@@ -2,7 +2,7 @@
 
 # KrakenD [![GoDoc](https://godoc.org/github.com/devopsfaith/krakend?status.svg)](https://godoc.org/github.com/devopsfaith/krakend)
 
-Ultra perfomant API Gateway with middlewares
+Ultra performant API Gateway with middlewares
 
 ## Motivation
 
