@@ -55,12 +55,12 @@ The KrakenD framework provides a default implementation of the proxy stack facto
 * The `balancing` middleware uses some type of strategy for selecting a the backend host to query
 * The `concurrent` middleware improves the QoS by sending several concurrent requests to the next step of the chain and returning the first succesful response using a timeout for cancelling the generated work load.
 * The `logging` middleware logs the received request and response and also the duration of the segment execution
-* The `merging` middleware is a frok-and-join middleware. It is intended to split the process of the request into several concurrent processes, each one against a different backend, and to merge all the received request from those created pipes into a single one. It applies a timeout, as the `concurrent` one does.
-* The `http` middleware completes the received proxy request by replacing the received params in the defined `URLPattern`
+* The `merging` middleware is a frok-and-join middleware. It is intended to split the process of the request into several concurrent processes, each one against a different backend, and to merge all the received responses from those created pipes into a single one. It applies a timeout, as the `concurrent` one does.
+* The `http` middleware completes the received proxy request by replacing the params extracted from the user request in the defined `URLPattern`
 
 ### Proxies available
 
-* The `http` proxy translates a proxy request into a HTTP request, sends it to the backend API using a `HTTPClientFactory`, decodes the received HTTP response with a `Decoder`, manipulates the response data with an `EntityFormatter` and returns it to the caller.
+* The `http` proxy translates a proxy request into a HTTP one, sends it to the backend API using a `HTTPClientFactory`, decodes the returned HTTP response with a `Decoder`, manipulates the response data with an `EntityFormatter` and returns it to the caller.
 
 ### Other components of the `proxy` package
 
