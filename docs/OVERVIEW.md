@@ -2,7 +2,7 @@
 
 ## The KrakenD rules
 
-* Reactive is key
+* [Reactive is key](http://www.reactivemanifesto.org/)
 * Reactive is key (yes, it is very very important)
 * Failling fast is better than successing slowly (say it one more time!)
 * The simplest, the better
