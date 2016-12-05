@@ -1,0 +1,9 @@
+examples/gin/krakend_gin*
+examples/mux/krakend_mux*
+krakend_gin*
+krakend_mux*
+server.rsa.crt
+server.rsa.key
+*.json
+*.yml
+*.toml
