@@ -12,24 +12,45 @@ import (
 	"github.com/devopsfaith/krakend/router"
 )
 
-// DefaultFactory returns a gin router factory with the injected proxy factory and logger
-func DefaultFactory(pf proxy.Factory, logger logging.Logger) router.Factory {
-	return factory{pf, logger}
+// Config is the struct that collects the parts the router should be builded from
+type Config struct {
+	Engine         *gin.Engine
+	Middlewares    []gin.HandlerFunc
+	HandlerFactory HandlerFactory
+	ProxyFactory   proxy.Factory
+	Logger         logging.Logger
+}
+
+// DefaultFactory returns a gin router factory with the injected proxy factory and logger.
+// It also uses a default gin router and the default HandlerFactory
+func DefaultFactory(proxyFactory proxy.Factory, logger logging.Logger) router.Factory {
+	return factory{
+		Config{
+			Engine:         gin.Default(),
+			Middlewares:    []gin.HandlerFunc{},
+			HandlerFactory: EndpointHandler,
+			ProxyFactory:   proxyFactory,
+			Logger:         logger,
+		},
+	}
+}
+
+// NewFactory returns a gin router factory with the injected configuration
+func NewFactory(cfg Config) router.Factory {
+	return factory{cfg}
 }
 
 type factory struct {
-	pf     proxy.Factory
-	logger logging.Logger
+	cfg Config
 }
 
 // New implements the factory interface
 func (rf factory) New() router.Router {
-	return ginRouter{rf.pf, rf.logger}
+	return ginRouter{rf.cfg}
 }
 
 type ginRouter struct {
-	pf     proxy.Factory
-	logger logging.Logger
+	cfg Config
 }
 
 // Run implements the router interface
@@ -37,52 +58,50 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 	if !cfg.Debug {
 		gin.SetMode(gin.ReleaseMode)
 	} else {
-		r.logger.Debug("Debug enabled")
+		r.cfg.Logger.Debug("Debug enabled")
 	}
-	engine := gin.Default()
 
-	engine.RedirectTrailingSlash = true
-	engine.RedirectFixedPath = true
-	engine.HandleMethodNotAllowed = true
+	r.cfg.Engine.RedirectTrailingSlash = true
+	r.cfg.Engine.RedirectFixedPath = true
+	r.cfg.Engine.HandleMethodNotAllowed = true
+
+	r.cfg.Engine.Use(r.cfg.Middlewares...)
 
 	for _, c := range cfg.Endpoints {
-		proxyStack, err := r.pf.New(c)
+		proxyStack, err := r.cfg.ProxyFactory.New(c)
 		if err != nil {
-			r.logger.Error("calling the ProxyFactory", err.Error())
+			r.cfg.Logger.Error("calling the ProxyFactory", err.Error())
 			continue
 		}
-		handler := EndpointHandler(c, proxyStack)
-		// add endpoint middleware components here:
-		// logs, metrics, throttling, 3rd party integrations...
-		// there are several in the package gin-gonic/gin and in the golang community
+		handler := r.cfg.HandlerFactory(c, proxyStack)
 
 		switch c.Method {
 		case "GET":
-			engine.GET(c.Endpoint, handler)
+			r.cfg.Engine.GET(c.Endpoint, handler)
 		case "POST":
 			if len(c.Backend) > 1 {
-				r.logger.Error("POST endpoints must have a single backend! Ignoring", c.Endpoint)
+				r.cfg.Logger.Error("POST endpoints must have a single backend! Ignoring", c.Endpoint)
 				continue
 			}
-			engine.POST(c.Endpoint, handler)
+			r.cfg.Engine.POST(c.Endpoint, handler)
 		case "PUT":
 			if len(c.Backend) > 1 {
-				r.logger.Error("PUT endpoints must have a single backend! Ignoring", c.Endpoint)
+				r.cfg.Logger.Error("PUT endpoints must have a single backend! Ignoring", c.Endpoint)
 				continue
 			}
-			engine.PUT(c.Endpoint, handler)
+			r.cfg.Engine.PUT(c.Endpoint, handler)
 		default:
-			r.logger.Error("Unsupported method", c.Method)
+			r.cfg.Logger.Error("Unsupported method", c.Method)
 		}
 	}
 
 	if cfg.Debug {
-		handler := DebugHandler(r.logger)
-		engine.GET("/__debug/*param", handler)
-		engine.POST("/__debug/*param", handler)
-		engine.PUT("/__debug/*param", handler)
+		handler := DebugHandler(r.cfg.Logger)
+		r.cfg.Engine.GET("/__debug/*param", handler)
+		r.cfg.Engine.POST("/__debug/*param", handler)
+		r.cfg.Engine.PUT("/__debug/*param", handler)
 	}
 
-	r.logger.Critical(engine.Run(fmt.Sprintf(":%d", cfg.Port)))
+	r.cfg.Logger.Critical(r.cfg.Engine.Run(fmt.Sprintf(":%d", cfg.Port)))
 
 }
