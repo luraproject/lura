@@ -21,8 +21,8 @@ func httpProxy(backend *config.Backend) Proxy {
 	return NewHTTPProxy(backend, NewHTTPClient, backend.Decoder)
 }
 
-// NewRequestBuilderMiddleware creates a proxy middleware that parses the request params recived
-// the user and generates the path to the backend endpoints
+// NewRequestBuilderMiddleware creates a proxy middleware that parses the request params received
+// from the outter layer and generates the path to the backend endpoints
 func NewRequestBuilderMiddleware(remote *config.Backend) Middleware {
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {

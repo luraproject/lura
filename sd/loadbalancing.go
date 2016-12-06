@@ -14,7 +14,7 @@ type Balancer interface {
 // ErrNoHosts is the error the balancer must return when there are 0 hosts ready
 var ErrNoHosts = errors.New("no hosts available")
 
-// NewRoundRobinLB returns a new balancer using a round robin startegy
+// NewRoundRobinLB returns a new balancer using a round robin strategy
 func NewRoundRobinLB(subscriber Subscriber) Balancer {
 	return &roundRobinLB{
 		subscriber: subscriber,
@@ -40,7 +40,7 @@ func (rr *roundRobinLB) Host() (string, error) {
 	return hosts[offset], nil
 }
 
-// NewRandomLB returns a new balancer using a pseudo-random startegy
+// NewRandomLB returns a new balancer using a pseudo-random strategy
 func NewRandomLB(subscriber Subscriber, seed int64) Balancer {
 	return &randomLB{
 		subscriber: subscriber,

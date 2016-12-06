@@ -253,7 +253,7 @@ func TestEntityFormatter_targetingNonObjects(t *testing.T) {
 	}
 }
 
-func TestEntityFormatter_alltogether(t *testing.T) {
+func TestEntityFormatter_altogether(t *testing.T) {
 	sample := Response{
 		Data: map[string]interface{}{
 			"supu": 42,
