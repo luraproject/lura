@@ -24,3 +24,7 @@ build_gin_example:
 
 build_mux_example:
 	cd examples/mux/ && make && cd ../.. && cp examples/mux/krakend_mux_example* .
+
+coveralls: all
+	go get github.com/mattn/goveralls
+	sh coverage.sh --coveralls
