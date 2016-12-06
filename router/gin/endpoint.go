@@ -17,7 +17,10 @@ import (
 
 var ErrInternalError = errors.New("internal server error")
 
-// EndpointHandler creates a handler function that adapts the gin router with the injected proxy
+// HandlerFactory creates a handler function that adapts the gin router with the injected proxy
+type HandlerFactory func(*config.EndpointConfig, proxy.Proxy) gin.HandlerFunc
+
+// EndpointHandler implements the HandleFactory interface
 func EndpointHandler(configuration *config.EndpointConfig, proxy proxy.Proxy) gin.HandlerFunc {
 	endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
 
