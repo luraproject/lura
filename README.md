@@ -1,6 +1,8 @@
 ![Krakend logo](docs/images/krakend.png)
 
-# KrakenD [![GoDoc](https://godoc.org/github.com/devopsfaith/krakend?status.svg)](https://godoc.org/github.com/devopsfaith/krakend) [![Travis-CI](https://travis-ci.org/devopsfaith/krakend.svg?branch=master)](https://travis-ci.org/devopsfaith/krakend)
+# KrakenD
+
+[![Travis-CI](https://travis-ci.org/devopsfaith/krakend.svg?branch=master)](https://travis-ci.org/devopsfaith/krakend) [![Go Report Card](https://goreportcard.com/badge/github.com/devopsfaith/krakend)](https://goreportcard.com/report/github.com/devopsfaith/krakend) [![GoDoc](https://godoc.org/github.com/devopsfaith/krakend?status.svg)](https://godoc.org/github.com/devopsfaith/krakend)
 
 Ultra performant API Gateway with middlewares
 
