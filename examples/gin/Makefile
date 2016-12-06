@@ -21,10 +21,3 @@ deps:
 build:
 	go build -a -ldflags="-X github.com/devopsfaith/krakend/core.KrakendVersion=${KRAKEND_VERSION}" -o ${BIN_NAME}
 	@echo "You can now use ./${BIN_NAME}"
-
-docker_build:
-	docker run --name krakend_gin -it -e "GOPATH=/go" -p 8080:8080 \
-	-v "${PWD}/main.go:/go/src/github.com/devopsfaith/krakend/examples/gin/main.go" \
-	-v "${PWD}/Makefile:/go/src/github.com/devopsfaith/krakend/examples/gin/Makefile" \
-	-w /go/src/github.com/devopsfaith/krakend/examples/gin \
-	golang:1.7.4 make all
