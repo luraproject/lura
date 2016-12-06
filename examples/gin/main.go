@@ -76,7 +76,7 @@ type customProxyFactory struct {
 }
 
 // New implements the Factory interface
-func (cf customRouterFactory) New(cfg *config.EndpointConfig) (p proxy.Proxy, err error) {
+func (cf customProxyFactory) New(cfg *config.EndpointConfig) (p proxy.Proxy, err error) {
 	p, err = cf.factory.New(cfg)
 	if err == nil {
 		p = proxy.NewLoggingMiddleware(cf.logger, cfg.Endpoint)(p)
