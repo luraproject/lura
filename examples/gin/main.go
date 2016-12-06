@@ -4,11 +4,19 @@ import (
 	"flag"
 	"log"
 	"os"
+	"time"
 
+	"github.com/aviddiviner/gin-limit"
+	"github.com/gin-gonic/contrib/cache"
+	"github.com/gin-gonic/contrib/secure"
+	"github.com/gin-gonic/gin"
+
+	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/config/viper"
+	"github.com/devopsfaith/krakend/logging"
 	"github.com/devopsfaith/krakend/logging/gologging"
 	"github.com/devopsfaith/krakend/proxy"
-	"github.com/devopsfaith/krakend/router/gin"
+	krakendgin "github.com/devopsfaith/krakend/router/gin"
 )
 
 func main() {
@@ -30,7 +38,48 @@ func main() {
 
 	logger := gologging.NewLogger(*logLevel, os.Stdout, "[KRAKEND]")
 
-	routerFactory := gin.DefaultFactory(proxy.DefaultFactory(logger), logger)
+	store := cache.NewInMemoryStore(time.Minute)
+
+	mws := []gin.HandlerFunc{
+		secure.Secure(secure.Options{
+			AllowedHosts:          []string{"127.0.0.1:8080", "example.com", "ssl.example.com"},
+			SSLRedirect:           false,
+			SSLHost:               "ssl.example.com",
+			SSLProxyHeaders:       map[string]string{"X-Forwarded-Proto": "https"},
+			STSSeconds:            315360000,
+			STSIncludeSubdomains:  true,
+			FrameDeny:             true,
+			ContentTypeNosniff:    true,
+			BrowserXssFilter:      true,
+			ContentSecurityPolicy: "default-src 'self'",
+		}),
+		limit.MaxAllowed(20),
+	}
+
+	routerFactory := krakendgin.NewFactory(krakendgin.Config{
+		Engine:       gin.Default(),
+		ProxyFactory: customProxyFactory{logger, proxy.DefaultFactory(logger)},
+		Middlewares:  mws,
+		Logger:       logger,
+		HandlerFactory: func(configuration *config.EndpointConfig, proxy proxy.Proxy) gin.HandlerFunc {
+			return cache.CachePage(store, configuration.CacheTTL, krakendgin.EndpointHandler(configuration, proxy))
+		},
+	})
 
 	routerFactory.New().Run(serviceConfig)
+}
+
+// customProxyFactory adds a logging middleware wrapping the internal factory
+type customProxyFactory struct {
+	logger  logging.Logger
+	factory proxy.Factory
+}
+
+// New implements the Factory interface
+func (cf customRouterFactory) New(cfg *config.EndpointConfig) (p proxy.Proxy, err error) {
+	p, err = cf.factory.New(cfg)
+	if err == nil {
+		p = proxy.NewLoggingMiddleware(cf.logger, cfg.Endpoint)(p)
+	}
+	return
 }
