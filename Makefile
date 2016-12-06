@@ -1,5 +1,7 @@
 .PHONY: all deps test build run benchmark cover
 
+PACKAGES = $(shell go list ./... | grep -v /examples/)
+
 all: deps test build
 
 deps:
@@ -9,11 +11,11 @@ deps:
 
 test:
 	go fmt ./...
-	go test -cover ./...
+	go test -cover $(PACKAGES)
 	go vet ./...
 
 benchmark:
-	go test -bench=. -benchtime=3s ./...
+	go test -bench=. -benchtime=3s $(PACKAGES)
 
 build: build_gin_example build_mux_example
 
