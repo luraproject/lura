@@ -236,7 +236,7 @@ func TestConfig_init(t *testing.T) {
 	}
 
 	if len(supuBackend.Host) != 1 || supuBackend.Host[0] != subject.Host[0] {
-		t.Errorf("Default hosts not applied to the supu backend", supuBackend.Host)
+		t.Error("Default hosts not applied to the supu backend", supuBackend.Host)
 	}
 
 	for level, method := range map[string]string{
