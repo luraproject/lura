@@ -10,10 +10,7 @@ import (
 
 func TestEmptyMiddleware_ok(t *testing.T) {
 	expected := Response{}
-	assertion := func(ctx context.Context, _ *Request) (*Response, error) {
-		return &expected, nil
-	}
-	result, err := EmptyMiddleware(assertion)(context.Background(), &Request{})
+	result, err := EmptyMiddleware(dummyProxy(&expected))(context.Background(), &Request{})
 	if err != nil {
 		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
 	}
@@ -28,7 +25,7 @@ func TestEmptyMiddleware_multipleNext(t *testing.T) {
 			t.Errorf("The code did not panic\n")
 		}
 	}()
-	EmptyMiddleware(explosiveProxy(t), explosiveProxy(t))
+	EmptyMiddleware(NoopProxy, NoopProxy)
 }
 
 func explosiveProxy(t *testing.T) Proxy {

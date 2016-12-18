@@ -107,6 +107,36 @@ func TestNewMergeDataMiddleware_partial(t *testing.T) {
 	}
 }
 
+func TestNewMergeDataMiddleware_nullResponse(t *testing.T) {
+	timeout := 100
+	backend := config.Backend{Timeout: time.Duration(timeout) * time.Millisecond}
+	endpoint := config.EndpointConfig{
+		Backend: []*config.Backend{&backend, &backend},
+	}
+	mw := NewMergeDataMiddleware(&endpoint)
+
+	mustEnd := time.After(time.Duration(2*timeout) * time.Millisecond)
+	out, err := mw(NoopProxy, NoopProxy)(context.Background(), &Request{})
+	if err != errNullResult {
+		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
+	}
+	if out == nil {
+		t.Errorf("The proxy returned a null result\n")
+		return
+	}
+	select {
+	case <-mustEnd:
+		t.Errorf("We were expecting a response but we got none\n")
+	default:
+		if len(out.Data) != 0 {
+			t.Errorf("We were expecting a partial response but we got %v!\n", out.Data)
+		}
+		if out.IsComplete {
+			t.Errorf("We were expecting an incompleted response but we got a completed one!\n")
+		}
+	}
+}
+
 func TestNewMergeDataMiddleware_timeout(t *testing.T) {
 	timeout := 100
 	backend := config.Backend{Timeout: time.Duration(timeout) * time.Millisecond}
@@ -152,6 +182,20 @@ func TestNewMergeDataMiddleware_notEnoughBackends(t *testing.T) {
 	}
 	mw := NewMergeDataMiddleware(&endpoint)
 	mw(explosiveProxy(t), explosiveProxy(t))
+}
+
+func TestNewMergeDataMiddleware_notEnoughProxies(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("The code did not panic\n")
+		}
+	}()
+	backend := config.Backend{}
+	endpoint := config.EndpointConfig{
+		Backend: []*config.Backend{&backend, &backend},
+	}
+	mw := NewMergeDataMiddleware(&endpoint)
+	mw(NoopProxy)
 }
 
 func TestNewMergeDataMiddleware_noBackends(t *testing.T) {
