@@ -3,6 +3,7 @@ package config
 import (
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestConfig_rejectInvalidVersion(t *testing.T) {
@@ -180,5 +181,83 @@ func TestConfig_initBackendURLMappings_undefinedOutput(t *testing.T) {
 	err := subject.initBackendURLMappings(0, 0, inputSet)
 	if err == nil || strings.Index(err.Error(), "Undefined output param [") != 0 {
 		t.Error("Error expected")
+	}
+}
+
+func TestConfig_init(t *testing.T) {
+	supuBackend := Backend{
+		URLPattern: "/__debug/supu",
+	}
+	supuEndpoint := EndpointConfig{
+		Endpoint: "/supu",
+		Method:   "post",
+		Timeout:  1500 * time.Millisecond,
+		CacheTTL: 6 * time.Hour,
+		Backend:  []*Backend{&supuBackend},
+	}
+
+	githubBackend := Backend{
+		URLPattern: "/",
+		Host:       []string{"https://api.github.com"},
+		Whitelist:  []string{"authorizations_url", "code_search_url"},
+	}
+	githubEndpoint := EndpointConfig{
+		Endpoint: "/github",
+		Timeout:  1500 * time.Millisecond,
+		CacheTTL: 6 * time.Hour,
+		Backend:  []*Backend{&githubBackend},
+	}
+
+	userBackend := Backend{
+		URLPattern: "/users/{user}",
+		Host:       []string{"https://jsonplaceholder.typicode.com"},
+		Mapping:    map[string]string{"email": "personal_email"},
+	}
+	postBackend := Backend{
+		URLPattern: "/posts/{user}",
+		Host:       []string{"https://jsonplaceholder.typicode.com"},
+		Group:      "posts",
+	}
+	userEndpoint := EndpointConfig{
+		Endpoint: "/users/{user}",
+		Backend:  []*Backend{&userBackend, &postBackend},
+	}
+
+	subject := ServiceConfig{
+		Version:   1,
+		Timeout:   5 * time.Second,
+		CacheTTL:  30 * time.Minute,
+		Host:      []string{"http://127.0.0.1:8080"},
+		Endpoints: []*EndpointConfig{&supuEndpoint, &githubEndpoint, &userEndpoint},
+	}
+
+	if err := subject.Init(); err != nil {
+		t.Error("Error at the configuration init:", err.Error())
+	}
+
+	if len(supuBackend.Host) != 1 || supuBackend.Host[0] != subject.Host[0] {
+		t.Errorf("Default hosts not applied to the supu backend", supuBackend.Host)
+	}
+
+	for level, method := range map[string]string{
+		"userBackend":  userBackend.Method,
+		"postBackend":  postBackend.Method,
+		"userEndpoint": userEndpoint.Method,
+	} {
+		if method != "GET" {
+			t.Errorf("Default method not applied at %s. Get: %s", level, method)
+		}
+	}
+
+	if supuBackend.Method != "POST" {
+		t.Error("supuBackend method not sanitized")
+	}
+
+	if userBackend.Timeout != subject.Timeout {
+		t.Error("default timeout not applied to the userBackend")
+	}
+
+	if userEndpoint.CacheTTL != subject.CacheTTL {
+		t.Error("default CacheTTL not applied to the userEndpoint")
 	}
 }
