@@ -1,6 +1,7 @@
 package sd
 
 import (
+	"errors"
 	"math"
 	"testing"
 )
@@ -89,5 +90,27 @@ func TestRandomLB_noEndpoints(t *testing.T) {
 	_, err := balancer.Host()
 	if want, have := ErrNoHosts, err; want != have {
 		t.Errorf("want %v, have %v", want, have)
+	}
+}
+
+type erroredSubscriber string
+
+func (s erroredSubscriber) Hosts() ([]string, error) { return []string{}, errors.New(string(s)) }
+
+func TestRoundRobinLB_erroredSubscriber(t *testing.T) {
+	want := "supu"
+	balancer := NewRoundRobinLB(erroredSubscriber(want))
+	host, have := balancer.Host()
+	if host != "" || want != have.Error() {
+		t.Errorf("want %s, have %s", want, have.Error())
+	}
+}
+
+func TestRandomLB_erroredSubscriber(t *testing.T) {
+	want := "supu"
+	balancer := NewRandomLB(erroredSubscriber(want), 1415926)
+	host, have := balancer.Host()
+	if host != "" || want != have.Error() {
+		t.Errorf("want %s, have %s", want, have.Error())
 	}
 }
