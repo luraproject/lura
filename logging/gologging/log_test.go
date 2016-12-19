@@ -36,7 +36,7 @@ func TestNewLogger(t *testing.T) {
 
 func logSomeStuff(level string) string {
 	buff := bytes.NewBuffer(make([]byte, 1024))
-	logger := NewLogger(level, buff, "pref")
+	logger, _ := NewLogger(level, buff, "pref")
 
 	logger.Debug(debugMsg)
 	logger.Info(infoMsg)

@@ -28,7 +28,10 @@ func main() {
 		serviceConfig.Port = *port
 	}
 
-	logger := gologging.NewLogger(*logLevel, os.Stdout, "[KRAKEND]")
+	logger, err := gologging.NewLogger(*logLevel, os.Stdout, "[KRAKEND]")
+	if err != nil {
+		log.Fatal("ERROR:", err.Error())
+	}
 
 	routerFactory := mux.DefaultFactory(proxy.DefaultFactory(logger), logger)
 

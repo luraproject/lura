@@ -36,7 +36,10 @@ func main() {
 		serviceConfig.Port = *port
 	}
 
-	logger := gologging.NewLogger(*logLevel, os.Stdout, "[KRAKEND]")
+	logger, err := gologging.NewLogger(*logLevel, os.Stdout, "[KRAKEND]")
+	if err != nil {
+		log.Fatal("ERROR:", err.Error())
+	}
 
 	store := cache.NewInMemoryStore(time.Minute)
 
