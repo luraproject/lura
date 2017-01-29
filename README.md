@@ -109,5 +109,7 @@ Visit the [framework overview](/docs/OVERVIEW.md) for more details about the com
 Check out the [benchmark results](/docs/BENCHMARKS.md) of several KrakenD components
 
 ## Contributing
+We are always happy to receive contributions. If you have questions, suggestions, bugs please open an issue.
+If you want to submit the code, create the issue and send us a pull request for review.
 
-TBD
+Enjoy the KrakenD!
