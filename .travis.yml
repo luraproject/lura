@@ -1,7 +1,8 @@
 language: go
 
 go:
-    - 1.7.4
+    - 1.8
+    - 1.7.5
     - tip
 
 script:
