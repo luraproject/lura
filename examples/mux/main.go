@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"log"
-	"net/http"
 	"os"
 
 	"gopkg.in/unrolled/secure.v1"
@@ -51,7 +50,7 @@ func main() {
 	})
 
 	routerFactory := mux.NewFactory(mux.Config{
-		Engine:         http.NewServeMux(),
+		Engine:         mux.DefaultEngine(),
 		ProxyFactory:   proxy.DefaultFactory(logger),
 		Middlewares:    []mux.HandlerMiddleware{secureMiddleware},
 		Logger:         logger,

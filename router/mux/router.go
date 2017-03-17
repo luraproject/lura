@@ -11,13 +11,27 @@ import (
 	"github.com/devopsfaith/krakend/router"
 )
 
+const DefaultDebugPattern = "/__debug/"
+
+// Engine defines the minimun required interface for the mux compatible engine
+type Engine interface {
+	http.Handler
+	Handle(pattern string, handler http.Handler)
+}
+
+// DefaultEngine returns a new engine using the http.ServeMux router
+func DefaultEngine() *http.ServeMux {
+	return http.NewServeMux()
+}
+
 // Config is the struct that collects the parts the router should be builded from
 type Config struct {
-	Engine         *http.ServeMux
+	Engine         Engine
 	Middlewares    []HandlerMiddleware
 	HandlerFactory HandlerFactory
 	ProxyFactory   proxy.Factory
 	Logger         logging.Logger
+	DebugPattern   string
 }
 
 // HandlerMiddleware is the interface for the decorators over the http.Handler
@@ -29,17 +43,21 @@ type HandlerMiddleware interface {
 func DefaultFactory(pf proxy.Factory, logger logging.Logger) router.Factory {
 	return factory{
 		Config{
-			Engine:         http.NewServeMux(),
+			Engine:         DefaultEngine(),
 			Middlewares:    []HandlerMiddleware{},
 			HandlerFactory: EndpointHandler,
 			ProxyFactory:   pf,
 			Logger:         logger,
+			DebugPattern:   DefaultDebugPattern,
 		},
 	}
 }
 
 // NewFactory returns a net/http mux router factory with the injected configuration
 func NewFactory(cfg Config) router.Factory {
+	if cfg.DebugPattern == "" {
+		cfg.DebugPattern = DefaultDebugPattern
+	}
 	return factory{cfg}
 }
 
@@ -59,7 +77,7 @@ type httpRouter struct {
 // Run implements the router interface
 func (r httpRouter) Run(cfg config.ServiceConfig) {
 	if cfg.Debug {
-		r.cfg.Engine.Handle("/__debug/", DebugHandler(r.cfg.Logger))
+		r.cfg.Engine.Handle(r.cfg.DebugPattern, DebugHandler(r.cfg.Logger))
 	}
 
 	r.registerKrakendEndpoints(cfg.Endpoints)
