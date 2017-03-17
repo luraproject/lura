@@ -3,7 +3,7 @@ Krakend MUX example
 
 ## Build
 
-Go 1.7 is a requirement
+Go 1.8 is a requirement
 
 	$ make
 

@@ -3,7 +3,10 @@ package main
 import (
 	"flag"
 	"log"
+	"net/http"
 	"os"
+
+	"gopkg.in/unrolled/secure.v1"
 
 	"github.com/devopsfaith/krakend/config/viper"
 	"github.com/devopsfaith/krakend/logging/gologging"
@@ -33,7 +36,27 @@ func main() {
 		log.Fatal("ERROR:", err.Error())
 	}
 
-	routerFactory := mux.DefaultFactory(proxy.DefaultFactory(logger), logger)
+	secureMiddleware := secure.New(secure.Options{
+		AllowedHosts:          []string{"127.0.0.1:8080", "example.com", "ssl.example.com"},
+		SSLRedirect:           false,
+		SSLHost:               "ssl.example.com",
+		SSLProxyHeaders:       map[string]string{"X-Forwarded-Proto": "https"},
+		STSSeconds:            315360000,
+		STSIncludeSubdomains:  true,
+		STSPreload:            true,
+		FrameDeny:             true,
+		ContentTypeNosniff:    true,
+		BrowserXssFilter:      true,
+		ContentSecurityPolicy: "default-src 'self'",
+	})
+
+	routerFactory := mux.NewFactory(mux.Config{
+		Engine:         http.NewServeMux(),
+		ProxyFactory:   proxy.DefaultFactory(logger),
+		Middlewares:    []mux.HandlerMiddleware{secureMiddleware},
+		Logger:         logger,
+		HandlerFactory: mux.EndpointHandler,
+	})
 
 	routerFactory.New().Run(serviceConfig)
 }
