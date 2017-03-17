@@ -12,6 +12,13 @@ import (
 	"github.com/devopsfaith/krakend/encoding"
 )
 
+const (
+	BracketsRouterPatternBuilder = iota
+	ColonRouterPatternBuilder
+)
+
+var RoutingPattern = ColonRouterPatternBuilder
+
 // ServiceConfig defines the krakend service
 type ServiceConfig struct {
 	// set of endpoint definitions
@@ -237,8 +244,10 @@ func (s *ServiceConfig) cleanPath(path string) string {
 
 func (s *ServiceConfig) getEndpointPath(path string, params []string) string {
 	result := path
-	for p := range params {
-		result = strings.Replace(result, "/{"+params[p]+"}", "/:"+params[p], -1)
+	if RoutingPattern == ColonRouterPatternBuilder {
+		for p := range params {
+			result = strings.Replace(result, "/{"+params[p]+"}", "/:"+params[p], -1)
+		}
 	}
 	return result
 }
