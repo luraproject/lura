@@ -1,6 +1,7 @@
 **/krakend_gin*
 **/krakend_mux*
 **/krakend_gorilla*
+**/krakend_negroni*
 server.rsa.crt
 server.rsa.key
 *.json
