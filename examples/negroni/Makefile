@@ -15,6 +15,8 @@ deps:
 	go get "github.com/devopsfaith/krakend/router/mux"
 	go get "github.com/devopsfaith/krakend/logging/gologging"
 	go get "github.com/urfave/negroni"
+	go get "github.com/zbindenren/negroni-prometheus"
+	go get "github.com/prometheus/client_golang/prometheus"
 	go get "gopkg.in/unrolled/secure.v1"
 
 build:
