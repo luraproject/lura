@@ -217,6 +217,7 @@ func TestConfig_init(t *testing.T) {
 		URLPattern: "/posts/{user}",
 		Host:       []string{"https://jsonplaceholder.typicode.com"},
 		Group:      "posts",
+		Encoding:   "xml",
 	}
 	userEndpoint := EndpointConfig{
 		Endpoint: "/users/{user}",
@@ -260,4 +261,68 @@ func TestConfig_init(t *testing.T) {
 	if userEndpoint.CacheTTL != subject.CacheTTL {
 		t.Error("default CacheTTL not applied to the userEndpoint")
 	}
+}
+
+func TestConfig_initKONoBackends(t *testing.T) {
+	subject := ServiceConfig{
+		Version: 1,
+		Host:    []string{"http://127.0.0.1:8080"},
+		Endpoints: []*EndpointConfig{
+			&EndpointConfig{
+				Endpoint: "/supu",
+				Method:   "post",
+				Backend:  []*Backend{},
+			},
+		},
+	}
+
+	if err := subject.Init(); err == nil ||
+		!strings.HasPrefix(err.Error(), "WARNING: the [/supu] endpoint has 0 backends defined! Ignoring") {
+		t.Error("Expecting an error at the configuration init!", err)
+	}
+}
+
+func TestConfig_initKOInvalidHost(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("The init process did not panic with an invalid host!")
+		}
+	}()
+	subject := ServiceConfig{
+		Version: 1,
+		Host:    []string{"http://127.0.0.1:8080http://127.0.0.1:8080"},
+		Endpoints: []*EndpointConfig{
+			&EndpointConfig{
+				Endpoint: "/supu",
+				Method:   "post",
+				Backend:  []*Backend{},
+			},
+		},
+	}
+
+	subject.Init()
+}
+
+func TestConfig_initKOInvalidDebugPattern(t *testing.T) {
+	dp := debugPattern
+
+	debugPattern = "a(b"
+	subject := ServiceConfig{
+		Version: 1,
+		Host:    []string{"http://127.0.0.1:8080"},
+		Endpoints: []*EndpointConfig{
+			&EndpointConfig{
+				Endpoint: "/__debug/supu",
+				Method:   "get",
+				Backend:  []*Backend{},
+			},
+		},
+	}
+
+	if err := subject.Init(); err == nil ||
+		!strings.HasPrefix(err.Error(), "error parsing regexp: missing closing ): `a(b`") {
+		t.Error("Expecting an error at the configuration init!", err)
+	}
+
+	debugPattern = dp
 }
