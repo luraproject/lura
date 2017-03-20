@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/devopsfaith/krakend/router"
 	gorilla "github.com/gorilla/mux"
 
 	"github.com/devopsfaith/krakend/logging"
 	"github.com/devopsfaith/krakend/proxy"
+	"github.com/devopsfaith/krakend/router"
 	"github.com/devopsfaith/krakend/router/mux"
 )
 
