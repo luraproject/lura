@@ -13,6 +13,7 @@ deps:
 	go get "github.com/devopsfaith/krakend/config/viper"
 	go get "github.com/devopsfaith/krakend/proxy"
 	go get "github.com/devopsfaith/krakend/router/mux"
+	go get "github.com/devopsfaith/krakend/router/gorilla"
 	go get "github.com/devopsfaith/krakend/logging/gologging"
 	go get "github.com/gorilla/mux"
 	go get "gopkg.in/unrolled/secure.v1"
