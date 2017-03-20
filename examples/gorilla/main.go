@@ -12,7 +12,7 @@ import (
 	"github.com/devopsfaith/krakend/logging"
 	"github.com/devopsfaith/krakend/logging/gologging"
 	"github.com/devopsfaith/krakend/proxy"
-	krakendgorilla "github.com/devopsfaith/krakend/router/gorilla"
+	"github.com/devopsfaith/krakend/router/gorilla"
 	"github.com/devopsfaith/krakend/router/mux"
 )
 
@@ -53,7 +53,7 @@ func main() {
 		ContentSecurityPolicy: "default-src 'self'",
 	})
 
-	cfg := krakendgorilla.DefaultConfig(customProxyFactory{logger, proxy.DefaultFactory(logger)}, logger)
+	cfg := gorilla.DefaultConfig(customProxyFactory{logger, proxy.DefaultFactory(logger)}, logger)
 	cfg.Middlewares = append(cfg.Middlewares, secureMiddleware)
 	routerFactory := mux.NewFactory(cfg)
 	routerFactory.New().Run(serviceConfig)
