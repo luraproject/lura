@@ -5,12 +5,15 @@ import (
 	"log"
 	"os"
 
+	secure "gopkg.in/unrolled/secure.v1"
+
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/config/viper"
 	"github.com/devopsfaith/krakend/logging"
 	"github.com/devopsfaith/krakend/logging/gologging"
 	"github.com/devopsfaith/krakend/proxy"
 	krakendgorilla "github.com/devopsfaith/krakend/router/gorilla"
+	"github.com/devopsfaith/krakend/router/mux"
 )
 
 func main() {
@@ -36,7 +39,23 @@ func main() {
 		log.Fatal("ERROR:", err.Error())
 	}
 
-	routerFactory := krakendgorilla.DefaultFactory(customProxyFactory{logger, proxy.DefaultFactory(logger)}, logger)
+	secureMiddleware := secure.New(secure.Options{
+		AllowedHosts:          []string{"127.0.0.1:8080", "example.com", "ssl.example.com"},
+		SSLRedirect:           false,
+		SSLHost:               "ssl.example.com",
+		SSLProxyHeaders:       map[string]string{"X-Forwarded-Proto": "https"},
+		STSSeconds:            315360000,
+		STSIncludeSubdomains:  true,
+		STSPreload:            true,
+		FrameDeny:             true,
+		ContentTypeNosniff:    true,
+		BrowserXssFilter:      true,
+		ContentSecurityPolicy: "default-src 'self'",
+	})
+
+	cfg := krakendgorilla.DefaultConfig(customProxyFactory{logger, proxy.DefaultFactory(logger)}, logger)
+	cfg.Middlewares = append(cfg.Middlewares, secureMiddleware)
+	routerFactory := mux.NewFactory(cfg)
 	routerFactory.New().Run(serviceConfig)
 }
 
