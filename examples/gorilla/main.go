@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	secure "gopkg.in/unrolled/secure.v1"
+	"gopkg.in/unrolled/secure.v1"
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/config/viper"
