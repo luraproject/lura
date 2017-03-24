@@ -15,6 +15,7 @@ deps:
 	go get "github.com/devopsfaith/krakend/router/mux"
 	go get "github.com/devopsfaith/krakend/logging/gologging"
 	go get "gopkg.in/unrolled/secure.v1"
+	go get "github.com/geekypanda/httpcache"
 
 build:
 	go build -a -ldflags="-X github.com/devopsfaith/krakend/core.KrakendVersion=${KRAKEND_VERSION}" -o ${BIN_NAME}

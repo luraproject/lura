@@ -59,6 +59,7 @@ func main() {
 		limit.MaxAllowed(20),
 	}
 
+	// routerFactory := krakendgin.DefaultFactory(proxy.DefaultFactory(logger), logger)
 	routerFactory := krakendgin.NewFactory(krakendgin.Config{
 		Engine:       gin.Default(),
 		ProxyFactory: customProxyFactory{logger, proxy.DefaultFactory(logger)},
