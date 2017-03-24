@@ -3,10 +3,14 @@ package main
 import (
 	"flag"
 	"log"
+	"net/http"
 	"os"
+	"time"
 
+	"github.com/geekypanda/httpcache"
 	"gopkg.in/unrolled/secure.v1"
 
+	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/config/viper"
 	"github.com/devopsfaith/krakend/logging/gologging"
 	"github.com/devopsfaith/krakend/proxy"
@@ -49,12 +53,16 @@ func main() {
 		ContentSecurityPolicy: "default-src 'self'",
 	})
 
+	// routerFactory := mux.DefaultFactory(proxy.DefaultFactory(logger), logger)
+
 	routerFactory := mux.NewFactory(mux.Config{
-		Engine:         mux.DefaultEngine(),
-		ProxyFactory:   proxy.DefaultFactory(logger),
-		Middlewares:    []mux.HandlerMiddleware{secureMiddleware},
-		Logger:         logger,
-		HandlerFactory: mux.EndpointHandler,
+		Engine:       mux.DefaultEngine(),
+		ProxyFactory: proxy.DefaultFactory(logger),
+		Middlewares:  []mux.HandlerMiddleware{secureMiddleware},
+		Logger:       logger,
+		HandlerFactory: func(cfg *config.EndpointConfig, p proxy.Proxy) http.HandlerFunc {
+			return httpcache.CacheFunc(mux.EndpointHandler(cfg, p), time.Minute)
+		},
 	})
 
 	routerFactory.New().Run(serviceConfig)
