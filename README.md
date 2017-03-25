@@ -99,6 +99,8 @@ Visit the [framework overview](/docs/OVERVIEW.md) for more details about the com
 
 1. [gin router](/examples/gin/README.md)
 2. [mux router](/examples/mux/README.md)
+3. [gorilla router](/examples/gorilla/README.md)
+4. [negroni middlewares](/examples/negroni/README.md)
 
 ## Configuration file
 

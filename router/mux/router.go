@@ -11,64 +11,122 @@ import (
 	"github.com/devopsfaith/krakend/router"
 )
 
+// DefaultDebugPattern is the default pattern used to define the debug endpoint
+const DefaultDebugPattern = "/__debug/"
+
+// Engine defines the minimun required interface for the mux compatible engine
+type Engine interface {
+	http.Handler
+	Handle(pattern string, handler http.Handler)
+}
+
+// DefaultEngine returns a new engine using the http.ServeMux router
+func DefaultEngine() *http.ServeMux {
+	return http.NewServeMux()
+}
+
+// Config is the struct that collects the parts the router should be builded from
+type Config struct {
+	Engine         Engine
+	Middlewares    []HandlerMiddleware
+	HandlerFactory HandlerFactory
+	ProxyFactory   proxy.Factory
+	Logger         logging.Logger
+	DebugPattern   string
+}
+
+// HandlerMiddleware is the interface for the decorators over the http.Handler
+type HandlerMiddleware interface {
+	Handler(h http.Handler) http.Handler
+}
+
 // DefaultFactory returns a net/http mux router factory with the injected proxy factory and logger
 func DefaultFactory(pf proxy.Factory, logger logging.Logger) router.Factory {
-	return factory{pf, logger}
+	return factory{
+		Config{
+			Engine:         DefaultEngine(),
+			Middlewares:    []HandlerMiddleware{},
+			HandlerFactory: EndpointHandler,
+			ProxyFactory:   pf,
+			Logger:         logger,
+			DebugPattern:   DefaultDebugPattern,
+		},
+	}
+}
+
+// NewFactory returns a net/http mux router factory with the injected configuration
+func NewFactory(cfg Config) router.Factory {
+	if cfg.DebugPattern == "" {
+		cfg.DebugPattern = DefaultDebugPattern
+	}
+	return factory{cfg}
 }
 
 type factory struct {
-	pf     proxy.Factory
-	logger logging.Logger
+	cfg Config
 }
 
 // New implements the factory interface
 func (rf factory) New() router.Router {
-	return httpRouter{rf.pf, rf.logger}
+	return httpRouter{rf.cfg}
 }
 
 type httpRouter struct {
-	pf     proxy.Factory
-	logger logging.Logger
+	cfg Config
 }
 
 // Run implements the router interface
 func (r httpRouter) Run(cfg config.ServiceConfig) {
-	mux := http.NewServeMux()
-
-	for _, c := range cfg.Endpoints {
-		proxyStack, err := r.pf.New(c)
-		if err != nil {
-			r.logger.Error("calling the ProxyFactory", err.Error())
-			continue
-		}
-
-		switch c.Method {
-		case "GET":
-		case "POST":
-			if len(c.Backend) > 1 {
-				r.logger.Error("POST endpoints must have a single backend! Ignoring", c.Endpoint)
-				continue
-			}
-		case "PUT":
-			if len(c.Backend) > 1 {
-				r.logger.Error("PUT endpoints must have a single backend! Ignoring", c.Endpoint)
-				continue
-			}
-		default:
-			r.logger.Error("Unsupported method", c.Method)
-			continue
-		}
-		mux.Handle(c.Endpoint, EndpointHandler(c, proxyStack))
-	}
-
 	if cfg.Debug {
-		mux.Handle("/__debug/", DebugHandler(r.logger))
+		r.cfg.Engine.Handle(r.cfg.DebugPattern, DebugHandler(r.cfg.Logger))
 	}
+
+	r.registerKrakendEndpoints(cfg.Endpoints)
 
 	server := http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.Port),
-		Handler: mux,
+		Handler: r.handler(),
 	}
-	r.logger.Critical(server.ListenAndServe())
+	r.cfg.Logger.Critical(server.ListenAndServe())
 
+}
+
+func (r httpRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) {
+	for _, c := range endpoints {
+		proxyStack, err := r.cfg.ProxyFactory.New(c)
+		if err != nil {
+			r.cfg.Logger.Error("calling the ProxyFactory", err.Error())
+			continue
+		}
+
+		r.registerKrakendEndpoint(c.Method, c.Endpoint, r.cfg.HandlerFactory(c, proxyStack), len(c.Backend))
+	}
+}
+
+func (r httpRouter) registerKrakendEndpoint(method, path string, handler http.HandlerFunc, totBackends int) {
+	if method != "GET" && totBackends > 1 {
+		r.cfg.Logger.Error(method, "endpoints must have a single backend! Ignoring", path)
+		return
+	}
+
+	switch method {
+	case "GET":
+	case "POST":
+	case "PUT":
+	default:
+		r.cfg.Logger.Error("Unsupported method", method)
+		return
+	}
+	r.cfg.Logger.Debug("registering the endpoint", method, path)
+	r.cfg.Engine.Handle(path, handler)
+}
+
+func (r httpRouter) handler() http.Handler {
+	var handler http.Handler
+	handler = r.cfg.Engine
+	for _, middleware := range r.cfg.Middlewares {
+		r.cfg.Logger.Debug("Adding the middleware", middleware)
+		handler = middleware.Handler(handler)
+	}
+	return handler
 }

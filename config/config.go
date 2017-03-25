@@ -12,6 +12,13 @@ import (
 	"github.com/devopsfaith/krakend/encoding"
 )
 
+const (
+	BracketsRouterPatternBuilder = iota
+	ColonRouterPatternBuilder
+)
+
+var RoutingPattern = ColonRouterPatternBuilder
+
 // ServiceConfig defines the krakend service
 type ServiceConfig struct {
 	// set of endpoint definitions
@@ -89,6 +96,7 @@ var (
 	simpleURLKeysPattern   = regexp.MustCompile(`\{([a-zA-Z\-_0-9]+)\}`)
 	endpointURLKeysPattern = regexp.MustCompile(`/\{([a-zA-Z\-_0-9]+)\}`)
 	hostPattern            = regexp.MustCompile(`(https?://)?([a-zA-Z0-9\._\-]+)(:[0-9]{2,6})?/?`)
+	debugPattern           = "^[^/]|/__debug(/.*)?$"
 	errInvalidHost         = errors.New("invalid host")
 	defaultPort            = 8080
 )
@@ -239,14 +247,16 @@ func (s *ServiceConfig) cleanPath(path string) string {
 
 func (s *ServiceConfig) getEndpointPath(path string, params []string) string {
 	result := path
-	for p := range params {
-		result = strings.Replace(result, "/{"+params[p]+"}", "/:"+params[p], -1)
+	if RoutingPattern == ColonRouterPatternBuilder {
+		for p := range params {
+			result = strings.Replace(result, "/{"+params[p]+"}", "/:"+params[p], -1)
+		}
 	}
 	return result
 }
 
 func (e *EndpointConfig) validate() error {
-	matched, err := regexp.MatchString("^[^/]|/__debug(/.*)?$", e.Endpoint)
+	matched, err := regexp.MatchString(debugPattern, e.Endpoint)
 	if err != nil {
 		log.Printf("ERROR: parsing the endpoint url [%s]: %s. Ignoring\n", e.Endpoint, err.Error())
 		return err

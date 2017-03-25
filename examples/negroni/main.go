@@ -5,12 +5,12 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
-	"github.com/geekypanda/httpcache"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/urfave/negroni"
+	"github.com/zbindenren/negroni-prometheus"
 	"gopkg.in/unrolled/secure.v1"
 
-	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/config/viper"
 	"github.com/devopsfaith/krakend/logging/gologging"
 	"github.com/devopsfaith/krakend/proxy"
@@ -53,17 +53,40 @@ func main() {
 		ContentSecurityPolicy: "default-src 'self'",
 	})
 
-	// routerFactory := mux.DefaultFactory(proxy.DefaultFactory(logger), logger)
-
 	routerFactory := mux.NewFactory(mux.Config{
-		Engine:       mux.DefaultEngine(),
-		ProxyFactory: proxy.DefaultFactory(logger),
-		Middlewares:  []mux.HandlerMiddleware{secureMiddleware},
-		Logger:       logger,
-		HandlerFactory: func(cfg *config.EndpointConfig, p proxy.Proxy) http.HandlerFunc {
-			return httpcache.CacheFunc(mux.EndpointHandler(cfg, p), time.Minute)
-		},
+		Engine:         newNegroniEngine(),
+		ProxyFactory:   proxy.DefaultFactory(logger),
+		Middlewares:    []mux.HandlerMiddleware{secureMiddleware},
+		Logger:         logger,
+		HandlerFactory: mux.EndpointHandler,
 	})
 
 	routerFactory.New().Run(serviceConfig)
+}
+
+func newNegroniEngine() negroniEngine {
+	muxEngine := mux.DefaultEngine()
+	negroniRouter := negroni.Classic()
+	negroniRouter.UseHandler(muxEngine)
+
+	m := negroniprometheus.NewMiddleware("serviceName")
+	muxEngine.Handle("/__metrics", prometheus.Handler())
+	negroniRouter.Use(m)
+
+	return negroniEngine{muxEngine, negroniRouter}
+}
+
+type negroniEngine struct {
+	r mux.Engine
+	n *negroni.Negroni
+}
+
+// Handle implements the mux.Engine interface from the krakend router package
+func (e negroniEngine) Handle(pattern string, handler http.Handler) {
+	e.r.Handle(pattern, handler)
+}
+
+// ServeHTTP implements the http:Handler interface from the stdlib
+func (e negroniEngine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	e.n.ServeHTTP(w, r)
 }

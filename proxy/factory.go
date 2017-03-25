@@ -44,25 +44,23 @@ func (pf defaultFactory) New(cfg *config.EndpointConfig) (p Proxy, err error) {
 
 func (pf defaultFactory) newMulti(cfg *config.EndpointConfig) (p Proxy, err error) {
 	backendProxy := make([]Proxy, len(cfg.Backend))
-
 	for i, backend := range cfg.Backend {
-		backendProxy[i] = pf.backendFactory(backend)
-		backendProxy[i] = NewRoundRobinLoadBalancedMiddleware(backend)(backendProxy[i])
-		if backend.ConcurrentCalls > 1 {
-			backendProxy[i] = NewConcurrentMiddleware(backend)(backendProxy[i])
-		}
-		backendProxy[i] = NewRequestBuilderMiddleware(backend)(backendProxy[i])
+		backendProxy[i] = pf.newStack(backend)
 	}
 	p = NewMergeDataMiddleware(cfg)(backendProxy...)
 	return
 }
 
-func (pf defaultFactory) newSingle(cfg *config.EndpointConfig) (p Proxy, err error) {
-	p = pf.backendFactory(cfg.Backend[0])
-	p = NewRoundRobinLoadBalancedMiddleware(cfg.Backend[0])(p)
-	if cfg.Backend[0].ConcurrentCalls > 1 {
-		p = NewConcurrentMiddleware(cfg.Backend[0])(p)
+func (pf defaultFactory) newSingle(cfg *config.EndpointConfig) (Proxy, error) {
+	return pf.newStack(cfg.Backend[0]), nil
+}
+
+func (pf defaultFactory) newStack(backend *config.Backend) (p Proxy) {
+	p = pf.backendFactory(backend)
+	p = NewRoundRobinLoadBalancedMiddleware(backend)(p)
+	if backend.ConcurrentCalls > 1 {
+		p = NewConcurrentMiddleware(backend)(p)
 	}
-	p = NewRequestBuilderMiddleware(cfg.Backend[0])(p)
+	p = NewRequestBuilderMiddleware(backend)(p)
 	return
 }

@@ -4,19 +4,16 @@ import (
 	"flag"
 	"log"
 	"os"
-	"time"
 
-	"github.com/aviddiviner/gin-limit"
-	"github.com/gin-gonic/contrib/cache"
-	"github.com/gin-gonic/contrib/secure"
-	"github.com/gin-gonic/gin"
+	"gopkg.in/unrolled/secure.v1"
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/config/viper"
 	"github.com/devopsfaith/krakend/logging"
 	"github.com/devopsfaith/krakend/logging/gologging"
 	"github.com/devopsfaith/krakend/proxy"
-	krakendgin "github.com/devopsfaith/krakend/router/gin"
+	"github.com/devopsfaith/krakend/router/gorilla"
+	"github.com/devopsfaith/krakend/router/mux"
 )
 
 func main() {
@@ -27,6 +24,7 @@ func main() {
 	flag.Parse()
 
 	parser := viper.New()
+	config.RoutingPattern = config.BracketsRouterPatternBuilder
 	serviceConfig, err := parser.Parse(*configFile)
 	if err != nil {
 		log.Fatal("ERROR:", err.Error())
@@ -41,35 +39,23 @@ func main() {
 		log.Fatal("ERROR:", err.Error())
 	}
 
-	store := cache.NewInMemoryStore(time.Minute)
-
-	mws := []gin.HandlerFunc{
-		secure.Secure(secure.Options{
-			AllowedHosts:          []string{"127.0.0.1:8080", "example.com", "ssl.example.com"},
-			SSLRedirect:           false,
-			SSLHost:               "ssl.example.com",
-			SSLProxyHeaders:       map[string]string{"X-Forwarded-Proto": "https"},
-			STSSeconds:            315360000,
-			STSIncludeSubdomains:  true,
-			FrameDeny:             true,
-			ContentTypeNosniff:    true,
-			BrowserXssFilter:      true,
-			ContentSecurityPolicy: "default-src 'self'",
-		}),
-		limit.MaxAllowed(20),
-	}
-
-	// routerFactory := krakendgin.DefaultFactory(proxy.DefaultFactory(logger), logger)
-	routerFactory := krakendgin.NewFactory(krakendgin.Config{
-		Engine:       gin.Default(),
-		ProxyFactory: customProxyFactory{logger, proxy.DefaultFactory(logger)},
-		Middlewares:  mws,
-		Logger:       logger,
-		HandlerFactory: func(configuration *config.EndpointConfig, proxy proxy.Proxy) gin.HandlerFunc {
-			return cache.CachePage(store, configuration.CacheTTL, krakendgin.EndpointHandler(configuration, proxy))
-		},
+	secureMiddleware := secure.New(secure.Options{
+		AllowedHosts:          []string{"127.0.0.1:8080", "example.com", "ssl.example.com"},
+		SSLRedirect:           false,
+		SSLHost:               "ssl.example.com",
+		SSLProxyHeaders:       map[string]string{"X-Forwarded-Proto": "https"},
+		STSSeconds:            315360000,
+		STSIncludeSubdomains:  true,
+		STSPreload:            true,
+		FrameDeny:             true,
+		ContentTypeNosniff:    true,
+		BrowserXssFilter:      true,
+		ContentSecurityPolicy: "default-src 'self'",
 	})
 
+	cfg := gorilla.DefaultConfig(customProxyFactory{logger, proxy.DefaultFactory(logger)}, logger)
+	cfg.Middlewares = append(cfg.Middlewares, secureMiddleware)
+	routerFactory := mux.NewFactory(cfg)
 	routerFactory.New().Run(serviceConfig)
 }
 
