@@ -12,7 +12,21 @@ import (
 	"github.com/devopsfaith/krakend/logging/gologging"
 )
 
-func TestNewDefaultFactory(t *testing.T) {
+func TestDefaultFactory_noBackends(t *testing.T) {
+	buff := bytes.NewBuffer(make([]byte, 1024))
+	logger, err := gologging.NewLogger("ERROR", buff, "pref")
+	if err != nil {
+		t.Error("building the logger:", err.Error())
+		return
+	}
+	factory := DefaultFactory(logger)
+
+	if _, err := factory.New(&config.EndpointConfig{}); err != ErrNoBackends {
+		t.Errorf("Expecting ErrNoBackends. Got: %v\n", err)
+	}
+}
+
+func TestNewDefaultFactory_ok(t *testing.T) {
 	buff := bytes.NewBuffer(make([]byte, 1024))
 	logger, err := gologging.NewLogger("ERROR", buff, "pref")
 	if err != nil {
@@ -59,10 +73,6 @@ func TestNewDefaultFactory(t *testing.T) {
 		Backend:         []*config.Backend{&backend, &backend},
 		ConcurrentCalls: 3,
 	}
-	endpointEmpty := config.EndpointConfig{
-		Backend:         []*config.Backend{},
-		ConcurrentCalls: 3,
-	}
 	serviceConfig := config.ServiceConfig{
 		Version:   1,
 		Endpoints: []*config.EndpointConfig{&endpointSingle, &endpointMulti},
@@ -97,10 +107,5 @@ func TestNewDefaultFactory(t *testing.T) {
 	}
 	if !response.IsComplete || len(response.Data) != len(expectedResponse.Data) {
 		t.Errorf("The proxy middleware propagated an unexpected error: %v\n", response)
-	}
-
-	_, err = factory.New(&endpointEmpty)
-	if err != ErrNoBackends {
-		t.Errorf("The factory returned an unexpected error: %s\n", err.Error())
 	}
 }
