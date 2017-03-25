@@ -9,6 +9,8 @@ import (
 	"github.com/devopsfaith/krakend/encoding"
 )
 
+// ErrInvalidStatusCode is the error returned by the http proxy when the received status code
+// is not a 200 nor a 201
 var ErrInvalidStatusCode = errors.New("Invalid status code")
 
 // HTTPClientFactory creates http clients based with the received context

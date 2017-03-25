@@ -11,6 +11,7 @@ import (
 	"github.com/devopsfaith/krakend/router"
 )
 
+// DefaultDebugPattern is the default pattern used to define the debug endpoint
 const DefaultDebugPattern = "/__debug/"
 
 // Engine defines the minimun required interface for the mux compatible engine

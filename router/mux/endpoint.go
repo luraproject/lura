@@ -13,6 +13,7 @@ import (
 	"github.com/devopsfaith/krakend/proxy"
 )
 
+// ErrInternalError is the error returned by the router when something went wrong
 var ErrInternalError = errors.New("internal server error")
 
 // HandlerFactory creates a handler function that adapts the mux router with the injected proxy
