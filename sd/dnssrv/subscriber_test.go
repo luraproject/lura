@@ -5,6 +5,8 @@ import (
 	"net"
 	"testing"
 	"time"
+
+	"github.com/devopsfaith/krakend/config"
 )
 
 func TestSubscriber_New(t *testing.T) {
@@ -22,7 +24,7 @@ func TestSubscriber_New(t *testing.T) {
 		return "cname", srvSet, nil
 	}
 
-	s := New("some.example.tld")
+	s := SubscriberFactory(&config.Backend{Host: []string{"some.example.tld"}})
 	hosts, err := s.Hosts()
 	if err != nil {
 		t.Error("Getting the hosts:", err.Error())
