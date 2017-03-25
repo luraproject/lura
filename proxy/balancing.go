@@ -7,24 +7,30 @@ import (
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/sd"
-	"github.com/devopsfaith/krakend/sd/dnssrv"
 )
 
 // NewRoundRobinLoadBalancedMiddleware creates proxy middleware adding a round robin balancer
+// over a default subscriber
 func NewRoundRobinLoadBalancedMiddleware(remote *config.Backend) Middleware {
-	return newLoadBalancedMiddleware(sd.NewRoundRobinLB(newSubscriber(remote)))
+	return NewRoundRobinLoadBalancedMiddlewareWithSubscriber(sd.FixedSubscriber(remote.Host))
 }
 
 // NewRandomLoadBalancedMiddleware creates proxy middleware adding a random balancer
+// over a default subscriber
 func NewRandomLoadBalancedMiddleware(remote *config.Backend) Middleware {
-	return newLoadBalancedMiddleware(sd.NewRandomLB(newSubscriber(remote), time.Now().UnixNano()))
+	return NewRandomLoadBalancedMiddlewareWithSubscriber(sd.FixedSubscriber(remote.Host))
 }
 
-func newSubscriber(remote *config.Backend) sd.Subscriber {
-	if remote.DNSSVR {
-		return dnssrv.New(remote.Host[0])
-	}
-	return sd.FixedSubscriber(remote.Host)
+// NewRoundRobinLoadBalancedMiddlewareWithSubscriber creates proxy middleware adding a round robin
+// balancer over the received subscriber
+func NewRoundRobinLoadBalancedMiddlewareWithSubscriber(subscriber sd.Subscriber) Middleware {
+	return newLoadBalancedMiddleware(sd.NewRoundRobinLB(subscriber))
+}
+
+// NewRandomLoadBalancedMiddlewareWithSubscriber creates proxy middleware adding a random
+// balancer over the received subscriber
+func NewRandomLoadBalancedMiddlewareWithSubscriber(subscriber sd.Subscriber) Middleware {
+	return newLoadBalancedMiddleware(sd.NewRandomLB(subscriber, time.Now().UnixNano()))
 }
 
 func newLoadBalancedMiddleware(lb sd.Balancer) Middleware {

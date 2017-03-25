@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/sd"
 )
 
@@ -16,6 +17,11 @@ var (
 	// DefaultLookup id the function for the DNS resolution
 	DefaultLookup = net.LookupSRV
 )
+
+// SubscriberFactory builds a DNS_SRV Subscriber with the received config
+func SubscriberFactory(cfg *config.Backend) sd.Subscriber {
+	return New(cfg.Host[0])
+}
 
 // New creates a DNS subscriber with the default values
 func New(name string) sd.Subscriber {

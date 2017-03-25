@@ -97,10 +97,7 @@ func TestNewRoundRobinLoadBalancedMiddleware_DNSSRV(t *testing.T) {
 			},
 		}, nil
 	}
-	testLoadBalancedMw(t, NewRoundRobinLoadBalancedMiddleware(&config.Backend{
-		Host:   []string{"some.service.example.tld"},
-		DNSSVR: true,
-	}))
+	testLoadBalancedMw(t, NewRoundRobinLoadBalancedMiddlewareWithSubscriber(dnssrv.New("some.service.example.tld")))
 
 	dnssrv.DefaultLookup = defaultLookup
 }

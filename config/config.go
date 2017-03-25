@@ -67,8 +67,8 @@ type Backend struct {
 	Method string `mapstructure:"method"`
 	// Set of hosts of the API
 	Host []string `mapstructure:"host"`
-	// True if the hostname should be resolved with DNS SRV records
-	DNSSVR bool `mapstructure:"dns_srv"`
+	// False if the hostname should be sanitized
+	HostSanitizationDisabled bool `mapstructure:"disable_host_sanitize"`
 	// URL pattern to use to locate the resource to be consumed
 	URLPattern string `mapstructure:"url_pattern"`
 	// set of response fields to remove. If empty, the filter id not used
@@ -176,7 +176,7 @@ func (s *ServiceConfig) initBackendDefaults(e, b int) {
 	backend := endpoint.Backend[b]
 	if len(backend.Host) == 0 {
 		backend.Host = s.Host
-	} else if !backend.DNSSVR {
+	} else if !backend.HostSanitizationDisabled {
 		backend.Host = s.cleanHosts(backend.Host)
 	}
 	if backend.Method == "" {
