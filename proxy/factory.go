@@ -3,6 +3,7 @@ package proxy
 import (
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/logging"
+	"github.com/devopsfaith/krakend/sd"
 )
 
 // Factory creates proxies based on the received endpoint configuration.
@@ -19,14 +20,26 @@ func DefaultFactory(logger logging.Logger) Factory {
 	return NewDefaultFactory(httpProxy, logger)
 }
 
+// DefaultFactoryWithSubscriber returns a default proxy factory with the injected logger and subscriber factory
+func DefaultFactoryWithSubscriber(logger logging.Logger, sF sd.SubscriberFactory) Factory {
+	return NewDefaultFactoryWithSubscriber(httpProxy, logger, sF)
+}
+
 // NewDefaultFactory returns a default proxy factory with the injected proxy builder and logger
 func NewDefaultFactory(backendFactory BackendFactory, logger logging.Logger) Factory {
-	return defaultFactory{backendFactory, logger}
+	return NewDefaultFactoryWithSubscriber(backendFactory, logger, sd.FixedSubscriberFactory)
+}
+
+// NewDefaultFactoryWithSubscriber returns a default proxy factory with the injected proxy builder,
+// logger and subscriber factory
+func NewDefaultFactoryWithSubscriber(backendFactory BackendFactory, logger logging.Logger, sF sd.SubscriberFactory) Factory {
+	return defaultFactory{backendFactory, logger, sF}
 }
 
 type defaultFactory struct {
-	backendFactory BackendFactory
-	logger         logging.Logger
+	backendFactory    BackendFactory
+	logger            logging.Logger
+	subscriberFactory sd.SubscriberFactory
 }
 
 // New implements the Factory interface
@@ -57,7 +70,7 @@ func (pf defaultFactory) newSingle(cfg *config.EndpointConfig) (Proxy, error) {
 
 func (pf defaultFactory) newStack(backend *config.Backend) (p Proxy) {
 	p = pf.backendFactory(backend)
-	p = NewRoundRobinLoadBalancedMiddleware(backend)(p)
+	p = NewRoundRobinLoadBalancedMiddlewareWithSubscriber(pf.subscriberFactory(backend))(p)
 	if backend.ConcurrentCalls > 1 {
 		p = NewConcurrentMiddleware(backend)(p)
 	}

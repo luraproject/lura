@@ -4,6 +4,8 @@ import (
 	"errors"
 	"math"
 	"testing"
+
+	"github.com/devopsfaith/krakend/config"
 )
 
 func TestRoundRobinLB(t *testing.T) {
@@ -85,7 +87,7 @@ func TestRandomLB(t *testing.T) {
 }
 
 func TestRandomLB_noEndpoints(t *testing.T) {
-	subscriber := FixedSubscriber{}
+	subscriber := FixedSubscriberFactory(&config.Backend{})
 	balancer := NewRandomLB(subscriber, 1415926)
 	_, err := balancer.Host()
 	if want, have := ErrNoHosts, err; want != have {
