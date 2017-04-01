@@ -186,7 +186,8 @@ func TestConfig_initBackendURLMappings_undefinedOutput(t *testing.T) {
 
 func TestConfig_init(t *testing.T) {
 	supuBackend := Backend{
-		URLPattern: "/__debug/supu",
+		URLPattern:   "/__debug/supu",
+		IsCollection: true,
 	}
 	supuEndpoint := EndpointConfig{
 		Endpoint: "/supu",
@@ -212,12 +213,14 @@ func TestConfig_init(t *testing.T) {
 		URLPattern: "/users/{user}",
 		Host:       []string{"https://jsonplaceholder.typicode.com"},
 		Mapping:    map[string]string{"email": "personal_email"},
+		Encoding:   "xml",
 	}
 	postBackend := Backend{
-		URLPattern: "/posts/{user}",
-		Host:       []string{"https://jsonplaceholder.typicode.com"},
-		Group:      "posts",
-		Encoding:   "xml",
+		URLPattern:   "/posts/{user}",
+		Host:         []string{"https://jsonplaceholder.typicode.com"},
+		Group:        "posts",
+		Encoding:     "xml",
+		IsCollection: true,
 	}
 	userEndpoint := EndpointConfig{
 		Endpoint: "/users/{user}",

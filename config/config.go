@@ -79,6 +79,8 @@ type Backend struct {
 	Mapping map[string]string `mapstructure:"mapping"`
 	// the encoding format
 	Encoding string `mapstructure:"encoding"`
+	// the response to process is a collection
+	IsCollection bool `mapstructure:"is_collection"`
 	// name of the field to extract to the root. If empty, the formater will do nothing
 	Target string `mapstructure:"target"`
 
@@ -184,12 +186,25 @@ func (s *ServiceConfig) initBackendDefaults(e, b int) {
 	}
 	backend.Timeout = endpoint.Timeout
 	backend.ConcurrentCalls = endpoint.ConcurrentCalls
-	switch strings.ToLower(backend.Encoding) {
-	case "xml":
-		backend.Decoder = encoding.XMLDecoder
-	default:
-		backend.Decoder = encoding.JSONDecoder
+	if backend.IsCollection {
+		backend.Decoder = s.getCollectionDecoder(backend.Encoding)
+	} else {
+		backend.Decoder = s.getEntityDecoder(backend.Encoding)
 	}
+}
+
+func (ServiceConfig) getEntityDecoder(format string) encoding.Decoder {
+	if strings.ToLower(format) == "xml" {
+		return encoding.XMLDecoder
+	}
+	return encoding.JSONDecoder
+}
+
+func (ServiceConfig) getCollectionDecoder(format string) encoding.Decoder {
+	if strings.ToLower(format) == "xml" {
+		return encoding.XMLCollectionDecoder
+	}
+	return encoding.JSONCollectionDecoder
 }
 
 func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]interface{}) error {
