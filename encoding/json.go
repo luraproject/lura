@@ -5,6 +5,17 @@ import (
 	"io"
 )
 
+// JSON is the key for the json encoding
+const JSON = "json"
+
+// NewJSONDecoder return the right JSON decoder
+func NewJSONDecoder(isCollection bool) Decoder {
+	if isCollection {
+		return JSONCollectionDecoder
+	}
+	return JSONDecoder
+}
+
 // JSONDecoder implements the Decoder interface
 func JSONDecoder(r io.Reader, v *map[string]interface{}) error {
 	d := json.NewDecoder(r)

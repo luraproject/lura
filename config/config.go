@@ -186,25 +186,12 @@ func (s *ServiceConfig) initBackendDefaults(e, b int) {
 	}
 	backend.Timeout = endpoint.Timeout
 	backend.ConcurrentCalls = endpoint.ConcurrentCalls
-	if backend.IsCollection {
-		backend.Decoder = s.getCollectionDecoder(backend.Encoding)
-	} else {
-		backend.Decoder = s.getEntityDecoder(backend.Encoding)
+	switch strings.ToLower(backend.Encoding) {
+	case encoding.XML:
+		backend.Decoder = encoding.NewXMLDecoder(backend.IsCollection)
+	default:
+		backend.Decoder = encoding.NewJSONDecoder(backend.IsCollection)
 	}
-}
-
-func (ServiceConfig) getEntityDecoder(format string) encoding.Decoder {
-	if strings.ToLower(format) == "xml" {
-		return encoding.XMLDecoder
-	}
-	return encoding.JSONDecoder
-}
-
-func (ServiceConfig) getCollectionDecoder(format string) encoding.Decoder {
-	if strings.ToLower(format) == "xml" {
-		return encoding.XMLCollectionDecoder
-	}
-	return encoding.JSONCollectionDecoder
 }
 
 func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]interface{}) error {
