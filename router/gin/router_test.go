@@ -1,0 +1,263 @@
+package gin
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"testing"
+	"time"
+
+	"github.com/devopsfaith/krakend/config"
+	"github.com/devopsfaith/krakend/logging/gologging"
+	"github.com/devopsfaith/krakend/proxy"
+)
+
+func TestDefaultFactory_ok(t *testing.T) {
+	buff := bytes.NewBuffer(make([]byte, 1024))
+	logger, err := gologging.NewLogger("ERROR", buff, "pref")
+	if err != nil {
+		t.Error("building the logger:", err.Error())
+		return
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	r := DefaultFactory(noopProxyFactory(map[string]interface{}{"supu": "tupu"}), logger).NewWithContext(ctx)
+	expectedBody := "{\"supu\":\"tupu\"}\n"
+
+	serviceCfg := config.ServiceConfig{
+		Port: 8082,
+		Endpoints: []*config.EndpointConfig{
+			&config.EndpointConfig{
+				Endpoint: "/some",
+				Method:   "GET",
+				Timeout:  10,
+				Backend: []*config.Backend{
+					&config.Backend{},
+				},
+			},
+			&config.EndpointConfig{
+				Endpoint: "/some",
+				Method:   "POST",
+				Timeout:  10,
+				Backend: []*config.Backend{
+					&config.Backend{},
+				},
+			},
+			&config.EndpointConfig{
+				Endpoint: "/some",
+				Method:   "PUT",
+				Timeout:  10,
+				Backend: []*config.Backend{
+					&config.Backend{},
+				},
+			},
+			&config.EndpointConfig{
+				Endpoint: "/some",
+				Method:   "PATCH",
+				Timeout:  10,
+				Backend: []*config.Backend{
+					&config.Backend{},
+				},
+			},
+			&config.EndpointConfig{
+				Endpoint: "/some",
+				Method:   "DELETE",
+				Timeout:  10,
+				Backend: []*config.Backend{
+					&config.Backend{},
+				},
+			},
+		},
+	}
+
+	go func() { r.Run(serviceCfg) }()
+
+	time.Sleep(5 * time.Millisecond)
+
+	for _, endpoint := range serviceCfg.Endpoints {
+		req, _ := http.NewRequest(endpoint.Method, fmt.Sprintf("http://127.0.0.1:8082%s", endpoint.Endpoint), nil)
+		req.Header.Set("Content-Type", "application/json")
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Error("Making the request:", err.Error())
+			return
+		}
+		defer resp.Body.Close()
+
+		body, ioerr := ioutil.ReadAll(resp.Body)
+		if ioerr != nil {
+			t.Error("Reading the response:", ioerr.Error())
+			return
+		}
+		content := string(body)
+		if resp.Header.Get("Cache-Control") != "" {
+			t.Error("Cache-Control error:", resp.Header.Get("Cache-Control"))
+		}
+		if resp.Header.Get("Content-Type") != "application/json; charset=utf-8" {
+			t.Error("Content-Type error:", resp.Header.Get("Content-Type"))
+		}
+		if resp.Header.Get("X-Krakend") != "Version undefined" {
+			t.Error("X-Krakend error:", resp.Header.Get("X-Krakend"))
+		}
+		if resp.StatusCode != http.StatusOK {
+			t.Error("Unexpected status code:", resp.StatusCode)
+		}
+		if content != expectedBody {
+			t.Error("Unexpected body:", content, "expected:", expectedBody)
+		}
+	}
+
+	cancel()
+	time.Sleep(5 * time.Millisecond)
+}
+
+func TestDefaultFactory_ko(t *testing.T) {
+	buff := bytes.NewBuffer(make([]byte, 1024))
+	logger, err := gologging.NewLogger("ERROR", buff, "pref")
+	if err != nil {
+		t.Error("building the logger:", err.Error())
+		return
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	r := DefaultFactory(noopProxyFactory(map[string]interface{}{"supu": "tupu"}), logger).NewWithContext(ctx)
+
+	serviceCfg := config.ServiceConfig{
+		Debug: true,
+		Port:  8083,
+		Endpoints: []*config.EndpointConfig{
+			&config.EndpointConfig{
+				Endpoint: "/ignored",
+				Method:   "GETTT",
+				Backend: []*config.Backend{
+					&config.Backend{},
+				},
+			},
+			&config.EndpointConfig{
+				Endpoint: "/empty",
+				Method:   "GETTT",
+				Backend:  []*config.Backend{},
+			},
+			&config.EndpointConfig{
+				Endpoint: "/also-ignored",
+				Method:   "PUT",
+				Backend: []*config.Backend{
+					&config.Backend{},
+					&config.Backend{},
+				},
+			},
+		},
+	}
+
+	go func() { r.Run(serviceCfg) }()
+
+	time.Sleep(5 * time.Millisecond)
+
+	for _, subject := range [][]string{
+		[]string{"GET", "ignored"},
+		[]string{"GET", "empty"},
+		[]string{"PUT", "also-ignored"},
+	} {
+		req, _ := http.NewRequest(subject[0], fmt.Sprintf("http://127.0.0.1:8083/%s", subject[1]), nil)
+		req.Header.Set("Content-Type", "application/json")
+		checkResponseIs404(t, req)
+	}
+
+	cancel()
+	time.Sleep(5 * time.Millisecond)
+}
+
+func TestDefaultFactory_proxyFactoryCrash(t *testing.T) {
+	buff := bytes.NewBuffer(make([]byte, 1024))
+	logger, err := gologging.NewLogger("ERROR", buff, "pref")
+	if err != nil {
+		t.Error("building the logger:", err.Error())
+		return
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	r := DefaultFactory(erroredProxyFactory{fmt.Errorf("%s", "crash!!!")}, logger).NewWithContext(ctx)
+
+	serviceCfg := config.ServiceConfig{
+		Debug: true,
+		Port:  8084,
+		Endpoints: []*config.EndpointConfig{
+			&config.EndpointConfig{
+				Endpoint: "/ignored",
+				Method:   "GET",
+				Timeout:  10,
+				Backend: []*config.Backend{
+					&config.Backend{},
+				},
+			},
+		},
+	}
+
+	go func() { r.Run(serviceCfg) }()
+
+	time.Sleep(5 * time.Millisecond)
+
+	for _, subject := range [][]string{[]string{"GET", "ignored"}, []string{"PUT", "also-ignored"}} {
+		req, _ := http.NewRequest(subject[0], fmt.Sprintf("http://127.0.0.1:8084/%s", subject[1]), nil)
+		req.Header.Set("Content-Type", "application/json")
+		checkResponseIs404(t, req)
+	}
+
+	cancel()
+	time.Sleep(5 * time.Millisecond)
+}
+
+func checkResponseIs404(t *testing.T, req *http.Request) {
+	expectedBody := "404 page not found"
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Error("Making the request:", err.Error())
+		return
+	}
+	defer resp.Body.Close()
+	body, ioerr := ioutil.ReadAll(resp.Body)
+	if ioerr != nil {
+		t.Error("Reading the response:", ioerr.Error())
+		return
+	}
+	content := string(body)
+	if resp.Header.Get("Cache-Control") != "" {
+		t.Error("Cache-Control error:", resp.Header.Get("Cache-Control"))
+	}
+	if resp.Header.Get("Content-Type") != "text/plain" {
+		t.Error("Content-Type error:", resp.Header.Get("Content-Type"))
+	}
+	if resp.Header.Get("X-Krakend") != "" {
+		t.Error("X-Krakend error:", resp.Header.Get("X-Krakend"))
+	}
+	if resp.StatusCode != http.StatusNotFound {
+		t.Error("Unexpected status code:", resp.StatusCode)
+	}
+	if content != expectedBody {
+		t.Error("Unexpected body:", content, "expected:", expectedBody)
+	}
+}
+
+type noopProxyFactory map[string]interface{}
+
+func (n noopProxyFactory) New(_ *config.EndpointConfig) (proxy.Proxy, error) {
+	return func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
+		return &proxy.Response{
+			IsComplete: true,
+			Data:       n,
+		}, nil
+	}, nil
+}
+
+type erroredProxyFactory struct {
+	Error error
+}
+
+func (e erroredProxyFactory) New(_ *config.EndpointConfig) (proxy.Proxy, error) {
+	return proxy.NoopProxy, e.Error
+}
