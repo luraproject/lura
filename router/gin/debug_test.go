@@ -8,8 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/devopsfaith/krakend/logging/gologging"
 	"github.com/gin-gonic/gin"
+
+	"github.com/devopsfaith/krakend/logging/gologging"
 )
 
 func TestDebugHandler(t *testing.T) {
@@ -24,7 +25,7 @@ func TestDebugHandler(t *testing.T) {
 	router := gin.New()
 	router.GET("/_gin_endpoint/:param", DebugHandler(logger))
 	s := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":8088",
 		Handler: router,
 	}
 	defer s.Shutdown(context.Background())
@@ -32,7 +33,7 @@ func TestDebugHandler(t *testing.T) {
 
 	time.Sleep(5 * time.Millisecond)
 
-	req, _ := http.NewRequest("GET", "http://localhost:8080/_gin_endpoint/a?b=1", nil)
+	req, _ := http.NewRequest("GET", "http://127.0.0.1:8088/_gin_endpoint/a?b=1", nil)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

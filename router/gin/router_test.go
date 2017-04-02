@@ -23,6 +23,10 @@ func TestDefaultFactory_ok(t *testing.T) {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
+	defer func() {
+		cancel()
+		time.Sleep(5 * time.Millisecond)
+	}()
 
 	r := DefaultFactory(noopProxyFactory(map[string]interface{}{"supu": "tupu"}), logger).NewWithContext(ctx)
 	expectedBody := "{\"supu\":\"tupu\"}\n"
@@ -109,9 +113,6 @@ func TestDefaultFactory_ok(t *testing.T) {
 			t.Error("Unexpected body:", content, "expected:", expectedBody)
 		}
 	}
-
-	cancel()
-	time.Sleep(5 * time.Millisecond)
 }
 
 func TestDefaultFactory_ko(t *testing.T) {
@@ -123,6 +124,10 @@ func TestDefaultFactory_ko(t *testing.T) {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
+	defer func() {
+		cancel()
+		time.Sleep(5 * time.Millisecond)
+	}()
 
 	r := DefaultFactory(noopProxyFactory(map[string]interface{}{"supu": "tupu"}), logger).NewWithContext(ctx)
 
@@ -166,9 +171,6 @@ func TestDefaultFactory_ko(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 		checkResponseIs404(t, req)
 	}
-
-	cancel()
-	time.Sleep(5 * time.Millisecond)
 }
 
 func TestDefaultFactory_proxyFactoryCrash(t *testing.T) {
@@ -180,6 +182,10 @@ func TestDefaultFactory_proxyFactoryCrash(t *testing.T) {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
+	defer func() {
+		cancel()
+		time.Sleep(5 * time.Millisecond)
+	}()
 
 	r := DefaultFactory(erroredProxyFactory{fmt.Errorf("%s", "crash!!!")}, logger).NewWithContext(ctx)
 
@@ -207,9 +213,6 @@ func TestDefaultFactory_proxyFactoryCrash(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 		checkResponseIs404(t, req)
 	}
-
-	cancel()
-	time.Sleep(5 * time.Millisecond)
 }
 
 func checkResponseIs404(t *testing.T, req *http.Request) {

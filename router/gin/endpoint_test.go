@@ -95,7 +95,7 @@ func setup(timeout time.Duration, p proxy.Proxy) (string, *http.Response, error)
 	server := startGinServer(EndpointHandler(endpoint, p))
 	defer server.Shutdown(context.Background())
 
-	req, _ := http.NewRequest("GET", "http://localhost:8080/_gin_endpoint/a?b=1", nil)
+	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", nil)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
