@@ -20,11 +20,7 @@ func DebugHandler(logger logging.Logger) http.HandlerFunc {
 		r.Body.Close()
 		logger.Debug("Body:", string(body))
 
-		js, err := json.Marshal(map[string]string{"message": "pong"})
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		js, _ := json.Marshal(map[string]string{"message": "pong"})
 
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(js)

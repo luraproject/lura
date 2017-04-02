@@ -29,14 +29,13 @@ func CustomEndpointHandler(rb RequestBuilder) HandlerFactory {
 		endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
 
 		return func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set(core.KrakendHeaderName, core.KrakendHeaderValue)
 			if r.Method != configuration.Method {
 				http.Error(w, "", http.StatusMethodNotAllowed)
 				return
 			}
 
 			requestCtx, cancel := context.WithTimeout(context.Background(), endpointTimeout)
-
-			w.Header().Set(core.KrakendHeaderName, core.KrakendHeaderValue)
 
 			response, err := proxy(requestCtx, rb(r, configuration.QueryString))
 			if err != nil {

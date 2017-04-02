@@ -2,6 +2,7 @@
 package mux
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -68,11 +69,17 @@ type factory struct {
 
 // New implements the factory interface
 func (rf factory) New() router.Router {
-	return httpRouter{rf.cfg}
+	return httpRouter{rf.cfg, context.Background()}
+}
+
+// NewWithContext implements the factory interface
+func (rf factory) NewWithContext(ctx context.Context) router.Router {
+	return httpRouter{rf.cfg, ctx}
 }
 
 type httpRouter struct {
 	cfg Config
+	ctx context.Context
 }
 
 // Run implements the router interface
@@ -87,7 +94,13 @@ func (r httpRouter) Run(cfg config.ServiceConfig) {
 		Addr:    fmt.Sprintf(":%d", cfg.Port),
 		Handler: r.handler(),
 	}
-	r.cfg.Logger.Critical(server.ListenAndServe())
+
+	go func() {
+		r.cfg.Logger.Critical(server.ListenAndServe())
+	}()
+
+	<-r.ctx.Done()
+	r.cfg.Logger.Error(server.Shutdown(context.Background()))
 
 }
 
@@ -113,6 +126,8 @@ func (r httpRouter) registerKrakendEndpoint(method, path string, handler http.Ha
 	case "GET":
 	case "POST":
 	case "PUT":
+	case "PATCH":
+	case "DELETE":
 	default:
 		r.cfg.Logger.Error("Unsupported method", method)
 		return

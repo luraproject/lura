@@ -2,7 +2,9 @@
 package gin
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 
@@ -24,7 +26,7 @@ type Config struct {
 // DefaultFactory returns a gin router factory with the injected proxy factory and logger.
 // It also uses a default gin router and the default HandlerFactory
 func DefaultFactory(proxyFactory proxy.Factory, logger logging.Logger) router.Factory {
-	return factory{
+	return NewFactory(
 		Config{
 			Engine:         gin.Default(),
 			Middlewares:    []gin.HandlerFunc{},
@@ -32,7 +34,7 @@ func DefaultFactory(proxyFactory proxy.Factory, logger logging.Logger) router.Fa
 			ProxyFactory:   proxyFactory,
 			Logger:         logger,
 		},
-	}
+	)
 }
 
 // NewFactory returns a gin router factory with the injected configuration
@@ -46,11 +48,16 @@ type factory struct {
 
 // New implements the factory interface
 func (rf factory) New() router.Router {
-	return ginRouter{rf.cfg}
+	return ginRouter{rf.cfg, context.Background()}
+}
+
+func (rf factory) NewWithContext(ctx context.Context) router.Router {
+	return ginRouter{rf.cfg, ctx}
 }
 
 type ginRouter struct {
 	cfg Config
+	ctx context.Context
 }
 
 // Run implements the router interface
@@ -73,8 +80,17 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 
 	r.registerKrakendEndpoints(cfg.Endpoints)
 
-	r.cfg.Logger.Critical(r.cfg.Engine.Run(fmt.Sprintf(":%d", cfg.Port)))
+	s := &http.Server{
+		Addr:    fmt.Sprintf(":%d", cfg.Port),
+		Handler: r.cfg.Engine,
+	}
 
+	go func() {
+		r.cfg.Logger.Critical(s.ListenAndServe())
+	}()
+
+	<-r.ctx.Done()
+	r.cfg.Logger.Error(s.Shutdown(context.Background()))
 }
 
 func (r ginRouter) registerDebugEndpoints() {
