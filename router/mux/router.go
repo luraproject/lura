@@ -126,6 +126,8 @@ func (r httpRouter) registerKrakendEndpoint(method, path string, handler http.Ha
 	case "GET":
 	case "POST":
 	case "PUT":
+	case "PATCH":
+	case "DELETE":
 	default:
 		r.cfg.Logger.Error("Unsupported method", method)
 		return
