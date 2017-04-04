@@ -17,6 +17,7 @@ import (
 	"github.com/devopsfaith/krakend/logging/gologging"
 	"github.com/devopsfaith/krakend/proxy"
 	krakendgin "github.com/devopsfaith/krakend/router/gin"
+	"github.com/devopsfaith/krakend/sd/dnssrv"
 )
 
 func main() {
@@ -63,7 +64,7 @@ func main() {
 
 	routerFactory := krakendgin.NewFactory(krakendgin.Config{
 		Engine:       gin.Default(),
-		ProxyFactory: customProxyFactory{logger, proxy.DefaultFactory(logger)},
+		ProxyFactory: customProxyFactory{logger, proxy.DefaultFactoryWithSubscriber(logger, dnssrv.SubscriberFactory)},
 		Middlewares:  mws,
 		Logger:       logger,
 		HandlerFactory: func(configuration *config.EndpointConfig, proxy proxy.Proxy) gin.HandlerFunc {
