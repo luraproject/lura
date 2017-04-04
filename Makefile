@@ -19,10 +19,13 @@ test:
 benchmark:
 	go test -bench=. -benchtime=3s $(PACKAGES)
 
-build: build_gin_example build_mux_example build_gorilla_example build_negroni_example
+build: build_gin_example build_dns_example build_mux_example build_gorilla_example build_negroni_example
 
 build_gin_example:
 	cd examples/gin/ && make && cd ../.. && cp examples/gin/krakend_gin_example* .
+
+build_dns_example:
+	cd examples/dns/ && make && cd ../.. && cp examples/dns/krakend_dns_example* .
 
 build_mux_example:
 	cd examples/mux/ && make && cd ../.. && cp examples/mux/krakend_mux_example* .

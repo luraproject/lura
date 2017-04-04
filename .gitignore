@@ -1,4 +1,5 @@
 **/krakend_gin*
+**/krakend_dns*
 **/krakend_mux*
 **/krakend_gorilla*
 **/krakend_negroni*
