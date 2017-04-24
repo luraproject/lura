@@ -9,6 +9,7 @@ deps:
 	go get -u github.com/spf13/viper
 	go get -u github.com/op/go-logging
 	go get -u github.com/gorilla/mux
+	go get -u github.com/urfave/negroni
 	go get -u github.com/clbanning/mxj/x2j
 
 test:
