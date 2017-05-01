@@ -38,7 +38,7 @@ func TestNewHTTPProxy_ok(t *testing.T) {
 	}
 	mustEnd := time.After(time.Duration(150) * time.Millisecond)
 
-	result, err := httpProxy(&backend)(context.Background(), &request)
+	result, err := HTTPProxyFactory(http.DefaultClient)(&backend)(context.Background(), &request)
 	if err != nil {
 		t.Errorf("The proxy returned an unexpected error: %s\n", err.Error())
 		return

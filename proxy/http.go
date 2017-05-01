@@ -23,6 +23,13 @@ func httpProxy(backend *config.Backend) Proxy {
 	return NewHTTPProxy(backend, NewHTTPClient, backend.Decoder)
 }
 
+// HTTPProxyFactory returns a BackendFactory. The Proxies it creates will use the received net/http.Client
+func HTTPProxyFactory(client *http.Client) BackendFactory {
+	return func(backend *config.Backend) Proxy {
+		return NewHTTPProxy(backend, func(_ context.Context) *http.Client { return client }, backend.Decoder)
+	}
+}
+
 // NewRequestBuilderMiddleware creates a proxy middleware that parses the request params received
 // from the outter layer and generates the path to the backend endpoints
 func NewRequestBuilderMiddleware(remote *config.Backend) Middleware {
