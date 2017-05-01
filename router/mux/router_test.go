@@ -32,7 +32,7 @@ func TestDefaultFactory_ok(t *testing.T) {
 	expectedBody := "{\"supu\":\"tupu\"}"
 
 	serviceCfg := config.ServiceConfig{
-		Port: 8082,
+		Port: 8062,
 		Endpoints: []*config.EndpointConfig{
 			&config.EndpointConfig{
 				Endpoint: "/get",
@@ -82,7 +82,7 @@ func TestDefaultFactory_ok(t *testing.T) {
 	time.Sleep(5 * time.Millisecond)
 
 	for _, endpoint := range serviceCfg.Endpoints {
-		req, _ := http.NewRequest(endpoint.Method, fmt.Sprintf("http://127.0.0.1:8082%s", endpoint.Endpoint), nil)
+		req, _ := http.NewRequest(endpoint.Method, fmt.Sprintf("http://127.0.0.1:8062%s", endpoint.Endpoint), nil)
 		req.Header.Set("Content-Type", "application/json")
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
@@ -139,7 +139,7 @@ func TestDefaultFactory_ko(t *testing.T) {
 
 	serviceCfg := config.ServiceConfig{
 		Debug: true,
-		Port:  8083,
+		Port:  8063,
 		Endpoints: []*config.EndpointConfig{
 			&config.EndpointConfig{
 				Endpoint: "/ignored",
@@ -173,7 +173,7 @@ func TestDefaultFactory_ko(t *testing.T) {
 		[]string{"GET", "empty"},
 		[]string{"PUT", "also-ignored"},
 	} {
-		req, _ := http.NewRequest(subject[0], fmt.Sprintf("http://127.0.0.1:8083/%s", subject[1]), nil)
+		req, _ := http.NewRequest(subject[0], fmt.Sprintf("http://127.0.0.1:8063/%s", subject[1]), nil)
 		req.Header.Set("Content-Type", "application/json")
 		checkResponseIs404(t, req)
 	}
@@ -197,7 +197,7 @@ func TestDefaultFactory_proxyFactoryCrash(t *testing.T) {
 
 	serviceCfg := config.ServiceConfig{
 		Debug: true,
-		Port:  8084,
+		Port:  80864,
 		Endpoints: []*config.EndpointConfig{
 			&config.EndpointConfig{
 				Endpoint: "/ignored",
@@ -215,7 +215,7 @@ func TestDefaultFactory_proxyFactoryCrash(t *testing.T) {
 	time.Sleep(5 * time.Millisecond)
 
 	for _, subject := range [][]string{[]string{"GET", "ignored"}, []string{"PUT", "also-ignored"}} {
-		req, _ := http.NewRequest(subject[0], fmt.Sprintf("http://127.0.0.1:8084/%s", subject[1]), nil)
+		req, _ := http.NewRequest(subject[0], fmt.Sprintf("http://127.0.0.1:80864/%s", subject[1]), nil)
 		req.Header.Set("Content-Type", "application/json")
 		checkResponseIs404(t, req)
 	}
