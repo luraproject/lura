@@ -13,10 +13,13 @@ import (
 )
 
 const (
+	// BracketsRouterPatternBuilder uses brackets as route params delimiter
 	BracketsRouterPatternBuilder = iota
+	// ColonRouterPatternBuilder use a colon as route param delimiter
 	ColonRouterPatternBuilder
 )
 
+// RoutingPattern to use during route conversion. By default, use the colon router pattern
 var RoutingPattern = ColonRouterPatternBuilder
 
 // ServiceConfig defines the krakend service
@@ -35,7 +38,8 @@ type ServiceConfig struct {
 	Version int `mapstructure:"version"`
 
 	// run krakend in debug mode
-	Debug bool
+	Debug     bool
+	uriParser URIParser
 }
 
 // EndpointConfig defines the configuration of a single endpoint to be exposed
@@ -95,27 +99,26 @@ type Backend struct {
 }
 
 var (
-	simpleURLKeysPattern   = regexp.MustCompile(`\{([a-zA-Z\-_0-9]+)\}`)
-	endpointURLKeysPattern = regexp.MustCompile(`/\{([a-zA-Z\-_0-9]+)\}`)
-	hostPattern            = regexp.MustCompile(`(https?://)?([a-zA-Z0-9\._\-]+)(:[0-9]{2,6})?/?`)
-	debugPattern           = "^[^/]|/__debug(/.*)?$"
-	errInvalidHost         = errors.New("invalid host")
-	defaultPort            = 8080
+	simpleURLKeysPattern = regexp.MustCompile(`\{([a-zA-Z\-_0-9]+)\}`)
+	debugPattern         = "^[^/]|/__debug(/.*)?$"
+	errInvalidHost       = errors.New("invalid host")
+	defaultPort          = 8080
 )
 
 // Init initializes the configuration struct and its defined endpoints and backends.
 // Init also sanitizes the values, applies the default ones whenever necessary and
 // normalizes all the things.
 func (s *ServiceConfig) Init() error {
+	s.uriParser = NewURIParser()
 	if s.Version != 1 {
 		return fmt.Errorf("Unsupported version: %d\n", s.Version)
 	}
 	if s.Port == 0 {
 		s.Port = defaultPort
 	}
-	s.Host = s.cleanHosts(s.Host)
+	s.Host = s.uriParser.CleanHosts(s.Host)
 	for i, e := range s.Endpoints {
-		e.Endpoint = s.cleanPath(e.Endpoint)
+		e.Endpoint = s.uriParser.CleanPath(e.Endpoint)
 
 		if err := e.validate(); err != nil {
 			return err
@@ -127,7 +130,7 @@ func (s *ServiceConfig) Init() error {
 			inputSet[inputParams[ip]] = nil
 		}
 
-		e.Endpoint = s.getEndpointPath(e.Endpoint, inputParams)
+		e.Endpoint = s.uriParser.GetEndpointPath(e.Endpoint, inputParams)
 
 		s.initEndpointDefaults(i)
 
@@ -179,7 +182,7 @@ func (s *ServiceConfig) initBackendDefaults(e, b int) {
 	if len(backend.Host) == 0 {
 		backend.Host = s.Host
 	} else if !backend.HostSanitizationDisabled {
-		backend.Host = s.cleanHosts(backend.Host)
+		backend.Host = s.uriParser.CleanHosts(backend.Host)
 	}
 	if backend.Method == "" {
 		backend.Method = endpoint.Method
@@ -197,7 +200,7 @@ func (s *ServiceConfig) initBackendDefaults(e, b int) {
 func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]interface{}) error {
 	backend := s.Endpoints[e].Backend[b]
 
-	backend.URLPattern = s.cleanPath(backend.URLPattern)
+	backend.URLPattern = s.uriParser.CleanPath(backend.URLPattern)
 
 	outputParams := s.extractPlaceHoldersFromURLTemplate(backend.URLPattern, simpleURLKeysPattern)
 
@@ -221,40 +224,6 @@ func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]
 	}
 	backend.URLPattern = tmp
 	return nil
-}
-
-func (s *ServiceConfig) cleanHosts(hosts []string) []string {
-	cleaned := []string{}
-	for i := range hosts {
-		cleaned = append(cleaned, s.cleanHost(hosts[i]))
-	}
-	return cleaned
-}
-
-func (s *ServiceConfig) cleanHost(host string) string {
-	matches := hostPattern.FindAllStringSubmatch(host, -1)
-	if len(matches) != 1 {
-		panic(errInvalidHost)
-	}
-	keys := matches[0][1:]
-	if keys[0] == "" {
-		keys[0] = "http://"
-	}
-	return strings.Join(keys, "")
-}
-
-func (s *ServiceConfig) cleanPath(path string) string {
-	return "/" + strings.TrimPrefix(path, "/")
-}
-
-func (s *ServiceConfig) getEndpointPath(path string, params []string) string {
-	result := path
-	if RoutingPattern == ColonRouterPatternBuilder {
-		for p := range params {
-			result = strings.Replace(result, "/{"+params[p]+"}", "/:"+params[p], -1)
-		}
-	}
-	return result
 }
 
 func (e *EndpointConfig) validate() error {

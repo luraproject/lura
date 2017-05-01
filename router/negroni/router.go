@@ -31,7 +31,10 @@ func DefaultConfigWithRouter(pf proxy.Factory, logger logging.Logger, muxEngine 
 	return cfg
 }
 
-var NewGorillaRouter = gorilla.NewRouter
+// NewGorillaRouter is a wrapper over the default gorilla router builder
+func NewGorillaRouter() *gorilla.Router {
+	return gorilla.NewRouter()
+}
 
 func newNegroniEngine(muxEngine *gorilla.Router, middlewares ...negroni.Handler) negroniEngine {
 	negroniRouter := negroni.Classic()
