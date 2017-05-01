@@ -91,7 +91,7 @@ func TestNewRoundRobinLoadBalancedMiddleware_DNSSRV(t *testing.T) {
 
 	dnssrv.DefaultLookup = func(service, proto, name string) (cname string, addrs []*net.SRV, err error) {
 		return "cname", []*net.SRV{
-			&net.SRV{
+			{
 				Port:   8080,
 				Target: "127.0.0.1",
 			},
