@@ -18,11 +18,11 @@ func BenchmarkEntityFormatter_whitelistingFilter(b *testing.B) {
 			sampleData[fmt.Sprintf("%d", i)] = i
 		}
 		for _, testCase := range [][]string{
-			[]string{},
-			[]string{"supu"},
-			[]string{"supu", "tupu"},
-			[]string{"supu", "tupu", "foo"},
-			[]string{"supu", "tupu", "foo", "unknown"},
+			{},
+			{"supu"},
+			{"supu", "tupu"},
+			{"supu", "tupu", "foo"},
+			{"supu", "tupu", "foo", "unknown"},
 		} {
 			sample := Response{
 				Data:       sampleData,
@@ -54,11 +54,11 @@ func BenchmarkEntityFormatter_blacklistingFilter(b *testing.B) {
 			sampleData[fmt.Sprintf("%d", i)] = i
 		}
 		for _, testCase := range [][]string{
-			[]string{},
-			[]string{"supu"},
-			[]string{"supu", "tupu"},
-			[]string{"supu", "tupu", "foo"},
-			[]string{"supu", "tupu", "foo", "unknown"},
+			{},
+			{"supu"},
+			{"supu", "tupu"},
+			{"supu", "tupu", "foo"},
+			{"supu", "tupu", "foo", "unknown"},
 		} {
 			sample := Response{
 				Data:       sampleData,
@@ -105,12 +105,12 @@ func BenchmarkEntityFormatter_mapping(b *testing.B) {
 			sampleData[fmt.Sprintf("%d", i)] = i
 		}
 		for _, testCase := range []map[string]string{
-			map[string]string{},
-			map[string]string{"1": "supu"},
-			map[string]string{"1": "supu", "2": "tupu"},
-			map[string]string{"1": "supu", "2": "tupu", "3": "foo"},
-			map[string]string{"1": "supu", "2": "tupu", "3": "foo", "4": "bar"},
-			map[string]string{"1": "supu", "2": "tupu", "3": "foo", "4": "bar", "5": "a"},
+			{},
+			{"1": "supu"},
+			{"1": "supu", "2": "tupu"},
+			{"1": "supu", "2": "tupu", "3": "foo"},
+			{"1": "supu", "2": "tupu", "3": "foo", "4": "bar"},
+			{"1": "supu", "2": "tupu", "3": "foo", "4": "bar", "5": "a"},
 		} {
 			sample := Response{
 				Data:       sampleData,

@@ -11,11 +11,11 @@ import (
 
 func TestSubscriber_New(t *testing.T) {
 	srvSet := []*net.SRV{
-		&net.SRV{
+		{
 			Port:   80,
 			Target: "127.0.0.1",
 		},
-		&net.SRV{
+		{
 			Port:   81,
 			Target: "127.0.0.1",
 		},

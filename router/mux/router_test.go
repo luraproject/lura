@@ -34,44 +34,44 @@ func TestDefaultFactory_ok(t *testing.T) {
 	serviceCfg := config.ServiceConfig{
 		Port: 8062,
 		Endpoints: []*config.EndpointConfig{
-			&config.EndpointConfig{
+			{
 				Endpoint: "/get",
 				Method:   "GET",
 				Timeout:  10,
 				Backend: []*config.Backend{
-					&config.Backend{},
+					{},
 				},
 			},
-			&config.EndpointConfig{
+			{
 				Endpoint: "/post",
 				Method:   "POST",
 				Timeout:  10,
 				Backend: []*config.Backend{
-					&config.Backend{},
+					{},
 				},
 			},
-			&config.EndpointConfig{
+			{
 				Endpoint: "/put",
 				Method:   "PUT",
 				Timeout:  10,
 				Backend: []*config.Backend{
-					&config.Backend{},
+					{},
 				},
 			},
-			&config.EndpointConfig{
+			{
 				Endpoint: "/patch",
 				Method:   "PATCH",
 				Timeout:  10,
 				Backend: []*config.Backend{
-					&config.Backend{},
+					{},
 				},
 			},
-			&config.EndpointConfig{
+			{
 				Endpoint: "/delete",
 				Method:   "DELETE",
 				Timeout:  10,
 				Backend: []*config.Backend{
-					&config.Backend{},
+					{},
 				},
 			},
 		},
@@ -141,24 +141,24 @@ func TestDefaultFactory_ko(t *testing.T) {
 		Debug: true,
 		Port:  8063,
 		Endpoints: []*config.EndpointConfig{
-			&config.EndpointConfig{
+			{
 				Endpoint: "/ignored",
 				Method:   "GETTT",
 				Backend: []*config.Backend{
-					&config.Backend{},
+					{},
 				},
 			},
-			&config.EndpointConfig{
+			{
 				Endpoint: "/empty",
 				Method:   "GETTT",
 				Backend:  []*config.Backend{},
 			},
-			&config.EndpointConfig{
+			{
 				Endpoint: "/also-ignored",
 				Method:   "PUT",
 				Backend: []*config.Backend{
-					&config.Backend{},
-					&config.Backend{},
+					{},
+					{},
 				},
 			},
 		},
@@ -169,9 +169,9 @@ func TestDefaultFactory_ko(t *testing.T) {
 	time.Sleep(5 * time.Millisecond)
 
 	for _, subject := range [][]string{
-		[]string{"GET", "ignored"},
-		[]string{"GET", "empty"},
-		[]string{"PUT", "also-ignored"},
+		{"GET", "ignored"},
+		{"GET", "empty"},
+		{"PUT", "also-ignored"},
 	} {
 		req, _ := http.NewRequest(subject[0], fmt.Sprintf("http://127.0.0.1:8063/%s", subject[1]), nil)
 		req.Header.Set("Content-Type", "application/json")
@@ -199,12 +199,12 @@ func TestDefaultFactory_proxyFactoryCrash(t *testing.T) {
 		Debug: true,
 		Port:  8064,
 		Endpoints: []*config.EndpointConfig{
-			&config.EndpointConfig{
+			{
 				Endpoint: "/ignored",
 				Method:   "GET",
 				Timeout:  10,
 				Backend: []*config.Backend{
-					&config.Backend{},
+					{},
 				},
 			},
 		},
@@ -214,7 +214,7 @@ func TestDefaultFactory_proxyFactoryCrash(t *testing.T) {
 
 	time.Sleep(5 * time.Millisecond)
 
-	for _, subject := range [][]string{[]string{"GET", "ignored"}, []string{"PUT", "also-ignored"}} {
+	for _, subject := range [][]string{{"GET", "ignored"}, {"PUT", "also-ignored"}} {
 		req, _ := http.NewRequest(subject[0], fmt.Sprintf("http://127.0.0.1:8064/%s", subject[1]), nil)
 		req.Header.Set("Content-Type", "application/json")
 		checkResponseIs404(t, req)

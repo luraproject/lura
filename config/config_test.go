@@ -23,7 +23,7 @@ func TestConfig_rejectInvalidEndpoints(t *testing.T) {
 	}
 
 	for _, e := range samples {
-		subject := ServiceConfig{Version: 1, Endpoints: []*EndpointConfig{&EndpointConfig{Endpoint: e}}}
+		subject := ServiceConfig{Version: 1, Endpoints: []*EndpointConfig{{Endpoint: e}}}
 		err := subject.Init()
 		if err == nil || strings.Index(err.Error(), "ERROR: the endpoint url path [") != 0 {
 			t.Error("Error expected processing", e)
@@ -185,7 +185,7 @@ func TestConfig_initKONoBackends(t *testing.T) {
 		Version: 1,
 		Host:    []string{"http://127.0.0.1:8080"},
 		Endpoints: []*EndpointConfig{
-			&EndpointConfig{
+			{
 				Endpoint: "/supu",
 				Method:   "post",
 				Backend:  []*Backend{},
@@ -209,7 +209,7 @@ func TestConfig_initKOInvalidHost(t *testing.T) {
 		Version: 1,
 		Host:    []string{"http://127.0.0.1:8080http://127.0.0.1:8080"},
 		Endpoints: []*EndpointConfig{
-			&EndpointConfig{
+			{
 				Endpoint: "/supu",
 				Method:   "post",
 				Backend:  []*Backend{},
@@ -228,7 +228,7 @@ func TestConfig_initKOInvalidDebugPattern(t *testing.T) {
 		Version: 1,
 		Host:    []string{"http://127.0.0.1:8080"},
 		Endpoints: []*EndpointConfig{
-			&EndpointConfig{
+			{
 				Endpoint: "/__debug/supu",
 				Method:   "get",
 				Backend:  []*Backend{},

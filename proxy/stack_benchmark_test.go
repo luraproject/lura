@@ -62,11 +62,11 @@ func BenchmarkProxyStack_multi(b *testing.B) {
 	}
 
 	for _, testCase := range [][]*config.Backend{
-		[]*config.Backend{backend},
-		[]*config.Backend{backend, backend},
-		[]*config.Backend{backend, backend, backend},
-		[]*config.Backend{backend, backend, backend, backend},
-		[]*config.Backend{backend, backend, backend, backend, backend},
+		{backend},
+		{backend, backend},
+		{backend, backend, backend},
+		{backend, backend, backend, backend},
+		{backend, backend, backend, backend, backend},
 	} {
 		b.Run(fmt.Sprintf("with %d backends", len(testCase)), func(b *testing.B) {
 
