@@ -197,7 +197,7 @@ func TestDefaultFactory_proxyFactoryCrash(t *testing.T) {
 
 	serviceCfg := config.ServiceConfig{
 		Debug: true,
-		Port:  80864,
+		Port:  8064,
 		Endpoints: []*config.EndpointConfig{
 			&config.EndpointConfig{
 				Endpoint: "/ignored",
@@ -215,7 +215,7 @@ func TestDefaultFactory_proxyFactoryCrash(t *testing.T) {
 	time.Sleep(5 * time.Millisecond)
 
 	for _, subject := range [][]string{[]string{"GET", "ignored"}, []string{"PUT", "also-ignored"}} {
-		req, _ := http.NewRequest(subject[0], fmt.Sprintf("http://127.0.0.1:80864/%s", subject[1]), nil)
+		req, _ := http.NewRequest(subject[0], fmt.Sprintf("http://127.0.0.1:8064/%s", subject[1]), nil)
 		req.Header.Set("Content-Type", "application/json")
 		checkResponseIs404(t, req)
 	}
