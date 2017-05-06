@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -206,6 +207,89 @@ func TestNewHTTPProxy_decodingError(t *testing.T) {
 	}
 	if response != nil {
 		t.Errorf("We weren't expecting a response but we got one: %v\n", response)
+	}
+	select {
+	case <-mustEnd:
+		t.Errorf("Error: expected response")
+	default:
+	}
+}
+
+func TestNewHTTPProxy_badMethod(t *testing.T) {
+	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("The handler shouldn't be called")
+		return
+	}))
+	defer backendServer.Close()
+
+	rpURL, _ := url.Parse(backendServer.URL)
+	backend := config.Backend{
+		Decoder: func(_ io.Reader, _ *map[string]interface{}) error {
+			t.Error("The decoder shouldn't be called")
+			return nil
+		},
+	}
+	request := Request{
+		Method: "\n",
+		Path:   "/",
+		URL:    rpURL,
+		Body:   newDummyReadCloser(""),
+	}
+	mustEnd := time.After(time.Duration(150) * time.Millisecond)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Millisecond)
+	defer cancel()
+	_, err := httpProxy(&backend)(ctx, &request)
+	if err == nil {
+		t.Error("The proxy didn't return the expected error")
+		return
+	}
+	if err.Error() != "net/http: invalid method \"\\n\"" {
+		t.Errorf("The proxy returned an unexpected error: %s\n", err.Error())
+		return
+	}
+	select {
+	case <-mustEnd:
+		t.Errorf("Error: expected response")
+	default:
+	}
+}
+
+func TestNewHTTPProxy_requestKo(t *testing.T) {
+	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("The handler shouldn't be called")
+		return
+	}))
+	defer backendServer.Close()
+
+	rpURL, _ := url.Parse(backendServer.URL)
+	backend := config.Backend{
+		Decoder: func(_ io.Reader, _ *map[string]interface{}) error {
+			t.Error("The decoder shouldn't be called")
+			return nil
+		},
+	}
+	request := Request{
+		Method: "GET",
+		Path:   "/",
+		URL:    rpURL,
+		Body:   newDummyReadCloser(""),
+	}
+	mustEnd := time.After(time.Duration(150) * time.Millisecond)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Millisecond)
+	defer cancel()
+
+	client := http.DefaultClient
+	client.Timeout = time.Nanosecond
+	_, err := CustomHTTPProxyFactory(func(_ context.Context) *http.Client { return client })(&backend)(ctx, &request)
+	if err == nil {
+		t.Error("The proxy didn't return the expected error")
+		return
+	}
+	if !strings.Contains(err.Error(), "net/http: request canceled while waiting for connection (Client.Timeout exceeded while awaiting headers)") {
+		t.Errorf("The proxy returned an unexpected error: %s\n", err.Error())
+		return
 	}
 	select {
 	case <-mustEnd:

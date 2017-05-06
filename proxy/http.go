@@ -19,14 +19,17 @@ type HTTPClientFactory func(ctx context.Context) *http.Client
 // NewHTTPClient just creates a http default client
 func NewHTTPClient(_ context.Context) *http.Client { return http.DefaultClient }
 
-func httpProxy(backend *config.Backend) Proxy {
-	return NewHTTPProxy(backend, NewHTTPClient, backend.Decoder)
-}
+var httpProxy = CustomHTTPProxyFactory(NewHTTPClient)
 
 // HTTPProxyFactory returns a BackendFactory. The Proxies it creates will use the received net/http.Client
 func HTTPProxyFactory(client *http.Client) BackendFactory {
+	return CustomHTTPProxyFactory(func(_ context.Context) *http.Client { return client })
+}
+
+// CustomHTTPProxyFactory returns a BackendFactory. The Proxies it creates will use the received HTTPClientFactory
+func CustomHTTPProxyFactory(cf HTTPClientFactory) BackendFactory {
 	return func(backend *config.Backend) Proxy {
-		return NewHTTPProxy(backend, func(_ context.Context) *http.Client { return client }, backend.Decoder)
+		return NewHTTPProxy(backend, cf, backend.Decoder)
 	}
 }
 
