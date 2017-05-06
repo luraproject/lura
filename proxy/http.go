@@ -33,24 +33,23 @@ func CustomHTTPProxyFactory(cf HTTPClientFactory) BackendFactory {
 	}
 }
 
-// NewRequestBuilderMiddleware creates a proxy middleware that parses the request params received
-// from the outter layer and generates the path to the backend endpoints
-func NewRequestBuilderMiddleware(remote *config.Backend) Middleware {
-	return func(next ...Proxy) Proxy {
-		if len(next) > 1 {
-			panic(ErrTooManyProxies)
-		}
-		return func(ctx context.Context, request *Request) (*Response, error) {
-			r := request.Clone()
-			r.GeneratePath(remote.URLPattern)
-			r.Method = remote.Method
-			return next[0](ctx, &r)
-		}
+// HTTPRequestExecutor defines the interface of the request executor for the HTTP transport protocol
+type HTTPRequestExecutor func(ctx context.Context, req *http.Request) (*http.Response, error)
+
+// DefaultHTTPRequestExecutor creates a HTTPRequestExecutor with the received HTTPClientFactory
+func DefaultHTTPRequestExecutor(clientFactory HTTPClientFactory) HTTPRequestExecutor {
+	return func(ctx context.Context, req *http.Request) (*http.Response, error) {
+		return clientFactory(ctx).Do(req.WithContext(ctx))
 	}
 }
 
 // NewHTTPProxy creates a http proxy with the injected configuration, HTTPClientFactory and Decoder
 func NewHTTPProxy(remote *config.Backend, clientFactory HTTPClientFactory, decode encoding.Decoder) Proxy {
+	return NewHTTPProxyWithHTTPExecutor(remote, DefaultHTTPRequestExecutor(clientFactory), decode)
+}
+
+// NewHTTPProxyWithHTTPExecutor creates a http proxy with the injected configuration, HTTPRequestExecutor and Decoder
+func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, requestExecutor HTTPRequestExecutor, decode encoding.Decoder) Proxy {
 	formatter := NewEntityFormatter(remote.Target, remote.Whitelist, remote.Blacklist, remote.Group, remote.Mapping)
 
 	return func(ctx context.Context, request *Request) (*Response, error) {
@@ -60,7 +59,7 @@ func NewHTTPProxy(remote *config.Backend, clientFactory HTTPClientFactory, decod
 		}
 		requestToBakend.Header = request.Headers
 
-		resp, err := clientFactory(ctx).Do(requestToBakend.WithContext(ctx))
+		resp, err := requestExecutor(ctx, requestToBakend)
 		requestToBakend.Body.Close()
 		select {
 		case <-ctx.Done():
@@ -83,5 +82,21 @@ func NewHTTPProxy(remote *config.Backend, clientFactory HTTPClientFactory, decod
 
 		r := formatter.Format(Response{data, true})
 		return &r, nil
+	}
+}
+
+// NewRequestBuilderMiddleware creates a proxy middleware that parses the request params received
+// from the outter layer and generates the path to the backend endpoints
+func NewRequestBuilderMiddleware(remote *config.Backend) Middleware {
+	return func(next ...Proxy) Proxy {
+		if len(next) > 1 {
+			panic(ErrTooManyProxies)
+		}
+		return func(ctx context.Context, request *Request) (*Response, error) {
+			r := request.Clone()
+			r.GeneratePath(remote.URLPattern)
+			r.Method = remote.Method
+			return next[0](ctx, &r)
+		}
 	}
 }

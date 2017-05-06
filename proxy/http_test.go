@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strings"
 	"testing"
 	"time"
 
@@ -280,14 +279,15 @@ func TestNewHTTPProxy_requestKo(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Millisecond)
 	defer cancel()
 
-	client := http.DefaultClient
-	client.Timeout = time.Nanosecond
-	_, err := CustomHTTPProxyFactory(func(_ context.Context) *http.Client { return client })(&backend)(ctx, &request)
+	expectedError := fmt.Errorf("MAYDAY, MAYDAY")
+	_, err := NewHTTPProxyWithHTTPExecutor(&backend, func(_ context.Context, _ *http.Request) (*http.Response, error) {
+		return nil, expectedError
+	}, backend.Decoder)(ctx, &request)
 	if err == nil {
 		t.Error("The proxy didn't return the expected error")
 		return
 	}
-	if !strings.Contains(err.Error(), "net/http: request canceled while waiting for connection (Client.Timeout exceeded while awaiting headers)") {
+	if err != expectedError {
 		t.Errorf("The proxy returned an unexpected error: %s\n", err.Error())
 		return
 	}
