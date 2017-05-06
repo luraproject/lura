@@ -38,7 +38,7 @@ func TestNewHTTPProxy_ok(t *testing.T) {
 	}
 	mustEnd := time.After(time.Duration(150) * time.Millisecond)
 
-	result, err := httpProxy(&backend)(context.Background(), &request)
+	result, err := HTTPProxyFactory(http.DefaultClient)(&backend)(context.Background(), &request)
 	if err != nil {
 		t.Errorf("The proxy returned an unexpected error: %s\n", err.Error())
 		return
@@ -206,6 +206,90 @@ func TestNewHTTPProxy_decodingError(t *testing.T) {
 	}
 	if response != nil {
 		t.Errorf("We weren't expecting a response but we got one: %v\n", response)
+	}
+	select {
+	case <-mustEnd:
+		t.Errorf("Error: expected response")
+	default:
+	}
+}
+
+func TestNewHTTPProxy_badMethod(t *testing.T) {
+	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("The handler shouldn't be called")
+		return
+	}))
+	defer backendServer.Close()
+
+	rpURL, _ := url.Parse(backendServer.URL)
+	backend := config.Backend{
+		Decoder: func(_ io.Reader, _ *map[string]interface{}) error {
+			t.Error("The decoder shouldn't be called")
+			return nil
+		},
+	}
+	request := Request{
+		Method: "\n",
+		Path:   "/",
+		URL:    rpURL,
+		Body:   newDummyReadCloser(""),
+	}
+	mustEnd := time.After(time.Duration(150) * time.Millisecond)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Millisecond)
+	defer cancel()
+	_, err := httpProxy(&backend)(ctx, &request)
+	if err == nil {
+		t.Error("The proxy didn't return the expected error")
+		return
+	}
+	if err.Error() != "net/http: invalid method \"\\n\"" {
+		t.Errorf("The proxy returned an unexpected error: %s\n", err.Error())
+		return
+	}
+	select {
+	case <-mustEnd:
+		t.Errorf("Error: expected response")
+	default:
+	}
+}
+
+func TestNewHTTPProxy_requestKo(t *testing.T) {
+	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("The handler shouldn't be called")
+		return
+	}))
+	defer backendServer.Close()
+
+	rpURL, _ := url.Parse(backendServer.URL)
+	backend := config.Backend{
+		Decoder: func(_ io.Reader, _ *map[string]interface{}) error {
+			t.Error("The decoder shouldn't be called")
+			return nil
+		},
+	}
+	request := Request{
+		Method: "GET",
+		Path:   "/",
+		URL:    rpURL,
+		Body:   newDummyReadCloser(""),
+	}
+	mustEnd := time.After(time.Duration(150) * time.Millisecond)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Millisecond)
+	defer cancel()
+
+	expectedError := fmt.Errorf("MAYDAY, MAYDAY")
+	_, err := NewHTTPProxyWithHTTPExecutor(&backend, func(_ context.Context, _ *http.Request) (*http.Response, error) {
+		return nil, expectedError
+	}, backend.Decoder)(ctx, &request)
+	if err == nil {
+		t.Error("The proxy didn't return the expected error")
+		return
+	}
+	if err != expectedError {
+		t.Errorf("The proxy returned an unexpected error: %s\n", err.Error())
+		return
 	}
 	select {
 	case <-mustEnd:
