@@ -24,14 +24,12 @@ func (p parser) Parse(configFile string) (config.ServiceConfig, error) {
 	p.viper.AutomaticEnv()
 	var cfg config.ServiceConfig
 	if err := p.viper.ReadInConfig(); err != nil {
-		return cfg, fmt.Errorf("Fatal error config file: %s \n", err)
+		return cfg, fmt.Errorf("Fatal error config file: %s \n", err.Error())
 	}
 	if err := p.viper.Unmarshal(&cfg); err != nil {
-		return cfg, fmt.Errorf("Fatal error unmarshalling config file: %s \n", err)
+		return cfg, fmt.Errorf("Fatal error unmarshalling config file: %s \n", err.Error())
 	}
-	if err := cfg.Init(); err != nil {
-		return cfg, err
-	}
+	err := cfg.Init()
 
-	return cfg, nil
+	return cfg, err
 }
