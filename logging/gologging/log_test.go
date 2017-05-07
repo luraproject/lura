@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"regexp"
 	"testing"
+
+	gologging "github.com/op/go-logging"
 )
 
 const (
@@ -34,6 +36,17 @@ func TestNewLogger(t *testing.T) {
 	}
 }
 
+func TestNewLogger_unknownLevel(t *testing.T) {
+	_, err := NewLogger("UNKNOWN", bytes.NewBuffer(make([]byte, 1024)), "pref")
+	if err == nil {
+		t.Error("The factory didn't return the expected error")
+		return
+	}
+	if err != gologging.ErrInvalidLogLevel {
+		t.Errorf("The factory didn't return the expected error. Got: %s", err.Error())
+	}
+}
+
 func logSomeStuff(level string) string {
 	buff := bytes.NewBuffer(make([]byte, 1024))
 	logger, _ := NewLogger(level, buff, "pref")
@@ -44,5 +57,5 @@ func logSomeStuff(level string) string {
 	logger.Error(errorMsg)
 	logger.Critical(criticalMsg)
 
-	return string(buff.Bytes())
+	return buff.String()
 }
