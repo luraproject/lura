@@ -130,6 +130,11 @@ func TestConfig_init(t *testing.T) {
 		Host:       []string{"https://jsonplaceholder.typicode.com"},
 		Mapping:    map[string]string{"email": "personal_email"},
 	}
+	rssBackend := Backend{
+		URLPattern: "/users/{user}",
+		Host:       []string{"https://jsonplaceholder.typicode.com"},
+		Encoding:   "rss",
+	}
 	postBackend := Backend{
 		URLPattern: "/posts/{user}",
 		Host:       []string{"https://jsonplaceholder.typicode.com"},
@@ -138,7 +143,7 @@ func TestConfig_init(t *testing.T) {
 	}
 	userEndpoint := EndpointConfig{
 		Endpoint: "/users/{user}",
-		Backend:  []*Backend{&userBackend, &postBackend},
+		Backend:  []*Backend{&userBackend, &rssBackend, &postBackend},
 	}
 
 	subject := ServiceConfig{

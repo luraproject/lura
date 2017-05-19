@@ -192,6 +192,8 @@ func (s *ServiceConfig) initBackendDefaults(e, b int) {
 	switch strings.ToLower(backend.Encoding) {
 	case encoding.XML:
 		backend.Decoder = encoding.NewXMLDecoder(backend.IsCollection)
+	case encoding.RSS:
+		backend.Decoder = encoding.NewRSSDecoder()
 	default:
 		backend.Decoder = encoding.NewJSONDecoder(backend.IsCollection)
 	}
