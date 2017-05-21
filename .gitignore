@@ -5,6 +5,7 @@
 **/krakend_negroni*
 **/krakend_httpcache*
 **/krakend_rss*
+**/krakend_jwt*
 server.rsa.crt
 server.rsa.key
 *.json

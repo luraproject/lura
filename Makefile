@@ -1,4 +1,4 @@
-.PHONY: all deps test build benchmark coveralls build_gin_example build_dns_example build_mux_example build_gorilla_example build_negroni_example build_httpcache_example build_rss_example
+.PHONY: all deps test build benchmark coveralls build_gin_example build_dns_example build_mux_example build_gorilla_example build_negroni_example build_httpcache_example build_rss_example build_jwt_example
 
 PACKAGES = $(shell go list ./... | grep -v /examples/)
 
@@ -21,7 +21,7 @@ test:
 benchmark:
 	go test -bench=. -benchtime=3s $(PACKAGES)
 
-build: build_gin_example build_dns_example build_mux_example build_gorilla_example build_negroni_example build_httpcache_example build_rss_example
+build: build_gin_example build_dns_example build_mux_example build_gorilla_example build_negroni_example build_httpcache_example build_rss_example build_jwt_example
 
 build_gin_example:
 	cd examples/gin/ && make && cd ../.. && cp examples/gin/krakend_gin_example* .
@@ -43,6 +43,9 @@ build_httpcache_example:
 
 build_rss_example:
 	cd examples/rss/ && make && cd ../.. && cp examples/rss/krakend_rss_example* .
+
+build_jwt_example:
+	cd examples/jwt/ && make && cd ../.. && cp examples/jwt/krakend_jwt_example* .
 
 coveralls: all
 	go get github.com/mattn/goveralls

@@ -101,6 +101,10 @@ Visit the [framework overview](/docs/OVERVIEW.md) for more details about the com
 2. [mux router](/examples/mux/README.md)
 3. [gorilla router](/examples/gorilla/README.md)
 4. [negroni middlewares](/examples/negroni/README.md)
+5. [dns srv service discovery](/examples/dns/README.md)
+6. [rss backends](/examples/rss/README.md)
+7. [jwt middlewares](/examples/jwt/README.md)
+8. [httpcache based proxies](/examples/httpcache/README.md)
 
 ## Configuration file
 
