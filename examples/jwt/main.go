@@ -52,13 +52,12 @@ func main() {
 
 	logger, err := gologging.NewLogger(*logLevel, os.Stdout, "[KRAKEND]")
 	if err != nil {
-		log.Fatal("ERROR:", err.Error())
+		log.Println("ERROR:", err.Error())
+		return
 	}
 
-	go func() {
-		jwtGenerator := JWTGenerator{[]byte(*jwtSecret), *jwtIssuer, *jwsTTL, *jwtPort}
-		log.Fatal(jwtGenerator.Run())
-	}()
+	// run the dummy jwt generator http service in a dedicated goroutine
+	go runJWTGeneratorHTTPService("/token", *jwtSecret, *jwtIssuer, *jwsTTL, *jwtPort)
 
 	routerFactory := krakendgin.NewFactory(krakendgin.Config{
 		Engine:         gin.Default(),
@@ -109,27 +108,22 @@ func (cf customProxyFactory) New(cfg *config.EndpointConfig) (p proxy.Proxy, err
 	return
 }
 
-type JWTGenerator struct {
-	jwtSecret []byte
-	jwtIssuer string
-	jwsTTL    time.Duration
-	jwtPort   int
-}
-
-func (j *JWTGenerator) Run() error {
+// runJWTGeneratorHTTPService sets up and runs a dummy http service with a single endpoint ready to create signed JWT
+// issued for the received resource id
+func runJWTGeneratorHTTPService(resource, jwtSecret, jwtIssuer string, jwsTTL time.Duration, jwtPort int) {
 	engine := gin.Default()
-	engine.GET("/token/:id", func(c *gin.Context) {
+	engine.GET(fmt.Sprintf("%s/:id", resource), func(c *gin.Context) {
 		token := jwt_lib.New(jwt_lib.GetSigningMethod("HS256"))
 		token.Claims = jwt_lib.MapClaims{
 			"Id":  c.Param("id"),
-			"iss": j.jwtIssuer,
-			"exp": time.Now().Add(j.jwsTTL).Unix(),
+			"iss": jwtIssuer,
+			"exp": time.Now().Add(jwsTTL).Unix(),
 		}
-		tokenString, err := token.SignedString(j.jwtSecret)
+		tokenString, err := token.SignedString([]byte(jwtSecret))
 		if err != nil {
 			c.JSON(500, gin.H{"message": "Could not generate token"})
 		}
 		c.JSON(200, gin.H{"token": tokenString})
 	})
-	return engine.Run(fmt.Sprintf(":%d", j.jwtPort))
+	log.Fatal(engine.Run(fmt.Sprintf(":%d", jwtPort)))
 }
