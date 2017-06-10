@@ -40,12 +40,8 @@ func main() {
 	}
 
 	var (
-		etcdServer = "http://10.0.0.1:2379" // don't forget schema and port!
-		// prefix     = "/services/foosvc/"    // known at compile time
-		// instance   = "1.2.3.4:8080"         // taken from runtime or platform, somehow
-		// key        = prefix + instance      // should be globally unique
-		// value      = "http://" + instance   // based on our transport
-		ctx = context.Background()
+		etcdServer  = "http://192.168.99.100:4001" // don't forget schema and port!
+		ctx, cancel = context.WithCancel(context.Background())
 	)
 
 	etcdClient, err := etcd.NewClient(ctx, []string{etcdServer}, etcd.ClientOptions{})
@@ -55,13 +51,18 @@ func main() {
 
 	routerFactory := krakendgin.NewFactory(krakendgin.Config{
 		Engine:         gin.Default(),
-		ProxyFactory:   customProxyFactory{logger, proxy.DefaultFactoryWithSubscriber(logger, etcd.SubscriberFactory(etcdClient))},
 		Middlewares:    []gin.HandlerFunc{},
 		Logger:         logger,
 		HandlerFactory: krakendgin.EndpointHandler,
+		ProxyFactory: customProxyFactory{
+			logger,
+			proxy.DefaultFactoryWithSubscriber(logger, etcd.SubscriberFactory(ctx, etcdClient)),
+		},
 	})
 
 	routerFactory.New().Run(serviceConfig)
+
+	cancel()
 }
 
 // customProxyFactory adds a logging middleware wrapping the internal factory

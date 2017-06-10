@@ -1,6 +1,7 @@
 package etcd
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -8,14 +9,28 @@ import (
 	"github.com/devopsfaith/krakend/sd"
 )
 
+var (
+	subscribers      = map[string]sd.Subscriber{}
+	subscribersMutex = &sync.Mutex{}
+)
+
 // SubscriberFactory builds a an etcd subscriber SubscriberFactory with the received etcd client
-func SubscriberFactory(c Client) sd.SubscriberFactory {
+func SubscriberFactory(ctx context.Context, c Client) sd.SubscriberFactory {
 	return func(cfg *config.Backend) sd.Subscriber {
-		s, err := NewSubscriber(c, cfg.Host[0])
+		if len(cfg.Host) == 0 {
+			return sd.FixedSubscriberFactory(cfg)
+		}
+		subscribersMutex.Lock()
+		defer subscribersMutex.Unlock()
+		if sf, ok := subscribers[cfg.Host[0]]; ok {
+			return sf
+		}
+		sf, err := NewSubscriber(ctx, c, cfg.Host[0])
 		if err != nil {
 			return sd.FixedSubscriberFactory(cfg)
 		}
-		return s
+		subscribers[cfg.Host[0]] = sf
+		return sf
 	}
 }
 
@@ -28,17 +43,18 @@ type Subscriber struct {
 	mutex  *sync.Mutex
 	client Client
 	prefix string
-	quitc  chan struct{}
+	ctx    context.Context
 }
 
 // NewSubscriber returns an etcd subscriber. It will start watching the given
 // prefix for changes, and update the subscribers.
-func NewSubscriber(c Client, prefix string) (*Subscriber, error) {
+func NewSubscriber(ctx context.Context, c Client, prefix string) (*Subscriber, error) {
 	s := &Subscriber{
 		client: c,
 		prefix: prefix,
 		cache:  &sd.FixedSubscriber{},
-		quitc:  make(chan struct{}),
+		ctx:    ctx,
+		mutex:  &sync.Mutex{},
 	}
 
 	instances, err := s.client.GetEntries(s.prefix)
@@ -75,13 +91,8 @@ func (s *Subscriber) loop() {
 			*(s.cache) = sd.FixedSubscriber(instances)
 			s.mutex.Unlock()
 
-		case <-s.quitc:
+		case <-s.ctx.Done():
 			return
 		}
 	}
-}
-
-// Stop terminates the Subscriber.
-func (s *Subscriber) Stop() {
-	close(s.quitc)
 }
