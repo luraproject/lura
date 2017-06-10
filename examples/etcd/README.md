@@ -16,6 +16,8 @@ Running it as a common executable, logs are send to the stdOut and some options 
 	  -c string
 	    	Path to the configuration filename (default "/etc/krakend/configuration.json")
 	  -d	Enable the debug
+	  -etcd string
+	    	Comma-separated list of etcd servers (with port and schema) (default "http://192.168.99.100:4001")
 	  -l string
 	    	Logging level (default "ERROR")
 	  -p int

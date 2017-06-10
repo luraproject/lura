@@ -14,7 +14,7 @@ deps:
 	go get "github.com/devopsfaith/krakend/proxy"
 	go get "github.com/devopsfaith/krakend/router/gin"
 	go get "github.com/devopsfaith/krakend/logging/gologging"
-	go get "github.com/coreos/etcd/client"
+	go get "github.com/devopsfaith/krakend/sd/etcd"
 
 build:
 	go build -a -ldflags="-X github.com/devopsfaith/krakend/core.KrakendVersion=${KRAKEND_VERSION}" -o ${BIN_NAME}
