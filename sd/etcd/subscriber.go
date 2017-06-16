@@ -40,7 +40,7 @@ func SubscriberFactory(ctx context.Context, c Client) sd.SubscriberFactory {
 // change in that keyspace is watched and will update the Subscriber's list of hosts.
 type Subscriber struct {
 	cache  *sd.FixedSubscriber
-	mutex  *sync.Mutex
+	mutex  *sync.RWMutex
 	client Client
 	prefix string
 	ctx    context.Context
@@ -54,25 +54,24 @@ func NewSubscriber(ctx context.Context, c Client, prefix string) (*Subscriber, e
 		prefix: prefix,
 		cache:  &sd.FixedSubscriber{},
 		ctx:    ctx,
-		mutex:  &sync.Mutex{},
+		mutex:  &sync.RWMutex{},
 	}
 
 	instances, err := s.client.GetEntries(s.prefix)
-	if err == nil {
-		fmt.Println("prefix", s.prefix, "instances", len(instances))
-	} else {
-		fmt.Println("prefix", s.prefix, "err", err)
+	if err != nil {
+		return nil, err
 	}
 	*(s.cache) = sd.FixedSubscriber(instances)
 
 	go s.loop()
+
 	return s, nil
 }
 
 // Hosts implements the subscriber interface
 func (s Subscriber) Hosts() ([]string, error) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	return s.cache.Hosts()
 }
 
