@@ -2,7 +2,7 @@
 
 The configuration file needs to be a `json` file. The viper parser supports other formats but they haven't been as tested as the recommended one.
 
-Please check that the structure follows the [expected criteria](http://www.krakend.io/configuration/).
+The easiest way to create or edit a configuration file is using the [KrakenDesigner](http://www.krakend.io/designer/)
 
 ## Json example
 
