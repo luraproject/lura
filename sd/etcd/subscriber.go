@@ -2,7 +2,6 @@ package etcd
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/devopsfaith/krakend/config"
@@ -10,15 +9,16 @@ import (
 )
 
 var (
-	subscribers      = map[string]sd.Subscriber{}
-	subscribersMutex = &sync.Mutex{}
+	subscribers               = map[string]sd.Subscriber{}
+	subscribersMutex          = &sync.Mutex{}
+	fallbackSubscriberFactory = sd.FixedSubscriberFactory
 )
 
 // SubscriberFactory builds a an etcd subscriber SubscriberFactory with the received etcd client
 func SubscriberFactory(ctx context.Context, c Client) sd.SubscriberFactory {
 	return func(cfg *config.Backend) sd.Subscriber {
 		if len(cfg.Host) == 0 {
-			return sd.FixedSubscriberFactory(cfg)
+			return fallbackSubscriberFactory(cfg)
 		}
 		subscribersMutex.Lock()
 		defer subscribersMutex.Unlock()
@@ -27,7 +27,7 @@ func SubscriberFactory(ctx context.Context, c Client) sd.SubscriberFactory {
 		}
 		sf, err := NewSubscriber(ctx, c, cfg.Host[0])
 		if err != nil {
-			return sd.FixedSubscriberFactory(cfg)
+			return fallbackSubscriberFactory(cfg)
 		}
 		subscribers[cfg.Host[0]] = sf
 		return sf
@@ -83,7 +83,6 @@ func (s *Subscriber) loop() {
 		case <-ch:
 			instances, err := s.client.GetEntries(s.prefix)
 			if err != nil {
-				fmt.Println("msg", "failed to retrieve entries", "err", err)
 				continue
 			}
 			s.mutex.Lock()
