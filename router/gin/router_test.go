@@ -29,7 +29,7 @@ func TestDefaultFactory_ok(t *testing.T) {
 	}()
 
 	r := DefaultFactory(noopProxyFactory(map[string]interface{}{"supu": "tupu"}), logger).NewWithContext(ctx)
-	expectedBody := "{\"supu\":\"tupu\"}\n"
+	expectedBody := "{\"supu\":\"tupu\"}"
 
 	serviceCfg := config.ServiceConfig{
 		Port: 8072,
