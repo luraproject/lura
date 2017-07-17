@@ -21,7 +21,7 @@ func TestEndpointHandler_ok(t *testing.T) {
 			Data:       map[string]interface{}{"supu": "tupu"},
 		}, nil
 	}
-	expectedBody := "{\"supu\":\"tupu\"}\n"
+	expectedBody := "{\"supu\":\"tupu\"}"
 	testEndpointHandler(t, 10, p, expectedBody, "public, max-age=21600", "application/json; charset=utf-8", http.StatusOK)
 	time.Sleep(5 * time.Millisecond)
 }
@@ -33,7 +33,7 @@ func TestEndpointHandler_incomplete(t *testing.T) {
 			Data:       map[string]interface{}{"foo": "bar"},
 		}, nil
 	}
-	expectedBody := "{\"foo\":\"bar\"}\n"
+	expectedBody := "{\"foo\":\"bar\"}"
 	testEndpointHandler(t, 10, p, expectedBody, "", "application/json; charset=utf-8", http.StatusOK)
 	time.Sleep(5 * time.Millisecond)
 }
@@ -51,12 +51,12 @@ func TestEndpointHandler_cancel(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 		return nil, nil
 	}
-	testEndpointHandler(t, 0, p, "{}\n", "", "text/plain; charset=utf-8", http.StatusInternalServerError)
+	testEndpointHandler(t, 0, p, "{}", "", "text/plain; charset=utf-8", http.StatusInternalServerError)
 	time.Sleep(5 * time.Millisecond)
 }
 
 func TestEndpointHandler_noop(t *testing.T) {
-	testEndpointHandler(t, 10, proxy.NoopProxy, "{}\n", "", "application/json; charset=utf-8", http.StatusOK)
+	testEndpointHandler(t, 10, proxy.NoopProxy, "{}", "", "application/json; charset=utf-8", http.StatusOK)
 	time.Sleep(5 * time.Millisecond)
 }
 

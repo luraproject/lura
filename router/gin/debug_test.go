@@ -48,7 +48,7 @@ func TestDebugHandler(t *testing.T) {
 		return
 	}
 
-	expectedBody := "{\"message\":\"pong\"}\n"
+	expectedBody := "{\"message\":\"pong\"}"
 
 	content := string(body)
 	if resp.Header.Get("Cache-Control") != "" {
