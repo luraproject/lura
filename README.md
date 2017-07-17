@@ -24,7 +24,7 @@ Fred Calamari is a mobile developer that needs to construct a single front page 
     4) api.users.server/shopping-cart/{id_user}
 
 The screen is very simple and _only_ needs to retrieve data from 4 different sources, wait for the round trip and then pick only a few fields of the response. Instead of thing these calls, the mobile could call a single endpoint to KrakenD:
- 
+
     1) krakend.server/frontpage/{id_user}
 
 And this is how it would look like:
@@ -34,8 +34,8 @@ And this is how it would look like:
 The difference in size in this example would be because KrakenD server would have removed unneeded attributes from the responses.
 
 ## What's in this repository?
-The source code on which the [KrakenD](http://www.krakend.io) service core is built on. It is designed to work with your own middleware and extend the functionality by using small, independent, reusable components following the Unix philosophy. 
- 
+The source code on which the [KrakenD](http://www.krakend.io) service core is built on. It is designed to work with your own middleware and extend the functionality by using small, independent, reusable components following the Unix philosophy.
+
 **This repository is only for those who want to build from source a Krakend service** or for those who will reuse any of the components in another application.
 
 If you just want to use the server, please [download the binary for your architecture](http://www.krakend.io/download).
@@ -43,7 +43,7 @@ If you just want to use the server, please [download the binary for your archite
 
 ## Library Usage
 Krakend is presented as a **go library** that you can include in your own go application to build a powerful proxy or API gateway. In order to get you started several examples of implementations are included in the `examples` folder.
- 
+
 Of course you will need [go installed](https://golang.org/doc/install) in your system to compile the code.
 There is a `Makefile` in every example that will download library dependencies and compile a binary for you to test. Just run:
 
@@ -105,11 +105,12 @@ Visit the [framework overview](/docs/OVERVIEW.md) for more details about the com
 6. [rss backends](/examples/rss/README.md)
 7. [jwt middlewares](/examples/jwt/README.md)
 8. [httpcache based proxies](/examples/httpcache/README.md)
+9. [etcd service discovery](/examples/httpcache/README.md)
 
 ## Configuration file
 
 [KrakenD config file](/docs/CONFIG.md)
- 
+
 ## Benchmarks
 
 Check out the [benchmark results](/docs/BENCHMARKS.md) of several KrakenD components
