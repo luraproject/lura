@@ -59,6 +59,8 @@ type EndpointConfig struct {
 	CacheTTL time.Duration `mapstructure:"cache_ttl"`
 	// list of query string params to be extracted from the URI
 	QueryString []string `mapstructure:"querystring_params"`
+	// Endpoint Extra vars for customized behaviour
+	ExtraVars []Var `mapstructure:"extra_vars"`
 }
 
 // Backend defines how krakend should connect to the backend service (the API resource to consume)
@@ -96,6 +98,13 @@ type Backend struct {
 	Timeout time.Duration
 	// decoder to use in order to parse the received response from the API
 	Decoder encoding.Decoder
+	// Backend Extra vars for customized behaviour
+	ExtraVars []Var `mapstructure:"extra_vars"`
+}
+
+type Var struct{
+	Key string `mapstructure:"key"`
+	Value string `mapstructure:"value"`
 }
 
 var (

@@ -4,15 +4,21 @@ package proxy
 import (
 	"context"
 	"errors"
+	"net/http"
+	"io"
 
 	"github.com/devopsfaith/krakend/config"
 )
 
 // Response is the entity returned by the proxy
 type Response struct {
-	Data       map[string]interface{}
-	IsComplete bool
+	Data         map[string]interface{}
+	IsComplete   bool
+	HttpResponse *http.Response
 }
+
+func (r Response) GetInputStream() io.ReadCloser { return r.HttpResponse.Body }
+func (r Response) GetHeaders() http.Header       { return r.HttpResponse.Header }
 
 var (
 	// ErrNoBackends is the error returned when an endpoint has no backends defined
