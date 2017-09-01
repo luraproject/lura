@@ -19,6 +19,7 @@ func TestNew_ok(t *testing.T) {
         {
             "endpoint": "/github",
             "method": "GET",
+            "extra_configuration" : {"user":"test","hits":6,"parents":["gomez","morticia"]},
             "backend": [
                 {
                     "host": [
@@ -28,7 +29,8 @@ func TestNew_ok(t *testing.T) {
                     "whitelist": [
                         "authorizations_url",
                         "code_search_url"
-                    ]
+                    ],
+                    "extra_configuration" : {"user":"test","hits":6,"parents":["gomez","morticia"]}
                 }
             ]
         },
@@ -76,11 +78,40 @@ func TestNew_ok(t *testing.T) {
 		t.FailNow()
 	}
 
-	if _, err := New().Parse(configPath); err != nil {
+	serviceConfig, err := New().Parse(configPath)
+
+	if err != nil {
 		t.Error("Unexpected error. Got", err.Error())
 	}
+
+	endpoint := serviceConfig.Endpoints[0]
+	endpointExtraConfiguration := endpoint.ExtraConfiguration
+
+	if endpointExtraConfiguration != nil {
+		testExtraConfig(endpointExtraConfiguration, t)
+	}
+
+	backend := endpoint.Backend[0]
+	backendExtraConfiguration := backend.ExtraConfiguration
+	if backendExtraConfiguration != nil {
+		testExtraConfig(backendExtraConfiguration, t)
+	}
+
 	if err := os.Remove(configPath); err != nil {
 		t.FailNow()
+	}
+}
+func testExtraConfig(extraConfig map[string]interface{}, t *testing.T) {
+	userVar := extraConfig["user"]
+	if userVar != "test" {
+		t.Error("User in extra config is not test")
+	}
+	parents := extraConfig["parents"].([]interface{})
+	if parents[0] != "gomez" {
+		t.Error("Parent 0 of user us not gomez")
+	}
+	if parents[1] != "morticia" {
+		t.Error("Parent 1 of user us not morticia")
 	}
 }
 
