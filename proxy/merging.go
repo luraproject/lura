@@ -45,7 +45,7 @@ func NewMergeDataMiddleware(endpointConfig *config.EndpointConfig) Middleware {
 			}
 			if isEmpty {
 				cancel()
-				return &Response{make(map[string]interface{}, 0), false}, err
+				return &Response{Data: make(map[string]interface{}, 0),IsComplete: false}, err
 			}
 
 			result := combineData(localCtx, totalBackends, responses)
@@ -92,5 +92,5 @@ func combineData(ctx context.Context, total int, parts []*Response) *Response {
 		}
 	}
 
-	return &Response{composedData, isComplete}
+	return &Response{Data: composedData,IsComplete: isComplete}
 }

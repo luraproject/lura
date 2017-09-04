@@ -80,7 +80,7 @@ func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, requestExecutor HTTPRe
 			return nil, err
 		}
 
-		r := formatter.Format(Response{data, true})
+		r := formatter.Format(Response{Data: data, IsComplete: true})
 		return &r, nil
 	}
 }

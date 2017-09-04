@@ -59,6 +59,8 @@ type EndpointConfig struct {
 	CacheTTL time.Duration `mapstructure:"cache_ttl"`
 	// list of query string params to be extracted from the URI
 	QueryString []string `mapstructure:"querystring_params"`
+	// Endpoint Extra configuration for customized behaviour
+	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
 }
 
 // Backend defines how krakend should connect to the backend service (the API resource to consume)
@@ -96,7 +98,24 @@ type Backend struct {
 	Timeout time.Duration
 	// decoder to use in order to parse the received response from the API
 	Decoder encoding.Decoder
+	// Backend Extra configuration for customized behaviours
+	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
 }
+
+type ExtraConfig map[string]interface{}
+
+// ConfigGetter is a function for parsing ExtraConfig into a previously know type
+type ConfigGetter func(ExtraConfig) interface{}
+
+// DefaultConfigGetter is the Default implementation for ConfigGetter, it just returns the ExtraConfig map.
+func DefaultConfigGetter(extra ExtraConfig) interface{} { return extra }
+
+const defaultNamespace = "github.com/devopsfaith/krakend/config"
+
+// ConfigGetters map than match namespaces and ConfigGetter so the components knows which type to expect returned by the
+// ConfigGetter ie: if we look for the defaultNamespace in the map, we will get the DefaultConfigGetter implementation
+// which will return a ExtraConfig when called
+var ConfigGetters = map[string]ConfigGetter{defaultNamespace: DefaultConfigGetter}
 
 var (
 	simpleURLKeysPattern = regexp.MustCompile(`\{([a-zA-Z\-_0-9]+)\}`)
