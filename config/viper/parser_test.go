@@ -19,7 +19,7 @@ func TestNew_ok(t *testing.T) {
         {
             "endpoint": "/github",
             "method": "GET",
-            "extra_configuration" : {"user":"test","hits":6,"parents":["gomez","morticia"]},
+            "extra_config" : {"user":"test","hits":6,"parents":["gomez","morticia"]},
             "backend": [
                 {
                     "host": [
@@ -30,7 +30,7 @@ func TestNew_ok(t *testing.T) {
                         "authorizations_url",
                         "code_search_url"
                     ],
-                    "extra_configuration" : {"user":"test","hits":6,"parents":["gomez","morticia"]}
+                    "extra_config" : {"user":"test","hits":6,"parents":["gomez","morticia"]}
                 }
             ]
         },
@@ -85,16 +85,20 @@ func TestNew_ok(t *testing.T) {
 	}
 
 	endpoint := serviceConfig.Endpoints[0]
-	endpointExtraConfiguration := endpoint.ExtraConfiguration
+	endpointExtraConfiguration := endpoint.ExtraConfig
 
 	if endpointExtraConfiguration != nil {
 		testExtraConfig(endpointExtraConfiguration, t)
+	} else {
+		t.Error("Extra config is not present in EndpointConfig")
 	}
 
 	backend := endpoint.Backend[0]
-	backendExtraConfiguration := backend.ExtraConfiguration
+	backendExtraConfiguration := backend.ExtraConfig
 	if backendExtraConfiguration != nil {
 		testExtraConfig(backendExtraConfiguration, t)
+	} else {
+		t.Error("Extra config is not present in BackendConfig")
 	}
 
 	if err := os.Remove(configPath); err != nil {

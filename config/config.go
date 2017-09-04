@@ -60,7 +60,7 @@ type EndpointConfig struct {
 	// list of query string params to be extracted from the URI
 	QueryString []string `mapstructure:"querystring_params"`
 	// Endpoint Extra configuration for customized behaviour
-	ExtraConfiguration ExtraConfiguration `mapstructure:"extra_configuration"`
+	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
 }
 
 // Backend defines how krakend should connect to the backend service (the API resource to consume)
@@ -99,11 +99,27 @@ type Backend struct {
 	// decoder to use in order to parse the received response from the API
 	Decoder encoding.Decoder
 	// Backend Extra configuration for customized behaviours
-	ExtraConfiguration ExtraConfiguration `mapstructure:"extra_configuration"`
+	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
 }
 
+type ExtraConfig map[string]interface{}
 
-type ExtraConfiguration map[string]interface{}
+type ConfigGetter interface {
+	getConfig() interface{}
+}
+
+type DefaultConfigGetter struct {
+	extraConfig ExtraConfig
+}
+
+func NewDefaultConfigGetter(extraConfig ExtraConfig) (config DefaultConfigGetter) {
+	config = DefaultConfigGetter{extraConfig: extraConfig}
+	return
+}
+
+func (f DefaultConfigGetter) getConfig() interface{} {
+	return f.extraConfig
+}
 
 var (
 	simpleURLKeysPattern = regexp.MustCompile(`\{([a-zA-Z\-_0-9]+)\}`)
