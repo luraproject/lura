@@ -104,22 +104,18 @@ type Backend struct {
 
 type ExtraConfig map[string]interface{}
 
-type ConfigGetter interface {
-	getConfig() interface{}
-}
+// ConfigGetter is a function for parsing ExtraConfig into a previously know type
+type ConfigGetter func(ExtraConfig) interface{}
 
-type DefaultConfigGetter struct {
-	extraConfig ExtraConfig
-}
+// DefaultConfigGetter is the Default implementation for ConfigGetter, it just returns the ExtraConfig map.
+func DefaultConfigGetter(extra ExtraConfig) interface{} { return extra }
 
-func NewDefaultConfigGetter(extraConfig ExtraConfig) (config DefaultConfigGetter) {
-	config = DefaultConfigGetter{extraConfig: extraConfig}
-	return
-}
+const defaultNamespace = "github.com/devopsfaith/krakend/config"
 
-func (f DefaultConfigGetter) getConfig() interface{} {
-	return f.extraConfig
-}
+// ConfigGetters map than match namespaces and ConfigGetter so the components knows which type to expect returned by the
+// ConfigGetter ie: if we look for the defaultNamespace in the map, we will get the DefaultConfigGetter implementation
+// which will return a ExtraConfig when called
+var ConfigGetters = map[string]ConfigGetter{defaultNamespace: DefaultConfigGetter}
 
 var (
 	simpleURLKeysPattern = regexp.MustCompile(`\{([a-zA-Z\-_0-9]+)\}`)

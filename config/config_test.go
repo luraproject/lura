@@ -248,3 +248,92 @@ func TestConfig_initKOInvalidDebugPattern(t *testing.T) {
 
 	debugPattern = dp
 }
+
+
+func TestDefaultConfigGetter(t *testing.T) {
+	getter, ok := ConfigGetters[defaultNamespace]
+	if !ok {
+		t.Error("Nothing stored at the default namespace")
+		return
+	}
+	extra := ExtraConfig{
+		"a": 1,
+		"b": true,
+		"c": []int{1, 1, 2, 3, 5, 8},
+	}
+	result := getter(extra)
+	res, ok := result.(ExtraConfig)
+	if !ok {
+		t.Error("error casting the returned value")
+		return
+	}
+	if v, ok := res["a"]; !ok || 1 != v.(int) {
+		t.Errorf("unexpected value for key `a`: %v", v)
+		return
+	}
+	if v, ok := res["b"]; !ok || !v.(bool) {
+		t.Errorf("unexpected value for key `b`: %v", v)
+		return
+	}
+	if v, ok := res["c"]; !ok || 6 != len(v.([]int)) {
+		t.Errorf("unexpected value for key `c`: %v", v)
+		return
+	}
+}
+
+func TestConfigGetter(t *testing.T) {
+	ConfigGetters = map[string]ConfigGetter{
+		"ns1": func(e ExtraConfig) interface{} {
+			return len(e)
+		},
+		"ns2": func(e ExtraConfig) interface{} {
+			v, ok := e["publishedAt"]
+			if !ok {
+				return e
+			}
+			start, ok := v.(time.Time)
+			if !ok {
+				return e
+			}
+			if start.After(time.Now()) {
+				return nil
+			}
+			return e
+		},
+	}
+	extra := ExtraConfig{
+		"a": 1,
+		"b": true,
+		"c": []int{1, 1, 2, 3, 5, 8},
+	}
+
+	tmp1 := ConfigGetters["ns1"](extra)
+	v, ok := tmp1.(int)
+	if !ok {
+		t.Error("error casting the returned value")
+		return
+	}
+	if 3 != v {
+		t.Errorf("unexpected value for getter `ns1`: %v", v)
+		return
+	}
+
+	tmp2 := ConfigGetters["ns2"](extra)
+	res, ok := tmp2.(ExtraConfig)
+	if !ok {
+		t.Error("error casting the returned value")
+		return
+	}
+	if v, ok := res["a"]; !ok || 1 != v.(int) {
+		t.Errorf("unexpected value for key `a`: %v", v)
+		return
+	}
+	if v, ok := res["b"]; !ok || !v.(bool) {
+		t.Errorf("unexpected value for key `b`: %v", v)
+		return
+	}
+	if v, ok := res["c"]; !ok || 6 != len(v.([]int)) {
+		t.Errorf("unexpected value for key `c`: %v", v)
+		return
+	}
+}
