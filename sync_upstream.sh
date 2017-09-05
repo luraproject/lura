@@ -1,19 +1,9 @@
 #!/usr/bin/env bash
-set -x
+set -e
 
-upstream_url=https://github.com/devopsfaith/krakend.git
 branch_name="sync-upstream-"$(date +"%Y%M%d")
 
-function add_remote {
-	echo "* Adding the upstream remote: $upstream_url"
-	git remote add upstream $origin_url
-}
-
 function main {
-	upstream=$(git remote | grep upstream )
-	if [[ -z $upstream ]]; then
-		add_remote
-	fi
 
 	git checkout t-master
 
