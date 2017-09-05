@@ -4,6 +4,7 @@ package proxy
 import (
 	"context"
 	"errors"
+	"io"
 
 	"github.com/devopsfaith/krakend/config"
 )
@@ -12,6 +13,34 @@ import (
 type Response struct {
 	Data       map[string]interface{}
 	IsComplete bool
+	Metadata   map[string]string
+	Io         io.Reader
+}
+
+
+// readCloserWrapper is Io.Reader which is closed when the Context is closed or canceled
+type readCloserWrapper struct {
+	ctx context.Context
+	rc  io.ReadCloser
+}
+
+
+// NewReadCloserWrapper Creates a new closeable io.Read
+func NewReadCloserWrapper(ctx context.Context, in io.ReadCloser) io.Reader {
+	wrapper := readCloserWrapper{ctx, in}
+	go wrapper.closeOnCancel()
+	return wrapper
+}
+
+
+func (w readCloserWrapper) Read(b []byte) (int, error) {
+	return w.rc.Read(b)
+}
+
+// closeOnCancel closes the io.Reader when the context is Done
+func (w readCloserWrapper) closeOnCancel() {
+	<-w.ctx.Done()
+	w.rc.Close()
 }
 
 var (

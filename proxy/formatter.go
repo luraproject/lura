@@ -104,7 +104,7 @@ func newWhitelistingFilter(whitelist []string) propertyFilter {
 				}
 			}
 		}
-		*entity = Response{accumulator, entity.IsComplete}
+		*entity = Response{Data: accumulator, IsComplete: entity.IsComplete}
 	}
 }
 
