@@ -4,23 +4,22 @@ import (
 	"github.com/devopsfaith/krakend/config"
 	"net/http"
 	"context"
-	"github.com/devopsfaith/krakend/encoding"
 )
 
 // StreamHTTPProxyFactory returns a BackendFactory. The Proxies it creates will use the received HTTPClientFactory
 func StreamHTTPProxyFactory(cf HTTPClientFactory) BackendFactory {
-	config.ConfigGetters[streamNamespace] = StreamConfigGetter
+	config.ConfigGetters[config.StreamNamespace] = config.StreamConfigGetter
 	return func(backend *config.Backend) Proxy {
-		return NewStreamHTTPProxy(backend, cf, backend.Decoder)
+		return NewStreamHTTPProxy(backend, cf)
 	}
 }
 
-// NewStreamHTTPProxy creates a http proxy with the injected configuration, HTTPClientFactory and Decoder
-func NewStreamHTTPProxy(cfg *config.Backend, clientFactory HTTPClientFactory, decode encoding.Decoder) Proxy {
+// NewStreamHTTPProxy creates a streaming http proxy with the injected configuration, HTTPClientFactory and Decoder
+func NewStreamHTTPProxy(cfg *config.Backend, clientFactory HTTPClientFactory) Proxy {
 	return NewHTTPStreamProxyWithHTTPExecutor(cfg, DefaultHTTPRequestExecutor(clientFactory))
 }
 
-// NewHTTPStreamProxyWithHTTPExecutor creates a http proxy with the injected configuration, HTTPRequestExecutor and Decoder
+// NewHTTPStreamProxyWithHTTPExecutor creates a streaming http proxy with the injected configuration, HTTPRequestExecutor and Decoder
 func NewHTTPStreamProxyWithHTTPExecutor(cfg *config.Backend, requestExecutor HTTPRequestExecutor) Proxy {
 	return func(ctx context.Context, request *Request) (*Response, error) {
 		requestToBakend, err := http.NewRequest(request.Method, request.URL.String(), request.Body)
