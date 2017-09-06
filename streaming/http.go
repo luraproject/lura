@@ -7,10 +7,19 @@ import (
 	"context"
 )
 
-// StreamHTTPProxyFactory returns a BackendFactory. The Proxies it creates will use the received HTTPClientFactory
-func StreamHTTPProxyFactory(cf proxy.HTTPClientFactory) proxy.BackendFactory {
+var streamHttpProxy = CustomStreamHTTPProxyFactory(proxy.NewHTTPClient)
+
+// CustomStreamHTTPProxyFactory returns a BackendFactory. The Proxies it creates will use the received HTTPClientFactory
+func CustomStreamHTTPProxyFactory(cf proxy.HTTPClientFactory) proxy.BackendFactory {
 	return func(backend *config.Backend) proxy.Proxy {
 		return NewStreamHTTPProxy(backend, cf)
+	}
+}
+
+// StreamHTTPProxyFactory returns a BackendFactory. The Proxies it creates will use the received HTTPClientFactory
+func StreamHTTPProxyFactory(client *http.Client) proxy.BackendFactory {
+	return func(backend *config.Backend) proxy.Proxy {
+		return NewStreamHTTPProxy(backend, func(_ context.Context) *http.Client { return client })
 	}
 }
 

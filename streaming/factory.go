@@ -7,8 +7,6 @@ import (
 	"github.com/devopsfaith/krakend/proxy"
 )
 
-var streamHttpProxy = StreamHTTPProxyFactory(proxy.NewHTTPClient)
-
 // StreamDefaultFactory returns a default streaming http proxy factory with the injected logger, if the endpoint is not
 // configured as streaming it will fallback to the DefaultFactory implementation
 func StreamDefaultFactory(logger logging.Logger) proxy.Factory {
