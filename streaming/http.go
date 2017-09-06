@@ -1,27 +1,27 @@
-package proxy
+package streaming
 
 import (
 	"github.com/devopsfaith/krakend/config"
+	"github.com/devopsfaith/krakend/proxy"
 	"net/http"
 	"context"
 )
 
 // StreamHTTPProxyFactory returns a BackendFactory. The Proxies it creates will use the received HTTPClientFactory
-func StreamHTTPProxyFactory(cf HTTPClientFactory) BackendFactory {
-	config.ConfigGetters[config.StreamNamespace] = config.StreamConfigGetter
-	return func(backend *config.Backend) Proxy {
+func StreamHTTPProxyFactory(cf proxy.HTTPClientFactory) proxy.BackendFactory {
+	return func(backend *config.Backend) proxy.Proxy {
 		return NewStreamHTTPProxy(backend, cf)
 	}
 }
 
 // NewStreamHTTPProxy creates a streaming http proxy with the injected configuration, HTTPClientFactory and Decoder
-func NewStreamHTTPProxy(cfg *config.Backend, clientFactory HTTPClientFactory) Proxy {
-	return NewHTTPStreamProxyWithHTTPExecutor(cfg, DefaultHTTPRequestExecutor(clientFactory))
+func NewStreamHTTPProxy(cfg *config.Backend, clientFactory proxy.HTTPClientFactory) proxy.Proxy {
+	return NewHTTPStreamProxyWithHTTPExecutor(cfg, proxy.DefaultHTTPRequestExecutor(clientFactory))
 }
 
 // NewHTTPStreamProxyWithHTTPExecutor creates a streaming http proxy with the injected configuration, HTTPRequestExecutor and Decoder
-func NewHTTPStreamProxyWithHTTPExecutor(cfg *config.Backend, requestExecutor HTTPRequestExecutor) Proxy {
-	return func(ctx context.Context, request *Request) (*Response, error) {
+func NewHTTPStreamProxyWithHTTPExecutor(cfg *config.Backend, requestExecutor proxy.HTTPRequestExecutor) proxy.Proxy {
+	return func(ctx context.Context, request *proxy.Request) (*proxy.Response, error) {
 		requestToBakend, err := http.NewRequest(request.Method, request.URL.String(), request.Body)
 		if err != nil {
 			return nil, err
@@ -39,14 +39,14 @@ func NewHTTPStreamProxyWithHTTPExecutor(cfg *config.Backend, requestExecutor HTT
 			return nil, err
 		}
 		if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-			return nil, ErrInvalidStatusCode
+			return nil, proxy.ErrInvalidStatusCode
 		}
 
 		if err != nil {
 			return nil, err
 		}
 
-		w := NewReadCloserWrapper(ctx, resp.Body)
+		w := proxy.NewReadCloserWrapper(ctx, resp.Body)
 		metadata := make(map[string]string)
 
 		headers := resp.Header
@@ -54,7 +54,7 @@ func NewHTTPStreamProxyWithHTTPExecutor(cfg *config.Backend, requestExecutor HTT
 			metadata[k] = headers.Get(k)
 		}
 
-		r := Response{Io: w, IsComplete: true, Metadata: metadata}
+		r := proxy.Response{Io: w, IsComplete: true, Metadata: metadata}
 		return &r, nil
 	}
 }

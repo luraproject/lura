@@ -9,22 +9,24 @@ import (
 	"github.com/devopsfaith/krakend/proxy"
 	"context"
 	"github.com/devopsfaith/krakend/core"
+	"github.com/devopsfaith/krakend/streaming"
 	"io"
+	kgin "github.com/devopsfaith/krakend/router/gin"
 )
 
 // StreamEndpointHandler implements the HandleFactory interface, if the endpoint is configured as stream
 // it will try to use streaming behaviour otherwise it will fallback to EndpointHandler
-func StreamEndpointHandler(configuration *config.EndpointConfig, proxy proxy.Proxy) gin.HandlerFunc {
+func StreamEndpointHandler(configuration *config.EndpointConfig, pr proxy.Proxy) gin.HandlerFunc {
 	endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
-	streamConfigGetter := config.ConfigGetters[config.StreamNamespace]
-	streamExtraConfig := streamConfigGetter(configuration.ExtraConfig).(config.StreamExtraConfig)
+	streamConfigGetter := config.ConfigGetters[streaming.StreamNamespace]
+	streamExtraConfig := streamConfigGetter(configuration.ExtraConfig).(streaming.StreamExtraConfig)
 	if streamExtraConfig.Forward {
 		return func(c *gin.Context) {
 			requestCtx, cancel := context.WithTimeout(c, endpointTimeout)
 
 			c.Header(core.KrakendHeaderName, core.KrakendHeaderValue)
 
-			response, err := proxy(requestCtx, NewRequest(c, configuration.QueryString))
+			response, err := pr(requestCtx, kgin.NewRequest(c, configuration.QueryString))
 			if err != nil {
 				c.AbortWithError(http.StatusInternalServerError, err)
 				cancel()
@@ -33,7 +35,7 @@ func StreamEndpointHandler(configuration *config.EndpointConfig, proxy proxy.Pro
 
 			select {
 			case <-requestCtx.Done():
-				c.AbortWithError(http.StatusInternalServerError, ErrInternalError)
+				c.AbortWithError(http.StatusInternalServerError, kgin.ErrInternalError)
 				cancel()
 			default:
 			}
@@ -50,6 +52,6 @@ func StreamEndpointHandler(configuration *config.EndpointConfig, proxy proxy.Pro
 			cancel()
 		}
 	} else {
-		return EndpointHandler(configuration, proxy)
+		return kgin.EndpointHandler(configuration, pr)
 	}
 }
