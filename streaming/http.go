@@ -1,10 +1,10 @@
 package streaming
 
 import (
+	"context"
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/proxy"
 	"net/http"
-	"context"
 )
 
 var streamHttpProxy = CustomStreamHTTPProxyFactory(proxy.NewHTTPClient)

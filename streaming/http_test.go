@@ -26,9 +26,7 @@ func TestNewHTTPProxy_ok(t *testing.T) {
 	defer backendServer.Close()
 
 	rpURL, _ := url.Parse(backendServer.URL)
-	backend := config.Backend{
-
-	}
+	backend := config.Backend{}
 	request := proxy.Request{
 		Method: expectedMethod,
 		Path:   "/",
@@ -85,9 +83,7 @@ func TestNewHTTPProxy_cancel(t *testing.T) {
 	defer backendServer.Close()
 
 	rpURL, _ := url.Parse(backendServer.URL)
-	backend := config.Backend{
-
-	}
+	backend := config.Backend{}
 	request := proxy.Request{
 		Method: expectedMethod,
 		Path:   "/",
@@ -154,8 +150,7 @@ func TestNewHTTPProxy_badStatusCode(t *testing.T) {
 	defer backendServer.Close()
 
 	rpURL, _ := url.Parse(backendServer.URL)
-	backend := config.Backend{
-	}
+	backend := config.Backend{}
 	request := proxy.Request{
 		Method: expectedMethod,
 		Path:   "/",
@@ -188,9 +183,7 @@ func TestNewHTTPProxy_decodingError(t *testing.T) {
 	defer backendServer.Close()
 
 	rpURL, _ := url.Parse(backendServer.URL)
-	backend := config.Backend{
-
-	}
+	backend := config.Backend{}
 	request := proxy.Request{
 		Method: expectedMethod,
 		Path:   "/",
@@ -221,8 +214,7 @@ func TestNewHTTPProxy_badMethod(t *testing.T) {
 	defer backendServer.Close()
 
 	rpURL, _ := url.Parse(backendServer.URL)
-	backend := config.Backend{
-	}
+	backend := config.Backend{}
 	request := proxy.Request{
 		Method: "\n",
 		Path:   "/",
@@ -257,8 +249,7 @@ func TestNewHTTPProxy_requestKo(t *testing.T) {
 	defer backendServer.Close()
 
 	rpURL, _ := url.Parse(backendServer.URL)
-	backend := config.Backend{
-	}
+	backend := config.Backend{}
 	request := proxy.Request{
 		Method: "GET",
 		Path:   "/",

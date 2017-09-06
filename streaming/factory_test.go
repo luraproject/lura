@@ -80,7 +80,7 @@ func TestNewStreamDefaultFactory_ok(t *testing.T) {
 	expectedMethod := "SOME"
 	expectedHost := "http://example.com/"
 	expectedPath := "/foo"
-	
+
 	factory := StreamDefaultFactory(logger)
 
 	extraConfig := make(map[string]interface{})

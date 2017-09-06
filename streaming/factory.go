@@ -1,10 +1,10 @@
 package streaming
 
 import (
-	"github.com/devopsfaith/krakend/logging"
-	"github.com/devopsfaith/krakend/sd"
 	"github.com/devopsfaith/krakend/config"
+	"github.com/devopsfaith/krakend/logging"
 	"github.com/devopsfaith/krakend/proxy"
+	"github.com/devopsfaith/krakend/sd"
 )
 
 // StreamDefaultFactory returns a default streaming http proxy factory with the injected logger, if the endpoint is not

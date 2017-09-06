@@ -10,9 +10,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"bytes"
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/proxy"
-	"bytes"
 )
 
 func TestEndpointHandler_ok(t *testing.T) {
@@ -69,7 +69,7 @@ func TestEndpointHandler_noop(t *testing.T) {
 }
 
 func testEndpointHandler(t *testing.T, timeout time.Duration, p proxy.Proxy, expectedBody, expectedCache,
-expectedContent string, expectedStatusCode int) {
+	expectedContent string, expectedStatusCode int) {
 	body, resp, err := setup(timeout, p)
 	if err != nil {
 		t.Error("Reading the response:", err.Error())

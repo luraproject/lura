@@ -1,17 +1,17 @@
 package gin
 
 import (
-	"github.com/gin-gonic/gin"
-	"time"
-	"net/http"
+	"context"
 	"fmt"
 	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/proxy"
-	"context"
 	"github.com/devopsfaith/krakend/core"
-	"github.com/devopsfaith/krakend/streaming"
-	"io"
+	"github.com/devopsfaith/krakend/proxy"
 	kgin "github.com/devopsfaith/krakend/router/gin"
+	"github.com/devopsfaith/krakend/streaming"
+	"github.com/gin-gonic/gin"
+	"io"
+	"net/http"
+	"time"
 )
 
 // StreamEndpointHandler implements the HandleFactory interface, if the endpoint is configured as stream

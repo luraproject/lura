@@ -1,8 +1,8 @@
 package streaming
 
 import (
-	"testing"
 	"github.com/devopsfaith/krakend/config"
+	"testing"
 )
 
 func TestStreamConfigGetter_is_present(t *testing.T) {

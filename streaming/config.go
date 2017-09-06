@@ -12,7 +12,7 @@ const StreamNamespace = "github.com/devopsfaith/krakend/streaming"
 //	"Forward": true
 //	},
 func StreamConfigGetter(extra config.ExtraConfig) interface{} {
-	ok := extra["Forward"];
+	ok := extra["Forward"]
 	return StreamExtraConfig{ok != nil}
 }
 

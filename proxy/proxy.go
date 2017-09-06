@@ -17,13 +17,11 @@ type Response struct {
 	Io         io.Reader
 }
 
-
 // readCloserWrapper is Io.Reader which is closed when the Context is closed or canceled
 type readCloserWrapper struct {
 	ctx context.Context
 	rc  io.ReadCloser
 }
-
 
 // NewReadCloserWrapper Creates a new closeable io.Read
 func NewReadCloserWrapper(ctx context.Context, in io.ReadCloser) io.Reader {
@@ -31,7 +29,6 @@ func NewReadCloserWrapper(ctx context.Context, in io.ReadCloser) io.Reader {
 	go wrapper.closeOnCancel()
 	return wrapper
 }
-
 
 func (w readCloserWrapper) Read(b []byte) (int, error) {
 	return w.rc.Read(b)
