@@ -51,7 +51,16 @@ func NewHTTPProxy(remote *config.Backend, clientFactory HTTPClientFactory, decod
 // NewHTTPProxyWithHTTPExecutor creates a http proxy with the injected configuration, HTTPRequestExecutor and Decoder
 func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, requestExecutor HTTPRequestExecutor, decode encoding.Decoder) Proxy {
 	formatter := NewEntityFormatter(remote.Target, remote.Whitelist, remote.Blacklist, remote.Group, remote.Mapping)
+	return NewHTTPProxyDetailed(remote, requestExecutor, DefaultHTTPResponseParser(decode, formatter))
+}
 
+// HTTPResponseParser defines the interface of the response parser for the HTTP transport protocol
+type HTTPResponseParser interface {
+	HandleResponse(context.Context, *http.Response) (*Response, error)
+}
+
+// NewHTTPProxyDetailed creates a http proxy with the injected configuration, HTTPRequestExecutor, Decoder and HTTPResponseParser
+func NewHTTPProxyDetailed(remote *config.Backend, requestExecutor HTTPRequestExecutor, responseParser HTTPResponseParser) Proxy {
 	return func(ctx context.Context, request *Request) (*Response, error) {
 		requestToBakend, err := http.NewRequest(request.Method, request.URL.String(), request.Body)
 		if err != nil {
@@ -73,16 +82,31 @@ func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, requestExecutor HTTPRe
 			return nil, ErrInvalidStatusCode
 		}
 
-		var data map[string]interface{}
-		err = decode(resp.Body, &data)
-		resp.Body.Close()
-		if err != nil {
-			return nil, err
-		}
-
-		r := formatter.Format(Response{Data: data, IsComplete: true})
-		return &r, nil
+		return responseParser.HandleResponse(ctx, resp)
 	}
+}
+
+type defaultHTTPResponseParser struct {
+	decoder   encoding.Decoder
+	formatter EntityFormatter
+}
+
+func DefaultHTTPResponseParser(decoder encoding.Decoder, formatter EntityFormatter) HTTPResponseParser {
+	return defaultHTTPResponseParser{decoder, formatter}
+}
+
+func (p defaultHTTPResponseParser) HandleResponse(ctx context.Context, resp *http.Response) (*Response, error) {
+	var data map[string]interface{}
+	err := p.decoder(resp.Body, &data)
+	resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	newResponse := Response{Data: data, IsComplete: true}
+	newResponse = p.formatter.Format(newResponse)
+	return &newResponse, nil
+
 }
 
 // NewRequestBuilderMiddleware creates a proxy middleware that parses the request params received

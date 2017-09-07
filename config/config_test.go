@@ -249,7 +249,6 @@ func TestConfig_initKOInvalidDebugPattern(t *testing.T) {
 	debugPattern = dp
 }
 
-
 func TestDefaultConfigGetter(t *testing.T) {
 	getter, ok := ConfigGetters[defaultNamespace]
 	if !ok {
