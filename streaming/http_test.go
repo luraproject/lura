@@ -262,9 +262,9 @@ func TestNewHTTPProxy_requestKo(t *testing.T) {
 	defer cancel()
 
 	expectedError := fmt.Errorf("MAYDAY, MAYDAY")
-	_, err := NewHTTPStreamProxyWithHTTPExecutor(&backend, func(_ context.Context, _ *http.Request) (*http.Response, error) {
+	_, err := proxy.NewHTTPProxyWithHTTPExecutor(&backend, func(_ context.Context, _ *http.Request) (*http.Response, error) {
 		return nil, expectedError
-	})(ctx, &request)
+	}, backend.Decoder)(ctx, &request)
 	if err == nil {
 		t.Error("The proxy didn't return the expected error")
 		return

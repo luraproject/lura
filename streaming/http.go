@@ -25,45 +25,25 @@ func StreamHTTPProxyFactory(client *http.Client) proxy.BackendFactory {
 
 // NewStreamHTTPProxy creates a streaming http proxy with the injected configuration, HTTPClientFactory and Decoder
 func NewStreamHTTPProxy(cfg *config.Backend, clientFactory proxy.HTTPClientFactory) proxy.Proxy {
-	return NewHTTPStreamProxyWithHTTPExecutor(cfg, proxy.DefaultHTTPRequestExecutor(clientFactory))
+	return proxy.NewHTTPProxyDetailed(cfg, proxy.DefaultHTTPRequestExecutor(clientFactory), StreamHTTPResponseParser())
 }
 
-// NewHTTPStreamProxyWithHTTPExecutor creates a streaming http proxy with the injected configuration, HTTPRequestExecutor and Decoder
-func NewHTTPStreamProxyWithHTTPExecutor(cfg *config.Backend, requestExecutor proxy.HTTPRequestExecutor) proxy.Proxy {
-	return func(ctx context.Context, request *proxy.Request) (*proxy.Response, error) {
-		requestToBakend, err := http.NewRequest(request.Method, request.URL.String(), request.Body)
-		if err != nil {
-			return nil, err
-		}
-		requestToBakend.Header = request.Headers
+type streamHTTPResponseParser struct {
+}
 
-		resp, err := requestExecutor(ctx, requestToBakend)
-		requestToBakend.Body.Close()
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-		}
-		if err != nil {
-			return nil, err
-		}
-		if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-			return nil, proxy.ErrInvalidStatusCode
-		}
+func StreamHTTPResponseParser() proxy.HTTPResponseParser {
+	return streamHTTPResponseParser{}
+}
 
-		if err != nil {
-			return nil, err
-		}
+func (p streamHTTPResponseParser) HandleResponse(ctx context.Context, resp *http.Response) (*proxy.Response, error) {
+	w := proxy.NewReadCloserWrapper(ctx, resp.Body)
+	metadata := make(map[string]string)
 
-		w := proxy.NewReadCloserWrapper(ctx, resp.Body)
-		metadata := make(map[string]string)
-
-		headers := resp.Header
-		for k := range headers {
-			metadata[k] = headers.Get(k)
-		}
-
-		r := proxy.Response{Io: w, IsComplete: true, Metadata: metadata}
-		return &r, nil
+	headers := resp.Header
+	for k := range headers {
+		metadata[k] = headers.Get(k)
 	}
+
+	return &proxy.Response{Io: w, IsComplete: true, Metadata: metadata}, nil
+
 }
