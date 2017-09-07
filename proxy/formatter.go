@@ -7,6 +7,16 @@ type EntityFormatter interface {
 	Format(entity Response) Response
 }
 
+// EntityFormatterFunc holds the formatter function
+type EntityFormatterFunc struct {
+	Func func(Response) Response
+}
+
+// Format implements the EntityFormatter interface
+func (e EntityFormatterFunc) Format(entity Response) Response {
+	return e.Func(entity)
+}
+
 type propertyFilter func(entity *Response)
 
 type entityFormatter struct {
