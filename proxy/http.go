@@ -7,6 +7,7 @@ import (
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/encoding"
+	"io"
 )
 
 // ErrInvalidStatusCode is the error returned by the http proxy when the received status code
@@ -49,9 +50,59 @@ func NewHTTPProxy(remote *config.Backend, clientFactory HTTPClientFactory, decod
 }
 
 // NewHTTPProxyWithHTTPExecutor creates a http proxy with the injected configuration, HTTPRequestExecutor and Decoder
-func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, requestExecutor HTTPRequestExecutor, decode encoding.Decoder) Proxy {
-	formatter := NewEntityFormatter(remote.Target, remote.Whitelist, remote.Blacklist, remote.Group, remote.Mapping)
+func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, requestExecutor HTTPRequestExecutor, dec encoding.Decoder) Proxy {
+	ef := NewEntityFormatter(remote.Target, remote.Whitelist, remote.Blacklist, remote.Group, remote.Mapping)
+	return NewHTTPProxyDetailed(remote, requestExecutor, DefaultHTTPStatusHandler, DefaultHTTPResponseParserFactory(HTTPResponseParserConfig{dec, ef}))
+}
 
+// HTTPResponseParser defines how of the response is parsed from http.Response to Response object
+type HTTPResponseParser func(context.Context, *http.Response) (*Response, error)
+
+// DefaultHTTPResponseParserConfig defines a default HTTPResponseParserConfig
+var DefaultHTTPResponseParserConfig = HTTPResponseParserConfig{
+	func(r io.Reader, v *map[string]interface{}) error { return nil },
+	EntityFormatterFunc{func(entity Response) Response { return entity }},
+}
+
+// HTTPResponseParserConfig contains the config for a given HttpResponseParser
+type HTTPResponseParserConfig struct {
+	dec encoding.Decoder
+	ef  EntityFormatter
+}
+
+// DefaultHTTPResponseParserFactory creates HTTPResponseParser from a given HTTPResponseParserConfig
+type HTTPResponseParserFactory func(HTTPResponseParserConfig) HTTPResponseParser
+
+// DefaultHTTPResponseParserFactory is the default implementation of HTTPResponseParserFactory
+func DefaultHTTPResponseParserFactory(cfg HTTPResponseParserConfig) HTTPResponseParser {
+	return func(ctx context.Context, resp *http.Response) (*Response, error) {
+		var data map[string]interface{}
+		err := cfg.dec(resp.Body, &data)
+		resp.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+
+		newResponse := Response{Data: data, IsComplete: true}
+		newResponse = cfg.ef.Format(newResponse)
+		return &newResponse, nil
+	}
+}
+
+// HTTPStatusHandler defines how we tread the http response code
+type HTTPStatusHandler func(context.Context, *http.Response) (*http.Response, error)
+
+// DefaultHTTPCodeHandler is the default implementation of HTTPStatusHandler
+func DefaultHTTPStatusHandler(ctx context.Context, resp *http.Response) (*http.Response, error) {
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		return nil, ErrInvalidStatusCode
+	}
+
+	return resp, nil
+}
+
+// NewHTTPProxyDetailed creates a http proxy with the injected configuration, HTTPRequestExecutor, Decoder and HTTPResponseParser
+func NewHTTPProxyDetailed(remote *config.Backend, requestExecutor HTTPRequestExecutor, ch HTTPStatusHandler, rp HTTPResponseParser) Proxy {
 	return func(ctx context.Context, request *Request) (*Response, error) {
 		requestToBakend, err := http.NewRequest(request.Method, request.URL.String(), request.Body)
 		if err != nil {
@@ -69,19 +120,13 @@ func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, requestExecutor HTTPRe
 		if err != nil {
 			return nil, err
 		}
-		if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-			return nil, ErrInvalidStatusCode
-		}
 
-		var data map[string]interface{}
-		err = decode(resp.Body, &data)
-		resp.Body.Close()
+		resp, err = ch(ctx, resp)
 		if err != nil {
 			return nil, err
 		}
 
-		r := formatter.Format(Response{Data: data, IsComplete: true})
-		return &r, nil
+		return rp(ctx, resp)
 	}
 }
 
