@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	xcontext "golang.org/x/net/context"
-
 	etcd "github.com/coreos/etcd/client"
 )
 
@@ -78,7 +76,7 @@ type getResult struct {
 }
 
 // Get return the content of getres or nil, nil
-func (fka *fakeKeysAPI) Get(ctx xcontext.Context, key string, opts *etcd.GetOptions) (*etcd.Response, error) {
+func (fka *fakeKeysAPI) Get(ctx context.Context, key string, opts *etcd.GetOptions) (*etcd.Response, error) {
 	if fka.getres == nil {
 		return nil, nil
 	}
@@ -86,27 +84,27 @@ func (fka *fakeKeysAPI) Get(ctx xcontext.Context, key string, opts *etcd.GetOpti
 }
 
 // Set is not used in the tests
-func (fka *fakeKeysAPI) Set(ctx xcontext.Context, key, value string, opts *etcd.SetOptions) (*etcd.Response, error) {
+func (fka *fakeKeysAPI) Set(ctx context.Context, key, value string, opts *etcd.SetOptions) (*etcd.Response, error) {
 	return nil, nil
 }
 
 // Delete is not used in the tests
-func (fka *fakeKeysAPI) Delete(ctx xcontext.Context, key string, opts *etcd.DeleteOptions) (*etcd.Response, error) {
+func (fka *fakeKeysAPI) Delete(ctx context.Context, key string, opts *etcd.DeleteOptions) (*etcd.Response, error) {
 	return nil, nil
 }
 
 // Create is not used in the tests
-func (fka *fakeKeysAPI) Create(ctx xcontext.Context, key, value string) (*etcd.Response, error) {
+func (fka *fakeKeysAPI) Create(ctx context.Context, key, value string) (*etcd.Response, error) {
 	return nil, nil
 }
 
 // CreateInOrder is not used in the tests
-func (fka *fakeKeysAPI) CreateInOrder(ctx xcontext.Context, dir, value string, opts *etcd.CreateInOrderOptions) (*etcd.Response, error) {
+func (fka *fakeKeysAPI) CreateInOrder(ctx context.Context, dir, value string, opts *etcd.CreateInOrderOptions) (*etcd.Response, error) {
 	return nil, nil
 }
 
 // Update is not used in the tests
-func (fka *fakeKeysAPI) Update(ctx xcontext.Context, key, value string) (*etcd.Response, error) {
+func (fka *fakeKeysAPI) Update(ctx context.Context, key, value string) (*etcd.Response, error) {
 	return nil, nil
 }
 
@@ -124,7 +122,7 @@ type fakeWatcher struct {
 // Next blocks until an etcd event or error is emulated.
 // When an event occurs it just return nil response and error.
 // When an error occur it return a non nil error.
-func (fw *fakeWatcher) Next(xcontext.Context) (*etcd.Response, error) {
+func (fw *fakeWatcher) Next(context.Context) (*etcd.Response, error) {
 	for {
 		select {
 		case <-fw.event:
