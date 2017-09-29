@@ -115,6 +115,216 @@ func TestDefaultFactory_ok(t *testing.T) {
 	}
 }
 
+func TestDefaultFactory_noEndpointMiddleware(t *testing.T) {
+	buff := bytes.NewBuffer(make([]byte, 1024))
+	logger, err := gologging.NewLogger("ERROR", buff, "pref")
+	if err != nil {
+		t.Error("building the logger:", err.Error())
+		return
+	}
+
+	delete(config.ConfigGetters, "middleware.mux")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer func() {
+		cancel()
+		time.Sleep(5 * time.Millisecond)
+	}()
+	sequence := ""
+
+	r := NewFactory(
+		Config{
+			Engine: DefaultEngine(),
+			Middlewares: []HandlerMiddleware{
+				loggerMiddleware{
+					func() { sequence += "A" },
+					func() { sequence += "B" },
+				},
+				loggerMiddleware{
+					func() { sequence += "C" },
+					func() { sequence += "D" },
+				},
+			},
+			HandlerFactory: EndpointHandler,
+			ProxyFactory:   visitProxyFactory{func() { sequence += " X " }},
+			Logger:         logger,
+		},
+	).NewWithContext(ctx)
+
+	endpoint := config.EndpointConfig{
+		Endpoint: "/some",
+		Method:   "GET",
+		Timeout:  10,
+		Backend: []*config.Backend{
+			{},
+		},
+	}
+
+	serviceCfg := config.ServiceConfig{
+		Port:      8072,
+		Endpoints: []*config.EndpointConfig{&endpoint},
+	}
+
+	go func() { r.Run(serviceCfg) }()
+	time.Sleep(5 * time.Millisecond)
+
+	req, _ := http.NewRequest(endpoint.Method, fmt.Sprintf("http://127.0.0.1:8072%s", endpoint.Endpoint), nil)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Error("Making the request:", err.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+	if sequence != "AC X DB" {
+		t.Error("middlewares have not been called in the good order:", sequence, "Expecting: AC X BD")
+	}
+}
+
+func TestDefaultFactory_EndpointMiddlewareError(t *testing.T) {
+	buff := bytes.NewBuffer(make([]byte, 1024))
+	logger, err := gologging.NewLogger("ERROR", buff, "pref")
+	if err != nil {
+		t.Error("building the logger:", err.Error())
+		return
+	}
+
+	config.ConfigGetters["middleware.mux"] = func(config.ExtraConfig) interface{} { return 42 }
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer func() {
+		cancel()
+		time.Sleep(5 * time.Millisecond)
+	}()
+	sequence := ""
+
+	r := NewFactory(
+		Config{
+			Engine: DefaultEngine(),
+			Middlewares: []HandlerMiddleware{
+				loggerMiddleware{
+					func() { sequence += "A" },
+					func() { sequence += "B" },
+				},
+				loggerMiddleware{
+					func() { sequence += "C" },
+					func() { sequence += "D" },
+				},
+			},
+			HandlerFactory: EndpointHandler,
+			ProxyFactory:   visitProxyFactory{func() { sequence += " X " }},
+			Logger:         logger,
+		},
+	).NewWithContext(ctx)
+
+	endpoint := config.EndpointConfig{
+		Endpoint: "/some",
+		Method:   "GET",
+		Timeout:  10,
+		Backend: []*config.Backend{
+			{},
+		},
+	}
+
+	serviceCfg := config.ServiceConfig{
+		Port:      8072,
+		Endpoints: []*config.EndpointConfig{&endpoint},
+	}
+
+	go func() { r.Run(serviceCfg) }()
+	time.Sleep(5 * time.Millisecond)
+
+	req, _ := http.NewRequest(endpoint.Method, fmt.Sprintf("http://127.0.0.1:8072%s", endpoint.Endpoint), nil)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Error("Making the request:", err.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+	if sequence != "AC X DB" {
+		t.Error("middlewares have not been called in the good order:", sequence, "Expecting: AC X BD")
+	}
+}
+
+func TestDefaultFactory_Middlewares(t *testing.T) {
+	buff := bytes.NewBuffer(make([]byte, 1024))
+	logger, err := gologging.NewLogger("ERROR", buff, "pref")
+	if err != nil {
+		t.Error("building the logger:", err.Error())
+		return
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer func() {
+		cancel()
+		time.Sleep(5 * time.Millisecond)
+	}()
+	sequence := ""
+	config.ConfigGetters["middleware.mux"] = func(config.ExtraConfig) interface{} {
+		return []HandlerMiddleware{
+			loggerMiddleware{
+				func() { sequence += "E" },
+				func() { sequence += "F" },
+			},
+			loggerMiddleware{
+				func() { sequence += "G" },
+				func() { sequence += "H" },
+			},
+		}
+	}
+
+	r := NewFactory(
+		Config{
+			Engine: DefaultEngine(),
+			Middlewares: []HandlerMiddleware{
+				loggerMiddleware{
+					func() { sequence += "A" },
+					func() { sequence += "B" },
+				},
+				loggerMiddleware{
+					func() { sequence += "C" },
+					func() { sequence += "D" },
+				},
+			},
+			HandlerFactory: EndpointHandler,
+			ProxyFactory:   visitProxyFactory{func() { sequence += " X " }},
+			Logger:         logger,
+		},
+	).NewWithContext(ctx)
+
+	endpoint := config.EndpointConfig{
+		Endpoint: "/some",
+		Method:   "GET",
+		Timeout:  10,
+		Backend: []*config.Backend{
+			{},
+		},
+	}
+
+	serviceCfg := config.ServiceConfig{
+		Port:      8072,
+		Endpoints: []*config.EndpointConfig{&endpoint},
+	}
+
+	go func() { r.Run(serviceCfg) }()
+	time.Sleep(5 * time.Millisecond)
+
+	req, _ := http.NewRequest(endpoint.Method, fmt.Sprintf("http://127.0.0.1:8072%s", endpoint.Endpoint), nil)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Error("Making the request:", err.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+	if sequence != "ACEG X HFDB" {
+		t.Error("middlewares have not been called in the good order:", sequence, "Expecting: ACEG X HFDB")
+	}
+}
+
 func TestDefaultFactory_ko(t *testing.T) {
 	buff := bytes.NewBuffer(make([]byte, 1024))
 	logger, err := gologging.NewLogger("ERROR", buff, "pref")
@@ -250,6 +460,33 @@ func checkResponseIs404(t *testing.T, req *http.Request) {
 	if content != expectedBody {
 		t.Error("Unexpected body:", content, "expected:", expectedBody)
 	}
+}
+
+type loggerMiddleware struct {
+	before func()
+	after  func()
+}
+
+func (l loggerMiddleware) Handler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		l.before()
+		h.ServeHTTP(w, r)
+		l.after()
+	})
+}
+
+type visitProxyFactory struct {
+	visit func()
+}
+
+func (l visitProxyFactory) New(_ *config.EndpointConfig) (proxy.Proxy, error) {
+	return func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
+		l.visit()
+		return &proxy.Response{
+			IsComplete: true,
+			Data:       map[string]interface{}{},
+		}, nil
+	}, nil
 }
 
 type noopProxyFactory map[string]interface{}
