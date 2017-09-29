@@ -108,26 +108,40 @@ func (r ginRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) 
 			continue
 		}
 
-		r.registerKrakendEndpoint(c.Method, c.Endpoint, r.cfg.HandlerFactory(c, proxyStack), len(c.Backend))
+		handlers := []gin.HandlerFunc{}
+		configGetter, ok := config.ConfigGetters["middleware.gin"]
+		if ok {
+			handlers, ok = configGetter(c.ExtraConfig).([]gin.HandlerFunc)
+			if !ok {
+				r.cfg.Logger.Error(fmt.Sprintf(
+					"Failed to get gin middlewares for endpoint %s\\%s. "+
+						"Please make sure ConfigGetter for middleware.gin returns a []gin.HandlerFunc",
+					c.Method, c.Endpoint,
+				))
+			}
+		}
+		handlers = append(handlers, r.cfg.HandlerFactory(c, proxyStack))
+
+		r.registerKrakendEndpoint(c.Method, c.Endpoint, handlers, len(c.Backend))
 	}
 }
 
-func (r ginRouter) registerKrakendEndpoint(method, path string, handler gin.HandlerFunc, totBackends int) {
+func (r ginRouter) registerKrakendEndpoint(method, path string, handlers []gin.HandlerFunc, totBackends int) {
 	if method != "GET" && totBackends > 1 {
 		r.cfg.Logger.Error(method, "endpoints must have a single backend! Ignoring", path)
 		return
 	}
 	switch method {
 	case "GET":
-		r.cfg.Engine.GET(path, handler)
+		r.cfg.Engine.GET(path, handlers...)
 	case "POST":
-		r.cfg.Engine.POST(path, handler)
+		r.cfg.Engine.POST(path, handlers...)
 	case "PUT":
-		r.cfg.Engine.PUT(path, handler)
+		r.cfg.Engine.PUT(path, handlers...)
 	case "PATCH":
-		r.cfg.Engine.PATCH(path, handler)
+		r.cfg.Engine.PATCH(path, handlers...)
 	case "DELETE":
-		r.cfg.Engine.DELETE(path, handler)
+		r.cfg.Engine.DELETE(path, handlers...)
 	default:
 		r.cfg.Logger.Error("Unsupported method", method)
 	}
