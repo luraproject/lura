@@ -139,7 +139,9 @@ func (r httpRouter) registerKrakendEndpoint(method, path string, handler http.Ha
 func (r httpRouter) handler() http.Handler {
 	var handler http.Handler
 	handler = r.cfg.Engine
-	for _, middleware := range r.cfg.Middlewares {
+	count := len(r.cfg.Middlewares)
+	for i := range r.cfg.Middlewares {
+		middleware := r.cfg.Middlewares[count-1-i]
 		r.cfg.Logger.Debug("Adding the middleware", middleware)
 		handler = middleware.Handler(handler)
 	}
