@@ -106,6 +106,7 @@ Visit the [framework overview](/docs/OVERVIEW.md) for more details about the com
 7. [jwt middlewares](/examples/jwt/README.md)
 8. [httpcache based proxies](/examples/httpcache/README.md)
 9. [etcd service discovery](/examples/httpcache/README.md)
+10. [martian](/examples/martian/README.md)
 
 ## Configuration file
 
