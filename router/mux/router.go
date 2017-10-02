@@ -112,11 +112,27 @@ func (r httpRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig)
 			continue
 		}
 
-		r.registerKrakendEndpoint(c.Method, c.Endpoint, r.cfg.HandlerFactory(c, proxyStack), len(c.Backend))
+		var handler http.Handler
+		handler = r.cfg.HandlerFactory(c, proxyStack)
+		configGetter, ok := config.ConfigGetters["middleware.mux"]
+		if ok {
+			middlewares, ok := configGetter(c.ExtraConfig).([]HandlerMiddleware)
+			if ok {
+				handler = r.addMiddlewares(handler, middlewares...)
+			} else {
+				r.cfg.Logger.Error(fmt.Sprintf(
+					"Failed to get mux middlewares for endpoint %s\\%s. "+
+						"Please make sure ConfigGetter for middleware.mux returns a []mux.HandlerMiddleware",
+					c.Method, c.Endpoint,
+				))
+			}
+		}
+
+		r.registerKrakendEndpoint(c.Method, c.Endpoint, handler, len(c.Backend))
 	}
 }
 
-func (r httpRouter) registerKrakendEndpoint(method, path string, handler http.HandlerFunc, totBackends int) {
+func (r httpRouter) registerKrakendEndpoint(method, path string, handler http.Handler, totBackends int) {
 	if method != "GET" && totBackends > 1 {
 		r.cfg.Logger.Error(method, "endpoints must have a single backend! Ignoring", path)
 		return
@@ -139,7 +155,13 @@ func (r httpRouter) registerKrakendEndpoint(method, path string, handler http.Ha
 func (r httpRouter) handler() http.Handler {
 	var handler http.Handler
 	handler = r.cfg.Engine
-	for _, middleware := range r.cfg.Middlewares {
+	return r.addMiddlewares(handler, r.cfg.Middlewares...)
+}
+
+func (r httpRouter) addMiddlewares(handler http.Handler, mws ...HandlerMiddleware) http.Handler {
+	count := len(mws)
+	for i := range mws {
+		middleware := mws[count-1-i]
 		r.cfg.Logger.Debug("Adding the middleware", middleware)
 		handler = middleware.Handler(handler)
 	}
