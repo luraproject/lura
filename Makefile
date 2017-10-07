@@ -1,4 +1,4 @@
-.PHONY: all deps test build benchmark coveralls build_gin_example build_dns_example build_mux_example build_gorilla_example build_negroni_example build_httpcache_example build_rss_example build_jwt_example build_etcd_example
+.PHONY: all deps test build benchmark coveralls build_gin_example build_dns_example build_mux_example build_gorilla_example build_negroni_example build_httpcache_example build_rss_example build_jwt_example build_etcd_example build_martian_example
 
 PACKAGES = $(shell go list ./... | grep -v /examples/)
 
@@ -13,6 +13,10 @@ deps:
 	go get -u github.com/clbanning/mxj/x2j
 	go get -u github.com/mmcdole/gofeed
 	go get -u github.com/coreos/etcd/client
+	go get -u github.com/google/martian/body
+	go get -u github.com/google/martian/fifo
+	go get -u github.com/google/martian/header
+	go get -u github.com/google/martian/parse
 
 test:
 	go fmt ./...
@@ -22,7 +26,7 @@ test:
 benchmark:
 	go test -bench=. -benchtime=3s $(PACKAGES)
 
-build: build_gin_example build_dns_example build_mux_example build_gorilla_example build_negroni_example build_httpcache_example build_rss_example build_jwt_example build_etcd_example
+build: build_gin_example build_dns_example build_mux_example build_gorilla_example build_negroni_example build_httpcache_example build_rss_example build_jwt_example build_etcd_example build_martian_example
 
 build_gin_example:
 	cd examples/gin/ && make && cd ../.. && cp examples/gin/krakend_gin_example* .
@@ -50,6 +54,9 @@ build_jwt_example:
 
 build_etcd_example:
 	cd examples/etcd/ && make && cd ../.. && cp examples/etcd/krakend_etcd_example* .
+
+build_martian_example:
+	cd examples/martian/ && make && cd ../.. && cp examples/martian/krakend_martian_example* .
 
 coveralls: all
 	go get github.com/mattn/goveralls
