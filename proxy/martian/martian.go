@@ -19,11 +19,15 @@ import (
 func NewBackendFactory(logger logging.Logger, re proxy.HTTPRequestExecutor) proxy.BackendFactory {
 	return func(remote *config.Backend) proxy.Proxy {
 		martian, err := Parse(remote.ExtraConfig)
-		if err != nil {
-			logger.Error(err)
+		switch err {
+		case nil:
+			return proxy.NewHTTPProxyWithHTTPExecutor(remote, HTTPRequestExecutor(martian, re), remote.Decoder)
+		case ErrEmptyValue:
+			return proxy.NewHTTPProxyWithHTTPExecutor(remote, re, remote.Decoder)
+		default:
+			logger.Error(err, remote.ExtraConfig)
 			return proxy.NewHTTPProxyWithHTTPExecutor(remote, re, remote.Decoder)
 		}
-		return proxy.NewHTTPProxyWithHTTPExecutor(remote, HTTPRequestExecutor(martian, re), remote.Decoder)
 	}
 }
 
@@ -39,17 +43,17 @@ func HTTPRequestExecutor(result *parse.Result, re proxy.HTTPRequestExecutor) pro
 func Parse(e config.ExtraConfig) (*parse.Result, error) {
 	cfg, ok := e[Namespace]
 	if !ok {
-		return nil, fmt.Errorf("getting the extra config for the martian proxy")
+		return nil, ErrEmptyValue
 	}
 
 	data, ok := cfg.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("casting the extra config for the martian proxy")
+		return nil, ErrBadValue
 	}
 
 	raw, err := json.Marshal(data)
 	if err != nil {
-		return nil, fmt.Errorf("marshalling the extra config for the martian proxy")
+		return nil, ErrMarshallingValue
 	}
 
 	return parse.FromJSON(raw)
@@ -57,3 +61,9 @@ func Parse(e config.ExtraConfig) (*parse.Result, error) {
 
 // Namespace is the key to look for extra configuration details
 const Namespace = "github.com/krakend/proxy/martian"
+
+var (
+	ErrEmptyValue       = fmt.Errorf("getting the extra config for the martian proxy")
+	ErrBadValue         = fmt.Errorf("casting the extra config for the martian proxy")
+	ErrMarshallingValue = fmt.Errorf("marshalling the extra config for the martian proxy")
+)
