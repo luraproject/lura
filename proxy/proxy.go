@@ -9,11 +9,15 @@ import (
 	"github.com/devopsfaith/krakend/config"
 )
 
+type Metadata struct {
+	Headers map[string][]string
+}
+
 // Response is the entity returned by the proxy
 type Response struct {
 	Data       map[string]interface{}
 	IsComplete bool
-	Metadata   map[string]string
+	Metadata   Metadata
 	Io         io.Reader
 }
 
