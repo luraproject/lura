@@ -56,6 +56,7 @@ Or, if you want to build all the examples, from the root of the project
 
 For the lazy, a ready to use example:
 
+```go
     package main
 
     import (
@@ -92,20 +93,21 @@ For the lazy, a ready to use example:
 
         routerFactory.New().Run(serviceConfig)
     }
+```
 
 Visit the [framework overview](/docs/OVERVIEW.md) for more details about the components of the KrakenD.
 
 ### Examples
 
-1. [gin router](/examples/gin/README.md)
-2. [mux router](/examples/mux/README.md)
-3. [gorilla router](/examples/gorilla/README.md)
-4. [negroni middlewares](/examples/negroni/README.md)
-5. [dns srv service discovery](/examples/dns/README.md)
-6. [rss backends](/examples/rss/README.md)
-7. [jwt middlewares](/examples/jwt/README.md)
-8. [httpcache based proxies](/examples/httpcache/README.md)
-9. [etcd service discovery](/examples/httpcache/README.md)
+1. [gin router](/examples/gin/)
+2. [mux router](/examples/mux/)
+3. [gorilla router](/examples/gorilla/)
+4. [negroni middlewares](/examples/negroni/)
+5. [dns srv service discovery](/examples/dns/)
+6. [rss backends](/examples/rss/)
+7. [jwt middlewares](/examples/jwt/)
+8. [httpcache based proxies](/examples/httpcache/)
+9. [etcd service discovery](/examples/httpcache/)
 
 ## Configuration file
 
