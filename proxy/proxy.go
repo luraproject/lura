@@ -11,6 +11,7 @@ import (
 
 type Metadata struct {
 	Headers map[string][]string
+	StatusCode int
 }
 
 // Response is the entity returned by the proxy

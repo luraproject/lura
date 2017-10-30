@@ -66,8 +66,8 @@ var DefaultHTTPResponseParserConfig = HTTPResponseParserConfig{
 
 // HTTPResponseParserConfig contains the config for a given HttpResponseParser
 type HTTPResponseParserConfig struct {
-	dec encoding.Decoder
-	ef  EntityFormatter
+	Decoder         encoding.Decoder
+	EntityFormatter EntityFormatter
 }
 
 // DefaultHTTPResponseParserFactory creates HTTPResponseParser from a given HTTPResponseParserConfig
@@ -77,14 +77,14 @@ type HTTPResponseParserFactory func(HTTPResponseParserConfig) HTTPResponseParser
 func DefaultHTTPResponseParserFactory(cfg HTTPResponseParserConfig) HTTPResponseParser {
 	return func(ctx context.Context, resp *http.Response) (*Response, error) {
 		var data map[string]interface{}
-		err := cfg.dec(resp.Body, &data)
+		err := cfg.Decoder(resp.Body, &data)
 		resp.Body.Close()
 		if err != nil {
 			return nil, err
 		}
 
 		newResponse := Response{Data: data, IsComplete: true}
-		newResponse = cfg.ef.Format(newResponse)
+		newResponse = cfg.EntityFormatter.Format(newResponse)
 		return &newResponse, nil
 	}
 }
