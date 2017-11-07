@@ -3,11 +3,11 @@ package proxy
 import (
 	"context"
 	"errors"
+	"io"
 	"net/http"
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/encoding"
-	"io"
 )
 
 // ErrInvalidStatusCode is the error returned by the http proxy when the received status code
