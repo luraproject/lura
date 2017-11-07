@@ -37,6 +37,8 @@ func TestConfig_initBackendURLMappings_ok(t *testing.T) {
 		"/supu/{tupu1}",
 		"/supu.local/",
 		"supu/{tupu_56}/{supu-5t6}?a={foo}&b={foo}",
+		"supu/{tupu_56}{supu-5t6}?a={foo}&b={foo}",
+		"supu/tupu{supu-5t6}?a={foo}&b={foo}",
 	}
 
 	expected := []string{
@@ -44,6 +46,8 @@ func TestConfig_initBackendURLMappings_ok(t *testing.T) {
 		"/supu/{{.Tupu1}}",
 		"/supu.local/",
 		"/supu/{{.Tupu_56}}/{{.Supu-5t6}}?a={{.Foo}}&b={{.Foo}}",
+		"/supu/{{.Tupu_56}}{{.Supu-5t6}}?a={{.Foo}}&b={{.Foo}}",
+		"/supu/tupu{{.Supu-5t6}}?a={{.Foo}}&b={{.Foo}}",
 	}
 
 	backend := Backend{}
