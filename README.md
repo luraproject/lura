@@ -104,10 +104,9 @@ Visit the [framework overview](/docs/OVERVIEW.md) for more details about the com
 3. [gorilla router](/examples/gorilla/)
 4. [negroni middlewares](/examples/negroni/)
 5. [dns srv service discovery](/examples/dns/)
-6. [rss backends](/examples/rss/)
-7. [jwt middlewares](/examples/jwt/)
-8. [httpcache based proxies](/examples/httpcache/)
-9. [etcd service discovery](/examples/httpcache/)
+6. [jwt middlewares](/examples/jwt/)
+7. [httpcache based proxies](/examples/httpcache/)
+8. [etcd service discovery](/examples/httpcache/)
 
 ## Configuration file
 
