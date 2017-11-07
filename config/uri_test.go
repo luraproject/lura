@@ -32,6 +32,7 @@ func TestURIParser_cleanHosts(t *testing.T) {
 func TestURIParser_cleanPath(t *testing.T) {
 	samples := []string{
 		"supu/{tupu}",
+		"supu/{tupu}{supu}",
 		"/supu/{tupu}",
 		"/supu.local/",
 		"supu_supu.txt",
@@ -42,6 +43,7 @@ func TestURIParser_cleanPath(t *testing.T) {
 
 	expected := []string{
 		"/supu/{tupu}",
+		"/supu/{tupu}{supu}",
 		"/supu/{tupu}",
 		"/supu.local/",
 		"/supu_supu.txt",
@@ -50,7 +52,7 @@ func TestURIParser_cleanPath(t *testing.T) {
 		"/debug/supu/supu?a=1&b=2",
 	}
 
-	subject := NewURIParser()
+	subject := URI(BracketsRouterPatternBuilder)
 
 	for i := range samples {
 		if have := subject.CleanPath(samples[i]); expected[i] != have {
@@ -62,6 +64,7 @@ func TestURIParser_cleanPath(t *testing.T) {
 func TestURIParser_getEndpointPath(t *testing.T) {
 	samples := []string{
 		"supu/{tupu}",
+		"/supu/{tupu}{supu}",
 		"/supu/{tupu}",
 		"/supu.local/",
 		"supu/{tupu}/{supu}?a={s}&b=2",
@@ -69,6 +72,7 @@ func TestURIParser_getEndpointPath(t *testing.T) {
 
 	expected := []string{
 		"supu/:tupu",
+		"/supu/:tupu{supu}",
 		"/supu/:tupu",
 		"/supu.local/",
 		"supu/:tupu/:supu?a={s}&b=2",
@@ -78,7 +82,34 @@ func TestURIParser_getEndpointPath(t *testing.T) {
 	subject := NewURIParser()
 
 	for i := range samples {
-		params := sc.extractPlaceHoldersFromURLTemplate(samples[i], endpointURLKeysPattern)
+		params := sc.extractPlaceHoldersFromURLTemplate(samples[i], sc.paramExtractionPattern())
+		if have := subject.GetEndpointPath(samples[i], params); expected[i] != have {
+			t.Errorf("want: %s, have: %s\n", expected[i], have)
+		}
+	}
+}
+func TestURIParser_getEndpointPath_notStrictREST(t *testing.T) {
+	samples := []string{
+		"supu/{tupu}",
+		"/supu/{tupu}{supu}",
+		"/supu/{tupu}",
+		"/supu.local/",
+		"supu/{tupu}/{supu}?a={s}&b=2",
+	}
+
+	expected := []string{
+		"supu/:tupu",
+		"/supu/:tupu:supu",
+		"/supu/:tupu",
+		"/supu.local/",
+		"supu/:tupu/:supu?a={s}&b=2",
+	}
+
+	sc := ServiceConfig{DisableStrictREST: true}
+	subject := NewURIParser()
+
+	for i := range samples {
+		params := sc.extractPlaceHoldersFromURLTemplate(samples[i], sc.paramExtractionPattern())
 		if have := subject.GetEndpointPath(samples[i], params); expected[i] != have {
 			t.Errorf("want: %s, have: %s\n", expected[i], have)
 		}
