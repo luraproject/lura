@@ -31,8 +31,10 @@ func Register(name string, dec DecoderFactory) error {
 // Get returns (from the register) the decoder factory by name. If there is no factory with the received name
 // it returns the JSON decoder factory
 func Get(name string) DecoderFactory {
-	if dec, ok := decoders[name]; ok {
-		return dec
+	for _, n := range []string{name, JSON} {
+		if dec, ok := decoders[n]; ok {
+			return dec
+		}
 	}
-	return decoders[JSON]
+	return NewJSONDecoder
 }
