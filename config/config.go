@@ -208,14 +208,7 @@ func (s *ServiceConfig) initBackendDefaults(e, b int) {
 	}
 	backend.Timeout = endpoint.Timeout
 	backend.ConcurrentCalls = endpoint.ConcurrentCalls
-	switch strings.ToLower(backend.Encoding) {
-	case encoding.XML:
-		backend.Decoder = encoding.NewXMLDecoder(backend.IsCollection)
-	case encoding.RSS:
-		backend.Decoder = encoding.NewRSSDecoder()
-	default:
-		backend.Decoder = encoding.NewJSONDecoder(backend.IsCollection)
-	}
+	backend.Decoder = encoding.Get(strings.ToLower(backend.Encoding))(backend.IsCollection)
 }
 
 func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]interface{}) error {
