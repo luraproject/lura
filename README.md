@@ -65,7 +65,7 @@ For the lazy, a ready to use example:
         "os"
 
         "github.com/devopsfaith/krakend/config/viper"
-        "github.com/devopsfaith/krakend/logging/gologging"
+        "github.com/devopsfaith/krakend/logging"
         "github.com/devopsfaith/krakend/proxy"
         "github.com/devopsfaith/krakend/router/gin"
     )
@@ -87,7 +87,7 @@ For the lazy, a ready to use example:
             serviceConfig.Port = *port
         }
 
-        logger := gologging.NewLogger(*logLevel, os.Stdout, "[KRAKEND]")
+        logger := logging.NewLogger(*logLevel, os.Stdout, "[KRAKEND]")
 
         routerFactory := gin.DefaultFactory(proxy.DefaultFactory(logger), logger)
 
