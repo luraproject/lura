@@ -13,7 +13,7 @@ deps:
 	go get "github.com/devopsfaith/krakend/config/viper"
 	go get "github.com/devopsfaith/krakend/proxy"
 	go get "github.com/devopsfaith/krakend/router/gin"
-	go get "github.com/devopsfaith/krakend/logging/gologging"
+	go get "github.com/devopsfaith/krakend/logging"
 	go get "github.com/gin-gonic/contrib/secure"
 	go get "github.com/aviddiviner/gin-limit"
 	go get "gopkg.in/gin-contrib/cors.v1"

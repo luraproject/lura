@@ -1,11 +1,9 @@
-package gologging
+package logging
 
 import (
 	"bytes"
 	"regexp"
 	"testing"
-
-	gologging "github.com/op/go-logging"
 )
 
 const (
@@ -42,7 +40,7 @@ func TestNewLogger_unknownLevel(t *testing.T) {
 		t.Error("The factory didn't return the expected error")
 		return
 	}
-	if err != gologging.ErrInvalidLogLevel {
+	if err != ErrInvalidLogLevel {
 		t.Errorf("The factory didn't return the expected error. Got: %s", err.Error())
 	}
 }

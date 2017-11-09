@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/devopsfaith/krakend/logging/gologging"
+	"github.com/devopsfaith/krakend/logging"
 )
 
 func TestNewLoggingMiddleware_multipleNext(t *testing.T) {
@@ -17,14 +17,14 @@ func TestNewLoggingMiddleware_multipleNext(t *testing.T) {
 		}
 	}()
 	buff := bytes.NewBuffer(make([]byte, 1024))
-	logger, _ := gologging.NewLogger("INFO", buff, "pref")
+	logger, _ := logging.NewLogger("INFO", buff, "pref")
 	mw := NewLoggingMiddleware(logger, "supu")
 	mw(explosiveProxy(t), explosiveProxy(t))
 }
 
 func TestNewLoggingMiddleware_ok(t *testing.T) {
 	buff := bytes.NewBuffer(make([]byte, 1024))
-	logger, _ := gologging.NewLogger("DEBUG", buff, "pref")
+	logger, _ := logging.NewLogger("DEBUG", buff, "pref")
 	resp := &Response{IsComplete: true}
 	mw := NewLoggingMiddleware(logger, "supu")
 	p := mw(dummyProxy(resp))
@@ -57,7 +57,7 @@ func TestNewLoggingMiddleware_ok(t *testing.T) {
 
 func TestNewLoggingMiddleware_erroredResponse(t *testing.T) {
 	buff := bytes.NewBuffer(make([]byte, 1024))
-	logger, _ := gologging.NewLogger("DEBUG", buff, "pref")
+	logger, _ := logging.NewLogger("DEBUG", buff, "pref")
 	resp := &Response{IsComplete: true}
 	mw := NewLoggingMiddleware(logger, "supu")
 	expextedError := fmt.Errorf("NO-body expects the %s Inquisition!", "Spanish")
@@ -99,7 +99,7 @@ func TestNewLoggingMiddleware_erroredResponse(t *testing.T) {
 
 func TestNewLoggingMiddleware_nullResponse(t *testing.T) {
 	buff := bytes.NewBuffer(make([]byte, 1024))
-	logger, _ := gologging.NewLogger("DEBUG", buff, "pref")
+	logger, _ := logging.NewLogger("DEBUG", buff, "pref")
 	mw := NewLoggingMiddleware(logger, "supu")
 	p := mw(dummyProxy(nil))
 	r, err := p(context.Background(), &Request{})

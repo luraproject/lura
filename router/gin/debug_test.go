@@ -10,12 +10,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/devopsfaith/krakend/logging/gologging"
+	"github.com/devopsfaith/krakend/logging"
 )
 
 func TestDebugHandler(t *testing.T) {
 	buff := bytes.NewBuffer(make([]byte, 1024))
-	logger, err := gologging.NewLogger("ERROR", buff, "pref")
+	logger, err := logging.NewLogger("ERROR", buff, "pref")
 	if err != nil {
 		t.Error("building the logger:", err.Error())
 		return

@@ -15,7 +15,7 @@ deps:
 	go get "github.com/devopsfaith/krakend/router/mux"
 	go get "github.com/devopsfaith/krakend/router/gorilla"
 	go get "github.com/devopsfaith/krakend/router/negroni"
-	go get "github.com/devopsfaith/krakend/logging/gologging"
+	go get "github.com/devopsfaith/krakend/logging"
 	go get "github.com/urfave/negroni"
 	go get "github.com/zbindenren/negroni-prometheus"
 	go get "github.com/prometheus/client_golang/prometheus"
