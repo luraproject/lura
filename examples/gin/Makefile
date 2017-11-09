@@ -11,6 +11,7 @@ all: deps build
 
 deps:
 	go get "github.com/devopsfaith/krakend/config/viper"
+	go get "github.com/devopsfaith/krakend/logging"
 	go get "github.com/devopsfaith/krakend/proxy"
 	go get "github.com/devopsfaith/krakend/router/gin"
 	go get "github.com/gin-gonic/contrib/cache"

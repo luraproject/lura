@@ -14,7 +14,6 @@ import (
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/config/viper"
 	"github.com/devopsfaith/krakend/logging"
-	"github.com/devopsfaith/krakend/logging/logging"
 	"github.com/devopsfaith/krakend/proxy"
 	krakendgin "github.com/devopsfaith/krakend/router/gin"
 )
