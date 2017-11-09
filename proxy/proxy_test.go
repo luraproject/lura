@@ -1,13 +1,13 @@
 package proxy
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"strings"
 	"testing"
 	"time"
-	"bytes"
-	"fmt"
 )
 
 func TestEmptyMiddleware_ok(t *testing.T) {

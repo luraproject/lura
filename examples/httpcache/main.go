@@ -13,7 +13,7 @@ import (
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/config/viper"
-	"github.com/devopsfaith/krakend/logging/gologging"
+	"github.com/devopsfaith/krakend/logging"
 	"github.com/devopsfaith/krakend/proxy"
 	krakendgin "github.com/devopsfaith/krakend/router/gin"
 )
@@ -35,7 +35,7 @@ func main() {
 		serviceConfig.Port = *port
 	}
 
-	logger, err := gologging.NewLogger(*logLevel, os.Stdout, "[KRAKEND]")
+	logger, err := logging.NewLogger(*logLevel, os.Stdout, "[KRAKEND]")
 	if err != nil {
 		log.Fatal("ERROR:", err.Error())
 	}

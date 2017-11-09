@@ -12,13 +12,13 @@ import (
 	"github.com/urfave/negroni"
 
 	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/logging/gologging"
+	"github.com/devopsfaith/krakend/logging"
 	"github.com/devopsfaith/krakend/proxy"
 )
 
 func TestDefaultFactory_ok(t *testing.T) {
 	buff := bytes.NewBuffer(make([]byte, 1024))
-	logger, err := gologging.NewLogger("ERROR", buff, "pref")
+	logger, err := logging.NewLogger("ERROR", buff, "pref")
 	if err != nil {
 		t.Error("building the logger:", err.Error())
 		return
@@ -119,7 +119,7 @@ func TestDefaultFactory_ok(t *testing.T) {
 
 func TestDefaultFactory_middlewares(t *testing.T) {
 	buff := bytes.NewBuffer(make([]byte, 1024))
-	logger, err := gologging.NewLogger("ERROR", buff, "pref")
+	logger, err := logging.NewLogger("ERROR", buff, "pref")
 	if err != nil {
 		t.Error("building the logger:", err.Error())
 		return
@@ -195,7 +195,7 @@ func TestDefaultFactory_middlewares(t *testing.T) {
 
 func TestDefaultFactory_ko(t *testing.T) {
 	buff := bytes.NewBuffer(make([]byte, 1024))
-	logger, err := gologging.NewLogger("ERROR", buff, "pref")
+	logger, err := logging.NewLogger("ERROR", buff, "pref")
 	if err != nil {
 		t.Error("building the logger:", err.Error())
 		return
@@ -253,7 +253,7 @@ func TestDefaultFactory_ko(t *testing.T) {
 
 func TestDefaultFactory_proxyFactoryCrash(t *testing.T) {
 	buff := bytes.NewBuffer(make([]byte, 1024))
-	logger, err := gologging.NewLogger("ERROR", buff, "pref")
+	logger, err := logging.NewLogger("ERROR", buff, "pref")
 	if err != nil {
 		t.Error("building the logger:", err.Error())
 		return

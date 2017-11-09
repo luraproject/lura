@@ -36,7 +36,8 @@ type ServiceConfig struct {
 	Port int `mapstructure:"port"`
 	// version code of the configuration
 	Version int `mapstructure:"version"`
-
+	// Extra configuration for customized behaviour
+	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
 	// run krakend in debug mode
 	Debug     bool
 	uriParser URIParser
