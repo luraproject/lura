@@ -2,6 +2,8 @@ package logging
 
 import (
 	"bytes"
+	"os"
+	"os/exec"
 	"regexp"
 	"testing"
 )
@@ -12,6 +14,7 @@ const (
 	warningMsg  = "Warning msg"
 	errorMsg    = "Error msg"
 	criticalMsg = "Critical msg"
+	fatalMsg    = "Fatal msg"
 )
 
 func TestNewLogger(t *testing.T) {
@@ -43,6 +46,25 @@ func TestNewLogger_unknownLevel(t *testing.T) {
 	if err != ErrInvalidLogLevel {
 		t.Errorf("The factory didn't return the expected error. Got: %s", err.Error())
 	}
+}
+
+func TestNewLogger_fatal(t *testing.T) {
+	if os.Getenv("BE_CRASHER") == "1" {
+		l, err := NewLogger("Critical", bytes.NewBuffer(make([]byte, 1024)), "pref")
+		if err != nil {
+			t.Error("The factory returned an expected error:", err.Error())
+			return
+		}
+		l.Fatal("crash!!!")
+		return
+	}
+	cmd := exec.Command(os.Args[0], "-test.run=TestNewLogger_fatal")
+	cmd.Env = append(os.Environ(), "BE_CRASHER=1")
+	err := cmd.Run()
+	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
+		return
+	}
+	t.Fatalf("process ran with err %v, want exit status 1", err)
 }
 
 func logSomeStuff(level string) string {

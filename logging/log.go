@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 )
 
 // Logger collects logging information at several levels
@@ -42,7 +43,7 @@ var (
 // NewLogger creates and returns a Logger object
 func NewLogger(level string, out io.Writer, prefix string) (Logger, error) {
 	log.SetOutput(out)
-	l, ok := logLevels[level]
+	l, ok := logLevels[strings.ToUpper(level)]
 	if !ok {
 		return defaultLogger, ErrInvalidLogLevel
 	}
