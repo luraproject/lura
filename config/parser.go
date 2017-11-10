@@ -37,13 +37,13 @@ func (p parser) Parse(configFile string) (ServiceConfig, error) {
 }
 
 type parseableServiceConfig struct {
-	Endpoints   []*parseableEndpointConfig `mapstructure:"endpoints"`
-	Timeout     string                     `mapstructure:"timeout"`
-	CacheTTL    string                     `mapstructure:"cache_ttl"`
-	Host        []string                   `mapstructure:"host"`
-	Port        int                        `mapstructure:"port"`
-	Version     int                        `mapstructure:"version"`
-	ExtraConfig *ExtraConfig               `mapstructure:"extra_config,omitempty" json:"extra_config,omitempty"`
+	Endpoints   []*parseableEndpointConfig `json:"endpoints"`
+	Timeout     string                     `json:"timeout"`
+	CacheTTL    string                     `json:"cache_ttl"`
+	Host        []string                   `json:"host"`
+	Port        int                        `json:"port"`
+	Version     int                        `json:"version"`
+	ExtraConfig *ExtraConfig               `json:"extra_config,omitempty"`
 	Debug       bool
 }
 
@@ -68,14 +68,14 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 }
 
 type parseableEndpointConfig struct {
-	Endpoint        string              `mapstructure:"endpoint"`
-	Method          string              `mapstructure:"method"`
-	Backend         []*parseableBackend `mapstructure:"backend"`
-	ConcurrentCalls int                 `mapstructure:"concurrent_calls"`
-	Timeout         string              `mapstructure:"timeout"`
-	CacheTTL        string              `mapstructure:"cache_ttl"`
-	QueryString     []string            `mapstructure:"querystring_params"`
-	ExtraConfig     *ExtraConfig        `mapstructure:"extra_config,omitempty" json:"extra_config,omitempty"`
+	Endpoint        string              `json:"endpoint"`
+	Method          string              `json:"method"`
+	Backend         []*parseableBackend `json:"backend"`
+	ConcurrentCalls int                 `json:"concurrent_calls"`
+	Timeout         string              `json:"timeout"`
+	CacheTTL        string              `json:"cache_ttl"`
+	QueryString     []string            `json:"querystring_params"`
+	ExtraConfig     *ExtraConfig        `json:"extra_config,omitempty"`
 }
 
 func (p *parseableEndpointConfig) normalize() *EndpointConfig {
@@ -99,18 +99,18 @@ func (p *parseableEndpointConfig) normalize() *EndpointConfig {
 }
 
 type parseableBackend struct {
-	Group                    string            `mapstructure:"group"`
-	Method                   string            `mapstructure:"method"`
-	Host                     []string          `mapstructure:"host"`
-	HostSanitizationDisabled bool              `mapstructure:"disable_host_sanitize"`
-	URLPattern               string            `mapstructure:"url_pattern"`
-	Blacklist                []string          `mapstructure:"blacklist"`
-	Whitelist                []string          `mapstructure:"whitelist"`
-	Mapping                  map[string]string `mapstructure:"mapping"`
-	Encoding                 string            `mapstructure:"encoding"`
-	IsCollection             bool              `mapstructure:"is_collection"`
-	Target                   string            `mapstructure:"target"`
-	ExtraConfig              *ExtraConfig      `mapstructure:"extra_config,omitempty" json:"extra_config,omitempty"`
+	Group                    string            `json:"group"`
+	Method                   string            `json:"method"`
+	Host                     []string          `json:"host"`
+	HostSanitizationDisabled bool              `json:"disable_host_sanitize"`
+	URLPattern               string            `json:"url_pattern"`
+	Blacklist                []string          `json:"blacklist"`
+	Whitelist                []string          `json:"whitelist"`
+	Mapping                  map[string]string `json:"mapping"`
+	Encoding                 string            `json:"encoding"`
+	IsCollection             bool              `json:"is_collection"`
+	Target                   string            `json:"target"`
+	ExtraConfig              *ExtraConfig      `json:"extra_config,omitempty"`
 }
 
 func (p *parseableBackend) normalize() *Backend {
