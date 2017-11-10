@@ -11,7 +11,6 @@ import (
 	"gopkg.in/unrolled/secure.v1"
 
 	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/config/viper"
 	"github.com/devopsfaith/krakend/logging"
 	"github.com/devopsfaith/krakend/proxy"
 	"github.com/devopsfaith/krakend/router/mux"
@@ -24,7 +23,7 @@ func main() {
 	configFile := flag.String("c", "/etc/krakend/configuration.json", "Path to the configuration filename")
 	flag.Parse()
 
-	parser := viper.New()
+	parser := config.NewParser()
 	serviceConfig, err := parser.Parse(*configFile)
 	if err != nil {
 		log.Fatal("ERROR:", err.Error())

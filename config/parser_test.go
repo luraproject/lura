@@ -1,4 +1,4 @@
-package viper
+package config
 
 import (
 	"io/ioutil"
@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestNew_ok(t *testing.T) {
+func TestNewParser_ok(t *testing.T) {
 	configPath := "/tmp/ok.json"
 	configContent := []byte(`{
     "version": 1,
@@ -72,17 +72,19 @@ func TestNew_ok(t *testing.T) {
                 }
             ]
         }
-    ]
+    ],
+    "extra_config" : {"user":"test","hits":6,"parents":["gomez","morticia"]}
 }`)
 	if err := ioutil.WriteFile(configPath, configContent, 0644); err != nil {
 		t.FailNow()
 	}
 
-	serviceConfig, err := New().Parse(configPath)
+	serviceConfig, err := NewParser().Parse(configPath)
 
 	if err != nil {
 		t.Error("Unexpected error. Got", err.Error())
 	}
+	testExtraConfig(serviceConfig.ExtraConfig, t)
 
 	endpoint := serviceConfig.Endpoints[0]
 	endpointExtraConfiguration := endpoint.ExtraConfig
@@ -119,14 +121,14 @@ func testExtraConfig(extraConfig map[string]interface{}, t *testing.T) {
 	}
 }
 
-func TestNew_unknownFile(t *testing.T) {
-	_, err := New().Parse("/nowhere/in/the/fs.json")
+func TestNewParser_unknownFile(t *testing.T) {
+	_, err := NewParser().Parse("/nowhere/in/the/fs.json")
 	if err == nil || strings.Index(err.Error(), "Fatal error config file:") != 0 {
 		t.Error("Error expected. Got", err)
 	}
 }
 
-func TestNew_readingError(t *testing.T) {
+func TestNewParser_readingError(t *testing.T) {
 	wrongConfigPath := "/tmp/reading.json"
 	wrongConfigContent := []byte("{hello\ngo\n")
 	if err := ioutil.WriteFile(wrongConfigPath, wrongConfigContent, 0644); err != nil {
@@ -134,7 +136,7 @@ func TestNew_readingError(t *testing.T) {
 	}
 
 	expected := "Fatal error config file: While parsing config: invalid character 'h' looking for beginning of object key string"
-	_, err := New().Parse(wrongConfigPath)
+	_, err := NewParser().Parse(wrongConfigPath)
 	if err == nil || strings.Index(err.Error(), expected) != 0 {
 		t.Error("Error expected. Got", err)
 	}
@@ -143,14 +145,14 @@ func TestNew_readingError(t *testing.T) {
 	}
 }
 
-func TestNew_initError(t *testing.T) {
+func TestNewParser_initError(t *testing.T) {
 	wrongConfigPath := "/tmp/unmarshall.json"
 	wrongConfigContent := []byte("{\"a\":42}")
 	if err := ioutil.WriteFile(wrongConfigPath, wrongConfigContent, 0644); err != nil {
 		t.FailNow()
 	}
 
-	_, err := New().Parse(wrongConfigPath)
+	_, err := NewParser().Parse(wrongConfigPath)
 	if err == nil || strings.Index(err.Error(), "Unsupported version: 0") != 0 {
 		t.Error("Error expected. Got", err)
 	}

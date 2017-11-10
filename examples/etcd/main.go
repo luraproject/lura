@@ -10,7 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/config/viper"
 	"github.com/devopsfaith/krakend/logging"
 	"github.com/devopsfaith/krakend/proxy"
 	krakendgin "github.com/devopsfaith/krakend/router/gin"
@@ -25,7 +24,7 @@ func main() {
 	etcdServer := flag.String("etcd", "http://192.168.99.100:4001", "Comma-separated list of etcd servers (with port and schema)")
 	flag.Parse()
 
-	parser := viper.New()
+	parser := config.NewParser()
 	serviceConfig, err := parser.Parse(*configFile)
 	if err != nil {
 		log.Fatal("ERROR:", err.Error())
