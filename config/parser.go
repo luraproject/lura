@@ -39,7 +39,7 @@ func (p parser) Parse(configFile string) (ServiceConfig, error) {
 type parseableServiceConfig struct {
 	Endpoints   []*parseableEndpointConfig `json:"endpoints"`
 	Timeout     string                     `json:"timeout"`
-	CacheTTL    string                     `json:"cache_ttl"`
+	CacheTTL    int                        `json:"cache_ttl"`
 	Host        []string                   `json:"host"`
 	Port        int                        `json:"port"`
 	Version     int                        `json:"version"`
@@ -50,7 +50,7 @@ type parseableServiceConfig struct {
 func (p *parseableServiceConfig) normalize() ServiceConfig {
 	cfg := ServiceConfig{
 		Timeout:  parseDuration(p.Timeout),
-		CacheTTL: parseDuration(p.CacheTTL),
+		CacheTTL: time.Duration(p.CacheTTL) * time.Second,
 		Host:     p.Host,
 		Port:     p.Port,
 		Version:  p.Version,
@@ -73,7 +73,7 @@ type parseableEndpointConfig struct {
 	Backend         []*parseableBackend `json:"backend"`
 	ConcurrentCalls int                 `json:"concurrent_calls"`
 	Timeout         string              `json:"timeout"`
-	CacheTTL        string              `json:"cache_ttl"`
+	CacheTTL        int                 `json:"cache_ttl"`
 	QueryString     []string            `json:"querystring_params"`
 	ExtraConfig     *ExtraConfig        `json:"extra_config,omitempty"`
 }
@@ -84,7 +84,7 @@ func (p *parseableEndpointConfig) normalize() *EndpointConfig {
 		Method:          p.Method,
 		ConcurrentCalls: p.ConcurrentCalls,
 		Timeout:         parseDuration(p.Timeout),
-		CacheTTL:        parseDuration(p.CacheTTL),
+		CacheTTL:        time.Duration(p.CacheTTL) * time.Second,
 		QueryString:     p.QueryString,
 	}
 	if p.ExtraConfig != nil {
