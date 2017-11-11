@@ -1,4 +1,4 @@
-.PHONY: all deps test build benchmark coveralls build_gin_example build_dns_example build_mux_example build_gorilla_example build_negroni_example build_httpcache_example build_jwt_example build_etcd_example
+.PHONY: all deps test build benchmark coveralls build_gin_example build_dns_example build_mux_example build_gorilla_example build_negroni_example build_httpcache_example build_jwt_example
 
 PACKAGES = $(shell go list ./... | grep -v /examples/)
 
@@ -8,7 +8,6 @@ deps:
 	go get -u github.com/gin-gonic/gin
 	go get -u github.com/gorilla/mux
 	go get -u github.com/urfave/negroni
-	go get -u github.com/coreos/etcd/client
 
 test:
 	go fmt ./...
@@ -18,7 +17,7 @@ test:
 benchmark:
 	go test -bench=. -benchtime=3s $(PACKAGES)
 
-build: build_gin_example build_dns_example build_mux_example build_gorilla_example build_negroni_example build_httpcache_example build_jwt_example build_etcd_example
+build: build_gin_example build_dns_example build_mux_example build_gorilla_example build_negroni_example build_httpcache_example build_jwt_example
 
 build_gin_example:
 	cd examples/gin/ && make && cd ../.. && cp examples/gin/krakend_gin_example* .
@@ -40,9 +39,6 @@ build_httpcache_example:
 
 build_jwt_example:
 	cd examples/jwt/ && make && cd ../.. && cp examples/jwt/krakend_jwt_example* .
-
-build_etcd_example:
-	cd examples/etcd/ && make && cd ../.. && cp examples/etcd/krakend_etcd_example* .
 
 coveralls: all
 	go get github.com/mattn/goveralls

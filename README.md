@@ -106,7 +106,6 @@ Visit the [framework overview](/docs/OVERVIEW.md) for more details about the com
 5. [dns srv service discovery](/examples/dns/)
 6. [jwt middlewares](/examples/jwt/)
 7. [httpcache based proxies](/examples/httpcache/)
-8. [etcd service discovery](/examples/httpcache/)
 
 ## Configuration file
 
