@@ -51,6 +51,7 @@ func (rf factory) New() router.Router {
 	return ginRouter{rf.cfg, context.Background()}
 }
 
+// NewWithContext implements the factory interface
 func (rf factory) NewWithContext(ctx context.Context) router.Router {
 	return ginRouter{rf.cfg, ctx}
 }
