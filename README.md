@@ -120,4 +120,10 @@ Check out the [benchmark results](/docs/BENCHMARKS.md) of several KrakenD compon
 We are always happy to receive contributions. If you have questions, suggestions, bugs please open an issue.
 If you want to submit the code, create the issue and send us a pull request for review.
 
+
+## Read more
+- Follow the [KrakenD blog](http://www.krakend.io/blog/)
+- Follow our [twitter account](https://twitter.com/devopsfaith)
+- **Read the [documentation](http://www.krakend.io/docs/overview/introduction/)**
+
 Enjoy the KrakenD!
