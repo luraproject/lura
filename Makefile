@@ -11,7 +11,7 @@ deps:
 
 test:
 	go fmt ./...
-	go test -cover $(PACKAGES)
+	go test -v -cover $(PACKAGES)
 	go vet ./...
 
 benchmark:

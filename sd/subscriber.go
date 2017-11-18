@@ -10,6 +10,13 @@ type Subscriber interface {
 	Hosts() ([]string, error)
 }
 
+// SubscriberFunc type is an adapter to allow the use of ordinary functions as subscribers.
+// If f is a function with the appropriate signature, SubscriberFunc(f) is a Subscriber that calls f.
+type SubscriberFunc func() ([]string, error)
+
+// New implements the Subscriber interface by executing the wrapped function
+func (f SubscriberFunc) Hosts() ([]string, error) { return f() }
+
 // FixedSubscriber has a constant set of backend hosts and they never get updated
 type FixedSubscriber []string
 

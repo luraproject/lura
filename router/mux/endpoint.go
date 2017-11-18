@@ -81,7 +81,7 @@ type ParamExtractor func(r *http.Request) map[string]string
 
 // NewRequest is a RequestBuilder that creates a proxy request from the received http request without
 // processing the uri params
-var NewRequest = NewRequestBuilder(func(r *http.Request) map[string]string {
+var NewRequest = NewRequestBuilder(func(_ *http.Request) map[string]string {
 	return map[string]string{}
 })
 
