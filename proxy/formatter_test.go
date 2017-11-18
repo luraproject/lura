@@ -63,6 +63,45 @@ func TestEntityFormatter_newWhitelistingFilter(t *testing.T) {
 	}
 }
 
+func TestEntityFormatter_newWhitelistingFilterKeyOrder(t *testing.T) {
+	sample := Response{
+		Data: map[string]interface{}{
+			"id": 42,
+			"tupu": map[string]interface{}{
+				"muku": map[string]interface{}{
+					"supu": 1,
+					"muku": 2,
+				},
+				"supu": map[string]interface{}{
+					"supu": 3,
+					"muku": 4,
+				},
+			},
+		},
+		IsComplete: true,
+	}
+	expected_supu_child := 1
+
+	var ok bool
+	f := NewEntityFormatter("", []string{"tupu.muku.supu"}, []string{}, "", map[string]string{})
+	res := f.Format(sample)
+	var tupu map[string]interface{}
+	var muku map[string]interface{}
+	var supu_child int
+	if tupu, ok = res.Data["tupu"].(map[string]interface{}); !ok {
+		t.Errorf("The formatter does not have field tupu\n")
+	}
+	if muku, ok = tupu["muku"].(map[string]interface{}); !ok {
+		t.Errorf("The formatter does not have field tupu.muku\n")
+	}
+	if supu_child, ok = muku["supu"].(int); !ok || supu_child != expected_supu_child {
+		t.Errorf("The formatter does not have field tupu.muku.supu or wrong value\n")
+	}
+	if _, ok = tupu["supu"].(map[string]interface{}); ok {
+		t.Errorf("The formatter should have removed tupu.supu\n")
+	}
+}
+
 func TestEntityFormatter_newblacklistingFilter(t *testing.T) {
 	sample := Response{
 		Data: map[string]interface{}{
