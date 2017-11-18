@@ -9,11 +9,18 @@ import (
 
 // Router sets up the public layer exposed to the users
 type Router interface {
-	Run(cfg config.ServiceConfig)
+	Run(config.ServiceConfig)
 }
+
+// FactoryFunc type is an adapter to allow the use of ordinary functions as routers.
+// If f is a function with the appropriate signature, RouterFunc(f) is a Router that calls f.
+type RouterFunc func(config.ServiceConfig)
+
+// New implements the Router interface
+func (f RouterFunc) Run(cfg config.ServiceConfig) { f(cfg) }
 
 // Factory creates new routers
 type Factory interface {
 	New() Router
-	NewWithContext(ctx context.Context) Router
+	NewWithContext(context.Context) Router
 }
