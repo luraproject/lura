@@ -60,8 +60,8 @@ type HTTPResponseParser func(context.Context, *http.Response) (*Response, error)
 
 // DefaultHTTPResponseParserConfig defines a default HTTPResponseParserConfig
 var DefaultHTTPResponseParserConfig = HTTPResponseParserConfig{
-	func(r io.Reader, v *map[string]interface{}) error { return nil },
-	EntityFormatterFunc(func(entity Response) Response { return entity }),
+	func(_ io.Reader, _ *map[string]interface{}) error { return nil },
+	EntityFormatterFunc(func(r Response) Response { return r }),
 }
 
 // HTTPResponseParserConfig contains the config for a given HttpResponseParser

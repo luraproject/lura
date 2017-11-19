@@ -4,7 +4,7 @@ import "strings"
 
 // EntityFormatter formats the response data
 type EntityFormatter interface {
-	Format(entity Response) Response
+	Format(Response) Response
 }
 
 // EntityFormatterFunc holds the formatter function
@@ -13,7 +13,7 @@ type EntityFormatterFunc func(Response) Response
 // Format implements the EntityFormatter interface
 func (e EntityFormatterFunc) Format(entity Response) Response { return e(entity) }
 
-type propertyFilter func(entity *Response)
+type propertyFilter func(*Response)
 
 type entityFormatter struct {
 	Target         string
