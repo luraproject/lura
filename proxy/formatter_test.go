@@ -71,9 +71,9 @@ func TestEntityFormatter_newWhitelistingDeepFields(t *testing.T) {
 				"muku": map[string]interface{}{
 					"supu": 1,
 					"muku": 2,
-                    "gutu": map[string]interface{} {
-                        "kugu" : 42,
-                    },
+					"gutu": map[string]interface{}{
+						"kugu": 42,
+					},
 				},
 				"supu": map[string]interface{}{
 					"supu": 3,
@@ -90,8 +90,8 @@ func TestEntityFormatter_newWhitelistingDeepFields(t *testing.T) {
 	res := f.Format(sample)
 	var tupu map[string]interface{}
 	var muku map[string]interface{}
-    var gutu map[string]interface{}
-    var kugu int
+	var gutu map[string]interface{}
+	var kugu int
 	var supu_child int
 	if tupu, ok = res.Data["tupu"].(map[string]interface{}); !ok {
 		t.Errorf("The formatter does not have field tupu\n")
@@ -105,15 +105,15 @@ func TestEntityFormatter_newWhitelistingDeepFields(t *testing.T) {
 	if _, ok = tupu["supu"].(map[string]interface{}); ok {
 		t.Errorf("The formatter should have removed tupu.supu\n")
 	}
-    if _, ok = muku["muku"]; ok {
+	if _, ok = muku["muku"]; ok {
 		t.Errorf("The formatter should have removed tupu.muku.muku\n")
-    }
-    if gutu, ok = muku["gutu"].(map[string]interface{}); !ok {
+	}
+	if gutu, ok = muku["gutu"].(map[string]interface{}); !ok {
 		t.Errorf("The formatter does not have field tupu.muku.gutu\n")
-    }
-    if kugu, ok = gutu["kugu"].(int); !ok || kugu != 42 {
+	}
+	if kugu, ok = gutu["kugu"].(int); !ok || kugu != 42 {
 		t.Errorf("The formatter does not have field tupu.muku.gutu.kugu\n")
-    }
+	}
 }
 
 func TestEntityFormatter_newblacklistingFilter(t *testing.T) {

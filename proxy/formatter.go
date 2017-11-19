@@ -83,25 +83,25 @@ func newWhitelistingFilter(whitelist []string) propertyFilter {
 	}
 	wlIndices := make([]int, len(whitelist))
 	wlFields := make([]string, numFields)
-	f_idx := 0
-	for w_idx, k := range whitelist {
+	fIdx := 0
+	for wIdx, k := range whitelist {
 		for _, key := range strings.Split(k, ".") {
-			wlFields[f_idx] = key
-			f_idx++
+			wlFields[fIdx] = key
+			fIdx++
 		}
-		wlIndices[w_idx] = f_idx
+		wlIndices[wIdx] = fIdx
 	}
 
 	return func(entity *Response) {
 		accumulator := make(map[string]interface{}, len(whitelist))
 		start := 0
 		for _, end := range wlIndices {
-			d_end := end - 1
-            p := findDictPath(entity.Data, wlFields[start:d_end]);
-            if value, ok := p[wlFields[d_end]]; ok {
-                d := buildDictPath(accumulator, wlFields[start:d_end], value)
-                d[wlFields[d_end]] = value
-            }
+			dEnd := end - 1
+			p := findDictPath(entity.Data, wlFields[start:dEnd])
+			if value, ok := p[wlFields[dEnd]]; ok {
+				d := buildDictPath(accumulator, wlFields[start:dEnd])
+				d[wlFields[dEnd]] = value
+			}
 			start = end
 		}
 		*entity = Response{Data: accumulator, IsComplete: entity.IsComplete}
@@ -109,42 +109,35 @@ func newWhitelistingFilter(whitelist []string) propertyFilter {
 }
 
 func findDictPath(root map[string]interface{}, fields []string) map[string]interface{} {
-    ok := true
-    var p map[string]interface{}
-    var c interface{}
-
-    p = root
-    for _, field := range fields {
-        if c, ok = p[field]; !ok {
-            return nil
-        }
-        if p, ok = c.(map[string]interface{}); !ok {
-            return nil
-        }
-    }
-    return p
-}
-
-func buildDictPath(accumulator map[string]interface{}, fields []string, value interface{}) map[string]interface{} {
-	var ok bool = true
-	var c map[string]interface{}
-	var f_idx int
-    f_end := len(fields)
-	p := accumulator
-	for f_idx = 0; f_idx < f_end; f_idx++ {
-		if c, ok = p[fields[f_idx]].(map[string]interface{}); !ok {
-			break
+	ok := true
+	p := root
+	for _, field := range fields {
+		if p, ok = p[field].(map[string]interface{}); !ok {
+			return nil
 		}
-		p = c
-	}
-	for ; f_idx < f_end; f_idx++ {
-		c = make(map[string]interface{})
-		p[fields[f_idx]] = c
-		p = c
 	}
 	return p
 }
 
+func buildDictPath(accumulator map[string]interface{}, fields []string) map[string]interface{} {
+	var ok bool = true
+	var c map[string]interface{}
+	var fIdx int
+	fEnd := len(fields)
+	p := accumulator
+	for fIdx = 0; fIdx < fEnd; fIdx++ {
+		if c, ok = p[fields[fIdx]].(map[string]interface{}); !ok {
+			break
+		}
+		p = c
+	}
+	for ; fIdx < fEnd; fIdx++ {
+		c = make(map[string]interface{})
+		p[fields[fIdx]] = c
+		p = c
+	}
+	return p
+}
 
 func newBlacklistingFilter(blacklist []string) propertyFilter {
 	bl := make(map[string][]string, len(blacklist))
