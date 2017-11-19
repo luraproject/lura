@@ -91,7 +91,7 @@ type Backend struct {
 	// name of the field to extract to the root. If empty, the formater will do nothing
 	Target string `mapstructure:"target"`
 	// name of the service discovery driver to use
-	SD string `mapstructure:"target"`
+	SD string `mapstructure:"sd"`
 
 	// list of keys to be replaced in the URLPattern
 	URLKeys []string

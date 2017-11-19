@@ -118,6 +118,7 @@ type parseableBackend struct {
 	IsCollection             bool              `json:"is_collection"`
 	Target                   string            `json:"target"`
 	ExtraConfig              *ExtraConfig      `json:"extra_config,omitempty"`
+	SD                       string            `json:"sd"`
 }
 
 func (p *parseableBackend) normalize() *Backend {
@@ -133,6 +134,7 @@ func (p *parseableBackend) normalize() *Backend {
 		Encoding:                 p.Encoding,
 		IsCollection:             p.IsCollection,
 		Target:                   p.Target,
+		SD:                       p.SD,
 	}
 	if p.ExtraConfig != nil {
 		b.ExtraConfig = *p.ExtraConfig
