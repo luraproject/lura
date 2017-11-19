@@ -1,0 +1,299 @@
+KrakenD: The API Gateway
+
+Tags: go golang krakend
+
+http://krakend.io
+Apr 2017
+
+* What is KrakenD
+
+KrakenD is the fastest *API* *Gateway* solution in the market.
+
+It's also known as a *Backend* *For* *Frontend* as it sits between the client (frontend) and source servers (backends) offering a custom API that provides only the information that the UI needs. No coding required!
+
+*Agreggates* information from many sources into single endpoints.
+
+*Manipulates* responses and allows you to group, wrap, rename, hide attributes and shrink responses.
+
+*Extends* your ecosystem as it supports a myriad of middelwares and plugins, such as OAuth or security layers.
+
+*Speaks* different encoding formats and protocols.
+
+
+* What is KrakenD
+
+.image https://raw.githubusercontent.com/devopsfaith/krakend/master/docs/images/krakend-gateway.png
+
+* Use cases
+
+Typical scenarios:
+
+- Better Mobile apps user experience and less data consumption
+- Instantly creation of a new REST API
+- Add APIs in legacy systems
+- Quick Microservices adoption
+
+
+* The KrakenD flavours
+
+- *Open* *source*: the core of the KrakenD is an open sourced library that everyone can use, extend and modify. The project has several examples for the integration with other third party libs (gorilla, negroni, gin, etc)
+- *Free*: A sneak peak of the enterprise edition, with limitations in its usage.
+- Enterprise: The full version with all the KrakenD functionalitites.
+- SaaS (coming soon): Cloud version without any infrastructure needed.
+
+* The KrakenD rules
+
+- Reactive is key (even failing fast is better than succeeding slow)
+- The simpler, the better
+- Everything is plugglable
+- Each request must be processed in its own request-scoped context
+
+.image http://www.reactivemanifesto.org/images/reactive-traits.svg
+
+* How it works?
+
+KrakenD uses two different states: *building* and *working*.
+
+In the *building* stage, all the pipes are defined, with their tasks, helpers and generators. Each pipe is binded to an endpoint via their outter common interface, resulting in a HTTP handler function.
+
+*Building:* When the service is initially being prepared to serve the requests, prepares all the middelwares and defines the pipes. Each pipe is binded to an endpoint via their outter common interface, resulting in a HTTP handler function.
+Only when the configuration is parsed and the service being prepared.
+
+*Working:* The router maps every request to a HTTP handler function and triggers the pipe execution. As HTTP handler functions are built in the previous step, KrakenD doesn't penalize the performance depending on the number of endpoints or the possible cardinality of the URI requested by the users.
+
+* Architecture from 30.000ft
+
+The KrakenD framework is composed of a set of packages designed as building blocks for creating pipes and processors between an exposed endpoint and one or several API resources served by your backends.
+
+The most important packages are:
+
+- the `config` package defines the service.
+- the `router` package sets up the endpoints exposed to the clients.
+- the `proxy` package adds the required middlewares and components for further processing of the requests to send and the received responses sent by the backends, and also to manage the connections against those backends.
+
+The rest of the packages of the framework contain some helpers and adapters for complementary tasks, like encoding, logging or service discovery.
+
+* System components
+
+* The config package
+
+The `config` package contains the structs required for the service description.
+
+The `ServiceConfig` struct defines the entire service. It should be initialized before using it in order to be sure that all parameters have been normalized and default values have been applied.
+
+The `config` package also defines an interface for a file config parser and a parser based on the viper library.
+
+* The router package
+
+The `router` package contains an interface and several implementations for the KrakenD router layer using the mux router from the `net/http` and the `httprouter` wrapped in the `gin` framework.
+
+The router layer is responsible for setting up the HTTP(S) services, binding the endpoints defined at the ServiceConfig struct and transforming the HTTP request into proxy requests before delegating the task to the inner layer (proxy). Once the internal proxy layer returns a proxy response, the router layer converts it into a proper HTTP response and sends it to the user.
+
+This layer can be easily extended in order to use any HTTP router, framework or middleware of your choice. Adding transport layer adapters for other protocols (Thrift, gRPC, AMQP, NATS, etc) is in the roadmap.
+
+* The proxy package
+
+The `proxy` package is where the most part of the KrakenD components and features are placed. It defines two important interfaces, designed to be stacked:
+
+- *Proxy* is a function that converts a given context and request into a response.
+- *Middleware* is a function that accepts one or more proxies and returns a single proxy wrapping them.
+
+This layer transforms the request received from the outter layer (router) into a single or several requests to your backend services, processes the responses and returns a single response.
+
+* The proxy package
+
+*Middlewares* generate custom proxies that are chained depending on the workflow defined in the configuration until each possible branch ends in a transport-related proxy.
+
+Every one of these generated proxies is able to transform the input or even clone it several times and pass it or them to the next element in the chain.
+
+Finally, they can also modify the received response or responses adding all kinds of features to the generated pipe.
+
+The KrakenD framework provides a default implementation of the proxy stack factory.
+
+* Proxy Middlewares available
+
+- The `balancing` middleware uses some type of strategy for selecting a backend host to query.
+- The `concurrent` middleware improves the QoS by sending several concurrent requests to the next step of the chain and returning the first succesful response using a timeout for canceling the generated workload.
+- The `logging` middleware logs the received request and response and also the duration of the segment execution.
+- The `merging` middleware is a fork-and-join middleware. It is intended to split the process of the request into several concurrent processes, each one against a different backend, and to merge all the received responses from those created pipes into a single one. It applies a timeout, as the concurrent one does.
+- The `http` middleware completes the received proxy request by replacing the parameters extracted from the user request in the defined URLPattern.
+
+* Other components of the proxy package
+
+*Proxies* *available*:
+
+The http proxy translates a proxy request into an HTTP one, sends it to the backend API using a `HTTPClientFactory`, decodes the returned HTTP response with a `Decoder`, manipulates the response data with an `EntityFormatter` and returns it to the caller.
+
+*Other*:
+
+The proxy package also defines the `EntityFormatter`, the block responsible for enabling a powerful and fast response manipulation.
+
+* What did we learn?
+
+* Package dependencies
+
+The KrakenD framework is intended to be pluggable, so several implementations for each component must be expected. Storing every adapter in a dedicated repository would add some overhead, so keeping all in the same project looks like the proper solution. How to avoid dependency hells?
+
+- The framework doesn't add nor rely on any extra dependency outside the stdlib other than the 'first level' packages from the framework itself.
+- The 'first level' packages define the interfaces and common structs for the concrete implementations.
+- All these concrete implementations have their own factories and/or builders, so they can be injected easily.
+- Some of these concrete implementations are adapters depending on third party libs.
+- The concrete implementation must be injected by the client.
+
+* Decorator/middleware pattern
+
+The easiest way of extending a behaviour without using inheritance or complex object composition and without changing its structure/signature.
+
+	// Proxy processes a request in a given context and returns a response and an error
+	type Proxy func(ctx context.Context, request *Request) (*Response, error)
+
+	// BackendFactory creates a proxy based on the received backend configuration
+	type BackendFactory func(remote *config.Backend) Proxy
+
+	// Middleware adds a middleware, decorator or wrapper over a collection of proxies,
+	// exposing a proxy interface.
+	type Middleware func(next ...Proxy) Proxy
+
+This pattern is very usefull for adding orthogonal features like logging, load balancing, encoding and decoding, etc.
+
+It also plays nice with the Single Responsiblity Principle, aka. Separation of Concerns, aka. Do one thing and do it well!
+
+* Decorator/middleware pattern
+
+Stacking middlewares is as easy as
+
+	func (pf defaultFactory) newStack(backend *config.Backend) (p Proxy) {
+		// get the basic behaviour
+		p = pf.backendFactory(backend)
+		// add a load balancing startegy
+		p = NewRoundRobinLoadBalancedMiddleware(backend)(p)
+		// add a concurrent strategy
+		if backend.ConcurrentCalls > 1 {
+			p = NewConcurrentMiddleware(backend)(p)
+		}
+		// add a request builder to build the request to send to the backend
+		p = NewRequestBuilderMiddleware(backend)(p)
+		return
+	}
+
+* Heap vs stack
+
+One of the nicest features of using middleware functions is the way they help the GC by allocating their variables in the stack instead of in the heap.
+
+Stack-allocated variables, unlike heap-allocated variables, don't incur any GC overhead because they're destroyed when the rest of the stack frame is destroyed - when the function returns.
+
+Play with `go run -gcflags '-m -l'` or google 'golang escape analysis' for more details.
+
+* Readers
+
+Since KrakenD is a hard user of decorators, lots of values must be passed several times from one layer of the stack to the next/previous.
+
+Also, it's important ot keep in mind KrakenD is a HTTP(s) proxy, so it's moving HTTP requests and responses up and down.
+
+Storing the request body as a `io.Reader` reduces dramatically the number of memory allocations the pipe requires because passing a reader is cheaper than passing a string or an byte array (their are copied every time)
+
+HTTP responses could be modified on any level of the stack, therefore they are marshalled as a map as soon as they arrive.
+
+Both entities (request and response) are passed as pointers from one layer to the other.
+
+* String composition
+
+Each time a request hits the KrakenD node, it must create one or several url for the proxied request(s) to send to the backend(s). If you want to ensure a high throughput with a stable, predictable performance, this is the perfect place for some optimizations.
+
+What's wrong with this?
+
+	// GeneratePath takes a pattern and updates the path of the request
+	func (r *Request) GeneratePath(URLPattern string) {
+		if len(r.Params) == 0 {
+			r.Path = URLPattern
+			return
+		}
+		buff := URLPattern
+		for key, value := range r.Params {
+			buff = strings.Replace(buff, "{{." + key + "}}", value, -1)
+		}
+		r.Path = buff
+	}
+
+* String composition
+
+
+
+Final implementation:
+
+	// GeneratePath takes a pattern and updates the path of the request
+	func (r *Request) GeneratePath(URLPattern string) {
+		if len(r.Params) == 0 {
+			r.Path = URLPattern
+			return
+		}
+		buff := []byte(URLPattern)
+		for k, v := range r.Params {
+			key := []byte{}
+			key = append(key, "{{."...)
+			key = append(key, k...)
+			key = append(key, "}}"...)
+			buff = bytes.Replace(buff, key, []byte(v), -1)
+		}
+		r.Path = string(buff)
+	}
+
+_This_implementation_resulted_in_a_3%_performance_gain_.
+
+
+We're looking forward to improve this part even more with [[https://github.com/metakeule/places][Metakeule's places]]
+
+* Request context
+
+Every user's request creates its own context so the KrakenD can cancel all the running tasks and go routines created for serving a response back to the user whenever it's required (pipe completed, timeout, custom events, etc).
+
+This strategy allows the KrakenD to just keep the required processes running, releasing all the resources as soon as posible. And the profiler loves it!
+
+Contexts made the stdlib with go 1.7 and they already are key in applying reactive principles to the language, like managing subscriptions to concurrent data streams.
+
+Contexts aren't the place to hide globals nor other arguments for the function the context is passed to.
+
+* Don't reinvent the wheel
+
+The golang stdlib is amazing! If you need something not present in there, probably there is an easy way to add the feature just by extending/customizing some component.
+
+The best example was managing *graceful* *http* *server* *restarts/reloads* before go 1.8.
+
+You can keep all the connections as readers to filedescriptors, so communications can be resumed after a server restart or you can just plug-in a wrapper like https://github.com/facebookgo/grace.
+
+If the first option looks cooler to you, maybe you aren't aware of the blocking and thread consuming nature of the filesystem access in golang...
+
+Lucky us, in the later version of the stdlib, the `http.Server` exposes a method to attach a context to the server and request graceful shutdowns.
+
+* Benchmarking components
+
+All the critical components of the framework have a benchmark, so it's easy to detect performance regressions
+
+.link https://github.com/devopsfaith/krakend/blob/master/docs/BENCHMARKS.md#request-generator
+
+For components affected by the size of the input, the focus is to keep them with a constant memory consumption (_O(1)_) and a lineal or better time consumption (_O(N)_).
+
+* Was it worth it?
+
+* Benchmarking
+
+We wanted to compare our own product with other similar products in the market. In order to do so we used the same environment and conditions and tested the following API Gateways:
+
+- Kong
+- Vulcand
+- Tyk
+- KrakenD
+
+For the benchmarks we based the tests on the benchmarking project
+
+.link https://github.com/varnish/api-gateway-benchmarks varnish/api-gateway-benchmarks
+
+At the time of writing, KrakenD does not support auth features, so we just did the benchmark with `test01`
+
+* Benchmarking
+
+.iframe http://www.charted.co/c/1db8eb2 600 700
+
+* Benchmarking
+
+.iframe http://www.charted.co/c/6b69a26 600 700

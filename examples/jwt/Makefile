@@ -10,7 +10,6 @@ BIN_NAME=krakend_jwt_example_${KRAKEND_VERSION}
 all: deps build
 
 deps:
-	go get "github.com/devopsfaith/krakend/config/viper"
 	go get "github.com/devopsfaith/krakend/proxy"
 	go get "github.com/devopsfaith/krakend/router/gin"
 	go get "github.com/devopsfaith/krakend/logging"

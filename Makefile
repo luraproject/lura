@@ -6,13 +6,12 @@ all: deps test build
 
 deps:
 	go get -u github.com/gin-gonic/gin
-	go get -u github.com/spf13/viper
 	go get -u github.com/gorilla/mux
 	go get -u github.com/urfave/negroni
 
 test:
 	go fmt ./...
-	go test -cover $(PACKAGES)
+	go test -v -cover $(PACKAGES)
 	go vet ./...
 
 benchmark:

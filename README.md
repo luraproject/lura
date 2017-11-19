@@ -64,7 +64,7 @@ For the lazy, a ready to use example:
         "log"
         "os"
 
-        "github.com/devopsfaith/krakend/config/viper"
+        "github.com/devopsfaith/krakend/config"
         "github.com/devopsfaith/krakend/logging"
         "github.com/devopsfaith/krakend/proxy"
         "github.com/devopsfaith/krakend/router/gin"
@@ -77,7 +77,7 @@ For the lazy, a ready to use example:
         configFile := flag.String("c", "/etc/krakend/configuration.json", "Path to the configuration filename")
         flag.Parse()
 
-        parser := viper.New()
+        parser := config.NewParser()
         serviceConfig, err := parser.Parse(*configFile)
         if err != nil {
             log.Fatal("ERROR:", err.Error())
@@ -118,5 +118,11 @@ Check out the [benchmark results](/docs/BENCHMARKS.md) of several KrakenD compon
 ## Contributing
 We are always happy to receive contributions. If you have questions, suggestions, bugs please open an issue.
 If you want to submit the code, create the issue and send us a pull request for review.
+
+
+## Read more
+- Follow the [KrakenD blog](http://www.krakend.io/blog/)
+- Follow our [twitter account](https://twitter.com/devopsfaith)
+- **Read the [documentation](http://www.krakend.io/docs/overview/introduction/)**
 
 Enjoy the KrakenD!

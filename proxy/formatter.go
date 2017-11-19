@@ -84,20 +84,13 @@ func newWhitelistingFilter(whitelist []string) propertyFilter {
 	wl := make(map[string]map[string]interface{}, len(whitelist))
 	for _, k := range whitelist {
 		keys := strings.Split(k, ".")
-		tmp := make(map[string]interface{}, len(keys)-1)
-		if len(keys) > 1 {
-			if _, ok := wl[keys[0]]; ok {
-				for _, k := range keys[1:] {
-					wl[keys[0]][k] = nil
-				}
-			} else {
-				for _, k := range keys[1:] {
-					tmp[k] = nil
-				}
-				wl[keys[0]] = tmp
-			}
-		} else {
+		tmp, ok := wl[keys[0]]
+		if !ok {
+			tmp = make(map[string]interface{}, len(keys)-1)
 			wl[keys[0]] = tmp
+		}
+		for idx := 1; idx < len(keys); idx++ {
+			tmp[keys[idx]] = nil
 		}
 	}
 

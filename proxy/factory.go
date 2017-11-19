@@ -15,6 +15,13 @@ type Factory interface {
 	New(cfg *config.EndpointConfig) (Proxy, error)
 }
 
+// FactoryFunc type is an adapter to allow the use of ordinary functions as proxy factories.
+// If f is a function with the appropriate signature, FactoryFunc(f) is a Factory that calls f.
+type FactoryFunc func(*config.EndpointConfig) (Proxy, error)
+
+// New implements the Factory interface
+func (f FactoryFunc) New(cfg *config.EndpointConfig) (Proxy, error) { return f(cfg) }
+
 // DefaultFactory returns a default http proxy factory with the injected logger
 func DefaultFactory(logger logging.Logger) Factory {
 	return NewDefaultFactory(httpProxy, logger)

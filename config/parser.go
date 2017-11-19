@@ -1,6 +1,149 @@
 package config
 
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"time"
+)
+
 // Parser reads a configuration file, parses it and returns the content as an init ServiceConfig struct
 type Parser interface {
 	Parse(configFile string) (ServiceConfig, error)
+}
+
+// ParserFunc type is an adapter to allow the use of ordinary functions as subscribers.
+// If f is a function with the appropriate signature, ParserFunc(f) is a Parser that calls f.
+type ParserFunc func(string) (ServiceConfig, error)
+
+// Parse implements the Parser interface
+func (f ParserFunc) Parse(configFile string) (ServiceConfig, error) { return f(configFile) }
+
+// NewParser creates a new parser using the json library
+func NewParser() Parser {
+	return parser{}
+}
+
+type parser struct{}
+
+// Parser implements the Parse interface
+func (p parser) Parse(configFile string) (ServiceConfig, error) {
+	var result ServiceConfig
+	var cfg parseableServiceConfig
+	data, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		return result, fmt.Errorf("Fatal error config file: %s \n", configFile)
+	}
+	if err = json.Unmarshal(data, &cfg); err != nil {
+		return result, fmt.Errorf("Fatal error config file: While parsing config: %s \n", err.Error())
+	}
+	result = cfg.normalize()
+	err = result.Init()
+
+	return result, err
+}
+
+type parseableServiceConfig struct {
+	Endpoints   []*parseableEndpointConfig `json:"endpoints"`
+	Timeout     string                     `json:"timeout"`
+	CacheTTL    int                        `json:"cache_ttl"`
+	Host        []string                   `json:"host"`
+	Port        int                        `json:"port"`
+	Version     int                        `json:"version"`
+	ExtraConfig *ExtraConfig               `json:"extra_config,omitempty"`
+	Debug       bool
+}
+
+func (p *parseableServiceConfig) normalize() ServiceConfig {
+	cfg := ServiceConfig{
+		Timeout:  parseDuration(p.Timeout),
+		CacheTTL: time.Duration(p.CacheTTL) * time.Second,
+		Host:     p.Host,
+		Port:     p.Port,
+		Version:  p.Version,
+		Debug:    p.Debug,
+	}
+	if p.ExtraConfig != nil {
+		cfg.ExtraConfig = *p.ExtraConfig
+	}
+	endpoints := []*EndpointConfig{}
+	for _, e := range p.Endpoints {
+		endpoints = append(endpoints, e.normalize())
+	}
+	cfg.Endpoints = endpoints
+	return cfg
+}
+
+type parseableEndpointConfig struct {
+	Endpoint        string              `json:"endpoint"`
+	Method          string              `json:"method"`
+	Backend         []*parseableBackend `json:"backend"`
+	ConcurrentCalls int                 `json:"concurrent_calls"`
+	Timeout         string              `json:"timeout"`
+	CacheTTL        int                 `json:"cache_ttl"`
+	QueryString     []string            `json:"querystring_params"`
+	ExtraConfig     *ExtraConfig        `json:"extra_config,omitempty"`
+}
+
+func (p *parseableEndpointConfig) normalize() *EndpointConfig {
+	e := EndpointConfig{
+		Endpoint:        p.Endpoint,
+		Method:          p.Method,
+		ConcurrentCalls: p.ConcurrentCalls,
+		Timeout:         parseDuration(p.Timeout),
+		CacheTTL:        time.Duration(p.CacheTTL) * time.Second,
+		QueryString:     p.QueryString,
+	}
+	if p.ExtraConfig != nil {
+		e.ExtraConfig = *p.ExtraConfig
+	}
+	backends := []*Backend{}
+	for _, b := range p.Backend {
+		backends = append(backends, b.normalize())
+	}
+	e.Backend = backends
+	return &e
+}
+
+type parseableBackend struct {
+	Group                    string            `json:"group"`
+	Method                   string            `json:"method"`
+	Host                     []string          `json:"host"`
+	HostSanitizationDisabled bool              `json:"disable_host_sanitize"`
+	URLPattern               string            `json:"url_pattern"`
+	Blacklist                []string          `json:"blacklist"`
+	Whitelist                []string          `json:"whitelist"`
+	Mapping                  map[string]string `json:"mapping"`
+	Encoding                 string            `json:"encoding"`
+	IsCollection             bool              `json:"is_collection"`
+	Target                   string            `json:"target"`
+	ExtraConfig              *ExtraConfig      `json:"extra_config,omitempty"`
+}
+
+func (p *parseableBackend) normalize() *Backend {
+	b := Backend{
+		Group:  p.Group,
+		Method: p.Method,
+		Host:   p.Host,
+		HostSanitizationDisabled: p.HostSanitizationDisabled,
+		URLPattern:               p.URLPattern,
+		Blacklist:                p.Blacklist,
+		Whitelist:                p.Whitelist,
+		Mapping:                  p.Mapping,
+		Encoding:                 p.Encoding,
+		IsCollection:             p.IsCollection,
+		Target:                   p.Target,
+	}
+	if p.ExtraConfig != nil {
+		b.ExtraConfig = *p.ExtraConfig
+	}
+	return &b
+}
+
+func parseDuration(v string) time.Duration {
+	d, err := time.ParseDuration(v)
+	if err != nil {
+		return 0
+	}
+	return d
 }
