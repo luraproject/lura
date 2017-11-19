@@ -83,7 +83,7 @@ func TestEntityFormatter_newWhitelistingDeepFields(t *testing.T) {
 		},
 		IsComplete: true,
 	}
-	expected_supu_child := 1
+	expectedSupuChild := 1
 
 	var ok bool
 	f := NewEntityFormatter("", []string{"tupu.muku.supu", "tupu.muku.gutu.kugu"}, []string{}, "", map[string]string{})
@@ -92,14 +92,14 @@ func TestEntityFormatter_newWhitelistingDeepFields(t *testing.T) {
 	var muku map[string]interface{}
 	var gutu map[string]interface{}
 	var kugu int
-	var supu_child int
+	var supuChild int
 	if tupu, ok = res.Data["tupu"].(map[string]interface{}); !ok {
 		t.Errorf("The formatter does not have field tupu\n")
 	}
 	if muku, ok = tupu["muku"].(map[string]interface{}); !ok {
 		t.Errorf("The formatter does not have field tupu.muku\n")
 	}
-	if supu_child, ok = muku["supu"].(int); !ok || supu_child != expected_supu_child {
+	if supuChild, ok = muku["supu"].(int); !ok || supuChild != expectedSupuChild {
 		t.Errorf("The formatter does not have field tupu.muku.supu or wrong value\n")
 	}
 	if _, ok = tupu["supu"].(map[string]interface{}); ok {
