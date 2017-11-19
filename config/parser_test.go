@@ -107,6 +107,7 @@ func TestNewParser_ok(t *testing.T) {
 		t.FailNow()
 	}
 }
+
 func testExtraConfig(extraConfig map[string]interface{}, t *testing.T) {
 	userVar := extraConfig["user"]
 	if userVar != "test" {
@@ -158,5 +159,16 @@ func TestNewParser_initError(t *testing.T) {
 	}
 	if err = os.Remove(wrongConfigPath); err != nil {
 		t.FailNow()
+	}
+}
+
+func TestParserFunc(t *testing.T) {
+	expected := ServiceConfig{Version: 42}
+	result, err := ParserFunc(func(_ string) (ServiceConfig, error) { return expected, nil })("path/to/the/config/file")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if result.Version != expected.Version {
+		t.Error("unexpected parsed config:", result)
 	}
 }
