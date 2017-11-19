@@ -77,64 +77,61 @@ func extractTarget(target string, entity *Response) {
 }
 
 func newWhitelistingFilter(whitelist []string) propertyFilter {
-	// count num of field names (including repeated ones) to allocate a
-	// linear array of strings:
-	num_fields := 0
+	numFields := 0
 	for _, k := range whitelist {
-		num_fields += len(strings.Split(k, "."))
-		// TODO: we can "sanitize" and check that there are no empty strings?
+		numFields += len(strings.Split(k, "."))
 	}
-	indices := make([]int, len(whitelist))
-	fields := make([]string, num_fields)
+	wlIndices := make([]int, len(whitelist))
+	wlFields := make([]string, numFields)
 	f_idx := 0
 	for w_idx, k := range whitelist {
 		for _, key := range strings.Split(k, ".") {
-			fields[f_idx] = key
+			wlFields[f_idx] = key
 			f_idx++
 		}
-		indices[w_idx] = f_idx
+		wlIndices[w_idx] = f_idx
 	}
 
 	return func(entity *Response) {
 		accumulator := make(map[string]interface{}, len(whitelist))
-		var p map[string]interface{}
-		var c interface{}
-
 		start := 0
-		for _, end := range indices {
-			p = entity.Data
-			ok := true
+		for _, end := range wlIndices {
 			d_end := end - 1
-			// find 'dicts-path' in input
-			for _, field := range fields[start:d_end] {
-				if c, ok = p[field]; !ok {
-					break
-				}
-				if p, ok = c.(map[string]interface{}); !ok {
-					break
-				}
-			}
-			if ok {
-				// find 'value' in input
-				if c, ok = p[fields[d_end]]; ok {
-					// find 'dicts-path' in accumulator
-					d := buildDictPath(accumulator, fields, start, d_end, c)
-					// assign 'value' in acuumulator
-					d[fields[d_end]] = c
-				}
-			}
+            p := findDictPath(entity.Data, wlFields[start:d_end]);
+            if value, ok := p[wlFields[d_end]]; ok {
+                d := buildDictPath(accumulator, wlFields[start:d_end], value)
+                d[wlFields[d_end]] = value
+            }
 			start = end
 		}
 		*entity = Response{Data: accumulator, IsComplete: entity.IsComplete}
 	}
 }
 
-func buildDictPath(accumulator map[string]interface{}, fields []string, f_start int, f_end int, value interface{}) map[string]interface{} {
+func findDictPath(root map[string]interface{}, fields []string) map[string]interface{} {
+    ok := true
+    var p map[string]interface{}
+    var c interface{}
+
+    p = root
+    for _, field := range fields {
+        if c, ok = p[field]; !ok {
+            return nil
+        }
+        if p, ok = c.(map[string]interface{}); !ok {
+            return nil
+        }
+    }
+    return p
+}
+
+func buildDictPath(accumulator map[string]interface{}, fields []string, value interface{}) map[string]interface{} {
 	var ok bool = true
 	var c map[string]interface{}
 	var f_idx int
+    f_end := len(fields)
 	p := accumulator
-	for f_idx = f_start; f_idx < f_end; f_idx++ {
+	for f_idx = 0; f_idx < f_end; f_idx++ {
 		if c, ok = p[fields[f_idx]].(map[string]interface{}); !ok {
 			break
 		}
