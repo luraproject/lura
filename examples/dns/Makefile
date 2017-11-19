@@ -12,9 +12,7 @@ all: deps build
 deps:
 	go get "github.com/devopsfaith/krakend/proxy"
 	go get "github.com/devopsfaith/krakend/router/gin"
-	go get "github.com/gin-gonic/contrib/cache"
-	go get "github.com/gin-gonic/contrib/secure"
-	go get "github.com/aviddiviner/gin-limit"
+	go get "github.com/devopsfaith/krakend/sd/dnssrv"
 
 build:
 	go build -a -ldflags="-X github.com/devopsfaith/krakend/core.KrakendVersion=${KRAKEND_VERSION}" -o ${BIN_NAME}
