@@ -7,9 +7,13 @@ import (
 	"time"
 
 	"github.com/devopsfaith/krakend/config"
+	"github.com/devopsfaith/krakend/sd"
 )
 
 func TestSubscriber_New(t *testing.T) {
+	if err := Register(); err != nil {
+		t.Error("registering the dns module:", err.Error())
+	}
 	srvSet := []*net.SRV{
 		{
 			Port:   80,
@@ -24,7 +28,7 @@ func TestSubscriber_New(t *testing.T) {
 		return "cname", srvSet, nil
 	}
 
-	s := SubscriberFactory(&config.Backend{Host: []string{"some.example.tld"}})
+	s := sd.GetSubscriber(&config.Backend{Host: []string{"some.example.tld"}, SD: Namespace})
 	hosts, err := s.Hosts()
 	if err != nil {
 		t.Error("Getting the hosts:", err.Error())
