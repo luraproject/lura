@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestNewRawDecoder(t *testing.T) {
+func TestNewRawDecoder_ok(t *testing.T) {
 	decoder := NewRawDecoder(false)
 	message := "somewhere over the rainbow"
 	original := strings.NewReader(message)
@@ -23,4 +23,23 @@ func TestNewRawDecoder(t *testing.T) {
 	if v.(string) != message {
 		t.Error("wrong result:", v)
 	}
+}
+
+func TestNewRawDecoder_ko(t *testing.T) {
+	decoder := NewRawDecoder(false)
+	errorMsg := erroredReader("some error")
+	var result map[string]interface{}
+	if err := decoder(errorMsg, &result); err == nil || err.Error() != errorMsg.Error() {
+		t.Error("Unexpected error:", err)
+	}
+}
+
+type erroredReader string
+
+func (e erroredReader) Error() string {
+	return string(e)
+}
+
+func (e erroredReader) Read(_ []byte) (n int, err error) {
+	return 0, e
 }
