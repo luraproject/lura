@@ -89,6 +89,22 @@ func DefaultHTTPResponseParserFactory(cfg HTTPResponseParserConfig) HTTPResponse
 	}
 }
 
+// NopHTTPResponseParserFactory is a HTTPResponseParserFactory implementation that just copies the
+// http response body into the proxy response IO
+func NopHTTPResponseParserFactory(_ HTTPResponseParserConfig) HTTPResponseParser {
+	return func(_ context.Context, resp *http.Response) (*Response, error) {
+		return &Response{
+			Data:       map[string]interface{}{},
+			IsComplete: true,
+			Io:         resp.Body,
+			Metadata: Metadata{
+				StatusCode: resp.StatusCode,
+				Headers:    resp.Header,
+			},
+		}, nil
+	}
+}
+
 // HTTPStatusHandler defines how we tread the http response code
 type HTTPStatusHandler func(context.Context, *http.Response) (*http.Response, error)
 
