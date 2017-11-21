@@ -20,7 +20,10 @@ type Decoder func(io.Reader, *map[string]interface{}) error
 // A DecoderFactory is a function that returns CollectionDecoder or an EntityDecoder
 type DecoderFactory func(bool) Decoder
 
-var decoders = map[string]DecoderFactory{JSON: NewJSONDecoder}
+var decoders = map[string]DecoderFactory{
+	JSON: NewJSONDecoder,
+	RAW:  NewRawDecoder,
+}
 
 // Register registers the decoder factory with the given name
 func Register(name string, dec DecoderFactory) error {
