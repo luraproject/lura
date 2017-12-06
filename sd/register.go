@@ -8,7 +8,7 @@ func RegisterSubscriberFactory(name string, sf SubscriberFactory) error {
 	return nil
 }
 
-// GetSubscriberFactory gets the subscriber factory by name or a fixed subscriber factory if
+// GetSubscriber gets the subscriber factory by name or a fixed subscriber factory if
 // the name is not registered
 func GetSubscriber(cfg *config.Backend) Subscriber {
 	sf, ok := subscriberFactories[cfg.SD]

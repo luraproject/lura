@@ -12,13 +12,13 @@ import (
 // NewRoundRobinLoadBalancedMiddleware creates proxy middleware adding a round robin balancer
 // over a default subscriber
 func NewRoundRobinLoadBalancedMiddleware(remote *config.Backend) Middleware {
-	return NewRoundRobinLoadBalancedMiddlewareWithSubscriber(sd.FixedSubscriber(remote.Host))
+	return NewRoundRobinLoadBalancedMiddlewareWithSubscriber(sd.GetSubscriber(remote))
 }
 
 // NewRandomLoadBalancedMiddleware creates proxy middleware adding a random balancer
 // over a default subscriber
 func NewRandomLoadBalancedMiddleware(remote *config.Backend) Middleware {
-	return NewRandomLoadBalancedMiddlewareWithSubscriber(sd.FixedSubscriber(remote.Host))
+	return NewRandomLoadBalancedMiddlewareWithSubscriber(sd.GetSubscriber(remote))
 }
 
 // NewRoundRobinLoadBalancedMiddlewareWithSubscriber creates proxy middleware adding a round robin
