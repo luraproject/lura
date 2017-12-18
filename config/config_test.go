@@ -23,7 +23,7 @@ func TestConfig_rejectInvalidEndpoints(t *testing.T) {
 	}
 
 	for _, e := range samples {
-		subject := ServiceConfig{Version: 1, Endpoints: []*EndpointConfig{{Endpoint: e}}}
+		subject := ServiceConfig{Version: 1, Timeout: 1 * time.Second, Endpoints: []*EndpointConfig{{Endpoint: e}}}
 		err := subject.Init()
 		if err == nil || strings.Index(err.Error(), "ERROR: the endpoint url path [") != 0 {
 			t.Error("Error expected processing", e)
@@ -192,6 +192,7 @@ func TestConfig_init(t *testing.T) {
 func TestConfig_initKONoBackends(t *testing.T) {
 	subject := ServiceConfig{
 		Version: 1,
+		Timeout: 1 * time.Second,
 		Host:    []string{"http://127.0.0.1:8080"},
 		Endpoints: []*EndpointConfig{
 			{
@@ -208,6 +209,17 @@ func TestConfig_initKONoBackends(t *testing.T) {
 	}
 }
 
+func TestConfig_initKONoTimeout(t *testing.T) {
+	subject := ServiceConfig{
+		Version: 1,
+	}
+
+	if err := subject.Init(); err == nil ||
+		err.Error() != "the timeout 0s for service config must be greater than 0s.\n" {
+		t.Error("Expecting an error at the configuration init!", err)
+	}
+}
+
 func TestConfig_initKOInvalidHost(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
@@ -216,6 +228,7 @@ func TestConfig_initKOInvalidHost(t *testing.T) {
 	}()
 	subject := ServiceConfig{
 		Version: 1,
+		Timeout: 1 * time.Second,
 		Host:    []string{"http://127.0.0.1:8080http://127.0.0.1:8080"},
 		Endpoints: []*EndpointConfig{
 			{
@@ -235,6 +248,7 @@ func TestConfig_initKOInvalidDebugPattern(t *testing.T) {
 	debugPattern = "a(b"
 	subject := ServiceConfig{
 		Version: 1,
+		Timeout: 1 * time.Second,
 		Host:    []string{"http://127.0.0.1:8080"},
 		Endpoints: []*EndpointConfig{
 			{

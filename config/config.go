@@ -139,6 +139,9 @@ func (s *ServiceConfig) Init() error {
 	if s.Port == 0 {
 		s.Port = defaultPort
 	}
+	if s.Timeout <= 0 {
+		return fmt.Errorf("the timeout %v for service config must be greater than 0s.\n", s.Timeout)
+	}
 	s.Host = s.uriParser.CleanHosts(s.Host)
 
 	for i, e := range s.Endpoints {
