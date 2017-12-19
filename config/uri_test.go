@@ -8,7 +8,7 @@ func TestURIParser_cleanHosts(t *testing.T) {
 		"127.0.0.1",
 		"https://supu.local/",
 		"http://127.0.0.1",
-		"supu_42.local:8080/",
+		"supu_42.local",
 		"http://127.0.0.1:8080",
 	}
 
@@ -17,7 +17,7 @@ func TestURIParser_cleanHosts(t *testing.T) {
 		"http://127.0.0.1",
 		"https://supu.local",
 		"http://127.0.0.1",
-		"http://supu_42.local:8080",
+		"http://supu_42.local",
 		"http://127.0.0.1:8080",
 	}
 
