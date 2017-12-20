@@ -1,13 +1,13 @@
 package config
 
 import (
+	"net/url"
 	"regexp"
 	"strings"
 )
 
 var (
 	endpointURLKeysPattern = regexp.MustCompile(`/\{([a-zA-Z\-_0-9]+)\}`)
-	hostPattern            = regexp.MustCompile(`(https?://)?([a-zA-Z0-9\._\-]+)(:[0-9]{2,6})?/?`)
 )
 
 // URIParser defines the interface for all the URI manipulation required by KrakenD
@@ -37,15 +37,17 @@ func (u URI) CleanHosts(hosts []string) []string {
 
 // CleanHost sanitizes the received host
 func (URI) CleanHost(host string) string {
-	matches := hostPattern.FindAllStringSubmatch(host, -1)
-	if len(matches) != 1 {
+	u, err := url.Parse(host)
+	if err != nil {
 		panic(errInvalidHost)
 	}
-	keys := matches[0][1:]
-	if keys[0] == "" {
-		keys[0] = "http://"
+	if u.Scheme == "" {
+		u.Scheme = "http"
 	}
-	return strings.Join(keys, "")
+	u.User = nil
+	u.RawQuery = ""
+	u.Fragment = ""
+	return strings.TrimRight(u.String(), "/")
 }
 
 // CleanPath trims all the extra slashes from the received URI path
