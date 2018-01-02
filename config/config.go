@@ -38,6 +38,12 @@ type ServiceConfig struct {
 	Version int `mapstructure:"version"`
 	// Extra configuration for customized behaviour
 	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
+
+	ReadTimeout       time.Duration
+	WriteTimeout      time.Duration
+	IdleTimeout       time.Duration
+	ReadHeaderTimeout time.Duration
+
 	// run krakend in debug mode
 	Debug     bool
 	uriParser URIParser

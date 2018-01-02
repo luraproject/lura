@@ -91,8 +91,12 @@ func (r httpRouter) Run(cfg config.ServiceConfig) {
 	r.registerKrakendEndpoints(cfg.Endpoints)
 
 	server := http.Server{
-		Addr:    fmt.Sprintf(":%d", cfg.Port),
-		Handler: r.handler(),
+		Addr:              fmt.Sprintf(":%d", cfg.Port),
+		Handler:           r.handler(),
+		ReadTimeout:       cfg.ReadTimeout,
+		WriteTimeout:      cfg.WriteTimeout,
+		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
+		IdleTimeout:       cfg.IdleTimeout,
 	}
 
 	go func() {
