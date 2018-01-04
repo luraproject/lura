@@ -40,12 +40,12 @@ type ServiceConfig struct {
 	// Extra configuration for customized behaviour
 	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
 
-	ReadTimeout       time.Duration
-	WriteTimeout      time.Duration
-	IdleTimeout       time.Duration
-	ReadHeaderTimeout time.Duration
+	ReadTimeout       time.Duration `mapstructure:"read_timeout"`
+	WriteTimeout      time.Duration `mapstructure:"write_timeout"`
+	IdleTimeout       time.Duration `mapstructure:"idle_timeout"`
+	ReadHeaderTimeout time.Duration `mapstructure:"read_header_timeout"`
 
-	MaxIdleConnsPerHost int
+	MaxIdleConnsPerHost int `mapstructure:"max_idle_connections"`
 
 	// run krakend in debug mode
 	Debug     bool
