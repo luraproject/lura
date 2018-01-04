@@ -17,7 +17,11 @@ const (
 	BracketsRouterPatternBuilder = iota
 	// ColonRouterPatternBuilder use a colon as route param delimiter
 	ColonRouterPatternBuilder
+	// DefaultMaxIdleConnsPerHost is the default value for the MaxIdleConnsPerHost param
 	DefaultMaxIdleConnsPerHost = 250
+
+	// ConfigVersion is the current version of the config struct
+	ConfigVersion = 2
 )
 
 // RoutingPattern to use during route conversion. By default, use the colon router pattern
@@ -141,8 +145,8 @@ var (
 // normalizes all the things.
 func (s *ServiceConfig) Init() error {
 	s.uriParser = NewURIParser()
-	if s.Version != 1 {
-		return fmt.Errorf("Unsupported version: %d\n", s.Version)
+	if s.Version != ConfigVersion {
+		return fmt.Errorf("Unsupported version: %d (want: %d)", s.Version, ConfigVersion)
 	}
 	if s.Port == 0 {
 		s.Port = defaultPort
