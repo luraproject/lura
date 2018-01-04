@@ -19,6 +19,8 @@ const (
 	ColonRouterPatternBuilder
 	// DefaultMaxIdleConnsPerHost is the default value for the MaxIdleConnsPerHost param
 	DefaultMaxIdleConnsPerHost = 250
+	// DefaultTimeout is the default value to use for the ServiceConfig.Timeout param
+	DefaultTimeout = 2 * time.Second
 
 	// ConfigVersion is the current version of the config struct
 	ConfigVersion = 2
@@ -153,6 +155,9 @@ func (s *ServiceConfig) Init() error {
 	}
 	if s.MaxIdleConnsPerHost == 0 {
 		s.MaxIdleConnsPerHost = DefaultMaxIdleConnsPerHost
+	}
+	if s.Timeout == 0 {
+		s.Timeout = DefaultTimeout
 	}
 
 	s.Host = s.uriParser.CleanHosts(s.Host)
