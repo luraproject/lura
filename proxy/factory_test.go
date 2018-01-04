@@ -105,7 +105,7 @@ func TestNewDefaultFactory_ok(t *testing.T) {
 		ConcurrentCalls: 3,
 	}
 	serviceConfig := config.ServiceConfig{
-		Version:   1,
+		Version:   config.ConfigVersion,
 		Endpoints: []*config.EndpointConfig{&endpointSingle, &endpointMulti},
 		Timeout:   100 * time.Millisecond,
 		Host:      []string{expectedHost},
