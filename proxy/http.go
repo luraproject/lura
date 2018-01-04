@@ -3,7 +3,6 @@ package proxy
 import (
 	"context"
 	"errors"
-	"io"
 	"net/http"
 
 	"github.com/devopsfaith/krakend/config"
@@ -13,12 +12,6 @@ import (
 // ErrInvalidStatusCode is the error returned by the http proxy when the received status code
 // is not a 200 nor a 201
 var ErrInvalidStatusCode = errors.New("Invalid status code")
-
-// HTTPClientFactory creates http clients based with the received context
-type HTTPClientFactory func(ctx context.Context) *http.Client
-
-// NewHTTPClient just creates a http default client
-func NewHTTPClient(_ context.Context) *http.Client { return http.DefaultClient }
 
 var httpProxy = CustomHTTPProxyFactory(NewHTTPClient)
 
@@ -34,16 +27,6 @@ func CustomHTTPProxyFactory(cf HTTPClientFactory) BackendFactory {
 	}
 }
 
-// HTTPRequestExecutor defines the interface of the request executor for the HTTP transport protocol
-type HTTPRequestExecutor func(ctx context.Context, req *http.Request) (*http.Response, error)
-
-// DefaultHTTPRequestExecutor creates a HTTPRequestExecutor with the received HTTPClientFactory
-func DefaultHTTPRequestExecutor(clientFactory HTTPClientFactory) HTTPRequestExecutor {
-	return func(ctx context.Context, req *http.Request) (*http.Response, error) {
-		return clientFactory(ctx).Do(req.WithContext(ctx))
-	}
-}
-
 // NewHTTPProxy creates a http proxy with the injected configuration, HTTPClientFactory and Decoder
 func NewHTTPProxy(remote *config.Backend, clientFactory HTTPClientFactory, decode encoding.Decoder) Proxy {
 	return NewHTTPProxyWithHTTPExecutor(remote, DefaultHTTPRequestExecutor(clientFactory), decode)
@@ -52,53 +35,8 @@ func NewHTTPProxy(remote *config.Backend, clientFactory HTTPClientFactory, decod
 // NewHTTPProxyWithHTTPExecutor creates a http proxy with the injected configuration, HTTPRequestExecutor and Decoder
 func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, requestExecutor HTTPRequestExecutor, dec encoding.Decoder) Proxy {
 	ef := NewEntityFormatter(remote.Target, remote.Whitelist, remote.Blacklist, remote.Group, remote.Mapping)
-	return NewHTTPProxyDetailed(remote, requestExecutor, DefaultHTTPStatusHandler, DefaultHTTPResponseParserFactory(HTTPResponseParserConfig{dec, ef}))
-}
-
-// HTTPResponseParser defines how of the response is parsed from http.Response to Response object
-type HTTPResponseParser func(context.Context, *http.Response) (*Response, error)
-
-// DefaultHTTPResponseParserConfig defines a default HTTPResponseParserConfig
-var DefaultHTTPResponseParserConfig = HTTPResponseParserConfig{
-	func(_ io.Reader, _ *map[string]interface{}) error { return nil },
-	EntityFormatterFunc(func(r Response) Response { return r }),
-}
-
-// HTTPResponseParserConfig contains the config for a given HttpResponseParser
-type HTTPResponseParserConfig struct {
-	Decoder         encoding.Decoder
-	EntityFormatter EntityFormatter
-}
-
-// DefaultHTTPResponseParserFactory creates HTTPResponseParser from a given HTTPResponseParserConfig
-type HTTPResponseParserFactory func(HTTPResponseParserConfig) HTTPResponseParser
-
-// DefaultHTTPResponseParserFactory is the default implementation of HTTPResponseParserFactory
-func DefaultHTTPResponseParserFactory(cfg HTTPResponseParserConfig) HTTPResponseParser {
-	return func(ctx context.Context, resp *http.Response) (*Response, error) {
-		var data map[string]interface{}
-		err := cfg.Decoder(resp.Body, &data)
-		resp.Body.Close()
-		if err != nil {
-			return nil, err
-		}
-
-		newResponse := Response{Data: data, IsComplete: true}
-		newResponse = cfg.EntityFormatter.Format(newResponse)
-		return &newResponse, nil
-	}
-}
-
-// HTTPStatusHandler defines how we tread the http response code
-type HTTPStatusHandler func(context.Context, *http.Response) (*http.Response, error)
-
-// DefaultHTTPCodeHandler is the default implementation of HTTPStatusHandler
-func DefaultHTTPStatusHandler(ctx context.Context, resp *http.Response) (*http.Response, error) {
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return nil, ErrInvalidStatusCode
-	}
-
-	return resp, nil
+	rp := DefaultHTTPResponseParserFactory(HTTPResponseParserConfig{dec, ef})
+	return NewHTTPProxyDetailed(remote, requestExecutor, DefaultHTTPStatusHandler, rp)
 }
 
 // NewHTTPProxyDetailed creates a http proxy with the injected configuration, HTTPRequestExecutor, Decoder and HTTPResponseParser
