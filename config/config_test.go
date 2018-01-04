@@ -9,7 +9,7 @@ import (
 func TestConfig_rejectInvalidVersion(t *testing.T) {
 	subject := ServiceConfig{}
 	err := subject.Init()
-	if err == nil || strings.Index(err.Error(), "Unsupported version: 0") != 0 {
+	if err == nil || strings.Index(err.Error(), "Unsupported version: 0 (want: 2)") != 0 {
 		t.Error("Error expected. Got", err.Error())
 	}
 }
@@ -23,7 +23,7 @@ func TestConfig_rejectInvalidEndpoints(t *testing.T) {
 	}
 
 	for _, e := range samples {
-		subject := ServiceConfig{Version: 1, Endpoints: []*EndpointConfig{{Endpoint: e}}}
+		subject := ServiceConfig{Version: ConfigVersion, Endpoints: []*EndpointConfig{{Endpoint: e}}}
 		err := subject.Init()
 		if err == nil || strings.Index(err.Error(), "ERROR: the endpoint url path [") != 0 {
 			t.Error("Error expected processing", e)
@@ -147,7 +147,7 @@ func TestConfig_init(t *testing.T) {
 	}
 
 	subject := ServiceConfig{
-		Version:   1,
+		Version:   ConfigVersion,
 		Timeout:   5 * time.Second,
 		CacheTTL:  30 * time.Minute,
 		Host:      []string{"http://127.0.0.1:8080"},
@@ -187,7 +187,7 @@ func TestConfig_init(t *testing.T) {
 
 func TestConfig_initKONoBackends(t *testing.T) {
 	subject := ServiceConfig{
-		Version: 1,
+		Version: ConfigVersion,
 		Host:    []string{"http://127.0.0.1:8080"},
 		Endpoints: []*EndpointConfig{
 			{
@@ -211,7 +211,7 @@ func TestConfig_initKOInvalidHost(t *testing.T) {
 		}
 	}()
 	subject := ServiceConfig{
-		Version: 1,
+		Version: ConfigVersion,
 		Host:    []string{"http://127.0.0.1:8080http://127.0.0.1:8080"},
 		Endpoints: []*EndpointConfig{
 			{
@@ -230,7 +230,7 @@ func TestConfig_initKOInvalidDebugPattern(t *testing.T) {
 
 	debugPattern = "a(b"
 	subject := ServiceConfig{
-		Version: 1,
+		Version: ConfigVersion,
 		Host:    []string{"http://127.0.0.1:8080"},
 		Endpoints: []*EndpointConfig{
 			{

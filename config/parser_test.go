@@ -10,7 +10,7 @@ import (
 func TestNewParser_ok(t *testing.T) {
 	configPath := "/tmp/ok.json"
 	configContent := []byte(`{
-    "version": 1,
+    "version": 2,
     "name": "My lovely gateway",
     "port": 8080,
     "cache_ttl": 3600,
