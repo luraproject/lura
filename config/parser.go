@@ -44,32 +44,34 @@ func (p parser) Parse(configFile string) (ServiceConfig, error) {
 }
 
 type parseableServiceConfig struct {
-	Endpoints         []*parseableEndpointConfig `json:"endpoints"`
-	Timeout           string                     `json:"timeout"`
-	CacheTTL          int                        `json:"cache_ttl"`
-	Host              []string                   `json:"host"`
-	Port              int                        `json:"port"`
-	Version           int                        `json:"version"`
-	ExtraConfig       *ExtraConfig               `json:"extra_config,omitempty"`
-	ReadTimeout       string                     `json:"read_timeout"`
-	WriteTimeout      string                     `json:"write_timeout"`
-	IdleTimeout       string                     `json:"idle_timeout"`
-	ReadHeaderTimeout string                     `json:"read_header_timeout"`
-	Debug             bool
+	Endpoints           []*parseableEndpointConfig `json:"endpoints"`
+	Timeout             string                     `json:"timeout"`
+	CacheTTL            int                        `json:"cache_ttl"`
+	Host                []string                   `json:"host"`
+	Port                int                        `json:"port"`
+	Version             int                        `json:"version"`
+	ExtraConfig         *ExtraConfig               `json:"extra_config,omitempty"`
+	ReadTimeout         string                     `json:"read_timeout"`
+	WriteTimeout        string                     `json:"write_timeout"`
+	IdleTimeout         string                     `json:"idle_timeout"`
+	ReadHeaderTimeout   string                     `json:"read_header_timeout"`
+	MaxIdleConnsPerHost int                        `json:"max_idle_connections"`
+	Debug               bool
 }
 
 func (p *parseableServiceConfig) normalize() ServiceConfig {
 	cfg := ServiceConfig{
-		Timeout:           parseDuration(p.Timeout),
-		CacheTTL:          time.Duration(p.CacheTTL) * time.Second,
-		Host:              p.Host,
-		Port:              p.Port,
-		Version:           p.Version,
-		Debug:             p.Debug,
-		ReadTimeout:       parseDuration(p.ReadTimeout),
-		WriteTimeout:      parseDuration(p.WriteTimeout),
-		IdleTimeout:       parseDuration(p.IdleTimeout),
-		ReadHeaderTimeout: parseDuration(p.ReadHeaderTimeout),
+		Timeout:             parseDuration(p.Timeout),
+		CacheTTL:            time.Duration(p.CacheTTL) * time.Second,
+		Host:                p.Host,
+		Port:                p.Port,
+		Version:             p.Version,
+		Debug:               p.Debug,
+		ReadTimeout:         parseDuration(p.ReadTimeout),
+		WriteTimeout:        parseDuration(p.WriteTimeout),
+		IdleTimeout:         parseDuration(p.IdleTimeout),
+		ReadHeaderTimeout:   parseDuration(p.ReadHeaderTimeout),
+		MaxIdleConnsPerHost: p.MaxIdleConnsPerHost,
 	}
 	if p.ExtraConfig != nil {
 		cfg.ExtraConfig = *p.ExtraConfig

@@ -17,6 +17,7 @@ const (
 	BracketsRouterPatternBuilder = iota
 	// ColonRouterPatternBuilder use a colon as route param delimiter
 	ColonRouterPatternBuilder
+	DefaultMaxIdleConnsPerHost = 250
 )
 
 // RoutingPattern to use during route conversion. By default, use the colon router pattern
@@ -43,6 +44,8 @@ type ServiceConfig struct {
 	WriteTimeout      time.Duration
 	IdleTimeout       time.Duration
 	ReadHeaderTimeout time.Duration
+
+	MaxIdleConnsPerHost int
 
 	// run krakend in debug mode
 	Debug     bool
@@ -144,6 +147,10 @@ func (s *ServiceConfig) Init() error {
 	if s.Port == 0 {
 		s.Port = defaultPort
 	}
+	if s.MaxIdleConnsPerHost == 0 {
+		s.MaxIdleConnsPerHost = DefaultMaxIdleConnsPerHost
+	}
+
 	s.Host = s.uriParser.CleanHosts(s.Host)
 	for i, e := range s.Endpoints {
 		e.Endpoint = s.uriParser.CleanPath(e.Endpoint)
