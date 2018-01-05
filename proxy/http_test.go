@@ -373,7 +373,7 @@ func TestNopHTTPResponseParser(t *testing.T) {
 	}
 	req, _ := http.NewRequest("GET", "/url", nil)
 	handler(w, req)
-	result, err := NopHTTPResponseParserFactory(DefaultHTTPResponseParserConfig)(context.Background(), w.Result())
+	result, err := NoOpHTTPResponseParserFactory(DefaultHTTPResponseParserConfig)(context.Background(), w.Result())
 	if !result.IsComplete {
 		t.Error("unexpected result")
 	}
