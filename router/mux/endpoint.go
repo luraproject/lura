@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/core"
+	"github.com/devopsfaith/krakend/encoding"
 	"github.com/devopsfaith/krakend/proxy"
 )
 
@@ -25,8 +27,16 @@ var EndpointHandler = CustomEndpointHandler(NewRequest)
 
 // CustomEndpointHandler returns a HandlerFactory with the received RequestBuilder
 func CustomEndpointHandler(rb RequestBuilder) HandlerFactory {
-	return func(configuration *config.EndpointConfig, proxy proxy.Proxy) http.HandlerFunc {
+	return func(configuration *config.EndpointConfig, prxy proxy.Proxy) http.HandlerFunc {
 		endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
+
+		var dump func(int, http.ResponseWriter, *proxy.Response)
+		if len(configuration.Backend) == 1 && configuration.Backend[0].Encoding == encoding.NOOP {
+			dump = noopResponse
+		} else {
+			dump = jsonResponse
+		}
+		cacheTTL := int(configuration.CacheTTL.Seconds())
 
 		return func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set(core.KrakendHeaderName, core.KrakendHeaderValue)
@@ -37,7 +47,7 @@ func CustomEndpointHandler(rb RequestBuilder) HandlerFactory {
 
 			requestCtx, cancel := context.WithTimeout(context.Background(), endpointTimeout)
 
-			response, err := proxy(requestCtx, rb(r, configuration.QueryString))
+			response, err := prxy(requestCtx, rb(r, configuration.QueryString))
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				cancel()
@@ -52,22 +62,14 @@ func CustomEndpointHandler(rb RequestBuilder) HandlerFactory {
 			default:
 			}
 
-			var js []byte
-
 			if response != nil {
-				js, err = json.Marshal(response.Data)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					cancel()
-					return
-				}
-				if configuration.CacheTTL.Seconds() != 0 && response.IsComplete {
-					w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds())))
+				for k, v := range response.Metadata.Headers {
+					w.Header().Set(k, v[0])
 				}
 			}
 
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(js)
+			dump(cacheTTL, w, response)
+
 			cancel()
 		}
 	}
@@ -120,4 +122,33 @@ func NewRequestBuilder(paramExtractor ParamExtractor) RequestBuilder {
 			Headers: headers,
 		}
 	}
+}
+
+func jsonResponse(cacheTTL int, w http.ResponseWriter, response *proxy.Response) {
+	var js []byte
+
+	if response != nil {
+		var err error
+		js, err = json.Marshal(response.Data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if cacheTTL != 0 && response.IsComplete {
+			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", cacheTTL))
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func noopResponse(cacheTTL int, w http.ResponseWriter, response *proxy.Response) {
+	if response == nil {
+		http.Error(w, "", http.StatusInternalServerError)
+	}
+	if cacheTTL != 0 && response.IsComplete {
+		w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", cacheTTL))
+	}
+	io.Copy(w, response.Io)
 }

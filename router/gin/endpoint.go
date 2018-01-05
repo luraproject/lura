@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/core"
+	"github.com/devopsfaith/krakend/encoding"
 	"github.com/devopsfaith/krakend/proxy"
 )
 
@@ -22,15 +24,22 @@ var ErrInternalError = errors.New("internal server error")
 type HandlerFactory func(*config.EndpointConfig, proxy.Proxy) gin.HandlerFunc
 
 // EndpointHandler implements the HandleFactory interface
-func EndpointHandler(configuration *config.EndpointConfig, proxy proxy.Proxy) gin.HandlerFunc {
+func EndpointHandler(configuration *config.EndpointConfig, prxy proxy.Proxy) gin.HandlerFunc {
 	endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
+
+	var dump func(*gin.Context, *proxy.Response)
+	if len(configuration.Backend) == 1 && configuration.Backend[0].Encoding == encoding.NOOP {
+		dump = noopResponse
+	} else {
+		dump = jsonResponse
+	}
 
 	return func(c *gin.Context) {
 		requestCtx, cancel := context.WithTimeout(c, endpointTimeout)
 
 		c.Header(core.KrakendHeaderName, core.KrakendHeaderValue)
 
-		response, err := proxy(requestCtx, NewRequest(c, configuration.QueryString))
+		response, err := prxy(requestCtx, NewRequest(c, configuration.QueryString))
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			cancel()
@@ -49,11 +58,30 @@ func EndpointHandler(configuration *config.EndpointConfig, proxy proxy.Proxy) gi
 		}
 
 		if response != nil {
-			c.JSON(http.StatusOK, response.Data)
-		} else {
-			c.JSON(http.StatusOK, gin.H{})
+			for k, v := range response.Metadata.Headers {
+				c.Header(k, v[0])
+			}
 		}
+
+		dump(c, response)
 		cancel()
+	}
+}
+
+func jsonResponse(c *gin.Context, response *proxy.Response) {
+	if response != nil {
+		c.JSON(http.StatusOK, response.Data)
+	} else {
+		c.JSON(http.StatusOK, gin.H{})
+	}
+}
+
+func noopResponse(c *gin.Context, response *proxy.Response) {
+	if response != nil {
+		c.Status(response.Metadata.StatusCode)
+		io.Copy(c.Writer, response.Io)
+	} else {
+		c.Status(http.StatusInternalServerError)
 	}
 }
 
