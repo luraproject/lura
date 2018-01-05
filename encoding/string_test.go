@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-func TestNewRawDecoder_ok(t *testing.T) {
-	decoder := NewRawDecoder(false)
+func TestNewStringDecoder_ok(t *testing.T) {
+	decoder := NewStringDecoder(false)
 	message := "somewhere over the rainbow"
 	original := strings.NewReader(message)
 	var result map[string]interface{}
@@ -25,8 +25,8 @@ func TestNewRawDecoder_ok(t *testing.T) {
 	}
 }
 
-func TestNewRawDecoder_ko(t *testing.T) {
-	decoder := NewRawDecoder(false)
+func TestNewStringDecoder_ko(t *testing.T) {
+	decoder := NewStringDecoder(false)
 	errorMsg := erroredReader("some error")
 	var result map[string]interface{}
 	if err := decoder(errorMsg, &result); err == nil || err.Error() != errorMsg.Error() {

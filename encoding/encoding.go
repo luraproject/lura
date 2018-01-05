@@ -21,8 +21,8 @@ type Decoder func(io.Reader, *map[string]interface{}) error
 type DecoderFactory func(bool) Decoder
 
 var decoders = map[string]DecoderFactory{
-	JSON: NewJSONDecoder,
-	RAW:  NewRawDecoder,
+	JSON:   NewJSONDecoder,
+	STRING: NewStringDecoder,
 }
 
 // Register registers the decoder factory with the given name
