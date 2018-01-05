@@ -69,6 +69,8 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 		r.cfg.Logger.Debug("Debug enabled")
 	}
 
+	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = cfg.MaxIdleConnsPerHost
+
 	r.cfg.Engine.RedirectTrailingSlash = true
 	r.cfg.Engine.RedirectFixedPath = true
 	r.cfg.Engine.HandleMethodNotAllowed = true
@@ -82,8 +84,12 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 	r.registerKrakendEndpoints(cfg.Endpoints)
 
 	s := &http.Server{
-		Addr:    fmt.Sprintf(":%d", cfg.Port),
-		Handler: r.cfg.Engine,
+		Addr:              fmt.Sprintf(":%d", cfg.Port),
+		Handler:           r.cfg.Engine,
+		ReadTimeout:       cfg.ReadTimeout,
+		WriteTimeout:      cfg.WriteTimeout,
+		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
+		IdleTimeout:       cfg.IdleTimeout,
 	}
 
 	go func() {

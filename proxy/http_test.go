@@ -219,7 +219,6 @@ func TestNewHTTPProxy_decodingError(t *testing.T) {
 func TestNewHTTPProxy_badMethod(t *testing.T) {
 	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Error("The handler shouldn't be called")
-		return
 	}))
 	defer backendServer.Close()
 
@@ -259,7 +258,6 @@ func TestNewHTTPProxy_badMethod(t *testing.T) {
 func TestNewHTTPProxy_requestKo(t *testing.T) {
 	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Error("The handler shouldn't be called")
-		return
 	}))
 	defer backendServer.Close()
 
