@@ -23,6 +23,7 @@ type DecoderFactory func(bool) Decoder
 var decoders = map[string]DecoderFactory{
 	JSON:   NewJSONDecoder,
 	STRING: NewStringDecoder,
+	NOOP:   NoOpDecoderFactory,
 }
 
 // Register registers the decoder factory with the given name
@@ -41,3 +42,10 @@ func Get(name string) DecoderFactory {
 	}
 	return NewJSONDecoder
 }
+
+const NOOP = "no-op"
+
+// NoOpDecoder implements the Decoder interface
+func NoOpDecoder(_ io.Reader, _ *map[string]interface{}) error { return nil }
+
+func NoOpDecoderFactory(_ bool) Decoder { return NoOpDecoder }

@@ -42,18 +42,16 @@ func DefaultHTTPResponseParserFactory(cfg HTTPResponseParserConfig) HTTPResponse
 	}
 }
 
-// NoOpHTTPResponseParserFactory is a HTTPResponseParserFactory implementation that just copies the
+// NoOpHTTPResponseParser is a HTTPResponseParser implementation that just copies the
 // http response body into the proxy response IO
-func NoOpHTTPResponseParserFactory(_ HTTPResponseParserConfig) HTTPResponseParser {
-	return func(ctx context.Context, resp *http.Response) (*Response, error) {
-		return &Response{
-			Data:       map[string]interface{}{},
-			IsComplete: true,
-			Io:         NewReadCloserWrapper(ctx, resp.Body),
-			Metadata: Metadata{
-				StatusCode: resp.StatusCode,
-				Headers:    resp.Header,
-			},
-		}, nil
-	}
+func NoOpHTTPResponseParser(ctx context.Context, resp *http.Response) (*Response, error) {
+	return &Response{
+		Data:       map[string]interface{}{},
+		IsComplete: true,
+		Io:         NewReadCloserWrapper(ctx, resp.Body),
+		Metadata: Metadata{
+			StatusCode: resp.StatusCode,
+			Headers:    resp.Header,
+		},
+	}, nil
 }
