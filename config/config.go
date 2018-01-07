@@ -53,6 +53,9 @@ type ServiceConfig struct {
 
 	MaxIdleConnsPerHost int `mapstructure:"max_idle_connections"`
 
+	// DisableStrictREST flags if the REST enforcement is disabled
+	DisableStrictREST bool `mapstructure:"disable_rest"`
+
 	// run krakend in debug mode
 	Debug     bool
 	uriParser URIParser
@@ -161,6 +164,7 @@ func (s *ServiceConfig) Init() error {
 	}
 
 	s.Host = s.uriParser.CleanHosts(s.Host)
+
 	for i, e := range s.Endpoints {
 		e.Endpoint = s.uriParser.CleanPath(e.Endpoint)
 
@@ -168,7 +172,7 @@ func (s *ServiceConfig) Init() error {
 			return err
 		}
 
-		inputParams := s.extractPlaceHoldersFromURLTemplate(e.Endpoint, endpointURLKeysPattern)
+		inputParams := s.extractPlaceHoldersFromURLTemplate(e.Endpoint, s.paramExtractionPattern())
 		inputSet := map[string]interface{}{}
 		for ip := range inputParams {
 			inputSet[inputParams[ip]] = nil
@@ -191,6 +195,13 @@ func (s *ServiceConfig) Init() error {
 	}
 
 	return nil
+}
+
+func (s *ServiceConfig) paramExtractionPattern() *regexp.Regexp {
+	if s.DisableStrictREST {
+		return simpleURLKeysPattern
+	}
+	return endpointURLKeysPattern
 }
 
 func (s *ServiceConfig) extractPlaceHoldersFromURLTemplate(subject string, pattern *regexp.Regexp) []string {

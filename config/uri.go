@@ -58,7 +58,9 @@ func (u URI) GetEndpointPath(path string, params []string) string {
 	result := path
 	if u == ColonRouterPatternBuilder {
 		for p := range params {
-			result = strings.Replace(result, "/{"+params[p]+"}", "/:"+params[p], -1)
+			parts := strings.Split(result, "?")
+			parts[0] = strings.Replace(parts[0], "{"+params[p]+"}", ":"+params[p], -1)
+			result = strings.Join(parts, "?")
 		}
 	}
 	return result
