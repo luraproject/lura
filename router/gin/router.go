@@ -97,7 +97,10 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 	}()
 
 	<-r.ctx.Done()
-	r.cfg.Logger.Error(s.Shutdown(context.Background()))
+	if err := s.Shutdown(context.Background()); err != nil {
+		r.cfg.Logger.Error(err.Error())
+	}
+	r.cfg.Logger.Info("Router execution ended")
 }
 
 func (r ginRouter) registerDebugEndpoints() {
