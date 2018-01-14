@@ -46,7 +46,7 @@ func (p parser) Parse(configFile string) (ServiceConfig, error) {
 type parseableServiceConfig struct {
 	Endpoints           []*parseableEndpointConfig `json:"endpoints"`
 	Timeout             string                     `json:"timeout"`
-	CacheTTL            int                        `json:"cache_ttl"`
+	CacheTTL            string                     `json:"cache_ttl"`
 	Host                []string                   `json:"host"`
 	Port                int                        `json:"port"`
 	Version             int                        `json:"version"`
@@ -62,7 +62,7 @@ type parseableServiceConfig struct {
 func (p *parseableServiceConfig) normalize() ServiceConfig {
 	cfg := ServiceConfig{
 		Timeout:             parseDuration(p.Timeout),
-		CacheTTL:            time.Duration(p.CacheTTL) * time.Second,
+		CacheTTL:            parseDuration(p.CacheTTL),
 		Host:                p.Host,
 		Port:                p.Port,
 		Version:             p.Version,
