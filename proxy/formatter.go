@@ -76,47 +76,45 @@ func extractTarget(target string, entity *Response) {
 	}
 }
 
-func newWhitelistingFilter(whitelist []string) propertyFilter {
-	numFields := 0
-	for _, k := range whitelist {
-		numFields += len(strings.Split(k, "."))
-	}
-	wlIndices := make([]int, len(whitelist))
-	wlFields := make([]string, numFields)
-	fIdx := 0
-	for wIdx, k := range whitelist {
-		for _, key := range strings.Split(k, ".") {
-			wlFields[fIdx] = key
-			fIdx++
+func whitelistPrune(wlDict map[string]interface{}, inDict map[string]interface{}) bool {
+	canDelete := true
+	var deleteSibling bool
+	for k, v := range inDict {
+		deleteSibling = true
+		if subWl, ok := wlDict[k]; ok {
+			if subWlDict, okk := subWl.(map[string]interface{}); okk {
+				if subInDict, isDict := v.(map[string]interface{}); isDict && !whitelistPrune(subWlDict, subInDict) {
+					deleteSibling = false
+				}
+			} else {
+				// whitelist leaf, maintain this branch
+				deleteSibling = false
+			}
 		}
-		wlIndices[wIdx] = fIdx
+		if deleteSibling {
+			delete(inDict, k)
+		} else {
+			canDelete = false
+		}
+	}
+	return canDelete
+}
+
+func newWhitelistingFilter(whitelist []string) propertyFilter {
+	wlDict := make(map[string]interface{})
+	for _, k := range whitelist {
+		wlFields := strings.Split(k, ".")
+		d := buildDictPath(wlDict, wlFields[:len(wlFields)-1])
+		d[wlFields[len(wlFields)-1]] = true
 	}
 
 	return func(entity *Response) {
-		accumulator := make(map[string]interface{}, len(whitelist))
-		start := 0
-		for _, end := range wlIndices {
-			dEnd := end - 1
-			p := findDictPath(entity.Data, wlFields[start:dEnd])
-			if value, ok := p[wlFields[dEnd]]; ok {
-				d := buildDictPath(accumulator, wlFields[start:dEnd])
-				d[wlFields[dEnd]] = value
+		if whitelistPrune(wlDict, entity.Data) {
+			for k := range entity.Data {
+				delete(entity.Data, k)
 			}
-			start = end
-		}
-		*entity = Response{Data: accumulator, IsComplete: entity.IsComplete}
-	}
-}
-
-func findDictPath(root map[string]interface{}, fields []string) map[string]interface{} {
-	ok := true
-	p := root
-	for _, field := range fields {
-		if p, ok = p[field].(map[string]interface{}); !ok {
-			return nil
 		}
 	}
-	return p
 }
 
 func buildDictPath(accumulator map[string]interface{}, fields []string) map[string]interface{} {
