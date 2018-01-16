@@ -24,12 +24,12 @@ type HandlerFactory func(*config.EndpointConfig, proxy.Proxy) http.HandlerFunc
 // and the default RequestBuilder
 var EndpointHandler = CustomEndpointHandler(NewRequest)
 
-// CustomEndpointHandler returns a HandlerFactory with the received RequestBuilder
+// CustomEndpointHandler returns a HandlerFactory with the received RequestBuilder using the default ToHTTPError function
 func CustomEndpointHandler(rb RequestBuilder) HandlerFactory {
 	return CustomEndpointHandlerWithHTTPError(rb, router.DefaultToHTTPError)
 }
 
-// CustomEndpointHandler returns a HandlerFactory with the received RequestBuilder
+// CustomEndpointHandlerWithHTTPError returns a HandlerFactory with the received RequestBuilder
 func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPError) HandlerFactory {
 	return func(configuration *config.EndpointConfig, proxy proxy.Proxy) http.HandlerFunc {
 		endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
