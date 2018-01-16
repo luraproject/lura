@@ -30,6 +30,7 @@ func EndpointHandler(configuration *config.EndpointConfig, proxy proxy.Proxy) gi
 // CustomErrorEndpointHandler implements the HandleFactory interface
 func CustomErrorEndpointHandler(configuration *config.EndpointConfig, proxy proxy.Proxy, errF router.ToHTTPError) gin.HandlerFunc {
 	endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
+	cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
 
 	return func(c *gin.Context) {
 		requestCtx, cancel := context.WithTimeout(c, endpointTimeout)
@@ -51,7 +52,7 @@ func CustomErrorEndpointHandler(configuration *config.EndpointConfig, proxy prox
 		}
 
 		if configuration.CacheTTL.Seconds() != 0 && response != nil && response.IsComplete {
-			c.Header("Cache-Control", fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds())))
+			c.Header("Cache-Control", cacheControlHeaderValue)
 		}
 
 		if response != nil {

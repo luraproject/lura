@@ -33,6 +33,7 @@ func CustomEndpointHandler(rb RequestBuilder) HandlerFactory {
 func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPError) HandlerFactory {
 	return func(configuration *config.EndpointConfig, proxy proxy.Proxy) http.HandlerFunc {
 		endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
+		cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
 
 		return func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set(core.KrakendHeaderName, core.KrakendHeaderValue)
@@ -68,7 +69,7 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 					return
 				}
 				if configuration.CacheTTL.Seconds() != 0 && response.IsComplete {
-					w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds())))
+					w.Header().Set("Cache-Control", cacheControlHeaderValue)
 				}
 			}
 
