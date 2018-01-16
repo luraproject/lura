@@ -1,6 +1,7 @@
 package gin
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
@@ -24,7 +25,6 @@ func TestEndpointHandler_ok(t *testing.T) {
 	}
 	expectedBody := "{\"supu\":\"tupu\"}"
 	testEndpointHandler(t, 10, p, expectedBody, "public, max-age=21600", "application/json; charset=utf-8", http.StatusOK)
-	time.Sleep(5 * time.Millisecond)
 }
 
 func TestEndpointHandler_incomplete(t *testing.T) {
@@ -36,7 +36,6 @@ func TestEndpointHandler_incomplete(t *testing.T) {
 	}
 	expectedBody := "{\"foo\":\"bar\"}"
 	testEndpointHandler(t, 10, p, expectedBody, "", "application/json; charset=utf-8", http.StatusOK)
-	time.Sleep(5 * time.Millisecond)
 }
 
 func TestEndpointHandler_ko(t *testing.T) {
@@ -44,7 +43,6 @@ func TestEndpointHandler_ko(t *testing.T) {
 		return nil, fmt.Errorf("This is %s", "a dummy error")
 	}
 	testEndpointHandler(t, 10, p, "", "", "", http.StatusInternalServerError)
-	time.Sleep(5 * time.Millisecond)
 }
 
 func TestEndpointHandler_cancel(t *testing.T) {
@@ -53,12 +51,10 @@ func TestEndpointHandler_cancel(t *testing.T) {
 		return nil, nil
 	}
 	testEndpointHandler(t, 0, p, "{}", "", "", http.StatusInternalServerError)
-	time.Sleep(5 * time.Millisecond)
 }
 
 func TestEndpointHandler_noop(t *testing.T) {
 	testEndpointHandler(t, 10, proxy.NoopProxy, "{}", "", "application/json; charset=utf-8", http.StatusOK)
-	time.Sleep(5 * time.Millisecond)
 }
 
 func testEndpointHandler(t *testing.T, timeout time.Duration, p proxy.Proxy, expectedBody, expectedCache,
@@ -95,7 +91,7 @@ func setup(timeout time.Duration, p proxy.Proxy) (string, *http.Response, error)
 
 	server := startGinServer(EndpointHandler(endpoint, p))
 
-	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", nil)
+	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", ioutil.NopCloser(&bytes.Buffer{}))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()

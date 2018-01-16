@@ -1,6 +1,7 @@
 package mux
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
@@ -77,7 +78,7 @@ func testEndpointHandler(t *testing.T, timeout time.Duration, p proxy.Proxy, met
 
 	time.Sleep(15 * time.Millisecond)
 
-	req, _ := http.NewRequest(method, "http://127.0.0.1:8081/_mux_endpoint?b=1", nil)
+	req, _ := http.NewRequest(method, "http://127.0.0.1:8081/_mux_endpoint?b=1", ioutil.NopCloser(&bytes.Buffer{}))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

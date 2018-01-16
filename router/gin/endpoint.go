@@ -31,6 +31,7 @@ func EndpointHandler(configuration *config.EndpointConfig, proxy proxy.Proxy) gi
 func CustomErrorEndpointHandler(configuration *config.EndpointConfig, proxy proxy.Proxy, errF router.ToHTTPError) gin.HandlerFunc {
 	endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
 	cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
+	isCacheEnabled := configuration.CacheTTL.Seconds() != 0
 
 	return func(c *gin.Context) {
 		requestCtx, cancel := context.WithTimeout(c, endpointTimeout)
@@ -51,7 +52,7 @@ func CustomErrorEndpointHandler(configuration *config.EndpointConfig, proxy prox
 		default:
 		}
 
-		if configuration.CacheTTL.Seconds() != 0 && response != nil && response.IsComplete {
+		if isCacheEnabled && response != nil && response.IsComplete {
 			c.Header("Cache-Control", cacheControlHeaderValue)
 		}
 
