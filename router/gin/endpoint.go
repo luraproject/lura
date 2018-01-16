@@ -13,6 +13,7 @@ import (
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/core"
 	"github.com/devopsfaith/krakend/proxy"
+	"github.com/devopsfaith/krakend/router"
 )
 
 // ErrInternalError is the error returned by the router when something went wrong
@@ -21,8 +22,13 @@ var ErrInternalError = errors.New("internal server error")
 // HandlerFactory creates a handler function that adapts the gin router with the injected proxy
 type HandlerFactory func(*config.EndpointConfig, proxy.Proxy) gin.HandlerFunc
 
-// EndpointHandler implements the HandleFactory interface
+// EndpointHandler implements the HandleFactory interface using the default ToHTTPError function
 func EndpointHandler(configuration *config.EndpointConfig, proxy proxy.Proxy) gin.HandlerFunc {
+	return CustomErrorEndpointHandler(configuration, proxy, router.DefaultToHTTPError)
+}
+
+// CustomErrorEndpointHandler implements the HandleFactory interface
+func CustomErrorEndpointHandler(configuration *config.EndpointConfig, proxy proxy.Proxy, errF router.ToHTTPError) gin.HandlerFunc {
 	endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
 
 	return func(c *gin.Context) {
@@ -32,7 +38,7 @@ func EndpointHandler(configuration *config.EndpointConfig, proxy proxy.Proxy) gi
 
 		response, err := proxy(requestCtx, NewRequest(c, configuration.QueryString))
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithError(errF(err), err)
 			cancel()
 			return
 		}
