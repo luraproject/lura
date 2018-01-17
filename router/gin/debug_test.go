@@ -20,7 +20,6 @@ func TestDebugHandler(t *testing.T) {
 		return
 	}
 
-	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	router.GET("/_gin_endpoint/:param", DebugHandler(logger))
 

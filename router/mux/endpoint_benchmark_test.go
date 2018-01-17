@@ -24,7 +24,8 @@ func BenchmarkEndpointHandler_ko(b *testing.B) {
 		QueryString: []string{"b"},
 	}
 
-	router := EndpointHandler(endpoint, p)
+	router := http.NewServeMux()
+	router.Handle("/_gin_endpoint/", EndpointHandler(endpoint, p))
 
 	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", nil)
 	req.Header.Set("Content-Type", "application/json")
@@ -52,7 +53,8 @@ func BenchmarkEndpointHandler_ok(b *testing.B) {
 		QueryString: []string{"b"},
 	}
 
-	router := EndpointHandler(endpoint, p)
+	router := http.NewServeMux()
+	router.Handle("/_gin_endpoint/", EndpointHandler(endpoint, p))
 
 	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", nil)
 	req.Header.Set("Content-Type", "application/json")
@@ -74,7 +76,8 @@ func BenchmarkEndpointHandler_ko_Parallel(b *testing.B) {
 		QueryString: []string{"b"},
 	}
 
-	router := EndpointHandler(endpoint, p)
+	router := http.NewServeMux()
+	router.Handle("/_gin_endpoint/", EndpointHandler(endpoint, p))
 
 	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", nil)
 	req.Header.Set("Content-Type", "application/json")
@@ -104,7 +107,8 @@ func BenchmarkEndpointHandler_ok_Parallel(b *testing.B) {
 		QueryString: []string{"b"},
 	}
 
-	router := EndpointHandler(endpoint, p)
+	router := http.NewServeMux()
+	router.Handle("/_gin_endpoint/", EndpointHandler(endpoint, p))
 
 	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", nil)
 	req.Header.Set("Content-Type", "application/json")
