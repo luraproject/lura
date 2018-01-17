@@ -146,3 +146,19 @@ Here you'll find some benchmarks of the different components of the KrakenD fram
     BenchmarkRequestGeneratePath//a?b={{.Tupu}}-8                             10000000           567 ns/op         136 B/op         10 allocs/op
     BenchmarkRequestGeneratePath//a/{{.Supu}}/foo/{{.Foo}}-8                  10000000           615 ns/op         182 B/op         10 allocs/op
     BenchmarkRequestGeneratePath//a/{{.Supu}}/foo/{{.Foo}}/b?c={{.Tupu}}-8    10000000           655 ns/op         236 B/op         10 allocs/op
+
+# Router Handlers
+
+## Gin
+
+    BenchmarkEndpointHandler_ko-8                1000000          5440 ns/op        3026 B/op         31 allocs/op
+    BenchmarkEndpointHandler_ok-8                1000000          6456 ns/op        3393 B/op         36 allocs/op
+    BenchmarkEndpointHandler_ko_Parallel-8       5000000          1534 ns/op        3028 B/op         31 allocs/op
+    BenchmarkEndpointHandler_ok_Parallel-8       5000000          1846 ns/op        3393 B/op         36 allocs/op
+
+## Mux
+
+    BenchmarkEndpointHandler_ko-8                5000000          1815 ns/op        1088 B/op         13 allocs/op
+    BenchmarkEndpointHandler_ok-8                5000000          1693 ns/op        1088 B/op         13 allocs/op
+    BenchmarkEndpointHandler_ko_Parallel-8      20000000           558 ns/op        1088 B/op         13 allocs/op
+    BenchmarkEndpointHandler_ok_Parallel-8      20000000           597 ns/op        1088 B/op         13 allocs/op

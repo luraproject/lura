@@ -3,9 +3,11 @@ package router
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/devopsfaith/krakend/config"
+	"github.com/devopsfaith/krakend/core"
 )
 
 // Router sets up the public layer exposed to the users
@@ -34,3 +36,12 @@ type ToHTTPError func(error) int
 func DefaultToHTTPError(_ error) int {
 	return http.StatusInternalServerError
 }
+
+var (
+	// HeadersToSend are the headers to pass from the router request to the proxy
+	HeadersToSend = []string{"Content-Type"}
+	// UserAgentHeaderValue is the value of the User-Agent header to add to the proxy request
+	UserAgentHeaderValue = []string{core.KrakendUserAgent}
+	// ErrInternalError is the error returned by the router when something went wrong
+	ErrInternalError = errors.New("internal server error")
+)

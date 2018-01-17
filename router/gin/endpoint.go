@@ -2,7 +2,6 @@ package gin
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -16,9 +15,6 @@ import (
 	"github.com/devopsfaith/krakend/router"
 )
 
-// ErrInternalError is the error returned by the router when something went wrong
-var ErrInternalError = errors.New("internal server error")
-
 // HandlerFactory creates a handler function that adapts the gin router with the injected proxy
 type HandlerFactory func(*config.EndpointConfig, proxy.Proxy) gin.HandlerFunc
 
@@ -30,6 +26,9 @@ func EndpointHandler(configuration *config.EndpointConfig, proxy proxy.Proxy) gi
 // CustomErrorEndpointHandler implements the HandleFactory interface
 func CustomErrorEndpointHandler(configuration *config.EndpointConfig, proxy proxy.Proxy, errF router.ToHTTPError) gin.HandlerFunc {
 	endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
+	cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
+	isCacheEnabled := configuration.CacheTTL.Seconds() != 0
+	emptyResponse := gin.H{}
 
 	return func(c *gin.Context) {
 		requestCtx, cancel := context.WithTimeout(c, endpointTimeout)
@@ -45,28 +44,25 @@ func CustomErrorEndpointHandler(configuration *config.EndpointConfig, proxy prox
 
 		select {
 		case <-requestCtx.Done():
-			c.AbortWithError(http.StatusInternalServerError, ErrInternalError)
+			c.AbortWithError(http.StatusInternalServerError, router.ErrInternalError)
 			cancel()
+			return
 		default:
 		}
 
-		if configuration.CacheTTL.Seconds() != 0 && response != nil && response.IsComplete {
-			c.Header("Cache-Control", fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds())))
+		if isCacheEnabled && response != nil && response.IsComplete {
+			c.Header("Cache-Control", cacheControlHeaderValue)
 		}
 
-		if response != nil {
-			c.JSON(http.StatusOK, response.Data)
-		} else {
-			c.JSON(http.StatusOK, gin.H{})
+		if response == nil {
+			c.JSON(http.StatusOK, emptyResponse)
+			cancel()
+			return
 		}
+		c.JSON(http.StatusOK, response.Data)
 		cancel()
 	}
 }
-
-var (
-	headersToSend        = []string{"Content-Type"}
-	userAgentHeaderValue = []string{core.KrakendUserAgent}
-)
 
 // NewRequest gets a request from the current gin context and the received query string
 func NewRequest(c *gin.Context, queryString []string) *proxy.Request {
@@ -75,11 +71,11 @@ func NewRequest(c *gin.Context, queryString []string) *proxy.Request {
 		params[strings.Title(param.Key)] = param.Value
 	}
 
-	headers := make(map[string][]string, 2+len(headersToSend))
+	headers := make(map[string][]string, 2+len(router.HeadersToSend))
 	headers["X-Forwarded-For"] = []string{c.ClientIP()}
-	headers["User-Agent"] = userAgentHeaderValue
+	headers["User-Agent"] = router.UserAgentHeaderValue
 
-	for _, k := range headersToSend {
+	for _, k := range router.HeadersToSend {
 		if h, ok := c.Request.Header[k]; ok {
 			headers[k] = h
 		}
