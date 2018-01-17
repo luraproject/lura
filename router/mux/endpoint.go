@@ -3,7 +3,6 @@ package mux
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -13,9 +12,6 @@ import (
 	"github.com/devopsfaith/krakend/proxy"
 	"github.com/devopsfaith/krakend/router"
 )
-
-// ErrInternalError is the error returned by the router when something went wrong
-var ErrInternalError = errors.New("internal server error")
 
 // HandlerFactory creates a handler function that adapts the mux router with the injected proxy
 type HandlerFactory func(*config.EndpointConfig, proxy.Proxy) http.HandlerFunc
@@ -35,6 +31,7 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 		endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
 		cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
 		isCacheEnabled := configuration.CacheTTL.Seconds() != 0
+		emptyResponse := []byte("{}")
 
 		return func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set(core.KrakendHeaderName, core.KrakendHeaderValue)
@@ -54,26 +51,29 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 
 			select {
 			case <-requestCtx.Done():
-				http.Error(w, ErrInternalError.Error(), http.StatusInternalServerError)
+				http.Error(w, router.ErrInternalError.Error(), http.StatusInternalServerError)
 				cancel()
 				return
 			default:
 			}
 
-			var js []byte
-
-			if response != nil {
-				js, err = json.Marshal(response.Data)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					cancel()
-					return
-				}
-				if isCacheEnabled && response.IsComplete {
-					w.Header().Set("Cache-Control", cacheControlHeaderValue)
-				}
+			if response == nil {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write(emptyResponse)
+				cancel()
+				return
 			}
 
+			js, err := json.Marshal(response.Data)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				cancel()
+				return
+			}
+
+			if isCacheEnabled && response.IsComplete {
+				w.Header().Set("Cache-Control", cacheControlHeaderValue)
+			}
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(js)
 			cancel()
@@ -93,21 +93,16 @@ var NewRequest = NewRequestBuilder(func(_ *http.Request) map[string]string {
 	return map[string]string{}
 })
 
-var (
-	headersToSend        = []string{"Content-Type"}
-	userAgentHeaderValue = []string{core.KrakendUserAgent}
-)
-
 // NewRequestBuilder gets a RequestBuilder with the received ParamExtractor as a query param
 // extraction mecanism
 func NewRequestBuilder(paramExtractor ParamExtractor) RequestBuilder {
 	return func(r *http.Request, queryString []string) *proxy.Request {
 		params := paramExtractor(r)
-		headers := make(map[string][]string, 2+len(headersToSend))
+		headers := make(map[string][]string, 2+len(router.HeadersToSend))
 		headers["X-Forwarded-For"] = []string{r.RemoteAddr}
-		headers["User-Agent"] = userAgentHeaderValue
+		headers["User-Agent"] = router.UserAgentHeaderValue
 
-		for _, k := range headersToSend {
+		for _, k := range router.HeadersToSend {
 			if h, ok := r.Header[k]; ok {
 				headers[k] = h
 			}

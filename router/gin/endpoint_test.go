@@ -50,7 +50,7 @@ func TestEndpointHandler_cancel(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 		return nil, nil
 	}
-	testEndpointHandler(t, 0, p, "{}", "", "", http.StatusInternalServerError)
+	testEndpointHandler(t, 0, p, "", "", "", http.StatusInternalServerError)
 }
 
 func TestEndpointHandler_noop(t *testing.T) {

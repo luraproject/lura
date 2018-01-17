@@ -12,6 +12,7 @@ import (
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/proxy"
+	"github.com/devopsfaith/krakend/router"
 )
 
 func TestEndpointHandler_ok(t *testing.T) {
@@ -51,12 +52,12 @@ func TestEndpointHandler_cancel(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 		return nil, nil
 	}
-	testEndpointHandler(t, 0, p, "GET", ErrInternalError.Error()+"\n", "", "text/plain; charset=utf-8", http.StatusInternalServerError)
+	testEndpointHandler(t, 0, p, "GET", router.ErrInternalError.Error()+"\n", "", "text/plain; charset=utf-8", http.StatusInternalServerError)
 	time.Sleep(5 * time.Millisecond)
 }
 
 func TestEndpointHandler_noop(t *testing.T) {
-	testEndpointHandler(t, 10, proxy.NoopProxy, "GET", "", "", "application/json", http.StatusOK)
+	testEndpointHandler(t, 10, proxy.NoopProxy, "GET", "{}", "", "application/json", http.StatusOK)
 	time.Sleep(5 * time.Millisecond)
 }
 
