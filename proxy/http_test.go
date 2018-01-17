@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -217,7 +218,6 @@ func TestNewHTTPProxy_decodingError(t *testing.T) {
 func TestNewHTTPProxy_badMethod(t *testing.T) {
 	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Error("The handler shouldn't be called")
-		return
 	}))
 	defer backendServer.Close()
 
@@ -257,7 +257,6 @@ func TestNewHTTPProxy_badMethod(t *testing.T) {
 func TestNewHTTPProxy_requestKo(t *testing.T) {
 	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Error("The handler shouldn't be called")
-		return
 	}))
 	defer backendServer.Close()
 
@@ -338,4 +337,29 @@ func TestNewRequestBuilderMiddleware_multipleNext(t *testing.T) {
 	sampleBackend := config.Backend{}
 	mw := NewRequestBuilderMiddleware(&sampleBackend)
 	mw(explosiveProxy(t), explosiveProxy(t))
+}
+
+func TestDefaultHTTPResponseParserConfig_nopDecoder(t *testing.T) {
+	result := map[string]interface{}{}
+	if err := DefaultHTTPResponseParserConfig.Decoder(bytes.NewBufferString("some body"), &result); err != nil {
+		t.Error(err.Error())
+	}
+	if len(result) != 0 {
+		t.Error("unexpected result")
+	}
+}
+
+func TestDefaultHTTPResponseParserConfig_nopEntityFormatter(t *testing.T) {
+	expected := Response{Data: map[string]interface{}{"supu": "tupu"}, IsComplete: true}
+	result := DefaultHTTPResponseParserConfig.EntityFormatter.Format(expected)
+	if !result.IsComplete {
+		t.Error("unexpected result")
+	}
+	d, ok := result.Data["supu"]
+	if !ok {
+		t.Error("unexpected result")
+	}
+	if v, ok := d.(string); !ok || v != "tupu" {
+		t.Error("unexpected result")
+	}
 }

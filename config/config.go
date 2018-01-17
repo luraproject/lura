@@ -17,6 +17,13 @@ const (
 	BracketsRouterPatternBuilder = iota
 	// ColonRouterPatternBuilder use a colon as route param delimiter
 	ColonRouterPatternBuilder
+	// DefaultMaxIdleConnsPerHost is the default value for the MaxIdleConnsPerHost param
+	DefaultMaxIdleConnsPerHost = 250
+	// DefaultTimeout is the default value to use for the ServiceConfig.Timeout param
+	DefaultTimeout = 2 * time.Second
+
+	// ConfigVersion is the current version of the config struct
+	ConfigVersion = 2
 )
 
 // RoutingPattern to use during route conversion. By default, use the colon router pattern
@@ -38,6 +45,14 @@ type ServiceConfig struct {
 	Version int `mapstructure:"version"`
 	// Extra configuration for customized behaviour
 	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
+
+	ReadTimeout       time.Duration `mapstructure:"read_timeout"`
+	WriteTimeout      time.Duration `mapstructure:"write_timeout"`
+	IdleTimeout       time.Duration `mapstructure:"idle_timeout"`
+	ReadHeaderTimeout time.Duration `mapstructure:"read_header_timeout"`
+
+	MaxIdleConnsPerHost int `mapstructure:"max_idle_connections"`
+
 	// DisableStrictREST flags if the REST enforcement is disabled
 	DisableStrictREST bool `mapstructure:"disable_rest"`
 
@@ -93,6 +108,8 @@ type Backend struct {
 	IsCollection bool `mapstructure:"is_collection"`
 	// name of the field to extract to the root. If empty, the formater will do nothing
 	Target string `mapstructure:"target"`
+	// name of the service discovery driver to use
+	SD string `mapstructure:"sd"`
 
 	// list of keys to be replaced in the URLPattern
 	URLKeys []string
@@ -133,12 +150,19 @@ var (
 // normalizes all the things.
 func (s *ServiceConfig) Init() error {
 	s.uriParser = NewURIParser()
-	if s.Version != 1 {
-		return fmt.Errorf("Unsupported version: %d\n", s.Version)
+	if s.Version != ConfigVersion {
+		return fmt.Errorf("Unsupported version: %d (want: %d)", s.Version, ConfigVersion)
 	}
 	if s.Port == 0 {
 		s.Port = defaultPort
 	}
+	if s.MaxIdleConnsPerHost == 0 {
+		s.MaxIdleConnsPerHost = DefaultMaxIdleConnsPerHost
+	}
+	if s.Timeout == 0 {
+		s.Timeout = DefaultTimeout
+	}
+
 	s.Host = s.uriParser.CleanHosts(s.Host)
 
 	for i, e := range s.Endpoints {

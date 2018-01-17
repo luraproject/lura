@@ -11,6 +11,14 @@ import (
 	"github.com/devopsfaith/krakend/sd"
 )
 
+// Namespace is the key for the dns sd module
+const Namespace = "dns"
+
+// Register registers the dns sd subscriber factory
+func Register() error {
+	return sd.RegisterSubscriberFactory(Namespace, SubscriberFactory)
+}
+
 var (
 	// TTL is the duration of the cached data
 	TTL = 30 * time.Second

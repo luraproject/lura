@@ -88,11 +88,17 @@ func (r httpRouter) Run(cfg config.ServiceConfig) {
 		r.cfg.Engine.Handle(r.cfg.DebugPattern, DebugHandler(r.cfg.Logger))
 	}
 
+	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = cfg.MaxIdleConnsPerHost
+
 	r.registerKrakendEndpoints(cfg.Endpoints)
 
 	server := http.Server{
-		Addr:    fmt.Sprintf(":%d", cfg.Port),
-		Handler: r.handler(),
+		Addr:              fmt.Sprintf(":%d", cfg.Port),
+		Handler:           r.handler(),
+		ReadTimeout:       cfg.ReadTimeout,
+		WriteTimeout:      cfg.WriteTimeout,
+		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
+		IdleTimeout:       cfg.IdleTimeout,
 	}
 
 	go func() {
@@ -100,8 +106,10 @@ func (r httpRouter) Run(cfg config.ServiceConfig) {
 	}()
 
 	<-r.ctx.Done()
-	r.cfg.Logger.Error(server.Shutdown(context.Background()))
-
+	if err := server.Shutdown(context.Background()); err != nil {
+		r.cfg.Logger.Error(err.Error())
+	}
+	r.cfg.Logger.Info("Router execution ended")
 }
 
 func (r httpRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) {
@@ -137,8 +145,7 @@ func (r httpRouter) registerKrakendEndpoint(method, path string, handler http.Ha
 }
 
 func (r httpRouter) handler() http.Handler {
-	var handler http.Handler
-	handler = r.cfg.Engine
+	var handler http.Handler = r.cfg.Engine
 	for _, middleware := range r.cfg.Middlewares {
 		r.cfg.Logger.Debug("Adding the middleware", middleware)
 		handler = middleware.Handler(handler)

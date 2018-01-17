@@ -2,6 +2,19 @@ package proxy
 
 import "testing"
 
+func TestEntityFormatterFunc(t *testing.T) {
+	expected := Response{Data: map[string]interface{}{"one": 1}, IsComplete: true}
+	f := func(_ Response) Response { return expected }
+	formatter := EntityFormatterFunc(f)
+	result := formatter.Format(Response{})
+	if result.Data["one"].(int) != 1 {
+		t.Error("unexpected result:", result.Data)
+	}
+	if !result.IsComplete {
+		t.Error("unexpected result:", result)
+	}
+}
+
 func TestEntityFormatter_newWhitelistingFilter(t *testing.T) {
 	sample := Response{
 		Data: map[string]interface{}{

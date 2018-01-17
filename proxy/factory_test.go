@@ -10,7 +10,38 @@ import (
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/logging"
+	"github.com/devopsfaith/krakend/sd"
 )
+
+func TestFactoryFunc(t *testing.T) {
+	buff := bytes.NewBuffer(make([]byte, 1024))
+	logger, err := logging.NewLogger("ERROR", buff, "pref")
+	if err != nil {
+		t.Error("building the logger:", err.Error())
+		return
+	}
+
+	factory := FactoryFunc(func(cfg *config.EndpointConfig) (Proxy, error) { return DefaultFactory(logger).New(cfg) })
+
+	if _, err := factory.New(&config.EndpointConfig{}); err != ErrNoBackends {
+		t.Errorf("Expecting ErrNoBackends. Got: %v\n", err)
+	}
+}
+
+func TestDefaultFactoryWithSubscriber(t *testing.T) {
+	buff := bytes.NewBuffer(make([]byte, 1024))
+	logger, err := logging.NewLogger("ERROR", buff, "pref")
+	if err != nil {
+		t.Error("building the logger:", err.Error())
+		return
+	}
+
+	factory := DefaultFactoryWithSubscriber(logger, sd.FixedSubscriberFactory)
+
+	if _, err := factory.New(&config.EndpointConfig{}); err != ErrNoBackends {
+		t.Errorf("Expecting ErrNoBackends. Got: %v\n", err)
+	}
+}
 
 func TestDefaultFactory_noBackends(t *testing.T) {
 	buff := bytes.NewBuffer(make([]byte, 1024))
@@ -74,7 +105,7 @@ func TestNewDefaultFactory_ok(t *testing.T) {
 		ConcurrentCalls: 3,
 	}
 	serviceConfig := config.ServiceConfig{
-		Version:   1,
+		Version:   config.ConfigVersion,
 		Endpoints: []*config.EndpointConfig{&endpointSingle, &endpointMulti},
 		Timeout:   100 * time.Millisecond,
 		Host:      []string{expectedHost},

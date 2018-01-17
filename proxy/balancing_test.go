@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net"
+	"net/url"
 	"testing"
 
 	"github.com/devopsfaith/krakend/config"
@@ -66,6 +67,33 @@ func testLoadBalancedMw(t *testing.T, lb Middleware) {
 	}
 	if _, err := lb(assertion)(context.Background(), &Request{
 		Path: "/tupu",
+	}); err != nil {
+		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
+	}
+
+	want = "http://127.0.0.1:8080/tupu?extra=true"
+	assertion = func(ctx context.Context, request *Request) (*Response, error) {
+		if request.URL.String() != want {
+			t.Errorf("The middleware did not update the request URL! want [%s], have [%s]\n", want, request.URL)
+		}
+		return nil, nil
+	}
+	if _, err := lb(assertion)(context.Background(), &Request{
+		Path: "/tupu?extra=true",
+	}); err != nil {
+		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
+	}
+
+	want = "http://127.0.0.1:8080/tupu?some=none"
+	assertion = func(ctx context.Context, request *Request) (*Response, error) {
+		if request.URL.String() != want {
+			t.Errorf("The middleware did not update the request URL! want [%s], have [%s]\n", want, request.URL)
+		}
+		return nil, nil
+	}
+	if _, err := lb(assertion)(context.Background(), &Request{
+		Path:  "/tupu?extra=true",
+		Query: url.Values{"some": []string{"none"}},
 	}); err != nil {
 		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
 	}

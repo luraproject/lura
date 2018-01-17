@@ -64,7 +64,7 @@ For the lazy, a ready to use example:
         "log"
         "os"
 
-        "github.com/devopsfaith/krakend/config/viper"
+        "github.com/devopsfaith/krakend/config"
         "github.com/devopsfaith/krakend/logging"
         "github.com/devopsfaith/krakend/proxy"
         "github.com/devopsfaith/krakend/router/gin"
@@ -77,7 +77,7 @@ For the lazy, a ready to use example:
         configFile := flag.String("c", "/etc/krakend/configuration.json", "Path to the configuration filename")
         flag.Parse()
 
-        parser := viper.New()
+        parser := config.NewParser()
         serviceConfig, err := parser.Parse(*configFile)
         if err != nil {
             log.Fatal("ERROR:", err.Error())
@@ -106,7 +106,6 @@ Visit the [framework overview](/docs/OVERVIEW.md) for more details about the com
 5. [dns srv service discovery](/examples/dns/)
 6. [jwt middlewares](/examples/jwt/)
 7. [httpcache based proxies](/examples/httpcache/)
-8. [etcd service discovery](/examples/httpcache/)
 
 ## Configuration file
 
