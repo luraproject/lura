@@ -1,10 +1,15 @@
 ![Krakend logo](docs/images/krakend.png)
 
-# KrakenD
+# The KrakenD framework
 
 [![Travis-CI](https://travis-ci.org/devopsfaith/krakend.svg?branch=master)](https://travis-ci.org/devopsfaith/krakend) [![Go Report Card](https://goreportcard.com/badge/github.com/devopsfaith/krakend)](https://goreportcard.com/report/github.com/devopsfaith/krakend) [![Coverage Status](https://coveralls.io/repos/github/devopsfaith/krakend/badge.svg?branch=master)](https://coveralls.io/github/devopsfaith/krakend?branch=master) [![GoDoc](https://godoc.org/github.com/devopsfaith/krakend?status.svg)](https://godoc.org/github.com/devopsfaith/krakend)
 
-Ultra performant API Gateway with middlewares
+An open framework to assemble ultra performance API Gateways with middlewares; core service of the [KrakenD API Gateway](http://www.krakend.io).
+
+Looking for the API gateway ready to use?
+
+[Site](http://www.krakend.io/) | [Download](http://www.krakend.io/download/) | [Build](https://github.com/devopsfaith/krakend-ce) | [Documentation](http://www.krakend.io/docs/overview/introduction/) | [Blog](http://www.krakend.io/blog)
+
 
 ## Motivation
 
@@ -16,35 +21,40 @@ KrakenD not only supports HTTP(S), but because it is a set of generic libraries 
 
 ### Practical Example
 
-Fred Calamari is a mobile developer that needs to construct a single front page that requires data from several calls to their backend services, e.g:
+A mobile developer needs to construct a single front page that requires data from 4 different calls to their backend services, e.g:
 
     1) api.store.server/products
     2) api.store.server/marketing-promos
     3) api.users.server/users/{id_user}
     4) api.users.server/shopping-cart/{id_user}
 
-The screen is very simple and _only_ needs to retrieve data from 4 different sources, wait for the round trip and then pick only a few fields of the response. Instead of thing these calls, the mobile could call a single endpoint to KrakenD:
+The screen is very simple and the mobile client _only_ needs to retrieve data from 4 different sources, wait for the round trip and then hand pick only a few fields from the response.
+
+What if the mobile could call a single endpoint?
 
     1) krakend.server/frontpage/{id_user}
 
-And this is how it would look like:
+That's something KrakenD can do for you. And this is how it would look like:
 
 ![Gateway](docs/images/krakend-gateway.png)
 
-The difference in size in this example would be because KrakenD server would have removed unneeded attributes from the responses.
+KrakenD would merge all the data and return only the fields you need (the difference in size in the graph).
+
+Visit the [KrakenD website](http://www.krakend.io) for more information.
 
 ## What's in this repository?
 The source code on which the [KrakenD](http://www.krakend.io) service core is built on. It is designed to work with your own middleware and extend the functionality by using small, independent, reusable components following the Unix philosophy.
 
-**This repository is only for those who want to build from source a Krakend service** or for those who will reuse any of the components in another application.
+Use this repository if want to **build from source your API Gateway** or if you want to **reuse the components in another application**.
 
-If you just want to use the server, please [download the binary for your architecture](http://www.krakend.io/download).
+If you need the KrakenD API Gateway [download the binary for your architecture](http://www.krakend.io/download) or [build it yourself](https://github.com/devopsfaith/krakend-ce).
 
 
 ## Library Usage
-Krakend is presented as a **go library** that you can include in your own go application to build a powerful proxy or API gateway. In order to get you started several examples of implementations are included in the `examples` folder.
+KrakenD is presented as a **go library** that you can include in your own go application to build a powerful proxy or API gateway. In order to get you started several examples of implementations are included in the `examples` folder.
 
 Of course you will need [go installed](https://golang.org/doc/install) in your system to compile the code.
+
 There is a `Makefile` in every example that will download library dependencies and compile a binary for you to test. Just run:
 
     $ cd examples/gin
@@ -54,7 +64,7 @@ Or, if you want to build all the examples, from the root of the project
 
     $ make
 
-For the lazy, a ready to use example:
+A ready to use example:
 
 ```go
     package main
@@ -119,8 +129,10 @@ Check out the [benchmark results](/docs/BENCHMARKS.md) of several KrakenD compon
 We are always happy to receive contributions. If you have questions, suggestions, bugs please open an issue.
 If you want to submit the code, create the issue and send us a pull request for review.
 
+If you want to contribute on the KrakenD API Gateway binary see the [builder](https://github.com/devopsfaith/krakend-ce))
 
-## Read more
+
+## Want more?
 - Follow the [KrakenD blog](http://www.krakend.io/blog/)
 - Follow our [twitter account](https://twitter.com/devopsfaith)
 - **Read the [documentation](http://www.krakend.io/docs/overview/introduction/)**
