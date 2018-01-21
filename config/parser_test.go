@@ -13,7 +13,7 @@ func TestNewParser_ok(t *testing.T) {
     "version": 2,
     "name": "My lovely gateway",
     "port": 8080,
-    "cache_ttl": 3600,
+    "cache_ttl": "3600s",
     "timeout": "3s",
     "endpoints": [
         {

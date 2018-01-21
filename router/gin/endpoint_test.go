@@ -1,10 +1,12 @@
 package gin
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -23,7 +25,6 @@ func TestEndpointHandler_ok(t *testing.T) {
 	}
 	expectedBody := "{\"supu\":\"tupu\"}"
 	testEndpointHandler(t, 10, p, expectedBody, "public, max-age=21600", "application/json; charset=utf-8", http.StatusOK)
-	time.Sleep(5 * time.Millisecond)
 }
 
 func TestEndpointHandler_incomplete(t *testing.T) {
@@ -35,15 +36,13 @@ func TestEndpointHandler_incomplete(t *testing.T) {
 	}
 	expectedBody := "{\"foo\":\"bar\"}"
 	testEndpointHandler(t, 10, p, expectedBody, "", "application/json; charset=utf-8", http.StatusOK)
-	time.Sleep(5 * time.Millisecond)
 }
 
 func TestEndpointHandler_ko(t *testing.T) {
 	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
 		return nil, fmt.Errorf("This is %s", "a dummy error")
 	}
-	testEndpointHandler(t, 10, p, "", "", "text/plain; charset=utf-8", http.StatusInternalServerError)
-	time.Sleep(5 * time.Millisecond)
+	testEndpointHandler(t, 10, p, "", "", "", http.StatusInternalServerError)
 }
 
 func TestEndpointHandler_cancel(t *testing.T) {
@@ -51,13 +50,11 @@ func TestEndpointHandler_cancel(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 		return nil, nil
 	}
-	testEndpointHandler(t, 0, p, "{}", "", "text/plain; charset=utf-8", http.StatusInternalServerError)
-	time.Sleep(5 * time.Millisecond)
+	testEndpointHandler(t, 0, p, "", "", "", http.StatusInternalServerError)
 }
 
 func TestEndpointHandler_noop(t *testing.T) {
 	testEndpointHandler(t, 10, proxy.NoopProxy, "{}", "", "application/json; charset=utf-8", http.StatusOK)
-	time.Sleep(5 * time.Millisecond)
 }
 
 func testEndpointHandler(t *testing.T, timeout time.Duration, p proxy.Proxy, expectedBody, expectedCache,
@@ -93,32 +90,27 @@ func setup(timeout time.Duration, p proxy.Proxy) (string, *http.Response, error)
 	}
 
 	server := startGinServer(EndpointHandler(endpoint, p))
-	defer server.Shutdown(context.Background())
 
-	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", nil)
+	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", ioutil.NopCloser(&bytes.Buffer{}))
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", nil, err
-	}
-	defer resp.Body.Close()
 
-	body, ioerr := ioutil.ReadAll(resp.Body)
+	w := httptest.NewRecorder()
+
+	server.ServeHTTP(w, req)
+
+	defer w.Result().Body.Close()
+
+	body, ioerr := ioutil.ReadAll(w.Result().Body)
 	if ioerr != nil {
-		return "", nil, err
+		return "", nil, ioerr
 	}
-	return string(body), resp, nil
+	return string(body), w.Result(), nil
 }
 
-func startGinServer(handlerFunc gin.HandlerFunc) *http.Server {
-	gin.SetMode(gin.ReleaseMode)
+func startGinServer(handlerFunc gin.HandlerFunc) *gin.Engine {
+	gin.SetMode(gin.TestMode)
 	router := gin.New()
 	router.GET("/_gin_endpoint/:param", handlerFunc)
-	s := &http.Server{
-		Addr:    ":8080",
-		Handler: router,
-	}
-	go s.ListenAndServe()
-	time.Sleep(5 * time.Millisecond)
-	return s
+
+	return router
 }

@@ -106,8 +106,10 @@ func (r httpRouter) Run(cfg config.ServiceConfig) {
 	}()
 
 	<-r.ctx.Done()
-	r.cfg.Logger.Error(server.Shutdown(context.Background()))
-
+	if err := server.Shutdown(context.Background()); err != nil {
+		r.cfg.Logger.Error(err.Error())
+	}
+	r.cfg.Logger.Info("Router execution ended")
 }
 
 func (r httpRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) {
