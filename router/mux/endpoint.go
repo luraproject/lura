@@ -33,15 +33,7 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 		endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
 		cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
 		isCacheEnabled := configuration.CacheTTL.Seconds() != 0
-		emptyResponse := []byte("{}")
-
-		var dump func(int, http.ResponseWriter, *proxy.Response)
-		if len(configuration.Backend) == 1 && configuration.Backend[0].Encoding == encoding.NOOP {
-			dump = noopResponse
-		} else {
-			dump = jsonResponse
-		}
-		cacheTTL := int(configuration.CacheTTL.Seconds())
+		dump := getDump(configuration)
 
 		return func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set(core.KrakendHeaderName, core.KrakendHeaderValue)
@@ -67,17 +59,16 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 			default:
 			}
 
-			if response == nil {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write(emptyResponse)
-				cancel()
-				return
-			}
-			if isCacheEnabled && response.IsComplete {
-				w.Header().Set("Cache-Control", cacheControlHeaderValue)
+			if response != nil {
+				for k, v := range response.Metadata.Headers {
+					w.Header().Set(k, v[0])
+				}
+				if isCacheEnabled && response.IsComplete {
+					w.Header().Set("Cache-Control", cacheControlHeaderValue)
+				}
 			}
 
-			dump(cacheTTL, w, response)
+			dump(w, response)
 			cancel()
 		}
 	}
@@ -127,28 +118,34 @@ func NewRequestBuilder(paramExtractor ParamExtractor) RequestBuilder {
 	}
 }
 
-func jsonResponse(cacheTTL int, w http.ResponseWriter, response *proxy.Response) {
+var emptyResponse = []byte("{}")
+
+func getDump(cfg *config.EndpointConfig) func(http.ResponseWriter, *proxy.Response) {
+	if len(cfg.Backend) == 1 && cfg.Backend[0].Encoding == encoding.NOOP {
+		return noopResponse
+	}
+	return jsonResponse
+}
+
+func jsonResponse(w http.ResponseWriter, response *proxy.Response) {
+	w.Header().Set("Content-Type", "application/json")
+	if response == nil {
+		w.Write(emptyResponse)
+		return
+	}
+
 	js, err := json.Marshal(response.Data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	for k, v := range response.Metadata.Headers {
-		w.Header().Set(k, v[0])
-	}
-
-	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
 
-func noopResponse(cacheTTL int, w http.ResponseWriter, response *proxy.Response) {
+func noopResponse(w http.ResponseWriter, response *proxy.Response) {
 	if response == nil {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
-	}
-	for k, v := range response.Metadata.Headers {
-		w.Header().Set(k, v[0])
 	}
 	io.Copy(w, response.Io)
 }

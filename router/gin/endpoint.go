@@ -3,7 +3,6 @@ package gin
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/core"
-	"github.com/devopsfaith/krakend/encoding"
 	"github.com/devopsfaith/krakend/proxy"
 	"github.com/devopsfaith/krakend/router"
 )
@@ -30,14 +28,7 @@ func CustomErrorEndpointHandler(configuration *config.EndpointConfig, prxy proxy
 	endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
 	cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
 	isCacheEnabled := configuration.CacheTTL.Seconds() != 0
-	emptyResponse := gin.H{}
-
-	var dump func(*gin.Context, *proxy.Response)
-	if len(configuration.Backend) == 1 && configuration.Backend[0].Encoding == encoding.NOOP {
-		dump = noopResponse
-	} else {
-		dump = jsonResponse
-	}
+	render := getRender(configuration)
 
 	return func(c *gin.Context) {
 		requestCtx, cancel := context.WithTimeout(c, endpointTimeout)
@@ -59,37 +50,17 @@ func CustomErrorEndpointHandler(configuration *config.EndpointConfig, prxy proxy
 		default:
 		}
 
-		if isCacheEnabled && response != nil && response.IsComplete {
-			c.Header("Cache-Control", cacheControlHeaderValue)
+		if response != nil {
+			if isCacheEnabled && response.IsComplete {
+				c.Header("Cache-Control", cacheControlHeaderValue)
+			}
+			for k, v := range response.Metadata.Headers {
+				c.Header(k, v[0])
+			}
 		}
 
-		if response == nil {
-			c.JSON(http.StatusOK, emptyResponse)
-			cancel()
-			return
-		}
-		for k, v := range response.Metadata.Headers {
-			c.Header(k, v[0])
-		}
-		dump(c, response)
+		render(c, response)
 		cancel()
-	}
-}
-
-func jsonResponse(c *gin.Context, response *proxy.Response) {
-	if response != nil {
-		c.JSON(http.StatusOK, response.Data)
-	} else {
-		c.JSON(http.StatusOK, gin.H{})
-	}
-}
-
-func noopResponse(c *gin.Context, response *proxy.Response) {
-	if response != nil {
-		c.Status(response.Metadata.StatusCode)
-		io.Copy(c.Writer, response.Io)
-	} else {
-		c.Status(http.StatusInternalServerError)
 	}
 }
 
