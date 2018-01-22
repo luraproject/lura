@@ -9,6 +9,10 @@ import (
 	"github.com/devopsfaith/krakend/config"
 )
 
+// Namespace to be used in extra config
+const Namespace = "github.com/devopsfaith/krakend/proxy"
+
+// Metadata wraps the metadata from the backend response
 type Metadata struct {
 	Headers    map[string][]string
 	StatusCode int
