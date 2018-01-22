@@ -12,16 +12,37 @@ import (
 
 type Render func(*gin.Context, *proxy.Response)
 
-func getRender(cfg *config.EndpointConfig) Render {
-	if len(cfg.Backend) == 1 && cfg.Backend[0].Encoding == encoding.NOOP {
-		switch cfg.Backend[0].Encoding {
-		case encoding.NOOP:
-			return noopRender
-		case encoding.STRING:
-			return stringRender
-		}
+var (
+	renderRegister = map[string]Render{
+		"negotiate":     negotiatedRender,
+		encoding.NOOP:   noopRender,
+		encoding.STRING: stringRender,
+		encoding.JSON:   jsonRender,
 	}
-	return negotiatedRender
+)
+
+func RegisterRender(name string, r Render) {
+	renderRegister[name] = r
+}
+
+func getRender(cfg *config.EndpointConfig) Render {
+	if cfg.OutputEncoding == "" {
+		return getRenderFromBackend(cfg.Backend[0])
+	}
+
+	r, ok := renderRegister[cfg.OutputEncoding]
+	if !ok {
+		return getRenderFromBackend(cfg.Backend[0])
+	}
+	return r
+}
+
+func getRenderFromBackend(cfg *config.Backend) Render {
+	r, ok := renderRegister[cfg.Encoding]
+	if !ok {
+		return jsonRender
+	}
+	return r
 }
 
 func negotiatedRender(c *gin.Context, response *proxy.Response) {
@@ -33,22 +54,6 @@ func negotiatedRender(c *gin.Context, response *proxy.Response) {
 	default:
 		renderResponse(c.JSON, response)
 	}
-}
-
-func renderResponse(render func(int, interface{}), response *proxy.Response) {
-	if response == nil {
-		render(http.StatusOK, emptyResponse)
-		return
-	}
-	render(http.StatusOK, response.Data)
-}
-
-func yamlRender(c *gin.Context, response *proxy.Response) {
-	if response == nil {
-		c.YAML(http.StatusOK, emptyResponse)
-		return
-	}
-	c.YAML(http.StatusOK, response.Data)
 }
 
 func stringRender(c *gin.Context, response *proxy.Response) {
@@ -78,6 +83,14 @@ func noopRender(c *gin.Context, response *proxy.Response) {
 	}
 	c.Status(response.Metadata.StatusCode)
 	io.Copy(c.Writer, response.Io)
+}
+
+func renderResponse(render func(int, interface{}), response *proxy.Response) {
+	if response == nil {
+		render(http.StatusOK, emptyResponse)
+		return
+	}
+	render(http.StatusOK, response.Data)
 }
 
 var emptyResponse = gin.H{}
