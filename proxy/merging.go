@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/devopsfaith/krakend/config"
@@ -17,6 +18,7 @@ func NewMergeDataMiddleware(endpointConfig *config.EndpointConfig) Middleware {
 		return EmptyMiddleware
 	}
 	serviceTimeout := time.Duration(85*endpointConfig.Timeout.Nanoseconds()/100) * time.Nanosecond
+	combiner := getResponseCombiner(endpointConfig.ExtraConfig)
 
 	return func(next ...Proxy) Proxy {
 		if len(next) != totalBackends {
@@ -48,7 +50,7 @@ func NewMergeDataMiddleware(endpointConfig *config.EndpointConfig) Middleware {
 				return &Response{Data: make(map[string]interface{}), IsComplete: false}, err
 			}
 
-			result := combineData(localCtx, totalBackends, responses)
+			result := combiner(localCtx, totalBackends, responses)
 			cancel()
 			return result, err
 		}
@@ -75,6 +77,44 @@ func requestPart(ctx context.Context, next Proxy, request *Request, out chan<- *
 		failed <- ctx.Err()
 	}
 	cancel()
+}
+
+// ResponseCombiner func to merge the collected responses into a single one
+type ResponseCombiner func(context.Context, int, []*Response) *Response
+
+// RegisterResponseCombiner adds a new response combiner into the internal register
+func RegisterResponseCombiner(name string, f ResponseCombiner) {
+	responseCombinersMutex.Lock()
+	responseCombiners[name] = f
+	responseCombinersMutex.Unlock()
+}
+
+const (
+	mergeKey            = "combiner"
+	defaultCombinerName = "default"
+)
+
+var (
+	responseCombinersMutex = &sync.RWMutex{}
+	responseCombiners      = map[string]ResponseCombiner{
+		defaultCombinerName: combineData,
+	}
+)
+
+func getResponseCombiner(extra config.ExtraConfig) ResponseCombiner {
+	responseCombinersMutex.RLock()
+	combiner := responseCombiners[defaultCombinerName]
+	if v, ok := extra[Namespace]; ok {
+		if e, ok := v.(map[string]interface{}); ok {
+			if v, ok := e[mergeKey]; ok {
+				if c, ok := responseCombiners[v.(string)]; ok {
+					combiner = c
+				}
+			}
+		}
+	}
+	responseCombinersMutex.RUnlock()
+	return combiner
 }
 
 func combineData(ctx context.Context, total int, parts []*Response) *Response {
