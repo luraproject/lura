@@ -26,13 +26,18 @@ func RegisterRender(name string, r Render) {
 }
 
 func getRender(cfg *config.EndpointConfig) Render {
+	fallback := jsonRender
+	if len(cfg.Backend) > 0 {
+		fallback = getRenderFromBackend(cfg.Backend[0])
+	}
+
 	if cfg.OutputEncoding == "" {
-		return getRenderFromBackend(cfg.Backend[0])
+		return fallback
 	}
 
 	r, ok := renderRegister[cfg.OutputEncoding]
 	if !ok {
-		return getRenderFromBackend(cfg.Backend[0])
+		return fallback
 	}
 	return r
 }

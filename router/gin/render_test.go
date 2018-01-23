@@ -22,9 +22,10 @@ func TestNegotiatedRender(t *testing.T) {
 		}, nil
 	}
 	endpoint := &config.EndpointConfig{
-		Timeout:     time.Second,
-		CacheTTL:    6 * time.Hour,
-		QueryString: []string{"b"},
+		Timeout:        time.Second,
+		CacheTTL:       6 * time.Hour,
+		QueryString:    []string{"b"},
+		OutputEncoding: "negotiate",
 	}
 	expectedBody := "supu: tupu\n"
 
