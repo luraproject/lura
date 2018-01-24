@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 	"time"
 
@@ -453,22 +454,22 @@ func TestRender_noop_nilResponse(t *testing.T) {
 
 func TestRegisterRender(t *testing.T) {
 	var total int
-	expected := &proxy.Response{IsComplete: true}
+	expected := &proxy.Response{IsComplete: true, Data: map[string]interface{}{"a": "b"}}
 	name := "test render"
 
 	RegisterRender(name, func(_ *gin.Context, resp *proxy.Response) {
-		resp = expected
+		*resp = *expected
 		total++
 	})
 
 	subject := getRender(&config.EndpointConfig{OutputEncoding: name})
 
 	var c *gin.Context
-	var resp *proxy.Response
-	subject(c, resp)
+	resp := proxy.Response{}
+	subject(c, &resp)
 
-	if resp != expected {
-		t.Error("unexpected response")
+	if !reflect.DeepEqual(resp, *expected) {
+		t.Error("unexpected response", resp)
 	}
 
 	if total != 1 {
