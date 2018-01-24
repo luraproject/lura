@@ -450,3 +450,28 @@ func TestRender_noop_nilResponse(t *testing.T) {
 		t.Error("Unexpected status code:", w.Result().StatusCode)
 	}
 }
+
+func TestRegisterRender(t *testing.T) {
+	var total int
+	expected := &proxy.Response{IsComplete: true}
+	name := "test render"
+
+	RegisterRender(name, func(_ *gin.Context, resp *proxy.Response) {
+		resp = expected
+		total++
+	})
+
+	subject := getRender(&config.EndpointConfig{OutputEncoding: name})
+
+	var c *gin.Context
+	var resp *proxy.Response
+	subject(c, resp)
+
+	if resp != expected {
+		t.Error("unexpected response")
+	}
+
+	if total != 1 {
+		t.Error("the render was called an unexpected amount of times:", total)
+	}
+}
