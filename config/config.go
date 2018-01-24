@@ -187,6 +187,10 @@ func (s *ServiceConfig) Init() error {
 
 		s.initEndpointDefaults(i)
 
+		if e.OutputEncoding == encoding.NOOP && len(e.Backend) > 1 {
+			return errInvalidNoOpEncoding
+		}
+
 		for j, b := range e.Backend {
 
 			s.initBackendDefaults(i, j)
@@ -195,10 +199,6 @@ func (s *ServiceConfig) Init() error {
 
 			if err := s.initBackendURLMappings(i, j, inputSet); err != nil {
 				return err
-			}
-
-			if b.Encoding == encoding.NOOP && len(e.Backend) > 1 {
-				return errInvalidNoOpEncoding
 			}
 		}
 	}

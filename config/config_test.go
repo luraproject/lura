@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/devopsfaith/krakend/encoding"
 )
 
 func TestConfig_rejectInvalidVersion(t *testing.T) {
@@ -205,6 +207,25 @@ func TestConfig_initKONoBackends(t *testing.T) {
 	if err := subject.Init(); err == nil ||
 		!strings.HasPrefix(err.Error(), "WARNING: the [/supu] endpoint has 0 backends defined! Ignoring") {
 		t.Error("Expecting an error at the configuration init!", err)
+	}
+}
+
+func TestConfig_initKO_errInvalidNoOpEncoding(t *testing.T) {
+	subject := ServiceConfig{
+		Version: ConfigVersion,
+		Host:    []string{"http://127.0.0.1:8080"},
+		Endpoints: []*EndpointConfig{
+			{
+				Endpoint:       "/supu",
+				Method:         "post",
+				OutputEncoding: encoding.NOOP,
+				Backend:        []*Backend{&Backend{}, &Backend{}},
+			},
+		},
+	}
+
+	if err := subject.Init(); err != errInvalidNoOpEncoding {
+		t.Error("expecting errInvalidNoOpEncoding. got:", err)
 	}
 }
 
