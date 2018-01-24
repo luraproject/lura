@@ -43,6 +43,8 @@ type ServiceConfig struct {
 	Port int `mapstructure:"port"`
 	// version code of the configuration
 	Version int `mapstructure:"version"`
+	// OutputEncoding defines the default encoding strategy to use for the endpoint responses
+	OutputEncoding string `mapstructure:"output_encoding"`
 	// Extra configuration for customized behaviour
 	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
 
@@ -80,6 +82,8 @@ type EndpointConfig struct {
 	QueryString []string `mapstructure:"querystring_params"`
 	// Endpoint Extra configuration for customized behaviour
 	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
+	// OutputEncoding defines the encoding strategy to use for the endpoint responses
+	OutputEncoding string `mapstructure:"output_encoding"`
 }
 
 // Backend defines how krakend should connect to the backend service (the API resource to consume)
@@ -139,10 +143,11 @@ const defaultNamespace = "github.com/devopsfaith/krakend/config"
 var ConfigGetters = map[string]ConfigGetter{defaultNamespace: DefaultConfigGetter}
 
 var (
-	simpleURLKeysPattern = regexp.MustCompile(`\{([a-zA-Z\-_0-9]+)\}`)
-	debugPattern         = "^[^/]|/__debug(/.*)?$"
-	errInvalidHost       = errors.New("invalid host")
-	defaultPort          = 8080
+	simpleURLKeysPattern   = regexp.MustCompile(`\{([a-zA-Z\-_0-9]+)\}`)
+	debugPattern           = "^[^/]|/__debug(/.*)?$"
+	errInvalidHost         = errors.New("invalid host")
+	errInvalidNoOpEncoding = errors.New("can not use NoOp encoding with more than one backends connected to the same endpoint")
+	defaultPort            = 8080
 )
 
 // Init initializes the configuration struct and its defined endpoints and backends.
@@ -181,6 +186,10 @@ func (s *ServiceConfig) Init() error {
 		e.Endpoint = s.uriParser.GetEndpointPath(e.Endpoint, inputParams)
 
 		s.initEndpointDefaults(i)
+
+		if e.OutputEncoding == encoding.NOOP && len(e.Backend) > 1 {
+			return errInvalidNoOpEncoding
+		}
 
 		for j, b := range e.Backend {
 
@@ -228,6 +237,13 @@ func (s *ServiceConfig) initEndpointDefaults(e int) {
 	}
 	if endpoint.ConcurrentCalls == 0 {
 		endpoint.ConcurrentCalls = 1
+	}
+	if endpoint.OutputEncoding == "" {
+		if s.OutputEncoding != "" {
+			endpoint.OutputEncoding = s.OutputEncoding
+		} else {
+			endpoint.OutputEncoding = encoding.JSON
+		}
 	}
 }
 

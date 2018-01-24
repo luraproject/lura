@@ -24,18 +24,18 @@ func EndpointHandler(configuration *config.EndpointConfig, proxy proxy.Proxy) gi
 }
 
 // CustomErrorEndpointHandler implements the HandleFactory interface
-func CustomErrorEndpointHandler(configuration *config.EndpointConfig, proxy proxy.Proxy, errF router.ToHTTPError) gin.HandlerFunc {
+func CustomErrorEndpointHandler(configuration *config.EndpointConfig, prxy proxy.Proxy, errF router.ToHTTPError) gin.HandlerFunc {
 	endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
 	cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
 	isCacheEnabled := configuration.CacheTTL.Seconds() != 0
-	emptyResponse := gin.H{}
+	render := getRender(configuration)
 
 	return func(c *gin.Context) {
 		requestCtx, cancel := context.WithTimeout(c, endpointTimeout)
 
 		c.Header(core.KrakendHeaderName, core.KrakendHeaderValue)
 
-		response, err := proxy(requestCtx, NewRequest(c, configuration.QueryString))
+		response, err := prxy(requestCtx, NewRequest(c, configuration.QueryString))
 		if err != nil {
 			c.AbortWithError(errF(err), err)
 			cancel()
@@ -50,19 +50,24 @@ func CustomErrorEndpointHandler(configuration *config.EndpointConfig, proxy prox
 		default:
 		}
 
-		if isCacheEnabled && response != nil && response.IsComplete {
-			c.Header("Cache-Control", cacheControlHeaderValue)
+		if response != nil {
+			if isCacheEnabled && response.IsComplete {
+				c.Header("Cache-Control", cacheControlHeaderValue)
+			}
+			for k, v := range response.Metadata.Headers {
+				c.Header(k, v[0])
+			}
 		}
 
-		if response == nil {
-			c.JSON(http.StatusOK, emptyResponse)
-			cancel()
-			return
-		}
-		c.JSON(http.StatusOK, response.Data)
+		render(c, response)
 		cancel()
 	}
 }
+
+var (
+	headersToSend        = []string{"Content-Type"}
+	userAgentHeaderValue = []string{core.KrakendUserAgent}
+)
 
 // NewRequest gets a request from the current gin context and the received query string
 func NewRequest(c *gin.Context, queryString []string) *proxy.Request {

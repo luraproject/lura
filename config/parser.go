@@ -56,6 +56,7 @@ type parseableServiceConfig struct {
 	IdleTimeout         string                     `json:"idle_timeout"`
 	ReadHeaderTimeout   string                     `json:"read_header_timeout"`
 	MaxIdleConnsPerHost int                        `json:"max_idle_connections"`
+	OutputEncoding      string                     `json:"output_encoding"`
 	Debug               bool
 }
 
@@ -71,6 +72,7 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 		WriteTimeout:        parseDuration(p.WriteTimeout),
 		IdleTimeout:         parseDuration(p.IdleTimeout),
 		ReadHeaderTimeout:   parseDuration(p.ReadHeaderTimeout),
+		OutputEncoding:      p.OutputEncoding,
 		MaxIdleConnsPerHost: p.MaxIdleConnsPerHost,
 	}
 	if p.ExtraConfig != nil {
@@ -93,6 +95,7 @@ type parseableEndpointConfig struct {
 	CacheTTL        int                 `json:"cache_ttl"`
 	QueryString     []string            `json:"querystring_params"`
 	ExtraConfig     *ExtraConfig        `json:"extra_config,omitempty"`
+	OutputEncoding  string              `json:"output_encoding"`
 }
 
 func (p *parseableEndpointConfig) normalize() *EndpointConfig {
@@ -103,6 +106,7 @@ func (p *parseableEndpointConfig) normalize() *EndpointConfig {
 		Timeout:         parseDuration(p.Timeout),
 		CacheTTL:        time.Duration(p.CacheTTL) * time.Second,
 		QueryString:     p.QueryString,
+		OutputEncoding:  p.OutputEncoding,
 	}
 	if p.ExtraConfig != nil {
 		e.ExtraConfig = *p.ExtraConfig

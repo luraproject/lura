@@ -297,6 +297,69 @@ func TestNewHTTPProxy_requestKo(t *testing.T) {
 	}
 }
 
+func TestNewHTTPProxy_noopDecoder(t *testing.T) {
+	expectedcontent := "some nice, interesting and long content"
+	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("header1", "value1")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(expectedcontent))
+	}))
+	defer backendServer.Close()
+
+	rpURL, _ := url.Parse(backendServer.URL)
+	backend := config.Backend{
+		Encoding: encoding.NOOP,
+		Decoder:  encoding.NoOpDecoder,
+	}
+	request := Request{
+		Method: "GET",
+		Path:   "/",
+		URL:    rpURL,
+		Body:   newDummyReadCloser(""),
+	}
+	mustEnd := time.After(time.Duration(150) * time.Millisecond)
+
+	result, err := HTTPProxyFactory(http.DefaultClient)(&backend)(context.Background(), &request)
+	if err != nil {
+		t.Errorf("The proxy returned an unexpected error: %s\n", err.Error())
+		return
+	}
+	if result == nil {
+		t.Errorf("The proxy returned a null result\n")
+		return
+	}
+	select {
+	case <-mustEnd:
+		t.Errorf("Error: expected response")
+		return
+	default:
+	}
+
+	if len(result.Data) > 0 {
+		t.Error("unexpected data:", result.Data)
+		return
+	}
+
+	if result.Metadata.StatusCode != http.StatusOK {
+		t.Error("unexpected status code:", result.Metadata.StatusCode)
+		return
+	}
+
+	if len(result.Metadata.Headers["Header1"]) < 1 || result.Metadata.Headers["Header1"][0] != "value1" {
+		t.Error("unexpected header:", result.Metadata.Headers)
+		return
+	}
+
+	b := &bytes.Buffer{}
+	if _, err := b.ReadFrom(result.Io); err != nil {
+		t.Error(err, b.String())
+		return
+	}
+	if content := b.String(); content != expectedcontent {
+		t.Error("unexpected content:", content)
+	}
+}
+
 func TestNewRequestBuilderMiddleware_ok(t *testing.T) {
 	expected := errors.New("error to be propagated")
 	expectedMethod := "GET"
@@ -337,29 +400,4 @@ func TestNewRequestBuilderMiddleware_multipleNext(t *testing.T) {
 	sampleBackend := config.Backend{}
 	mw := NewRequestBuilderMiddleware(&sampleBackend)
 	mw(explosiveProxy(t), explosiveProxy(t))
-}
-
-func TestDefaultHTTPResponseParserConfig_nopDecoder(t *testing.T) {
-	result := map[string]interface{}{}
-	if err := DefaultHTTPResponseParserConfig.Decoder(bytes.NewBufferString("some body"), &result); err != nil {
-		t.Error(err.Error())
-	}
-	if len(result) != 0 {
-		t.Error("unexpected result")
-	}
-}
-
-func TestDefaultHTTPResponseParserConfig_nopEntityFormatter(t *testing.T) {
-	expected := Response{Data: map[string]interface{}{"supu": "tupu"}, IsComplete: true}
-	result := DefaultHTTPResponseParserConfig.EntityFormatter.Format(expected)
-	if !result.IsComplete {
-		t.Error("unexpected result")
-	}
-	d, ok := result.Data["supu"]
-	if !ok {
-		t.Error("unexpected result")
-	}
-	if v, ok := d.(string); !ok || v != "tupu" {
-		t.Error("unexpected result")
-	}
 }
