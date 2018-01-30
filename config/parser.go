@@ -93,6 +93,7 @@ type parseableEndpointConfig struct {
 	CacheTTL        int                 `json:"cache_ttl"`
 	QueryString     []string            `json:"querystring_params"`
 	ExtraConfig     *ExtraConfig        `json:"extra_config,omitempty"`
+	HeadersToPass   []string            `json:"headers_to_pass"`
 }
 
 func (p *parseableEndpointConfig) normalize() *EndpointConfig {
@@ -103,6 +104,7 @@ func (p *parseableEndpointConfig) normalize() *EndpointConfig {
 		Timeout:         parseDuration(p.Timeout),
 		CacheTTL:        time.Duration(p.CacheTTL) * time.Second,
 		QueryString:     p.QueryString,
+		HeadersToPass:   p.HeadersToPass,
 	}
 	if p.ExtraConfig != nil {
 		e.ExtraConfig = *p.ExtraConfig

@@ -80,6 +80,8 @@ type EndpointConfig struct {
 	QueryString []string `mapstructure:"querystring_params"`
 	// Endpoint Extra configuration for customized behaviour
 	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
+	// HeadersToPass defines the list of headers to pass to the backends
+	HeadersToPass []string `mapstructure:"headers_to_pass"`
 }
 
 // Backend defines how krakend should connect to the backend service (the API resource to consume)
