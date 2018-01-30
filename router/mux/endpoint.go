@@ -33,6 +33,11 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 		isCacheEnabled := configuration.CacheTTL.Seconds() != 0
 		emptyResponse := []byte("{}")
 
+		headersToSend := configuration.HeadersToPass
+		if len(headersToSend) == 0 {
+			headersToSend = router.HeadersToSend
+		}
+
 		return func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set(core.KrakendHeaderName, core.KrakendHeaderValue)
 			if r.Method != configuration.Method {
@@ -42,7 +47,7 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 
 			requestCtx, cancel := context.WithTimeout(context.Background(), endpointTimeout)
 
-			response, err := proxy(requestCtx, rb(r, configuration.QueryString))
+			response, err := proxy(requestCtx, rb(r, configuration.QueryString, headersToSend))
 			if err != nil {
 				http.Error(w, err.Error(), errF(err))
 				cancel()
@@ -82,7 +87,7 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 }
 
 // RequestBuilder is a function that creates a proxy.Request from the received http request
-type RequestBuilder func(r *http.Request, queryString []string) *proxy.Request
+type RequestBuilder func(r *http.Request, queryString, headersToSend []string) *proxy.Request
 
 // ParamExtractor is a function that extracts thes query params from the requested uri
 type ParamExtractor func(r *http.Request) map[string]string
@@ -96,13 +101,13 @@ var NewRequest = NewRequestBuilder(func(_ *http.Request) map[string]string {
 // NewRequestBuilder gets a RequestBuilder with the received ParamExtractor as a query param
 // extraction mecanism
 func NewRequestBuilder(paramExtractor ParamExtractor) RequestBuilder {
-	return func(r *http.Request, queryString []string) *proxy.Request {
+	return func(r *http.Request, queryString, headersToSend []string) *proxy.Request {
 		params := paramExtractor(r)
-		headers := make(map[string][]string, 2+len(router.HeadersToSend))
+		headers := make(map[string][]string, 2+len(headersToSend))
 		headers["X-Forwarded-For"] = []string{r.RemoteAddr}
 		headers["User-Agent"] = router.UserAgentHeaderValue
 
-		for _, k := range router.HeadersToSend {
+		for _, k := range headersToSend {
 			if h, ok := r.Header[k]; ok {
 				headers[k] = h
 			}
