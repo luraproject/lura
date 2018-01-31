@@ -78,19 +78,27 @@ func requestPart(ctx context.Context, next Proxy, request *Request, out chan<- *
 }
 
 func combineData(total int, parts []*Response) *Response {
-	composedData := make(map[string]interface{})
-	isComplete := len(parts) == total
-
+	var isComplete bool = len(parts) == total
+	var retResponse *Response = nil
 	for _, part := range parts {
-		if part != nil && part.IsComplete {
-			for k, v := range part.Data {
-				composedData[k] = v
-			}
-			isComplete = isComplete && part.IsComplete
-		} else {
+		if part == nil || part.Data == nil {
 			isComplete = false
+			continue
+		}
+		isComplete = isComplete && part.IsComplete
+		if retResponse == nil {
+			retResponse = part
+			continue
+		}
+		for k, v := range part.Data {
+			retResponse.Data[k] = v
 		}
 	}
 
-	return &Response{Data: composedData, IsComplete: isComplete}
+	if nil == retResponse {
+		// do not allow nil data in the response:
+		return &Response{Data: make(map[string]interface{}, 0), IsComplete: isComplete}
+	}
+	retResponse.IsComplete = isComplete
+	return retResponse
 }
