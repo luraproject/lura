@@ -74,6 +74,39 @@ func TestNewMergeDataMiddleware_mergeIncompleteResults(t *testing.T) {
 	}
 }
 
+func TestNewMergeDataMiddleware_mergeEmptyResults(t *testing.T) {
+	timeout := 500
+	backend := config.Backend{}
+	endpoint := config.EndpointConfig{
+		Backend: []*config.Backend{&backend, &backend},
+		Timeout: time.Duration(timeout) * time.Millisecond,
+	}
+	mw := NewMergeDataMiddleware(&endpoint)
+	p := mw(
+		dummyProxy(&Response{Data: nil, IsComplete: false}),
+		dummyProxy(&Response{Data: nil, IsComplete: false}))
+	mustEnd := time.After(time.Duration(2*timeout) * time.Millisecond)
+	out, err := p(context.Background(), &Request{})
+	if err != nil {
+		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
+	}
+	if out == nil {
+		t.Errorf("The proxy returned a null result\n")
+		return
+	}
+	select {
+	case <-mustEnd:
+		t.Errorf("We were expecting a response but we got none\n")
+	default:
+		if len(out.Data) != 0 {
+			t.Errorf("We were expecting empty data but we got %v!\n", out)
+		}
+		if out.IsComplete {
+			t.Errorf("We were expecting an incomplete response but we got an incompleted one!\n")
+		}
+	}
+}
+
 func TestNewMergeDataMiddleware_partialTimeout(t *testing.T) {
 	timeout := 100
 	backend := config.Backend{Timeout: time.Duration(timeout) * time.Millisecond}
