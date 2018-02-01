@@ -76,49 +76,65 @@ func extractTarget(target string, entity *Response) {
 	}
 }
 
+func whitelistPrune(wlDict map[string]interface{}, inDict map[string]interface{}) bool {
+	canDelete := true
+	var deleteSibling bool
+	for k, v := range inDict {
+		deleteSibling = true
+		if subWl, ok := wlDict[k]; ok {
+			if subWlDict, okk := subWl.(map[string]interface{}); okk {
+				if subInDict, isDict := v.(map[string]interface{}); isDict && !whitelistPrune(subWlDict, subInDict) {
+					deleteSibling = false
+				}
+			} else {
+				// whitelist leaf, maintain this branch
+				deleteSibling = false
+			}
+		}
+		if deleteSibling {
+			delete(inDict, k)
+		} else {
+			canDelete = false
+		}
+	}
+	return canDelete
+}
+
 func newWhitelistingFilter(whitelist []string) propertyFilter {
-	wl := make(map[string]map[string]interface{}, len(whitelist))
+	wlDict := make(map[string]interface{})
 	for _, k := range whitelist {
-		keys := strings.Split(k, ".")
-		tmp, ok := wl[keys[0]]
-		if !ok {
-			tmp = make(map[string]interface{}, len(keys)-1)
-			wl[keys[0]] = tmp
-		}
-		for idx := 1; idx < len(keys); idx++ {
-			tmp[keys[idx]] = nil
-		}
+		wlFields := strings.Split(k, ".")
+		d := buildDictPath(wlDict, wlFields[:len(wlFields)-1])
+		d[wlFields[len(wlFields)-1]] = true
 	}
 
 	return func(entity *Response) {
-		accumulator := make(map[string]interface{}, len(whitelist))
-		for k, v := range entity.Data {
-			if sub, ok := wl[k]; ok {
-				if len(sub) > 0 {
-					if tmp := whitelistFilterSub(v, sub); len(tmp) > 0 {
-						accumulator[k] = tmp
-					}
-				} else {
-					accumulator[k] = v
-				}
+		if whitelistPrune(wlDict, entity.Data) {
+			for k := range entity.Data {
+				delete(entity.Data, k)
 			}
 		}
-		*entity = Response{Data: accumulator, IsComplete: entity.IsComplete}
 	}
 }
 
-func whitelistFilterSub(v interface{}, whitelist map[string]interface{}) map[string]interface{} {
-	entity, ok := v.(map[string]interface{})
-	if !ok {
-		return map[string]interface{}{}
-	}
-	tmp := make(map[string]interface{}, len(whitelist))
-	for k, v := range entity {
-		if _, ok := whitelist[k]; ok {
-			tmp[k] = v
+func buildDictPath(accumulator map[string]interface{}, fields []string) map[string]interface{} {
+	var ok bool = true
+	var c map[string]interface{}
+	var fIdx int
+	fEnd := len(fields)
+	p := accumulator
+	for fIdx = 0; fIdx < fEnd; fIdx++ {
+		if c, ok = p[fields[fIdx]].(map[string]interface{}); !ok {
+			break
 		}
+		p = c
 	}
-	return tmp
+	for ; fIdx < fEnd; fIdx++ {
+		c = make(map[string]interface{})
+		p[fields[fIdx]] = c
+		p = c
+	}
+	return p
 }
 
 func newBlacklistingFilter(blacklist []string) propertyFilter {
