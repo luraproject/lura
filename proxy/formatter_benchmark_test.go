@@ -57,7 +57,7 @@ func benchmarkDeepChilds(depth int, extraSiblings int) map[string]interface{} {
 
 func benchmarkDeepStructure(numTargets int, targetDepth int, extraFields int, extraSiblings int) (map[string]interface{}, []string) {
 	data := make(map[string]interface{}, numTargets+extraFields)
-	target_keys := make([]string, numTargets)
+	targetKeys := make([]string, numTargets)
 	for i := 0; i < numTargets; i++ {
 		data[fmt.Sprintf("target%d", i)] = benchmarkDeepChilds(targetDepth-1, extraSiblings)
 	}
@@ -71,9 +71,9 @@ func benchmarkDeepStructure(numTargets int, targetDepth int, extraFields int, ex
 		for j := targetDepth - 1; j >= 0; j-- {
 			buffer.WriteString(fmt.Sprintf(".child%d", j))
 		}
-		target_keys[i] = buffer.String()
+		targetKeys[i] = buffer.String()
 	}
-	return data, target_keys
+	return data, targetKeys
 }
 
 func BenchmarkEntityFormatter_deepWhitelistingFilter(b *testing.B) {
