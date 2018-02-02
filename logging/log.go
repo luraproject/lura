@@ -20,11 +20,15 @@ type Logger interface {
 }
 
 const (
-	// LEVEL_DEBUG = 0 the next LEVEL's are incremented by 1
+	// LEVEL_DEBUG = 0
 	LEVEL_DEBUG = iota
+	// LEVEL_INFO = 1
 	LEVEL_INFO
+	// LEVEL_WARNING = 2
 	LEVEL_WARNING
+	// LEVEL_ERROR = 3
 	LEVEL_ERROR
+	// LEVEL_CRITICAL = 4
 	LEVEL_CRITICAL
 )
 
