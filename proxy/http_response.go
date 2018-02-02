@@ -23,7 +23,7 @@ type HTTPResponseParserConfig struct {
 	EntityFormatter EntityFormatter
 }
 
-// DefaultHTTPResponseParserFactory creates HTTPResponseParser from a given HTTPResponseParserConfig
+// HTTPResponseParserFactory creates HTTPResponseParser from a given HTTPResponseParserConfig
 type HTTPResponseParserFactory func(HTTPResponseParserConfig) HTTPResponseParser
 
 // DefaultHTTPResponseParserFactory is the default implementation of HTTPResponseParserFactory

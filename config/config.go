@@ -125,6 +125,7 @@ type Backend struct {
 	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
 }
 
+// ExtraConfig is a type to store extra configurations for customized behaviours
 type ExtraConfig map[string]interface{}
 
 // ConfigGetter is a function for parsing ExtraConfig into a previously know type

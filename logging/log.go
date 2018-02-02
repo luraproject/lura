@@ -20,6 +20,7 @@ type Logger interface {
 }
 
 const (
+	// LEVEL_DEBUG = 0 the next LEVEL's are incremented by 1
 	LEVEL_DEBUG = iota
 	LEVEL_INFO
 	LEVEL_WARNING

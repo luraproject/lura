@@ -79,7 +79,7 @@ func requestPart(ctx context.Context, next Proxy, request *Request, out chan<- *
 
 func combineData(total int, parts []*Response) *Response {
 	var isComplete bool = len(parts) == total
-	var retResponse *Response = nil
+	var retResponse *Response
 	for _, part := range parts {
 		if part == nil || part.Data == nil {
 			isComplete = false

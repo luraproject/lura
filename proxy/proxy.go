@@ -9,6 +9,7 @@ import (
 	"github.com/devopsfaith/krakend/config"
 )
 
+// Metadata is the Metadata of the Response which contains Headers and StatusCode
 type Metadata struct {
 	Headers    map[string][]string
 	StatusCode int
