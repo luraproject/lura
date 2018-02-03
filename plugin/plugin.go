@@ -62,14 +62,18 @@ func open(pluginName string) (err error) {
 			}
 		}
 	}()
-	_, err = plugin.Open(pluginName)
+	_, err = pluginOpener(pluginName)
 	return
 }
+
+// pluginOpener keeps the plugin open function in a var for easy testing
+var pluginOpener = plugin.Open
 
 type loaderError struct {
 	errors []error
 }
 
+// Error implements the error interface
 func (l loaderError) Error() string {
 	msgs := make([]string, len(l.errors))
 	for i, err := range l.errors {
