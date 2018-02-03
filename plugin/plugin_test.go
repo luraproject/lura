@@ -94,7 +94,6 @@ func TestLoad_panicRecovered(t *testing.T) {
 	intialPOValue := pluginOpener
 	pluginOpener = func(path string) (*plugin.Plugin, error) {
 		panic("recover this, please")
-		return nil, nil
 	}
 	defer func() { pluginOpener = intialPOValue }()
 	tmpDir, err := ioutil.TempDir(".", "test")
