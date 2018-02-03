@@ -4,11 +4,13 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/devopsfaith/krakend/config"
 )
 
 func TestLoad_noFolder(t *testing.T) {
 	expectedErr := "open unknown: no such file or directory"
-	tot, err := Load("unknown", "")
+	tot, err := Load(config.Plugin{Folder: "unknown", Pattern: ""})
 	if tot != 0 {
 		t.Error("unexpected number of plugins loaded:", tot)
 	}
@@ -27,7 +29,7 @@ func TestLoad_emptyFolder(t *testing.T) {
 		t.Error("unexpected error:", err.Error())
 		return
 	}
-	tot, err := Load(name, "")
+	tot, err := Load(config.Plugin{Folder: name, Pattern: ""})
 	if tot != 0 {
 		t.Error("unexpected number of plugins loaded:", tot)
 	}
@@ -51,7 +53,7 @@ func TestLoad_noMatches(t *testing.T) {
 	}
 	f.Close()
 	defer os.RemoveAll(tmpDir)
-	tot, err := Load(tmpDir, ".so")
+	tot, err := Load(config.Plugin{Folder: tmpDir, Pattern: ".so"})
 	if tot != 0 {
 		t.Error("unexpected number of plugins loaded:", tot)
 	}
@@ -74,7 +76,7 @@ func TestLoad_erroredLoad(t *testing.T) {
 	}
 	f.Close()
 	defer os.RemoveAll(tmpDir)
-	tot, err := Load(tmpDir, ".so")
+	tot, err := Load(config.Plugin{Folder: tmpDir, Pattern: ".so"})
 	if tot != 0 {
 		t.Error("unexpected number of plugins loaded:", tot)
 	}

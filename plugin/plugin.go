@@ -5,12 +5,14 @@ import (
 	"io/ioutil"
 	"plugin"
 	"strings"
+
+	"github.com/devopsfaith/krakend/config"
 )
 
 // Load loads all the plugins in pluginFolder with pattern in its filename.
 // It returns the number of plugins loaded and an error if something goes wrong.
-func Load(pluginFolder, pattern string) (int, error) {
-	plugins, err := scan(pluginFolder, pattern)
+func Load(cfg config.Plugin) (int, error) {
+	plugins, err := scan(cfg.Folder, cfg.Pattern)
 	if err != nil {
 		return 0, err
 	}
