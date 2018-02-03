@@ -39,7 +39,7 @@ func load(plugins []string) (int, error) {
 	errors := []error{}
 	loadedPlugins := 0
 	for k, pluginName := range plugins {
-		if _, err := plugin.Open(pluginName); err != nil {
+		if err := open(pluginName); err != nil {
 			errors = append(errors, fmt.Errorf("opening plugin %d (%s): %s", k, pluginName, err.Error()))
 			continue
 		}
@@ -50,6 +50,20 @@ func load(plugins []string) (int, error) {
 		return loadedPlugins, loaderError{errors}
 	}
 	return loadedPlugins, nil
+}
+
+func open(pluginName string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			var ok bool
+			err, ok = r.(error)
+			if !ok {
+				err = fmt.Errorf("%v", r)
+			}
+		}
+	}()
+	_, err = plugin.Open(pluginName)
+	return
 }
 
 type loaderError struct {
