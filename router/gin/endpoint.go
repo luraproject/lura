@@ -70,7 +70,7 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 	if len(headersToSend) == 0 {
 		headersToSend = router.HeadersToSend
 	}
-	fmt.Println(headersToSend)
+
 	return func(c *gin.Context, queryString []string) *proxy.Request {
 		params := make(map[string]string, len(c.Params))
 		for _, param := range c.Params {
