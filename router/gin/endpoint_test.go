@@ -17,7 +17,16 @@ import (
 )
 
 func TestEndpointHandler_ok(t *testing.T) {
-	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
+	p := func(ctx context.Context, _ *proxy.Request) (*proxy.Response, error) {
+		if v, ok := ctx.Value("bool").(bool); !ok || !v {
+			t.Errorf("unexpected bool context value: %v", v)
+		}
+		if v, ok := ctx.Value("int").(int); !ok || v != 42 {
+			t.Errorf("unexpected int context value: %v", v)
+		}
+		if v, ok := ctx.Value("string").(string); !ok || v != "supu" {
+			t.Errorf("unexpected string context value: %v", v)
+		}
 		return &proxy.Response{
 			IsComplete: true,
 			Data:       map[string]interface{}{"supu": "tupu"},
@@ -25,6 +34,12 @@ func TestEndpointHandler_ok(t *testing.T) {
 	}
 	expectedBody := "{\"supu\":\"tupu\"}"
 	testEndpointHandler(t, 10, p, expectedBody, "public, max-age=21600", "application/json; charset=utf-8", http.StatusOK)
+}
+
+var ctxContent = map[string]interface{}{
+	"bool":   true,
+	"int":    42,
+	"string": "supu",
 }
 
 func TestEndpointHandler_incomplete(t *testing.T) {
@@ -110,7 +125,13 @@ func setup(timeout time.Duration, p proxy.Proxy) (string, *http.Response, error)
 func startGinServer(handlerFunc gin.HandlerFunc) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	router.GET("/_gin_endpoint/:param", handlerFunc)
+	router.GET("/_gin_endpoint/:param", ctxMiddleware, handlerFunc)
 
 	return router
+}
+
+func ctxMiddleware(c *gin.Context) {
+	for k, v := range ctxContent {
+		c.Set(k, v)
+	}
 }
