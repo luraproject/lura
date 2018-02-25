@@ -115,5 +115,4 @@ The easiest way to create or edit a configuration file is using the [KrakenDesig
 				"limit"
 			]
 		}
-	]
-}
+	]}
