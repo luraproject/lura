@@ -46,7 +46,12 @@ func NewHTTPProxyDetailed(remote *config.Backend, requestExecutor HTTPRequestExe
 		if err != nil {
 			return nil, err
 		}
-		requestToBakend.Header = request.Headers
+		requestToBakend.Header = make(map[string][]string, len(request.Headers))
+		for k, vs := range request.Headers {
+			tmp := make([]string, len(vs))
+			copy(tmp, vs)
+			requestToBakend.Header[k] = tmp
+		}
 
 		resp, err := requestExecutor(ctx, requestToBakend)
 		requestToBakend.Body.Close()
