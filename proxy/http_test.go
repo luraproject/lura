@@ -23,6 +23,13 @@ func TestNewHTTPProxy_ok(t *testing.T) {
 		if r.Method != expectedMethod {
 			t.Errorf("Wrong request method. Want: %s. Have: %s", expectedMethod, r.Method)
 		}
+		if h := r.Header.Get("X-First"); h != "first" {
+			t.Errorf("unexpected first header: %s", h)
+		}
+		if h := r.Header.Get("X-Second"); h != "second" {
+			t.Errorf("unexpected second header: %s", h)
+		}
+		r.Header.Del("X-Second")
 		fmt.Fprintf(w, "{\"supu\":42, \"tupu\":true, \"foo\": \"bar\"}")
 	}))
 	defer backendServer.Close()
@@ -36,6 +43,10 @@ func TestNewHTTPProxy_ok(t *testing.T) {
 		Path:   "/",
 		URL:    rpURL,
 		Body:   newDummyReadCloser(""),
+		Headers: map[string][]string{
+			"X-First":  {"first"},
+			"X-Second": {"second"},
+		},
 	}
 	mustEnd := time.After(time.Duration(150) * time.Millisecond)
 
@@ -68,6 +79,9 @@ func TestNewHTTPProxy_ok(t *testing.T) {
 	}
 	if v, ok := result.Data["foo"]; !ok || v.(string) != "bar" {
 		t.Errorf("The proxy returned an unexpected result: %v\n", result)
+	}
+	if v, ok := request.Headers["X-Second"]; !ok || len(v) != 1 {
+		t.Errorf("the proxy request headers were changed: %v", request.Headers)
 	}
 }
 
