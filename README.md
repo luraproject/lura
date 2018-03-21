@@ -97,7 +97,7 @@ A ready to use example:
             serviceConfig.Port = *port
         }
 
-        logger := logging.NewLogger(*logLevel, os.Stdout, "[KRAKEND]")
+        logger, _ := logging.NewLogger(*logLevel, os.Stdout, "[KRAKEND]")
 
         routerFactory := gin.DefaultFactory(proxy.DefaultFactory(logger), logger)
 
