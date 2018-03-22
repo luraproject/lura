@@ -36,6 +36,12 @@ func (r *Request) GeneratePath(URLPattern string) {
 
 // Clone clones itself into a new request
 func (r *Request) Clone() Request {
+	headers := make(map[string][]string, len(r.Headers))
+	for k, vs := range r.Headers {
+		tmp := make([]string, len(vs))
+		copy(tmp, vs)
+		headers[k] = tmp
+	}
 	return Request{
 		Method:  r.Method,
 		URL:     r.URL,
@@ -43,6 +49,6 @@ func (r *Request) Clone() Request {
 		Path:    r.Path,
 		Body:    r.Body,
 		Params:  r.Params,
-		Headers: r.Headers,
+		Headers: headers,
 	}
 }
