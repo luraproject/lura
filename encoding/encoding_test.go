@@ -8,7 +8,7 @@ import (
 func TestRegister(t *testing.T) {
 	original := decoders
 
-	if len(decoders) != 1 {
+	if len(decoders) != 2 {
 		t.Error("Unexpected number of registered factories:", len(decoders))
 	}
 
@@ -25,7 +25,7 @@ func TestRegister(t *testing.T) {
 func TestGet(t *testing.T) {
 	original := decoders
 
-	if len(decoders) != 1 {
+	if len(decoders) != 2 {
 		t.Error("Unexpected number of registered factories:", len(decoders))
 	}
 
