@@ -32,10 +32,10 @@ func (p parser) Parse(configFile string) (ServiceConfig, error) {
 	var cfg parseableServiceConfig
 	data, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		return result, fmt.Errorf("Fatal error config file: %s \n", configFile)
+		return result, fmt.Errorf("Fatal error config file: %s", configFile)
 	}
 	if err = json.Unmarshal(data, &cfg); err != nil {
-		return result, fmt.Errorf("Fatal error config file: While parsing config: %s \n", err.Error())
+		return result, fmt.Errorf("Fatal error config file: While parsing config: %s", err.Error())
 	}
 	result = cfg.normalize()
 	err = result.Init()
@@ -57,6 +57,7 @@ type parseableServiceConfig struct {
 	ReadHeaderTimeout   string                     `json:"read_header_timeout"`
 	MaxIdleConnsPerHost int                        `json:"max_idle_connections"`
 	Debug               bool
+	Plugin              *Plugin
 }
 
 func (p *parseableServiceConfig) normalize() ServiceConfig {
@@ -72,6 +73,7 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 		IdleTimeout:         parseDuration(p.IdleTimeout),
 		ReadHeaderTimeout:   parseDuration(p.ReadHeaderTimeout),
 		MaxIdleConnsPerHost: p.MaxIdleConnsPerHost,
+		Plugin:              p.Plugin,
 	}
 	if p.ExtraConfig != nil {
 		cfg.ExtraConfig = *p.ExtraConfig

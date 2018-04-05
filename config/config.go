@@ -56,6 +56,9 @@ type ServiceConfig struct {
 	// DisableStrictREST flags if the REST enforcement is disabled
 	DisableStrictREST bool `mapstructure:"disable_rest"`
 
+	// Plugin defines the configuration for the plugin loader
+	Plugin *Plugin `mapstructure:"plugin"`
+
 	// run krakend in debug mode
 	Debug     bool
 	uriParser URIParser
@@ -123,6 +126,12 @@ type Backend struct {
 	Decoder encoding.Decoder
 	// Backend Extra configuration for customized behaviours
 	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
+}
+
+// Plugin contains the config required by the plugin module
+type Plugin struct {
+	Folder  string `mapstructure:"folder"`
+	Pattern string `mapstructure:"pattern"`
 }
 
 // ExtraConfig is a type to store extra configurations for customized behaviours
