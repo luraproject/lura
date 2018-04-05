@@ -66,10 +66,10 @@ func TestNewMergeDataMiddleware_mergeIncompleteResults(t *testing.T) {
 		t.Errorf("We were expecting a response but we got none\n")
 	default:
 		if len(out.Data) != 2 {
-			t.Errorf("We were expecting incomplete results merged but we got %v!\n", out)
+			t.Errorf("We were expecting incomplete results merged but we got %v!\n", out.Data)
 		}
 		if out.IsComplete {
-			t.Errorf("We were expecting an incomplete response but we got an incompleted one!\n")
+			t.Errorf("We were expecting an incomplete response but we got a completed one!\n")
 		}
 	}
 }
@@ -272,4 +272,51 @@ func TestNewMergeDataMiddleware_noBackends(t *testing.T) {
 	}()
 	endpoint := config.EndpointConfig{}
 	NewMergeDataMiddleware(&endpoint)
+}
+func TestRegisterResponseCombiner(t *testing.T) {
+	subject := "test combiner"
+	if len(responseCombiners) != 1 {
+		t.Error("unexpected initial size of the response combiner list:", responseCombiners)
+	}
+	RegisterResponseCombiner(subject, getResponseCombiner(config.ExtraConfig{}))
+	defer delete(responseCombiners, subject)
+
+	if len(responseCombiners) != 2 {
+		t.Error("unexpected size of the response combiner list:", responseCombiners)
+	}
+	timeout := 500
+	backend := config.Backend{}
+	endpoint := config.EndpointConfig{
+		Backend: []*config.Backend{&backend, &backend},
+		Timeout: time.Duration(timeout) * time.Millisecond,
+		ExtraConfig: config.ExtraConfig{
+			Namespace: map[string]interface{}{
+				mergeKey: defaultCombinerName,
+			},
+		},
+	}
+	mw := NewMergeDataMiddleware(&endpoint)
+	p := mw(
+		dummyProxy(&Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}),
+		dummyProxy(&Response{Data: map[string]interface{}{"tupu": true}, IsComplete: true}))
+	mustEnd := time.After(time.Duration(2*timeout) * time.Millisecond)
+	out, err := p(context.Background(), &Request{})
+	if err != nil {
+		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
+	}
+	if out == nil {
+		t.Errorf("The proxy returned a null result\n")
+		return
+	}
+	select {
+	case <-mustEnd:
+		t.Errorf("We were expecting a response but we got none\n")
+	default:
+		if len(out.Data) != 2 {
+			t.Errorf("We weren't expecting a partial response but we got %v!\n", out)
+		}
+		if !out.IsComplete {
+			t.Errorf("We were expecting a completed response but we got an incompleted one!\n")
+		}
+	}
 }
