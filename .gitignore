@@ -1,10 +1,4 @@
-**/krakend_gin*
-**/krakend_dns*
-**/krakend_mux*
-**/krakend_gorilla*
-**/krakend_negroni*
-**/krakend_httpcache*
-**/krakend_jwt*
+vendor
 server.rsa.crt
 server.rsa.key
 *.json
