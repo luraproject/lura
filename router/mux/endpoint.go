@@ -2,7 +2,6 @@ package mux
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -27,11 +26,11 @@ func CustomEndpointHandler(rb RequestBuilder) HandlerFactory {
 
 // CustomEndpointHandlerWithHTTPError returns a HandlerFactory with the received RequestBuilder
 func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPError) HandlerFactory {
-	return func(configuration *config.EndpointConfig, proxy proxy.Proxy) http.HandlerFunc {
+	return func(configuration *config.EndpointConfig, prxy proxy.Proxy) http.HandlerFunc {
 		endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
 		cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
 		isCacheEnabled := configuration.CacheTTL.Seconds() != 0
-		emptyResponse := []byte("{}")
+		render := getRender(configuration)
 
 		headersToSend := configuration.HeadersToPass
 		if len(headersToSend) == 0 {
@@ -47,7 +46,7 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 
 			requestCtx, cancel := context.WithTimeout(context.Background(), endpointTimeout)
 
-			response, err := proxy(requestCtx, rb(r, configuration.QueryString, headersToSend))
+			response, err := prxy(requestCtx, rb(r, configuration.QueryString, headersToSend))
 			if err != nil {
 				http.Error(w, err.Error(), errF(err))
 				cancel()
@@ -62,25 +61,16 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 			default:
 			}
 
-			if response == nil {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write(emptyResponse)
-				cancel()
-				return
+			if response != nil {
+				for k, v := range response.Metadata.Headers {
+					w.Header().Set(k, v[0])
+				}
+				if isCacheEnabled && response.IsComplete {
+					w.Header().Set("Cache-Control", cacheControlHeaderValue)
+				}
 			}
 
-			js, err := json.Marshal(response.Data)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				cancel()
-				return
-			}
-
-			if isCacheEnabled && response.IsComplete {
-				w.Header().Set("Cache-Control", cacheControlHeaderValue)
-			}
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(js)
+			render(w, response)
 			cancel()
 		}
 	}
