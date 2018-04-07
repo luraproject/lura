@@ -53,16 +53,7 @@ If you need the KrakenD API Gateway [download the binary for your architecture](
 ## Library Usage
 KrakenD is presented as a **go library** that you can include in your own go application to build a powerful proxy or API gateway. In order to get you started several examples of implementations are included in the `examples` folder.
 
-Of course you will need [go installed](https://golang.org/doc/install) in your system to compile the code.
-
-There is a `Makefile` in every example that will download library dependencies and compile a binary for you to test. Just run:
-
-    $ cd examples/gin
-    $ make
-
-Or, if you want to build all the examples, from the root of the project
-
-    $ make
+Of course you will need [golang installed](https://golang.org/doc/install) in your system to compile the code.
 
 A ready to use example:
 
@@ -109,13 +100,15 @@ Visit the [framework overview](/docs/OVERVIEW.md) for more details about the com
 
 ### Examples
 
-1. [gin router](/examples/gin/)
-2. [mux router](/examples/mux/)
-3. [gorilla router](/examples/gorilla/)
-4. [negroni middlewares](/examples/negroni/)
-5. [dns srv service discovery](/examples/dns/)
-6. [jwt middlewares](/examples/jwt/)
-7. [httpcache based proxies](/examples/httpcache/)
+The project [KrakenD examples](https://github.com/devopsfaith/krakend-examples)
+
+1. [gin router](https://github.com/devopsfaith/krakend-examples/tree/master/gin/)
+2. [mux router](https://github.com/devopsfaith/krakend-examples/tree/master/mux/)
+3. [gorilla router](https://github.com/devopsfaith/krakend-examples/tree/master/gorilla/)
+4. [negroni middlewares](https://github.com/devopsfaith/krakend-examples/tree/master/negroni/)
+5. [dns srv service discovery](https://github.com/devopsfaith/krakend-examples/tree/master/dns/)
+6. [jwt middlewares](https://github.com/devopsfaith/krakend-examples/tree/master/jwt/)
+7. [httpcache based proxies](https://github.com/devopsfaith/krakend-examples/tree/master/httpcache/)
 
 ## Configuration file
 
