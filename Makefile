@@ -1,6 +1,4 @@
-.PHONY: all deps test build benchmark coveralls build_gin_example build_dns_example build_mux_example build_gorilla_example build_negroni_example build_httpcache_example build_jwt_example
-
-PACKAGES = $(shell go list ./... | grep -v /examples/)
+.PHONY: all deps test build benchmark coveralls
 
 all: deps test build
 
@@ -11,8 +9,7 @@ deps:
 
 test:
 	go fmt ./...
-	go test -v -cover $(PACKAGES)
-	go vet ./...
+	go test -v -cover ./...
 
 benchmark:
 	@echo "Proxy middleware stack"
@@ -31,28 +28,8 @@ benchmark:
 	@echo "Request generator"
 	@go test -bench=BenchmarkRequestGeneratePath -benchtime=3s ./proxy
 
-build: build_gin_example build_dns_example build_mux_example build_gorilla_example build_negroni_example build_httpcache_example build_jwt_example
-
-build_gin_example:
-	cd examples/gin/ && make && cd ../.. && cp examples/gin/krakend_gin_example* .
-
-build_dns_example:
-	cd examples/dns/ && make && cd ../.. && cp examples/dns/krakend_dns_example* .
-
-build_mux_example:
-	cd examples/mux/ && make && cd ../.. && cp examples/mux/krakend_mux_example* .
-
-build_gorilla_example:
-	cd examples/gorilla/ && make && cd ../.. && cp examples/gorilla/krakend_gorilla_example* .
-
-build_negroni_example:
-	cd examples/negroni/ && make && cd ../.. && cp examples/negroni/krakend_negroni_example* .
-
-build_httpcache_example:
-	cd examples/httpcache/ && make && cd ../.. && cp examples/httpcache/krakend_httpcache_example* .
-
-build_jwt_example:
-	cd examples/jwt/ && make && cd ../.. && cp examples/jwt/krakend_jwt_example* .
+build:
+	go build ./...
 
 coveralls: all
 	go get github.com/mattn/goveralls
