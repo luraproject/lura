@@ -1,11 +1,24 @@
 .PHONY: all deps test build benchmark coveralls
 
+DEP_VERSION=0.4.1
+OS := $(shell uname | tr '[:upper:]' '[:lower:]')
+
 all: deps test build
 
+prepare:
+	@echo "Installing dep..."
+	@curl -L -s https://github.com/golang/dep/releases/download/v${DEP_VERSION}/dep-${OS}-amd64 -o ${GOPATH}/bin/dep
+	@chmod a+x ${GOPATH}/bin/dep
+
 deps:
-	go get -u github.com/gin-gonic/gin
-	go get -u github.com/gorilla/mux
-	go get -u github.com/urfave/negroni
+	@echo "Setting up the vendors folder..."
+	@dep ensure -v
+	@go get github.com/devopsfaith/krakend-martian/register
+	@echo ""
+	@echo "Resolved dependencies:"
+	@dep status
+	@echo ""
+	@rm -rf vendor/github.com/devopsfaith/krakend-martian/register
 
 test:
 	go fmt ./...
