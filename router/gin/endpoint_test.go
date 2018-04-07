@@ -30,6 +30,9 @@ func TestEndpointHandler_ok(t *testing.T) {
 		return &proxy.Response{
 			IsComplete: true,
 			Data:       map[string]interface{}{"supu": "tupu"},
+			Metadata: proxy.Metadata{
+				Headers: map[string][]string{"a": {"a1", "a2"}},
+			},
 		}, nil
 	}
 	expectedBody := "{\"supu\":\"tupu\"}"
