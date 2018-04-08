@@ -8,10 +8,10 @@ import (
 )
 
 func TestRegister(t *testing.T) {
-	original := decoders
+	original := GetRegister()
 
-	if len(decoders.data.Clone()) != 2 {
-		t.Error("Unexpected number of registered factories:", len(decoders.data.Clone()))
+	if len(original.data.Clone()) != 2 {
+		t.Error("Unexpected number of registered factories:", len(original.data.Clone()))
 	}
 
 	decoders = &DecoderRegister{register.NewUntyped()}
@@ -21,12 +21,10 @@ func TestRegister(t *testing.T) {
 		t.Error("Unexpected number of registered factories:", len(decoders.data.Clone()))
 	}
 
-	decoders = original
+	decoders = initDecoderRegister()
 }
 
 func TestGet(t *testing.T) {
-	original := decoders
-
 	if len(decoders.data.Clone()) != 2 {
 		t.Error("Unexpected number of registered factories:", len(decoders.data.Clone()))
 	}
@@ -44,7 +42,7 @@ func TestGet(t *testing.T) {
 	checkDecoder(t, JSON)
 	checkDecoder(t, "some")
 
-	decoders = original
+	decoders = initDecoderRegister()
 }
 
 func checkDecoder(t *testing.T, name string) {

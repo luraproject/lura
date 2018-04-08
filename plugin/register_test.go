@@ -10,7 +10,6 @@ import (
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/encoding"
-	"github.com/devopsfaith/krakend/register"
 	"github.com/devopsfaith/krakend/sd"
 )
 
@@ -95,10 +94,10 @@ func (r registrableDummy) RegisterSD(setter sd.RegisterSetter) error {
 	return setter.Register(samplePluginName, subscriberFactory)
 }
 
-func (r registrableDummy) RegisterExternal(setter *register.Namespaced) error {
+func (r registrableDummy) RegisterExternal(setter func(namespace, name string, v interface{})) error {
 	fmt.Println("registrable", r, "from plugin", samplePluginName, "is registering its components depending on external modules")
 
-	setter.Register("namespace1", samplePluginName, func(x int) int { return 2 * x })
+	setter("namespace1", samplePluginName, func(x int) int { return 2 * x })
 	return nil
 }
 

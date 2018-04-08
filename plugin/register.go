@@ -48,7 +48,7 @@ func (r *Register) Register(p Plugin) error {
 	}
 
 	if registrable, ok := x.(RegistrableExternal); ok {
-		err = registrable.RegisterExternal(r.External)
+		err = registrable.RegisterExternal(r.External.Register)
 		totalRegistrations++
 	}
 
@@ -74,5 +74,5 @@ type RegistrableSD interface {
 // RegistrableExternal defines the interface the external plugins should implement
 // in order to be able to register themselves
 type RegistrableExternal interface {
-	RegisterExternal(*register.Namespaced) error
+	RegisterExternal(func(namespace, name string, v interface{})) error
 }
