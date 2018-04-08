@@ -28,3 +28,13 @@ func (u *Untyped) Get(name string) (interface{}, bool) {
 	u.mutex.RUnlock()
 	return v, ok
 }
+
+func (u *Untyped) Clone() map[string]interface{} {
+	u.mutex.RLock()
+	res := make(map[string]interface{}, len(u.data))
+	for k, v := range u.data {
+		res[k] = v
+	}
+	u.mutex.RUnlock()
+	return res
+}
