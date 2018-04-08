@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	"github.com/devopsfaith/krakend/config"
@@ -84,9 +83,7 @@ type ResponseCombiner func(context.Context, int, []*Response) *Response
 
 // RegisterResponseCombiner adds a new response combiner into the internal register
 func RegisterResponseCombiner(name string, f ResponseCombiner) {
-	responseCombinersMutex.Lock()
-	responseCombiners[name] = f
-	responseCombinersMutex.Unlock()
+	responseCombiners.SetResponseCombiner(name, f)
 }
 
 const (
@@ -94,26 +91,23 @@ const (
 	defaultCombinerName = "default"
 )
 
-var (
-	responseCombinersMutex = &sync.RWMutex{}
-	responseCombiners      = map[string]ResponseCombiner{
-		defaultCombinerName: combineData,
-	}
-)
+var responseCombiners = initResponseCombiners()
+
+func initResponseCombiners() *combinerRegister {
+	return newCombinerRegister(map[string]ResponseCombiner{defaultCombinerName: combineData}, combineData)
+}
 
 func getResponseCombiner(extra config.ExtraConfig) ResponseCombiner {
-	responseCombinersMutex.RLock()
-	combiner := responseCombiners[defaultCombinerName]
+	combiner, _ := responseCombiners.GetResponseCombiner(defaultCombinerName)
 	if v, ok := extra[Namespace]; ok {
 		if e, ok := v.(map[string]interface{}); ok {
 			if v, ok := e[mergeKey]; ok {
-				if c, ok := responseCombiners[v.(string)]; ok {
+				if c, ok := responseCombiners.GetResponseCombiner(v.(string)); ok {
 					combiner = c
 				}
 			}
 		}
 	}
-	responseCombinersMutex.RUnlock()
 	return combiner
 }
 
