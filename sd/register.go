@@ -1,9 +1,8 @@
 package sd
 
 import (
-	"sync"
-
 	"github.com/devopsfaith/krakend/config"
+	"github.com/devopsfaith/krakend/register"
 )
 
 // Deprecated: RegisterSubscriberFactory. Use the GetRegister function
@@ -34,28 +33,24 @@ func GetRegister() *Register {
 
 // Register is a SD register
 type Register struct {
-	data  map[string]SubscriberFactory
-	mutex *sync.RWMutex
+	data register.Untyped
 }
 
-var subscriberFactories = &Register{
-	data:  map[string]SubscriberFactory{},
-	mutex: &sync.RWMutex{},
-}
+var subscriberFactories = &Register{register.NewUntyped()}
 
 // Register implements the RegisterSetter interface
 func (r *Register) Register(name string, sf SubscriberFactory) error {
-	r.mutex.Lock()
-	r.data[name] = sf
-	r.mutex.Unlock()
+	r.data.Register(name, sf)
 	return nil
 }
 
 // Get implements the RegisterGetter interface
 func (r *Register) Get(name string) SubscriberFactory {
-	r.mutex.RLock()
-	sf, ok := r.data[name]
-	r.mutex.RUnlock()
+	tmp, ok := r.data.Get(name)
+	if !ok {
+		return FixedSubscriberFactory
+	}
+	sf, ok := tmp.(SubscriberFactory)
 	if !ok {
 		return FixedSubscriberFactory
 	}
