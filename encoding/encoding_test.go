@@ -2,25 +2,23 @@ package encoding
 
 import (
 	"strings"
-	"sync"
 	"testing"
+
+	"github.com/devopsfaith/krakend/register"
 )
 
 func TestRegister(t *testing.T) {
 	original := decoders
 
-	if len(decoders.data) != 2 {
-		t.Error("Unexpected number of registered factories:", len(decoders.data))
+	if len(decoders.data.Clone()) != 2 {
+		t.Error("Unexpected number of registered factories:", len(decoders.data.Clone()))
 	}
 
-	decoders = &DecoderRegister{
-		data:  map[string]DecoderFactory{},
-		mutex: &sync.RWMutex{},
-	}
+	decoders = &DecoderRegister{register.NewUntyped()}
 	Register("some", NewJSONDecoder)
 
-	if len(decoders.data) != 1 {
-		t.Error("Unexpected number of registered factories:", len(decoders.data))
+	if len(decoders.data.Clone()) != 1 {
+		t.Error("Unexpected number of registered factories:", len(decoders.data.Clone()))
 	}
 
 	decoders = original
@@ -29,21 +27,18 @@ func TestRegister(t *testing.T) {
 func TestGet(t *testing.T) {
 	original := decoders
 
-	if len(decoders.data) != 2 {
-		t.Error("Unexpected number of registered factories:", len(decoders.data))
+	if len(decoders.data.Clone()) != 2 {
+		t.Error("Unexpected number of registered factories:", len(decoders.data.Clone()))
 	}
 
 	checkDecoder(t, JSON)
 	checkDecoder(t, "some")
 
-	decoders = &DecoderRegister{
-		data:  map[string]DecoderFactory{},
-		mutex: &sync.RWMutex{},
-	}
+	decoders = &DecoderRegister{register.NewUntyped()}
 	Register("some", NewJSONDecoder)
 
-	if len(decoders.data) != 1 {
-		t.Error("Unexpected number of registered factories:", len(decoders.data))
+	if len(decoders.data.Clone()) != 1 {
+		t.Error("Unexpected number of registered factories:", len(decoders.data.Clone()))
 	}
 
 	checkDecoder(t, JSON)

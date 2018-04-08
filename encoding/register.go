@@ -1,6 +1,6 @@
 package encoding
 
-import "sync"
+import "github.com/devopsfaith/krakend/register"
 
 // RegisterSetter registers the decoder factory with the given name
 type RegisterSetter interface {
@@ -18,33 +18,41 @@ func GetRegister() *DecoderRegister {
 	return decoders
 }
 
-var decoders = &DecoderRegister{
-	data: map[string]DecoderFactory{
-		JSON:   NewJSONDecoder,
-		STRING: NewStringDecoder,
-	},
-	mutex: &sync.RWMutex{},
-}
-
+// DecoderRegister is the struct responsible of registering the decoder factories
 type DecoderRegister struct {
-	data  map[string]DecoderFactory
-	mutex *sync.RWMutex
+	data register.Untyped
 }
 
 // Register implements the RegisterSetter interface
 func (r *DecoderRegister) Register(name string, dec DecoderFactory) error {
-	r.mutex.Lock()
-	r.data[name] = dec
-	r.mutex.Unlock()
+	r.data.Register(name, dec)
 	return nil
 }
 
 // Get implements the RegisterGetter interface
 func (r *DecoderRegister) Get(name string) DecoderFactory {
 	for _, n := range []string{name, JSON} {
-		if dec, ok := r.data[n]; ok {
-			return dec
+		if v, ok := r.data.Get(n); ok {
+			if dec, ok := v.(DecoderFactory); ok {
+				return dec
+			}
 		}
 	}
 	return NewJSONDecoder
+}
+
+var (
+	decoders        = initDecoderRegister()
+	defaultDecoders = map[string]DecoderFactory{
+		JSON:   NewJSONDecoder,
+		STRING: NewStringDecoder,
+	}
+)
+
+func initDecoderRegister() *DecoderRegister {
+	r := &DecoderRegister{register.NewUntyped()}
+	for k, v := range defaultDecoders {
+		r.Register(k, v)
+	}
+	return r
 }
