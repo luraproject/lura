@@ -2,21 +2,25 @@ package encoding
 
 import (
 	"strings"
+	"sync"
 	"testing"
 )
 
 func TestRegister(t *testing.T) {
 	original := decoders
 
-	if len(decoders) != 2 {
-		t.Error("Unexpected number of registered factories:", len(decoders))
+	if len(decoders.data) != 2 {
+		t.Error("Unexpected number of registered factories:", len(decoders.data))
 	}
 
-	decoders = map[string]DecoderFactory{}
+	decoders = &DecoderRegister{
+		data:  map[string]DecoderFactory{},
+		mutex: &sync.RWMutex{},
+	}
 	Register("some", NewJSONDecoder)
 
-	if len(decoders) != 1 {
-		t.Error("Unexpected number of registered factories:", len(decoders))
+	if len(decoders.data) != 1 {
+		t.Error("Unexpected number of registered factories:", len(decoders.data))
 	}
 
 	decoders = original
@@ -25,18 +29,21 @@ func TestRegister(t *testing.T) {
 func TestGet(t *testing.T) {
 	original := decoders
 
-	if len(decoders) != 2 {
-		t.Error("Unexpected number of registered factories:", len(decoders))
+	if len(decoders.data) != 2 {
+		t.Error("Unexpected number of registered factories:", len(decoders.data))
 	}
 
 	checkDecoder(t, JSON)
 	checkDecoder(t, "some")
 
-	decoders = map[string]DecoderFactory{}
+	decoders = &DecoderRegister{
+		data:  map[string]DecoderFactory{},
+		mutex: &sync.RWMutex{},
+	}
 	Register("some", NewJSONDecoder)
 
-	if len(decoders) != 1 {
-		t.Error("Unexpected number of registered factories:", len(decoders))
+	if len(decoders.data) != 1 {
+		t.Error("Unexpected number of registered factories:", len(decoders.data))
 	}
 
 	checkDecoder(t, JSON)
