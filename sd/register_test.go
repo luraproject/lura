@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/register"
 )
 
 func TestRegisterSubscriberFactory_ok(t *testing.T) {
@@ -33,7 +32,7 @@ func TestRegisterSubscriberFactory_ok(t *testing.T) {
 		t.Error("error using the sd name2")
 	}
 
-	subscriberFactories = &Register{register.NewUntyped()}
+	subscriberFactories = initRegister()
 }
 
 func TestRegisterSubscriberFactory_unknown(t *testing.T) {
@@ -47,5 +46,5 @@ func TestRegisterSubscriberFactory_errored(t *testing.T) {
 	if h, err := GetSubscriber(&config.Backend{SD: "errored", Host: []string{"name"}}).Hosts(); err != nil || len(h) != 1 {
 		t.Error("error using the default sd")
 	}
-	subscriberFactories = &Register{register.NewUntyped()}
+	subscriberFactories = initRegister()
 }

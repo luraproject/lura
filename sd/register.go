@@ -36,7 +36,9 @@ type Register struct {
 	data register.Untyped
 }
 
-var subscriberFactories = &Register{register.NewUntyped()}
+func initRegister() *Register {
+	return &Register{register.NewUntyped()}
+}
 
 // Register implements the RegisterSetter interface
 func (r *Register) Register(name string, sf SubscriberFactory) error {
@@ -56,3 +58,5 @@ func (r *Register) Get(name string) SubscriberFactory {
 	}
 	return sf
 }
+
+var subscriberFactories = initRegister()
