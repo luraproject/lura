@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 
 	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/encoding"
 	"github.com/devopsfaith/krakend/sd"
 )
 
@@ -16,10 +15,10 @@ var Registrable registrable
 
 type registrable int
 
-func (r *registrable) RegisterDecoder(setter encoding.RegisterSetter) error {
-	fmt.Println("registrable", r, "from plugin", pluginName, "is registering its decoder components at", setter)
+func (r *registrable) RegisterDecoder(setter func(name string, dec func(bool) func(io.Reader, *map[string]interface{}) error) error) error {
+	fmt.Println("registrable", r, "from plugin", pluginName, "is registering its decoder components")
 
-	return setter.Register(pluginName, decoderFactory)
+	return setter(pluginName, decoderFactory)
 }
 
 func (r *registrable) RegisterSD(setter sd.RegisterSetter) error {
@@ -49,7 +48,7 @@ func subscriberFactory(cfg *config.Backend) sd.Subscriber {
 	})
 }
 
-func decoderFactory(bool) encoding.Decoder {
+func decoderFactory(bool) func(reader io.Reader, _ *map[string]interface{}) error {
 	fmt.Println("calling the decoder factory:", pluginName)
 
 	return decoder

@@ -11,9 +11,7 @@ Decode decodes HTTP responses:
 */
 package encoding
 
-import (
-	"io"
-)
+import "io"
 
 // A Decoder is a function that reads from the reader and decodes it
 // into an map of interfaces

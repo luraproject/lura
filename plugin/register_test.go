@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/encoding"
 	"github.com/devopsfaith/krakend/sd"
 )
 
@@ -82,10 +81,10 @@ func (d dummyPlugin) Lookup(name string) (plugin.Symbol, error) {
 
 type registrableDummy int
 
-func (r registrableDummy) RegisterDecoder(setter encoding.RegisterSetter) error {
+func (r registrableDummy) RegisterDecoder(setter func(string, func(bool) func(io.Reader, *map[string]interface{}) error) error) error {
 	fmt.Println("registrable", r, "from plugin", samplePluginName, "is registering its decoder components")
 
-	return setter.Register(samplePluginName, decoderFactory)
+	return setter(samplePluginName, decoderFactory)
 }
 
 func (r registrableDummy) RegisterSD(setter sd.RegisterSetter) error {
@@ -94,7 +93,7 @@ func (r registrableDummy) RegisterSD(setter sd.RegisterSetter) error {
 	return setter.Register(samplePluginName, subscriberFactory)
 }
 
-func (r registrableDummy) RegisterExternal(setter func(namespace, name string, v interface{})) error {
+func (r registrableDummy) RegisterExternal(setter func(string, string, interface{})) error {
 	fmt.Println("registrable", r, "from plugin", samplePluginName, "is registering its components depending on external modules")
 
 	setter("namespace1", samplePluginName, func(x int) int { return 2 * x })
@@ -111,7 +110,7 @@ func subscriberFactory(cfg *config.Backend) sd.Subscriber {
 	})
 }
 
-func decoderFactory(bool) encoding.Decoder {
+func decoderFactory(bool) func(reader io.Reader, _ *map[string]interface{}) error {
 	fmt.Println("calling the decoder factory:", samplePluginName)
 
 	return func(reader io.Reader, _ *map[string]interface{}) error {
