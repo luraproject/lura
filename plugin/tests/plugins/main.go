@@ -29,7 +29,7 @@ func (r *registrable) RegisterSD(setter sd.RegisterSetter) error {
 }
 
 func (r *registrable) RegisterExternal(setter func(namespace, name string, v interface{})) error {
-	fmt.Println("registrable", r, "from plugin", pluginName, "is registering its components depending on external modules at", setter)
+	fmt.Println("registrable", r, "from plugin", pluginName, "is registering its components depending on external modules")
 
 	setter("namespace1", pluginName, doubleInt)
 	return nil
