@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/devopsfaith/krakend/encoding"
 	"github.com/devopsfaith/krakend/register"
@@ -38,7 +39,7 @@ func (r *Register) Register(p Plugin) error {
 	totalRegistrations := 0
 
 	if registrable, ok := x.(RegistrableDecoder); ok {
-		err = registrable.RegisterDecoder(r.Decoder)
+		err = registrable.RegisterDecoder(r.Decoder.Register)
 		totalRegistrations++
 	}
 
@@ -62,7 +63,7 @@ func (r *Register) Register(p Plugin) error {
 // RegistrableDecoder defines the interface the encoding plugins should implement
 // in order to be able to register themselves
 type RegistrableDecoder interface {
-	RegisterDecoder(encoding.RegisterSetter) error
+	RegisterDecoder(func(name string, dec func(bool) func(io.Reader, *map[string]interface{}) error) error) error
 }
 
 // RegistrableSD defines the interface the SD plugins should implement

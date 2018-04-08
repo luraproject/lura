@@ -1,17 +1,10 @@
 package encoding
 
-import "github.com/devopsfaith/krakend/register"
+import (
+	"io"
 
-// RegisterSetter registers the decoder factory with the given name
-type RegisterSetter interface {
-	Register(name string, dec DecoderFactory) error
-}
-
-// RegisterGetter returns the decoder factory by name. If there is no factory with the received name
-// it returns the JSON decoder factory
-type RegisterGetter interface {
-	Get(name string) DecoderFactory
-}
+	"github.com/devopsfaith/krakend/register"
+)
 
 // GetRegister returns the package register
 func GetRegister() *DecoderRegister {
@@ -24,13 +17,13 @@ type DecoderRegister struct {
 }
 
 // Register implements the RegisterSetter interface
-func (r *DecoderRegister) Register(name string, dec DecoderFactory) error {
+func (r *DecoderRegister) Register(name string, dec func(bool) func(io.Reader, *map[string]interface{}) error) error {
 	r.data.Register(name, dec)
 	return nil
 }
 
 // Get implements the RegisterGetter interface
-func (r *DecoderRegister) Get(name string) DecoderFactory {
+func (r *DecoderRegister) Get(name string) func(bool) func(io.Reader, *map[string]interface{}) error {
 	for _, n := range []string{name, JSON} {
 		if v, ok := r.data.Get(n); ok {
 			if dec, ok := v.(DecoderFactory); ok {
