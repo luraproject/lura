@@ -4,8 +4,14 @@ package internal
 
 import "sync"
 
+func NewUntyped() *Untyped {
+	return &Untyped{
+		data: &sync.Map{},
+	}
+}
+
 type Untyped struct {
-	data sync.Map
+	data *sync.Map
 }
 
 func (u *Untyped) Register(name string, v interface{}) {

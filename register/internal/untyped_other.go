@@ -4,6 +4,13 @@ package internal
 
 import "sync"
 
+func NewUntyped() *Untyped {
+	return &Untyped{
+		data:  map[string]interface{}{},
+		mutex: &sync.RWMutex{},
+	}
+}
+
 type Untyped struct {
 	data  map[string]interface{}
 	mutex *sync.RWMutex

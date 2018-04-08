@@ -30,7 +30,7 @@ func (n *Namespaced) Register(namespace, name string, v interface{}) {
 	if r, ok := n.data[namespace]; ok {
 		r.Register(name, v)
 	} else {
-		n.data[namespace] = new(internal.Untyped)
+		n.data[namespace] = internal.NewUntyped()
 		n.data[namespace].Register(name, v)
 	}
 	n.mutex.Unlock()
@@ -38,6 +38,6 @@ func (n *Namespaced) Register(namespace, name string, v interface{}) {
 
 func (n *Namespaced) AddNamespace(namespace string) {
 	n.mutex.Lock()
-	n.data[namespace] = new(internal.Untyped)
+	n.data[namespace] = internal.NewUntyped()
 	n.mutex.Unlock()
 }
