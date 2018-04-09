@@ -275,14 +275,14 @@ func TestNewMergeDataMiddleware_noBackends(t *testing.T) {
 }
 func TestRegisterResponseCombiner(t *testing.T) {
 	subject := "test combiner"
-	if len(responseCombiners) != 1 {
-		t.Error("unexpected initial size of the response combiner list:", responseCombiners)
+	if len(responseCombiners.data.Clone()) != 1 {
+		t.Error("unexpected initial size of the response combiner list:", responseCombiners.data.Clone())
 	}
 	RegisterResponseCombiner(subject, getResponseCombiner(config.ExtraConfig{}))
-	defer delete(responseCombiners, subject)
+	defer func() { responseCombiners = initResponseCombiners() }()
 
-	if len(responseCombiners) != 2 {
-		t.Error("unexpected size of the response combiner list:", responseCombiners)
+	if len(responseCombiners.data.Clone()) != 2 {
+		t.Error("unexpected size of the response combiner list:", responseCombiners.data.Clone())
 	}
 	timeout := 500
 	backend := config.Backend{}

@@ -9,7 +9,7 @@ import (
 const STRING = "string"
 
 // NewStringDecoder return a String decoder
-func NewStringDecoder(_ bool) Decoder {
+func NewStringDecoder(_ bool) func(io.Reader, *map[string]interface{}) error {
 	return StringDecoder
 }
 

@@ -9,7 +9,7 @@ import (
 const JSON = "json"
 
 // NewJSONDecoder return the right JSON decoder
-func NewJSONDecoder(isCollection bool) Decoder {
+func NewJSONDecoder(isCollection bool) func(io.Reader, *map[string]interface{}) error {
 	if isCollection {
 		return JSONCollectionDecoder
 	}
