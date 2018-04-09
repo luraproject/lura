@@ -43,6 +43,8 @@ type ServiceConfig struct {
 	Port int `mapstructure:"port"`
 	// version code of the configuration
 	Version int `mapstructure:"version"`
+	// OutputEncoding defines the default encoding strategy to use for the endpoint responses
+	OutputEncoding string `mapstructure:"output_encoding"`
 	// Extra configuration for customized behaviour
 	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
 
@@ -85,6 +87,8 @@ type EndpointConfig struct {
 	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
 	// HeadersToPass defines the list of headers to pass to the backends
 	HeadersToPass []string `mapstructure:"headers_to_pass"`
+	// OutputEncoding defines the encoding strategy to use for the endpoint responses
+	OutputEncoding string `mapstructure:"output_encoding"`
 }
 
 // Backend defines how krakend should connect to the backend service (the API resource to consume)
@@ -240,6 +244,13 @@ func (s *ServiceConfig) initEndpointDefaults(e int) {
 	}
 	if endpoint.ConcurrentCalls == 0 {
 		endpoint.ConcurrentCalls = 1
+	}
+	if endpoint.OutputEncoding == "" {
+		if s.OutputEncoding != "" {
+			endpoint.OutputEncoding = s.OutputEncoding
+		} else {
+			endpoint.OutputEncoding = encoding.JSON
+		}
 	}
 }
 

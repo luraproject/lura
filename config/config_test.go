@@ -110,11 +110,12 @@ func TestConfig_init(t *testing.T) {
 		URLPattern: "/__debug/supu",
 	}
 	supuEndpoint := EndpointConfig{
-		Endpoint: "/supu",
-		Method:   "post",
-		Timeout:  1500 * time.Millisecond,
-		CacheTTL: 6 * time.Hour,
-		Backend:  []*Backend{&supuBackend},
+		Endpoint:       "/supu",
+		Method:         "post",
+		Timeout:        1500 * time.Millisecond,
+		CacheTTL:       6 * time.Hour,
+		Backend:        []*Backend{&supuBackend},
+		OutputEncoding: "some_render",
 	}
 
 	githubBackend := Backend{
