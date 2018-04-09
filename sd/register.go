@@ -15,17 +15,6 @@ func GetSubscriber(cfg *config.Backend) Subscriber {
 	return subscriberFactories.Get(cfg.SD)(cfg)
 }
 
-// RegisterSetter registers the received subscriber factory for later usage
-type RegisterSetter interface {
-	Register(name string, sf SubscriberFactory) error
-}
-
-// RegisterGetter gets the subscriber factory by name or a fixed subscriber factory if
-// the name is not registered
-type RegisterGetter interface {
-	Get(name string) SubscriberFactory
-}
-
 // GetRegister returns the package register
 func GetRegister() *Register {
 	return subscriberFactories

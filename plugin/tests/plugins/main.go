@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-
-	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/sd"
 )
 
 const pluginName = "supu"
@@ -21,12 +18,6 @@ func (r *registrable) RegisterDecoder(setter func(name string, dec func(bool) fu
 	return setter(pluginName, decoderFactory)
 }
 
-func (r *registrable) RegisterSD(setter sd.RegisterSetter) error {
-	fmt.Println("registrable", r, "from plugin", pluginName, "is registering its SD components at", setter)
-
-	return setter.Register(pluginName, subscriberFactory)
-}
-
 func (r *registrable) RegisterExternal(setter func(namespace, name string, v interface{})) error {
 	fmt.Println("registrable", r, "from plugin", pluginName, "is registering its components depending on external modules")
 
@@ -36,16 +27,6 @@ func (r *registrable) RegisterExternal(setter func(namespace, name string, v int
 
 func doubleInt(x int) int {
 	return 2 * x
-}
-
-func subscriberFactory(cfg *config.Backend) sd.Subscriber {
-	fmt.Println("calling the SD factory:", pluginName)
-
-	return sd.SubscriberFunc(func() ([]string, error) {
-		fmt.Println("calling the subscriber:", pluginName)
-
-		return cfg.Host, nil
-	})
 }
 
 func decoderFactory(bool) func(reader io.Reader, _ *map[string]interface{}) error {

@@ -43,11 +43,6 @@ func (r *Register) Register(p Plugin) error {
 		totalRegistrations++
 	}
 
-	if registrable, ok := x.(RegistrableSD); ok {
-		err = registrable.RegisterSD(r.SD)
-		totalRegistrations++
-	}
-
 	if registrable, ok := x.(RegistrableExternal); ok {
 		err = registrable.RegisterExternal(r.External.Register)
 		totalRegistrations++
@@ -64,12 +59,6 @@ func (r *Register) Register(p Plugin) error {
 // in order to be able to register themselves
 type RegistrableDecoder interface {
 	RegisterDecoder(func(name string, dec func(bool) func(io.Reader, *map[string]interface{}) error) error) error
-}
-
-// RegistrableSD defines the interface the SD plugins should implement
-// in order to be able to register themselves
-type RegistrableSD interface {
-	RegisterSD(sd.RegisterSetter) error
 }
 
 // RegistrableExternal defines the interface the external plugins should implement

@@ -7,9 +7,6 @@ import (
 	"io/ioutil"
 	"plugin"
 	"testing"
-
-	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/sd"
 )
 
 const samplePluginName = "samplePluginName"
@@ -46,7 +43,6 @@ func ExampleRegister_Register_ok() {
 	}
 	// Output:
 	// registrable 1 from plugin samplePluginName is registering its decoder components
-	// registrable 1 from plugin samplePluginName is registering its SD components
 	// registrable 1 from plugin samplePluginName is registering its components depending on external modules
 }
 
@@ -87,27 +83,11 @@ func (r registrableDummy) RegisterDecoder(setter func(string, func(bool) func(io
 	return setter(samplePluginName, decoderFactory)
 }
 
-func (r registrableDummy) RegisterSD(setter sd.RegisterSetter) error {
-	fmt.Println("registrable", r, "from plugin", samplePluginName, "is registering its SD components")
-
-	return setter.Register(samplePluginName, subscriberFactory)
-}
-
 func (r registrableDummy) RegisterExternal(setter func(string, string, interface{})) error {
 	fmt.Println("registrable", r, "from plugin", samplePluginName, "is registering its components depending on external modules")
 
 	setter("namespace1", samplePluginName, func(x int) int { return 2 * x })
 	return nil
-}
-
-func subscriberFactory(cfg *config.Backend) sd.Subscriber {
-	fmt.Println("calling the SD factory:", samplePluginName)
-
-	return sd.SubscriberFunc(func() ([]string, error) {
-		fmt.Println("calling the subscriber:", samplePluginName)
-
-		return cfg.Host, nil
-	})
 }
 
 func decoderFactory(bool) func(reader io.Reader, _ *map[string]interface{}) error {

@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/devopsfaith/krakend/config"
@@ -23,7 +22,6 @@ func main() {
 	time.Sleep(5 * time.Second)
 
 	checkDecoder(register)
-	checkSD(register)
 	checkExternal(register)
 }
 
@@ -37,22 +35,6 @@ func checkDecoder(register *plugin.Register) {
 		return
 	}
 	fmt.Println("encoding ok!")
-}
-
-func checkSD(register *plugin.Register) {
-	sdFactory := register.SD.Get(pluginName)
-	cfg := &config.Backend{Host: []string{"a", "b"}}
-	subscriber := sdFactory(cfg)
-	hosts, err := subscriber.Hosts()
-	if err != nil {
-		fmt.Println("error:", err.Error())
-		return
-	}
-	if !reflect.DeepEqual(hosts, cfg.Host) {
-		fmt.Println("unexpected set of hosts:", hosts)
-		return
-	}
-	fmt.Println("sd ok!")
 }
 
 func checkExternal(register *plugin.Register) {
