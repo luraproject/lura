@@ -26,7 +26,7 @@ func (r *DecoderRegister) Register(name string, dec func(bool) func(io.Reader, *
 func (r *DecoderRegister) Get(name string) func(bool) func(io.Reader, *map[string]interface{}) error {
 	for _, n := range []string{name, JSON} {
 		if v, ok := r.data.Get(n); ok {
-			if dec, ok := v.(DecoderFactory); ok {
+			if dec, ok := v.(func(bool) func(io.Reader, *map[string]interface{}) error); ok {
 				return dec
 			}
 		}
