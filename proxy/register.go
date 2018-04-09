@@ -4,11 +4,6 @@ import (
 	"github.com/devopsfaith/krakend/register"
 )
 
-type ResponseCombinerRegister interface {
-	GetResponseCombiner(string) (ResponseCombiner, bool)
-	SetResponseCombiner(string, ResponseCombiner)
-}
-
 func NewRegister() *Register {
 	return &Register{
 		responseCombiners,
