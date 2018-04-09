@@ -49,7 +49,7 @@ func NewMergeDataMiddleware(endpointConfig *config.EndpointConfig) Middleware {
 				return &Response{Data: make(map[string]interface{}), IsComplete: false}, err
 			}
 
-			result := combiner(localCtx, totalBackends, responses)
+			result := combiner(totalBackends, responses)
 			cancel()
 			return result, err
 		}
@@ -79,7 +79,7 @@ func requestPart(ctx context.Context, next Proxy, request *Request, out chan<- *
 }
 
 // ResponseCombiner func to merge the collected responses into a single one
-type ResponseCombiner func(context.Context, int, []*Response) *Response
+type ResponseCombiner func(int, []*Response) *Response
 
 // RegisterResponseCombiner adds a new response combiner into the internal register
 func RegisterResponseCombiner(name string, f ResponseCombiner) {
@@ -111,7 +111,7 @@ func getResponseCombiner(extra config.ExtraConfig) ResponseCombiner {
 	return combiner
 }
 
-func combineData(_ context.Context, total int, parts []*Response) *Response {
+func combineData(total int, parts []*Response) *Response {
 	isComplete := len(parts) == total
 	var retResponse *Response
 	for _, part := range parts {
