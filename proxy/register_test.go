@@ -1,13 +1,12 @@
 package proxy
 
 import (
-	"context"
 	"testing"
 )
 
 func TestNewRegister_responseCombiner_ok(t *testing.T) {
 	r := NewRegister()
-	r.SetResponseCombiner("name1", func(_ context.Context, total int, parts []*Response) *Response {
+	r.SetResponseCombiner("name1", func(total int, parts []*Response) *Response {
 		if total < 0 || total >= len(parts) {
 			return nil
 		}
@@ -20,7 +19,7 @@ func TestNewRegister_responseCombiner_ok(t *testing.T) {
 		return
 	}
 
-	result := rc(context.Background(), 0, []*Response{{IsComplete: true, Data: map[string]interface{}{"a": 42}}})
+	result := rc(0, []*Response{{IsComplete: true, Data: map[string]interface{}{"a": 42}}})
 
 	if result == nil {
 		t.Error("expecting result")
@@ -51,7 +50,7 @@ func TestNewRegister_responseCombiner_fallbackIfErrored(t *testing.T) {
 
 	original := &Response{IsComplete: true, Data: map[string]interface{}{"a": 42}}
 
-	result := rc(context.Background(), 0, []*Response{original})
+	result := rc(0, []*Response{original})
 
 	if result != original {
 		t.Error("unexpected result:", result)
@@ -70,7 +69,7 @@ func TestNewRegister_responseCombiner_fallbackIfUnknown(t *testing.T) {
 
 	original := &Response{IsComplete: true, Data: map[string]interface{}{"a": 42}}
 
-	result := rc(context.Background(), 0, []*Response{original})
+	result := rc(0, []*Response{original})
 
 	if result != original {
 		t.Error("unexpected result:", result)
