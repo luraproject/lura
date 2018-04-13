@@ -92,7 +92,7 @@ func (i *incrementalMergeAccumulator) Result() (*Response, error) {
 		return &Response{Data: make(map[string]interface{}, 0), IsComplete: false}, newMergeError(i.errs)
 	}
 
-	if i.pending != 0 {
+	if i.pending != 0 || len(i.errs) != 0 {
 		i.data.IsComplete = false
 	}
 	return i.data, newMergeError(i.errs)
