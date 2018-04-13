@@ -11,21 +11,31 @@ import (
 
 func BenchmarkNewMergeDataMiddleware(b *testing.B) {
 	backend := config.Backend{}
-	backends := []*config.Backend{&backend, &backend, &backend, &backend}
+	backends := make([]*config.Backend, 10)
+	for i := range backends {
+		backends[i] = &backend
+	}
 
-	partial1 := dummyProxy(&Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true})
-	partial2 := dummyProxy(&Response{Data: map[string]interface{}{"tupu": true}, IsComplete: true})
-	partial3 := dummyProxy(&Response{Data: map[string]interface{}{"foo": "bar"}, IsComplete: true})
-	partial4 := dummyProxy(&Response{Data: map[string]interface{}{"foobar": false}, IsComplete: true})
-	proxies := []Proxy{partial1, partial2, partial3, partial4}
+	proxies := []Proxy{
+		dummyProxy(&Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}),
+		dummyProxy(&Response{Data: map[string]interface{}{"tupu": true}, IsComplete: true}),
+		dummyProxy(&Response{Data: map[string]interface{}{"foo": "bar"}, IsComplete: true}),
+		dummyProxy(&Response{Data: map[string]interface{}{"foobar": false}, IsComplete: true}),
+		dummyProxy(&Response{Data: map[string]interface{}{"qux": "false"}, IsComplete: true}),
+		dummyProxy(&Response{Data: map[string]interface{}{"data": "the quick brow fox"}, IsComplete: true}),
+		dummyProxy(&Response{Data: map[string]interface{}{"status": "ok"}, IsComplete: true}),
+		dummyProxy(&Response{Data: map[string]interface{}{"aaaa": "aaaaaaaaaaaa"}, IsComplete: true}),
+		dummyProxy(&Response{Data: map[string]interface{}{"bbbbb": 3.14}, IsComplete: true}),
+		dummyProxy(&Response{Data: map[string]interface{}{"cccc": map[string]interface{}{"a": 42}}, IsComplete: true}),
+	}
 
-	for testCase, totalParts := range []int{2, 3, 4} {
+	for _, totalParts := range []int{2, 3, 4, 5, 6, 7, 8, 9, 10} {
 		b.Run(fmt.Sprintf("with %d parts", totalParts), func(b *testing.B) {
 			endpoint := config.EndpointConfig{
-				Backend: backends[:testCase+2],
+				Backend: backends[:totalParts],
 				Timeout: time.Duration(100) * time.Millisecond,
 			}
-			proxy := NewMergeDataMiddleware(&endpoint)(proxies[:testCase+2]...)
+			proxy := NewMergeDataMiddleware(&endpoint)(proxies[:totalParts]...)
 			b.ResetTimer()
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {

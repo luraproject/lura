@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/devopsfaith/krakend/config"
@@ -27,33 +28,74 @@ func NewMergeDataMiddleware(endpointConfig *config.EndpointConfig) Middleware {
 		return func(ctx context.Context, request *Request) (*Response, error) {
 			localCtx, cancel := context.WithTimeout(ctx, serviceTimeout)
 
-			parts := make(chan *Response, len(next))
-			failed := make(chan error, len(next))
+			parts := make(chan *Response, totalBackends)
+			failed := make(chan error, totalBackends)
 
 			for _, n := range next {
 				go requestPart(localCtx, n, request, parts, failed)
 			}
 
-			var err error
-			responses := make([]*Response, len(next))
-			isEmpty := true
-			for i := 0; i < len(next); i++ {
+			acc := newIncrementalMergeAccumulator(totalBackends, combiner)
+			for i := 0; i < totalBackends; i++ {
 				select {
-				case err = <-failed:
-				case responses[i] = <-parts:
-					isEmpty = false
+				case err := <-failed:
+					acc.Merge(nil, err)
+				case response := <-parts:
+					acc.Merge(response, nil)
 				}
 			}
-			if isEmpty {
-				cancel()
-				return &Response{Data: make(map[string]interface{}), IsComplete: false}, err
-			}
 
-			result := combiner(totalBackends, responses)
+			result, err := acc.Result()
 			cancel()
 			return result, err
 		}
 	}
+}
+
+type incrementalMergeAccumulator struct {
+	pending  int
+	data     *Response
+	combiner ResponseCombiner
+	errs     []error
+}
+
+func newIncrementalMergeAccumulator(total int, combiner ResponseCombiner) *incrementalMergeAccumulator {
+	return &incrementalMergeAccumulator{
+		pending:  total,
+		combiner: combiner,
+		errs:     []error{},
+	}
+}
+
+func (i *incrementalMergeAccumulator) Merge(res *Response, err error) {
+	i.pending--
+	if err != nil {
+		i.errs = append(i.errs, err)
+		if i.data != nil {
+			i.data.IsComplete = false
+		}
+		return
+	}
+	if res == nil {
+		i.errs = append(i.errs, errNullResult)
+		return
+	}
+	if i.data == nil {
+		i.data = res
+		return
+	}
+	i.data = i.combiner(2, []*Response{i.data, res})
+}
+
+func (i *incrementalMergeAccumulator) Result() (*Response, error) {
+	if i.data == nil {
+		return &Response{Data: make(map[string]interface{}, 0), IsComplete: false}, newMergeError(i.errs)
+	}
+
+	if i.pending != 0 {
+		i.data.IsComplete = false
+	}
+	return i.data, newMergeError(i.errs)
 }
 
 func requestPart(ctx context.Context, next Proxy, request *Request, out chan<- *Response, failed chan<- error) {
@@ -76,6 +118,25 @@ func requestPart(ctx context.Context, next Proxy, request *Request, out chan<- *
 		failed <- ctx.Err()
 	}
 	cancel()
+}
+
+func newMergeError(errs []error) error {
+	if len(errs) == 0 {
+		return nil
+	}
+	return mergeError{errs}
+}
+
+type mergeError struct {
+	errs []error
+}
+
+func (m mergeError) Error() string {
+	msg := make([]string, len(m.errs))
+	for i, err := range m.errs {
+		msg[i] = err.Error()
+	}
+	return strings.Join(msg, "\n")
 }
 
 // ResponseCombiner func to merge the collected responses into a single one

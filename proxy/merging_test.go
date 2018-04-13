@@ -183,8 +183,22 @@ func TestNewMergeDataMiddleware_nullResponse(t *testing.T) {
 
 	mustEnd := time.After(time.Duration(2*timeout) * time.Millisecond)
 	out, err := mw(NoopProxy, NoopProxy)(context.Background(), &Request{})
-	if err != errNullResult {
-		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
+	if err == nil {
+		t.Errorf("The middleware did not propagate the expected error")
+	}
+	switch mergeErr := err.(type) {
+	case mergeError:
+		if len(mergeErr.errs) != 2 {
+			t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+		}
+		if mergeErr.errs[0] != mergeErr.errs[1] {
+			t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+		}
+		if mergeErr.errs[0] != errNullResult {
+			t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+		}
+	default:
+		t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
 	}
 	if out == nil {
 		t.Errorf("The proxy returned a null result\n")
@@ -216,8 +230,22 @@ func TestNewMergeDataMiddleware_timeout(t *testing.T) {
 		delayedProxy(t, time.Duration(5*timeout)*time.Millisecond, nil))
 	mustEnd := time.After(time.Duration(2*timeout) * time.Millisecond)
 	out, err := p(context.Background(), &Request{})
-	if err == nil || err.Error() != "context deadline exceeded" {
-		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
+	if err == nil {
+		t.Errorf("The middleware did not propagate the expected error")
+	}
+	switch mergeErr := err.(type) {
+	case mergeError:
+		if len(mergeErr.errs) != 2 {
+			t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+		}
+		if mergeErr.errs[0].Error() != mergeErr.errs[1].Error() {
+			t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+		}
+		if mergeErr.errs[0].Error() != "context deadline exceeded" {
+			t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+		}
+	default:
+		t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
 	}
 	if out == nil {
 		t.Errorf("The proxy returned a null result\n")
