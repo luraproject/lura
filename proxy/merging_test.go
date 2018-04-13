@@ -348,3 +348,55 @@ func TestRegisterResponseCombiner(t *testing.T) {
 		}
 	}
 }
+
+func Test_incrementalMergeAccumulator_invalidResponse(t *testing.T) {
+	acc := newIncrementalMergeAccumulator(3, combineData)
+	acc.Merge(nil, nil)
+	acc.Merge(nil, nil)
+	acc.Merge(nil, nil)
+	res, err := acc.Result()
+	if res == nil {
+		t.Error("response should not be nil")
+		return
+	}
+	if err == nil {
+		t.Error("expecting error")
+		return
+	}
+	switch mergeErr := err.(type) {
+	case mergeError:
+		if len(mergeErr.errs) != 3 {
+			t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+		}
+		if mergeErr.errs[0] != mergeErr.errs[1] {
+			t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+		}
+		if mergeErr.errs[0] != mergeErr.errs[2] {
+			t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+		}
+		if mergeErr.errs[0] != errNullResult {
+			t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+		}
+	default:
+		t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+	}
+}
+
+func Test_incrementalMergeAccumulator_incompleteResponse(t *testing.T) {
+	acc := newIncrementalMergeAccumulator(3, combineData)
+	acc.Merge(&Response{Data: make(map[string]interface{}, 0), IsComplete: true}, nil)
+	acc.Merge(&Response{Data: make(map[string]interface{}, 0), IsComplete: false}, nil)
+	acc.Merge(&Response{Data: make(map[string]interface{}, 0), IsComplete: true}, nil)
+	res, err := acc.Result()
+	if res == nil {
+		t.Error("response should not be nil")
+		return
+	}
+	if err != nil {
+		t.Errorf("unexpected error: %s", err.Error())
+		return
+	}
+	if res.IsComplete {
+		t.Error("response should not be completed")
+	}
+}
