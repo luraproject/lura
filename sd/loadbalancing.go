@@ -16,6 +16,9 @@ var ErrNoHosts = errors.New("no hosts available")
 
 // NewRoundRobinLB returns a new balancer using a round robin strategy
 func NewRoundRobinLB(subscriber Subscriber) Balancer {
+	if s, ok := subscriber.(FixedSubscriber); ok && len(s) == 1 {
+		return nopBalancer(s[0])
+	}
 	return &roundRobinLB{
 		subscriber: subscriber,
 		counter:    0,
@@ -42,6 +45,9 @@ func (rr *roundRobinLB) Host() (string, error) {
 
 // NewRandomLB returns a new balancer using a pseudo-random strategy
 func NewRandomLB(subscriber Subscriber, seed int64) Balancer {
+	if s, ok := subscriber.(FixedSubscriber); ok && len(s) == 1 {
+		return nopBalancer(s[0])
+	}
 	return &randomLB{
 		subscriber: subscriber,
 		rnd:        rand.New(rand.NewSource(seed)),
@@ -64,3 +70,7 @@ func (r *randomLB) Host() (string, error) {
 	}
 	return hosts[r.rnd.Intn(len(hosts))], nil
 }
+
+type nopBalancer string
+
+func (b nopBalancer) Host() (string, error) { return string(b), nil }
