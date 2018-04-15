@@ -23,7 +23,7 @@ func TestEndpointHandler_ok(t *testing.T) {
 		}, nil
 	}
 	expectedBody := "{\"supu\":\"tupu\"}"
-	testEndpointHandler(t, 10, p, "GET", expectedBody, "public, max-age=21600", "application/json", http.StatusOK)
+	testEndpointHandler(t, 10, p, "GET", expectedBody, "public, max-age=21600", "application/json", http.StatusOK, true)
 	time.Sleep(5 * time.Millisecond)
 }
 
@@ -35,7 +35,7 @@ func TestEndpointHandler_incomplete(t *testing.T) {
 		}, nil
 	}
 	expectedBody := "{\"foo\":\"bar\"}"
-	testEndpointHandler(t, 10, p, "GET", expectedBody, "", "application/json", http.StatusOK)
+	testEndpointHandler(t, 10, p, "GET", expectedBody, "", "application/json", http.StatusOK, false)
 	time.Sleep(5 * time.Millisecond)
 }
 
@@ -43,7 +43,7 @@ func TestEndpointHandler_ko(t *testing.T) {
 	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
 		return nil, fmt.Errorf("This is %s", "a dummy error")
 	}
-	testEndpointHandler(t, 10, p, "GET", "This is a dummy error\n", "", "text/plain; charset=utf-8", http.StatusInternalServerError)
+	testEndpointHandler(t, 10, p, "GET", "This is a dummy error\n", "", "text/plain; charset=utf-8", http.StatusInternalServerError, false)
 	time.Sleep(5 * time.Millisecond)
 }
 
@@ -52,22 +52,22 @@ func TestEndpointHandler_cancel(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 		return nil, nil
 	}
-	testEndpointHandler(t, 0, p, "GET", router.ErrInternalError.Error()+"\n", "", "text/plain; charset=utf-8", http.StatusInternalServerError)
+	testEndpointHandler(t, 0, p, "GET", router.ErrInternalError.Error()+"\n", "", "text/plain; charset=utf-8", http.StatusInternalServerError, false)
 	time.Sleep(5 * time.Millisecond)
 }
 
 func TestEndpointHandler_noop(t *testing.T) {
-	testEndpointHandler(t, 10, proxy.NoopProxy, "GET", "{}", "", "application/json", http.StatusOK)
+	testEndpointHandler(t, 10, proxy.NoopProxy, "GET", "{}", "", "application/json", http.StatusOK, false)
 	time.Sleep(5 * time.Millisecond)
 }
 
 func TestEndpointHandler_badMethod(t *testing.T) {
-	testEndpointHandler(t, 10, proxy.NoopProxy, "PUT", "\n", "", "text/plain; charset=utf-8", http.StatusMethodNotAllowed)
+	testEndpointHandler(t, 10, proxy.NoopProxy, "PUT", "\n", "", "text/plain; charset=utf-8", http.StatusMethodNotAllowed, false)
 	time.Sleep(5 * time.Millisecond)
 }
 
 func testEndpointHandler(t *testing.T, timeout time.Duration, p proxy.Proxy, method, expectedBody, expectedCache, expectedContent string,
-	expectedStatusCode int) {
+	expectedStatusCode int, completed bool) {
 	endpoint := &config.EndpointConfig{
 		Method:      "GET",
 		Timeout:     timeout,
@@ -90,17 +90,24 @@ func testEndpointHandler(t *testing.T, timeout time.Duration, p proxy.Proxy, met
 	}
 	w.Result().Body.Close()
 	content := string(body)
-	if w.Result().Header.Get("Cache-Control") != expectedCache {
-		t.Error("Cache-Control error:", w.Result().Header.Get("Cache-Control"))
+	resp := w.Result()
+	if resp.Header.Get("Cache-Control") != expectedCache {
+		t.Error("Cache-Control error:", resp.Header.Get("Cache-Control"))
 	}
-	if w.Result().Header.Get("Content-Type") != expectedContent {
-		t.Error("Content-Type error:", w.Result().Header.Get("Content-Type"))
+	if completed && resp.Header.Get(router.CompleteResponseHeaderName) != router.HeaderCompleteResponseValue {
+		t.Error(router.CompleteResponseHeaderName, "error:", resp.Header.Get(router.CompleteResponseHeaderName))
 	}
-	if w.Result().Header.Get("X-Krakend") != "Version undefined" {
-		t.Error("X-Krakend error:", w.Result().Header.Get("X-Krakend"))
+	if !completed && resp.Header.Get(router.CompleteResponseHeaderName) != router.HeaderIncompleteResponseValue {
+		t.Error(router.CompleteResponseHeaderName, "error:", resp.Header.Get(router.CompleteResponseHeaderName))
 	}
-	if w.Result().StatusCode != expectedStatusCode {
-		t.Error("Unexpected status code:", w.Result().StatusCode)
+	if resp.Header.Get("Content-Type") != expectedContent {
+		t.Error("Content-Type error:", resp.Header.Get("Content-Type"))
+	}
+	if resp.Header.Get("X-Krakend") != "Version undefined" {
+		t.Error("X-Krakend error:", resp.Header.Get("X-Krakend"))
+	}
+	if resp.StatusCode != expectedStatusCode {
+		t.Error("Unexpected status code:", resp.StatusCode)
 	}
 	if content != expectedBody {
 		t.Error("Unexpected body:", content, "expected:", expectedBody)

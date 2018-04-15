@@ -40,6 +40,7 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 		return func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set(core.KrakendHeaderName, core.KrakendHeaderValue)
 			if r.Method != configuration.Method {
+				w.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 				http.Error(w, "", http.StatusMethodNotAllowed)
 				return
 			}
@@ -48,6 +49,7 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 
 			response, err := prxy(requestCtx, rb(r, configuration.QueryString, headersToSend))
 			if err != nil {
+				w.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 				http.Error(w, err.Error(), errF(err))
 				cancel()
 				return
@@ -55,6 +57,7 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 
 			select {
 			case <-requestCtx.Done():
+				w.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 				http.Error(w, router.ErrInternalError.Error(), http.StatusInternalServerError)
 				cancel()
 				return
@@ -62,12 +65,20 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 			}
 
 			if response != nil {
+				if response.IsComplete {
+					w.Header().Set(router.CompleteResponseHeaderName, router.HeaderCompleteResponseValue)
+					if isCacheEnabled {
+						w.Header().Set("Cache-Control", cacheControlHeaderValue)
+					}
+				} else {
+					w.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
+				}
+
 				for k, v := range response.Metadata.Headers {
 					w.Header().Set(k, v[0])
 				}
-				if isCacheEnabled && response.IsComplete {
-					w.Header().Set("Cache-Control", cacheControlHeaderValue)
-				}
+			} else {
+				w.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 			}
 
 			render(w, response)
