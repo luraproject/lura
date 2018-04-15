@@ -38,31 +38,45 @@ func CustomErrorEndpointHandler(configuration *config.EndpointConfig, prxy proxy
 
 		response, err := prxy(requestCtx, requestGenerator(c, configuration.QueryString))
 		if err != nil {
-			c.AbortWithError(errF(err), err)
+			abort(c, errF(err))
 			cancel()
 			return
 		}
 
 		select {
 		case <-requestCtx.Done():
-			c.AbortWithError(http.StatusInternalServerError, router.ErrInternalError)
+			abort(c, http.StatusInternalServerError)
 			cancel()
 			return
 		default:
 		}
 
 		if response != nil {
-			if isCacheEnabled && response.IsComplete {
-				c.Header("Cache-Control", cacheControlHeaderValue)
+			if response.IsComplete {
+				c.Header(router.CompleteResponseHeaderName, router.HeaderCompleteResponseValue)
+				if isCacheEnabled {
+					c.Header("Cache-Control", cacheControlHeaderValue)
+				}
+			} else {
+				c.Header(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 			}
+
 			for k, v := range response.Metadata.Headers {
 				c.Header(k, v[0])
 			}
+		} else {
+			c.Header(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 		}
 
 		render(c, response)
 		cancel()
 	}
+}
+
+func abort(c *gin.Context, code int) {
+	c.Status(code)
+	c.Header(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
+	c.Abort()
 }
 
 // NewRequest gets a request from the current gin context and the received query string
