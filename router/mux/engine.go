@@ -28,10 +28,10 @@ func (e *engine) Handle(pattern string, handler http.Handler) {
 }
 
 func (e *engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	e.handler.ServeHTTP(newHTTPErrorInterceptor(w), r)
+	e.handler.ServeHTTP(NewHTTPErrorInterceptor(w), r)
 }
 
-func newHTTPErrorInterceptor(w http.ResponseWriter) *HTTPErrorInterceptor {
+func NewHTTPErrorInterceptor(w http.ResponseWriter) *HTTPErrorInterceptor {
 	return &HTTPErrorInterceptor{w, new(sync.Once)}
 }
 
