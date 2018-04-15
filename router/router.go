@@ -37,7 +37,14 @@ func DefaultToHTTPError(_ error) int {
 	return http.StatusInternalServerError
 }
 
+const (
+	HeaderCompleteResponseValue   = "true"
+	HeaderIncompleteResponseValue = "false"
+)
+
 var (
+	// CompleteResponseHeaderName is the header to flag incomplete responses to the client
+	CompleteResponseHeaderName = "X-KrakenD-Completed"
 	// HeadersToSend are the headers to pass from the router request to the proxy
 	HeadersToSend = []string{"Content-Type"}
 	// UserAgentHeaderValue is the value of the User-Agent header to add to the proxy request

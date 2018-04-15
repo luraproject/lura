@@ -48,5 +48,5 @@ func (g gorillaEngine) Handle(pattern string, handler http.Handler) {
 
 // ServeHTTP implements the http:Handler interface from the stdlib
 func (g gorillaEngine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	g.r.ServeHTTP(w, r)
+	g.r.ServeHTTP(mux.NewHTTPErrorInterceptor(w), r)
 }

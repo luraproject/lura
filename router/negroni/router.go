@@ -59,5 +59,5 @@ func (e negroniEngine) Handle(pattern string, handler http.Handler) {
 
 // ServeHTTP implements the http:Handler interface from the stdlib
 func (e negroniEngine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	e.n.ServeHTTP(w, r)
+	e.n.ServeHTTP(mux.NewHTTPErrorInterceptor(w), r)
 }

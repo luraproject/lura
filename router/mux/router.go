@@ -15,17 +15,6 @@ import (
 // DefaultDebugPattern is the default pattern used to define the debug endpoint
 const DefaultDebugPattern = "/__debug/"
 
-// Engine defines the minimun required interface for the mux compatible engine
-type Engine interface {
-	http.Handler
-	Handle(pattern string, handler http.Handler)
-}
-
-// DefaultEngine returns a new engine using the http.ServeMux router
-func DefaultEngine() *http.ServeMux {
-	return http.NewServeMux()
-}
-
 // Config is the struct that collects the parts the router should be builded from
 type Config struct {
 	Engine         Engine
