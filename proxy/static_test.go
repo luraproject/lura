@@ -8,6 +8,30 @@ import (
 	"github.com/devopsfaith/krakend/config"
 )
 
+func TestNewStaticMiddleware_multipleNext(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("The code did not panic")
+		}
+	}()
+	endpoint := config.EndpointConfig{
+		ExtraConfig: config.ExtraConfig{
+			Namespace: map[string]interface{}{
+				staticKey: map[string]interface{}{
+					"data": map[string]interface{}{
+						"new-1": true,
+						"new-2": map[string]interface{}{"k1": 42},
+						"new-3": "42",
+					},
+					"strategy": "incomplete",
+				},
+			},
+		},
+	}
+	mw := NewStaticMiddleware(&endpoint)
+	mw(explosiveProxy(t), explosiveProxy(t))
+}
+
 func TestNewStaticMiddleware_ok(t *testing.T) {
 	endpoint := config.EndpointConfig{
 		ExtraConfig: config.ExtraConfig{
@@ -79,6 +103,18 @@ type staticMatcherTestCase struct {
 }
 
 func Test_staticAlwaysMatch(t *testing.T) {
+	extra := config.ExtraConfig{
+		Namespace: map[string]interface{}{
+			staticKey: map[string]interface{}{
+				"data": map[string]interface{}{
+					"new-1": true,
+					"new-2": map[string]interface{}{"k1": 42},
+					"new-3": "42",
+				},
+			},
+		},
+	}
+	cfg, _ := getStaticMiddlewareCfg(extra)
 	for _, testCase := range []staticMatcherTestCase{
 		{
 			name:     "nil & nil",
@@ -106,11 +142,24 @@ func Test_staticAlwaysMatch(t *testing.T) {
 			expected: true,
 		},
 	} {
-		testStaticMatcher(t, staticAlwaysMatch, testCase)
+		testStaticMatcher(t, cfg.Match, testCase)
 	}
 }
 
 func Test_staticIfSuccessMatch(t *testing.T) {
+	extra := config.ExtraConfig{
+		Namespace: map[string]interface{}{
+			staticKey: map[string]interface{}{
+				"data": map[string]interface{}{
+					"new-1": true,
+					"new-2": map[string]interface{}{"k1": 42},
+					"new-3": "42",
+				},
+				"strategy": staticIfSuccessStrategy,
+			},
+		},
+	}
+	cfg, _ := getStaticMiddlewareCfg(extra)
 	for _, testCase := range []staticMatcherTestCase{
 		{
 			name:     "nil & nil",
@@ -132,11 +181,24 @@ func Test_staticIfSuccessMatch(t *testing.T) {
 			err:      errors.New("ignore me"),
 		},
 	} {
-		testStaticMatcher(t, staticIfSuccessMatch, testCase)
+		testStaticMatcher(t, cfg.Match, testCase)
 	}
 }
 
 func Test_staticIfErroredMatch(t *testing.T) {
+	extra := config.ExtraConfig{
+		Namespace: map[string]interface{}{
+			staticKey: map[string]interface{}{
+				"data": map[string]interface{}{
+					"new-1": true,
+					"new-2": map[string]interface{}{"k1": 42},
+					"new-3": "42",
+				},
+				"strategy": staticIfErroredStrategy,
+			},
+		},
+	}
+	cfg, _ := getStaticMiddlewareCfg(extra)
 	for _, testCase := range []staticMatcherTestCase{
 		{
 			name: "nil & nil",
@@ -157,11 +219,24 @@ func Test_staticIfErroredMatch(t *testing.T) {
 			expected: true,
 		},
 	} {
-		testStaticMatcher(t, staticIfErroredMatch, testCase)
+		testStaticMatcher(t, cfg.Match, testCase)
 	}
 }
 
 func Test_staticIfCompleteMatch(t *testing.T) {
+	extra := config.ExtraConfig{
+		Namespace: map[string]interface{}{
+			staticKey: map[string]interface{}{
+				"data": map[string]interface{}{
+					"new-1": true,
+					"new-2": map[string]interface{}{"k1": 42},
+					"new-3": "42",
+				},
+				"strategy": staticIfCompleteStrategy,
+			},
+		},
+	}
+	cfg, _ := getStaticMiddlewareCfg(extra)
 	for _, testCase := range []staticMatcherTestCase{
 		{
 			name: "nil & nil",
@@ -185,11 +260,24 @@ func Test_staticIfCompleteMatch(t *testing.T) {
 			expected: true,
 		},
 	} {
-		testStaticMatcher(t, staticIfCompleteMatch, testCase)
+		testStaticMatcher(t, cfg.Match, testCase)
 	}
 }
 
 func Test_staticIfIncompleteMatch(t *testing.T) {
+	extra := config.ExtraConfig{
+		Namespace: map[string]interface{}{
+			staticKey: map[string]interface{}{
+				"data": map[string]interface{}{
+					"new-1": true,
+					"new-2": map[string]interface{}{"k1": 42},
+					"new-3": "42",
+				},
+				"strategy": staticIfIncompleteStrategy,
+			},
+		},
+	}
+	cfg, _ := getStaticMiddlewareCfg(extra)
 	for _, testCase := range []staticMatcherTestCase{
 		{
 			name:     "nil & nil",
@@ -216,12 +304,67 @@ func Test_staticIfIncompleteMatch(t *testing.T) {
 			response: &Response{IsComplete: true},
 		},
 	} {
-		testStaticMatcher(t, staticIfIncompleteMatch, testCase)
+		testStaticMatcher(t, cfg.Match, testCase)
 	}
 }
 
 func testStaticMatcher(t *testing.T, marcher func(*Response, error) bool, testCase staticMatcherTestCase) {
 	if marcher(testCase.response, testCase.err) != testCase.expected {
 		t.Errorf("[%s] unexepecting match result (%v) with: %v, %v", testCase.name, testCase.expected, testCase.response, testCase.err)
+	}
+}
+
+func Test_getStaticMiddlewareCfg_ko(t *testing.T) {
+	for i, cfg := range []config.ExtraConfig{
+		{"a": 42},
+		{Namespace: true},
+		{Namespace: map[string]interface{}{}},
+		{Namespace: map[string]interface{}{staticKey: 42}},
+		{Namespace: map[string]interface{}{staticKey: map[string]interface{}{}}},
+	} {
+		if _, ok := getStaticMiddlewareCfg(cfg); ok {
+			t.Errorf("expecting error on test #%d", i)
+		}
+	}
+}
+
+func Test_getStaticMiddlewareCfg_strategy(t *testing.T) {
+	for _, strategy := range []string{
+		staticAlwaysStrategy,
+		staticIfSuccessStrategy,
+		staticIfErroredStrategy,
+		staticIfCompleteStrategy,
+		staticIfIncompleteStrategy,
+	} {
+		cfg := config.ExtraConfig{
+			Namespace: map[string]interface{}{
+				staticKey: map[string]interface{}{
+					"data":     map[string]interface{}{},
+					"strategy": strategy,
+				},
+			},
+		}
+		staticCfg, ok := getStaticMiddlewareCfg(cfg)
+		if !ok {
+			t.Errorf("unexpecting error on test %s", strategy)
+		}
+		if strategy != staticCfg.Strategy {
+			t.Errorf("wrong parsing on test %s", strategy)
+		}
+	}
+
+	cfg := config.ExtraConfig{
+		Namespace: map[string]interface{}{
+			staticKey: map[string]interface{}{
+				"data": map[string]interface{}{},
+			},
+		},
+	}
+	staticCfg, ok := getStaticMiddlewareCfg(cfg)
+	if !ok {
+		t.Error("unexpecting error parsing default strategy")
+	}
+	if staticAlwaysStrategy != staticCfg.Strategy {
+		t.Error("wrong parsing default strategy")
 	}
 }
