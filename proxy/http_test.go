@@ -377,3 +377,66 @@ func TestDefaultHTTPResponseParserConfig_nopEntityFormatter(t *testing.T) {
 		t.Error("unexpected result")
 	}
 }
+
+func TestNewHTTPProxy_noopDecoder(t *testing.T) {
+	expectedcontent := "some nice, interesting and long content"
+	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("header1", "value1")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(expectedcontent))
+	}))
+	defer backendServer.Close()
+
+	rpURL, _ := url.Parse(backendServer.URL)
+	backend := config.Backend{
+		Encoding: encoding.NOOP,
+		Decoder:  encoding.NoOpDecoder,
+	}
+	request := Request{
+		Method: "GET",
+		Path:   "/",
+		URL:    rpURL,
+		Body:   newDummyReadCloser(""),
+	}
+	mustEnd := time.After(time.Duration(150) * time.Millisecond)
+
+	result, err := HTTPProxyFactory(http.DefaultClient)(&backend)(context.Background(), &request)
+	if err != nil {
+		t.Errorf("The proxy returned an unexpected error: %s\n", err.Error())
+		return
+	}
+	if result == nil {
+		t.Errorf("The proxy returned a null result\n")
+		return
+	}
+	select {
+	case <-mustEnd:
+		t.Errorf("Error: expected response")
+		return
+	default:
+	}
+
+	if len(result.Data) > 0 {
+		t.Error("unexpected data:", result.Data)
+		return
+	}
+
+	if result.Metadata.StatusCode != http.StatusOK {
+		t.Error("unexpected status code:", result.Metadata.StatusCode)
+		return
+	}
+
+	if len(result.Metadata.Headers["Header1"]) < 1 || result.Metadata.Headers["Header1"][0] != "value1" {
+		t.Error("unexpected header:", result.Metadata.Headers)
+		return
+	}
+
+	b := &bytes.Buffer{}
+	if _, err := b.ReadFrom(result.Io); err != nil {
+		t.Error(err, b.String())
+		return
+	}
+	if content := b.String(); content != expectedcontent {
+		t.Error("unexpected content:", content)
+	}
+}

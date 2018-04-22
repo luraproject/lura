@@ -10,13 +10,26 @@ import (
 	"github.com/devopsfaith/krakend/register"
 )
 
+func TestNoOpDecoder(t *testing.T) {
+	d := Get(NOOP)(false)
+
+	errorMsg := erroredReader("this error should never been sent")
+	var result map[string]interface{}
+	if err := d(errorMsg, &result); err != nil {
+		t.Error("Unexpected error:", err.Error())
+	}
+	if result != nil {
+		t.Error("Unexpected value:", result)
+	}
+}
+
 func TestRegister(t *testing.T) {
 	decoders = initDecoderRegister()
 	defer func() { decoders = initDecoderRegister() }()
 
 	original := GetRegister()
 
-	if len(original.data.Clone()) != 2 {
+	if len(original.data.Clone()) != 3 {
 		t.Error("Unexpected number of registered factories:", len(original.data.Clone()))
 	}
 
@@ -32,7 +45,7 @@ func TestGet(t *testing.T) {
 	decoders = initDecoderRegister()
 	defer func() { decoders = initDecoderRegister() }()
 
-	if len(decoders.data.Clone()) != 2 {
+	if len(decoders.data.Clone()) != 3 {
 		t.Error("Unexpected number of registered factories:", len(decoders.data.Clone()))
 	}
 

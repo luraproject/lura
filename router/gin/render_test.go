@@ -391,3 +391,88 @@ func TestRegisterRender(t *testing.T) {
 		t.Error("the render was called an unexpected amount of times:", total)
 	}
 }
+
+func TestRender_noop(t *testing.T) {
+	expectedContent := "supu"
+	expectedHeader := "text/plain; charset=utf-8"
+
+	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
+		return &proxy.Response{
+			Metadata: proxy.Metadata{
+				StatusCode: 200,
+				Headers:    map[string][]string{"Content-Type": {expectedHeader}},
+			},
+			Io: bytes.NewBufferString(expectedContent),
+		}, nil
+	}
+	endpoint := &config.EndpointConfig{
+		Timeout:        time.Second,
+		CacheTTL:       6 * time.Hour,
+		QueryString:    []string{"b"},
+		OutputEncoding: encoding.NOOP,
+	}
+
+	gin.SetMode(gin.TestMode)
+	server := gin.New()
+	server.GET("/_gin_endpoint/:param", EndpointHandler(endpoint, p))
+
+	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", ioutil.NopCloser(&bytes.Buffer{}))
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	server.ServeHTTP(w, req)
+
+	defer w.Result().Body.Close()
+
+	body, ioerr := ioutil.ReadAll(w.Result().Body)
+	if ioerr != nil {
+		t.Error("reading response body:", ioerr)
+		return
+	}
+
+	content := string(body)
+	if w.Result().Header.Get("Content-Type") != expectedHeader {
+		t.Error("Content-Type error:", w.Result().Header.Get("Content-Type"))
+	}
+	if w.Result().Header.Get("X-Krakend") != "Version undefined" {
+		t.Error("X-Krakend error:", w.Result().Header.Get("X-Krakend"))
+	}
+	if w.Result().StatusCode != http.StatusOK {
+		t.Error("Unexpected status code:", w.Result().StatusCode)
+	}
+	if content != expectedContent {
+		t.Error("Unexpected body:", content, "expected:", expectedContent)
+	}
+}
+
+func TestRender_noop_nilResponse(t *testing.T) {
+	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
+		return nil, nil
+	}
+	endpoint := &config.EndpointConfig{
+		Timeout:        time.Second,
+		CacheTTL:       6 * time.Hour,
+		QueryString:    []string{"b"},
+		OutputEncoding: encoding.NOOP,
+	}
+
+	gin.SetMode(gin.TestMode)
+	server := gin.New()
+	server.GET("/_gin_endpoint/:param", EndpointHandler(endpoint, p))
+
+	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", ioutil.NopCloser(&bytes.Buffer{}))
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	server.ServeHTTP(w, req)
+
+	if w.Result().Header.Get("Content-Type") != "" {
+		t.Error("Content-Type error:", w.Result().Header.Get("Content-Type"))
+	}
+	if w.Result().Header.Get("X-Krakend") != "Version undefined" {
+		t.Error("X-Krakend error:", w.Result().Header.Get("X-Krakend"))
+	}
+	if w.Result().StatusCode != http.StatusInternalServerError {
+		t.Error("Unexpected status code:", w.Result().StatusCode)
+	}
+}

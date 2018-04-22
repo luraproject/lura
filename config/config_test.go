@@ -209,6 +209,32 @@ func TestConfig_initKONoBackends(t *testing.T) {
 	}
 }
 
+func TestConfig_initKOMultipleBackendsForNoopEncoder(t *testing.T) {
+	subject := ServiceConfig{
+		Version: ConfigVersion,
+		Host:    []string{"http://127.0.0.1:8080"},
+		Endpoints: []*EndpointConfig{
+			{
+				Endpoint:       "/supu",
+				Method:         "post",
+				OutputEncoding: "no-op",
+				Backend: []*Backend{
+					{
+						Encoding: "no-op",
+					},
+					{
+						Encoding: "no-op",
+					},
+				},
+			},
+		},
+	}
+
+	if err := subject.Init(); err != errInvalidNoOpEncoding {
+		t.Error("Expecting an error at the configuration init!", err)
+	}
+}
+
 func TestConfig_initKOInvalidHost(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
