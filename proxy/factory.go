@@ -59,6 +59,11 @@ func (pf defaultFactory) New(cfg *config.EndpointConfig) (p Proxy, err error) {
 	default:
 		p, err = pf.newMulti(cfg)
 	}
+	if err != nil {
+		return
+	}
+
+	p = NewStaticMiddleware(cfg)(p)
 	return
 }
 
