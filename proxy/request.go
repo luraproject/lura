@@ -34,7 +34,11 @@ func (r *Request) GeneratePath(URLPattern string) {
 	r.Path = string(buff)
 }
 
-// Clone clones itself into a new request
+// Clone clones itself into a new request. The returned cloned request is not
+// thread-safe, so changes on request.Params and request.Headers could generate
+// race-conditions depending on the part of the pipe they are being executed.
+// For thread-safe request headers and/or params manipulation, use the proxy.CloneRequest
+// function.
 func (r *Request) Clone() Request {
 	return Request{
 		Method:  r.Method,
@@ -45,4 +49,33 @@ func (r *Request) Clone() Request {
 		Params:  r.Params,
 		Headers: r.Headers,
 	}
+}
+
+// CloneRequest returns a deep copy of the received request, so the received and the
+// returned proxy.Request do not share a pointer
+func CloneRequest(r *Request) *Request {
+	clone := r.Clone()
+	clone.Headers = CloneRequestHeaders(r.Headers)
+	clone.Params = CloneRequestParams(r.Params)
+	return &clone
+}
+
+// CloneRequestHeaders returns a copy of the received request headers
+func CloneRequestHeaders(headers map[string][]string) map[string][]string {
+	m := make(map[string][]string, len(headers))
+	for k, vs := range headers {
+		tmp := make([]string, len(vs))
+		copy(tmp, vs)
+		m[k] = tmp
+	}
+	return m
+}
+
+// CloneRequestParams returns a copy of the received request params
+func CloneRequestParams(params map[string]string) map[string]string {
+	m := make(map[string]string, len(params))
+	for k, v := range params {
+		m[k] = v
+	}
+	return m
 }
