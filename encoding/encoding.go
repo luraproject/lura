@@ -29,3 +29,11 @@ func Register(name string, dec func(bool) func(io.Reader, *map[string]interface{
 func Get(name string) DecoderFactory {
 	return decoders.Get(name)
 }
+
+// NOOP is the key for the NoOp encoding
+const NOOP = "no-op"
+
+// NoOpDecoder implements the Decoder interface
+func NoOpDecoder(_ io.Reader, _ *map[string]interface{}) error { return nil }
+
+func noOpDecoderFactory(_ bool) func(io.Reader, *map[string]interface{}) error { return NoOpDecoder }

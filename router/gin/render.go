@@ -1,6 +1,7 @@
 package gin
 
 import (
+	"io"
 	"net/http"
 	"sync"
 
@@ -23,6 +24,7 @@ var (
 		NEGOTIATE:       negotiatedRender,
 		encoding.STRING: stringRender,
 		encoding.JSON:   jsonRender,
+		encoding.NOOP:   noopRender,
 	}
 )
 
@@ -112,6 +114,18 @@ func yamlRender(c *gin.Context, response *proxy.Response) {
 		return
 	}
 	c.YAML(http.StatusOK, response.Data)
+}
+
+func noopRender(c *gin.Context, response *proxy.Response) {
+	if response == nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	c.Status(response.Metadata.StatusCode)
+	for k, v := range response.Metadata.Headers {
+		c.Header(k, v[0])
+	}
+	io.Copy(c.Writer, response.Io)
 }
 
 var emptyResponse = gin.H{}

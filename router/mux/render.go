@@ -2,6 +2,7 @@ package mux
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"sync"
 
@@ -22,6 +23,7 @@ var (
 	renderRegister = map[string]Render{
 		encoding.STRING: stringRender,
 		encoding.JSON:   jsonRender,
+		encoding.NOOP:   noopRender,
 	}
 )
 
@@ -89,4 +91,15 @@ func stringRender(w http.ResponseWriter, response *proxy.Response) {
 		return
 	}
 	w.Write([]byte(msg))
+}
+
+func noopRender(w http.ResponseWriter, response *proxy.Response) {
+	if response == nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+	for k, v := range response.Metadata.Headers {
+		w.Header().Set(k, v[0])
+	}
+	io.Copy(w, response.Io)
 }
