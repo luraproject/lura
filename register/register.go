@@ -21,26 +21,26 @@ func (n *Namespaced) Get(namespace string) (Untyped, bool) {
 	return register, ok
 }
 
-func (n *Namespaced) Register(namespace, name string, v interface{}) {
+func (n *Namespaced) Set(namespace, name string, v interface{}) {
 	if register, ok := n.Get(namespace); ok {
-		register.Register(name, v)
+		register.Set(name, v)
 		return
 	}
 
 	register := NewUntyped()
-	register.Register(name, v)
-	n.data.Register(namespace, register)
+	register.Set(name, v)
+	n.data.Set(namespace, register)
 }
 
 func (n *Namespaced) AddNamespace(namespace string) {
 	if _, ok := n.Get(namespace); ok {
 		return
 	}
-	n.data.Register(namespace, NewUntyped())
+	n.data.Set(namespace, NewUntyped())
 }
 
 type Untyped interface {
-	Register(name string, v interface{})
+	Set(name string, v interface{})
 	Get(name string) (interface{}, bool)
 	Clone() map[string]interface{}
 }

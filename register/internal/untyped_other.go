@@ -16,7 +16,7 @@ type Untyped struct {
 	mutex *sync.RWMutex
 }
 
-func (u *Untyped) Register(name string, v interface{}) {
+func (u *Untyped) Set(name string, v interface{}) {
 	u.mutex.Lock()
 	u.data[name] = v
 	u.mutex.Unlock()

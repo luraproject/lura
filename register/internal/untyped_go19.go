@@ -12,7 +12,7 @@ type Untyped struct {
 	data *sync.Map
 }
 
-func (u *Untyped) Register(name string, v interface{}) {
+func (u *Untyped) Set(name string, v interface{}) {
 	u.data.Store(name, v)
 }
 

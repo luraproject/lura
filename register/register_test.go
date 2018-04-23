@@ -4,10 +4,10 @@ import "testing"
 
 func Test(t *testing.T) {
 	r := New()
-	r.Register("namespace1", "name1", 42)
+	r.Set("namespace1", "name1", 42)
 	r.AddNamespace("namespace1")
 	r.AddNamespace("namespace2")
-	r.Register("namespace2", "name2", true)
+	r.Set("namespace2", "name2", true)
 
 	nr, ok := r.Get("namespace1")
 	if !ok {
