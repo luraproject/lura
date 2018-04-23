@@ -22,7 +22,7 @@ type combinerRegister struct {
 func newCombinerRegister(data map[string]ResponseCombiner, fallback ResponseCombiner) *combinerRegister {
 	r := register.NewUntyped()
 	for k, v := range data {
-		r.Register(k, v)
+		r.Set(k, v)
 	}
 	return &combinerRegister{r, fallback}
 }
@@ -39,5 +39,5 @@ func (r *combinerRegister) GetResponseCombiner(name string) (ResponseCombiner, b
 }
 
 func (r *combinerRegister) SetResponseCombiner(name string, rc ResponseCombiner) {
-	r.data.Register(name, rc)
+	r.data.Set(name, rc)
 }

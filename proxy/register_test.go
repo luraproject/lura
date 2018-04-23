@@ -40,7 +40,7 @@ func TestNewRegister_responseCombiner_ok(t *testing.T) {
 func TestNewRegister_responseCombiner_fallbackIfErrored(t *testing.T) {
 	r := NewRegister()
 
-	r.data.Register("errored", true)
+	r.data.Set("errored", true)
 
 	rc, ok := r.GetResponseCombiner("errored")
 	if !ok {
