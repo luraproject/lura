@@ -14,7 +14,7 @@ const pluginName = "supu"
 func main() {
 	register := plugin.NewRegister()
 
-	fmt.Println(plugin.Load(config.Plugin{
+	fmt.Println(plugin.Load(&config.Plugin{
 		Folder:  "../plugins/",
 		Pattern: ".so",
 	}, register))

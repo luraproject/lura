@@ -14,9 +14,14 @@ const REGISTRABLE_VAR = "Registrable"
 
 // Register contains all the registers required by the framework and the external modules
 type Register struct {
-	Decoder  *encoding.DecoderRegister
+	Decoder  DecoderRegisterer
 	SD       *sd.Register
 	External *register.Namespaced
+}
+
+type DecoderRegisterer interface {
+	Set(name string, dec func(bool) func(io.Reader, *map[string]interface{}) error) error
+	Get(name string) func(bool) func(io.Reader, *map[string]interface{}) error
 }
 
 // NewRegister returns a new register to be used by the plugin loader
@@ -39,12 +44,12 @@ func (r *Register) Register(p Plugin) error {
 	totalRegistrations := 0
 
 	if registrable, ok := x.(RegistrableDecoder); ok {
-		err = registrable.RegisterDecoder(r.Decoder.Register)
+		err = registrable.RegisterDecoder(r.Decoder.Set)
 		totalRegistrations++
 	}
 
 	if registrable, ok := x.(RegistrableExternal); ok {
-		err = registrable.RegisterExternal(r.External.Register)
+		err = registrable.RegisterExternal(r.External.Set)
 		totalRegistrations++
 	}
 

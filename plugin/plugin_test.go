@@ -28,7 +28,7 @@ func TestLoad_ok(t *testing.T) {
 			content: plugin.Symbol(registrableDummy(1)),
 		}, nil
 	}
-	tot, err := Load(config.Plugin{Folder: tmpDir, Pattern: ".so"}, NewRegister())
+	tot, err := Load(&config.Plugin{Folder: tmpDir, Pattern: ".so"}, NewRegister())
 	if tot != 1 {
 		t.Error("unexpected number of plugins loaded:", tot)
 	}
@@ -40,7 +40,7 @@ func TestLoad_ok(t *testing.T) {
 
 func TestLoad_noFolder(t *testing.T) {
 	expectedErr := "open unknown: no such file or directory"
-	tot, err := Load(config.Plugin{Folder: "unknown", Pattern: ""}, NewRegister())
+	tot, err := Load(&config.Plugin{Folder: "unknown", Pattern: ""}, NewRegister())
 	if tot != 0 {
 		t.Error("unexpected number of plugins loaded:", tot)
 	}
@@ -59,7 +59,7 @@ func TestLoad_emptyFolder(t *testing.T) {
 		t.Error("unexpected error:", err.Error())
 		return
 	}
-	tot, err := Load(config.Plugin{Folder: name, Pattern: ""}, NewRegister())
+	tot, err := Load(&config.Plugin{Folder: name, Pattern: ""}, NewRegister())
 	if tot != 0 {
 		t.Error("unexpected number of plugins loaded:", tot)
 	}
@@ -83,7 +83,7 @@ func TestLoad_noMatches(t *testing.T) {
 	}
 	f.Close()
 	defer os.RemoveAll(tmpDir)
-	tot, err := Load(config.Plugin{Folder: tmpDir, Pattern: ".so"}, NewRegister())
+	tot, err := Load(&config.Plugin{Folder: tmpDir, Pattern: ".so"}, NewRegister())
 	if tot != 0 {
 		t.Error("unexpected number of plugins loaded:", tot)
 	}
@@ -106,7 +106,7 @@ func TestLoad_erroredLoad(t *testing.T) {
 	}
 	f.Close()
 	defer os.RemoveAll(tmpDir)
-	tot, err := Load(config.Plugin{Folder: tmpDir, Pattern: ".so"}, NewRegister())
+	tot, err := Load(&config.Plugin{Folder: tmpDir, Pattern: ".so"}, NewRegister())
 	if tot != 0 {
 		t.Error("unexpected number of plugins loaded:", tot)
 	}
@@ -138,7 +138,7 @@ func TestLoad_panicRecovered(t *testing.T) {
 	}
 	f.Close()
 	defer os.RemoveAll(tmpDir)
-	tot, err := Load(config.Plugin{Folder: tmpDir, Pattern: ".so"}, NewRegister())
+	tot, err := Load(&config.Plugin{Folder: tmpDir, Pattern: ".so"}, NewRegister())
 	if tot != 0 {
 		t.Error("unexpected number of plugins loaded:", tot)
 	}

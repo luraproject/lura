@@ -5,8 +5,6 @@ import (
 	"io/ioutil"
 	"plugin"
 	"strings"
-
-	"github.com/devopsfaith/krakend/config"
 )
 
 // Plugin is the interface of the loaded plugins
@@ -14,10 +12,15 @@ type Plugin interface {
 	Lookup(name string) (plugin.Symbol, error)
 }
 
+type PluginDefinition interface {
+	GetFolder() string
+	GetPattern() string
+}
+
 // Load loads all the plugins in pluginFolder with pattern in its filename.
 // It returns the number of plugins loaded and an error if something goes wrong.
-func Load(cfg config.Plugin, reg *Register) (int, error) {
-	plugins, err := scan(cfg.Folder, cfg.Pattern)
+func Load(cfg PluginDefinition, reg *Register) (int, error) {
+	plugins, err := scan(cfg.GetFolder(), cfg.GetPattern())
 	if err != nil {
 		return 0, err
 	}
