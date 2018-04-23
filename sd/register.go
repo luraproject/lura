@@ -7,7 +7,7 @@ import (
 
 // Deprecated: RegisterSubscriberFactory. Use the GetRegister function
 func RegisterSubscriberFactory(name string, sf SubscriberFactory) error {
-	return subscriberFactories.Register(name, sf)
+	return subscriberFactories.Set(name, sf)
 }
 
 // Deprecated: GetSubscriber. Use the GetRegister function
@@ -30,8 +30,8 @@ func initRegister() *Register {
 }
 
 // Register implements the RegisterSetter interface
-func (r *Register) Register(name string, sf SubscriberFactory) error {
-	r.data.Register(name, sf)
+func (r *Register) Set(name string, sf SubscriberFactory) error {
+	r.data.Set(name, sf)
 	return nil
 }
 

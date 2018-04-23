@@ -42,7 +42,7 @@ func TestRegisterSubscriberFactory_unknown(t *testing.T) {
 }
 
 func TestRegisterSubscriberFactory_errored(t *testing.T) {
-	subscriberFactories.data.Register("errored", true)
+	subscriberFactories.data.Set("errored", true)
 	if h, err := GetSubscriber(&config.Backend{SD: "errored", Host: []string{"name"}}).Hosts(); err != nil || len(h) != 1 {
 		t.Error("error using the default sd")
 	}
