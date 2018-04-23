@@ -28,17 +28,21 @@ type parser struct{}
 
 // Parser implements the Parse interface
 func (p parser) Parse(configFile string) (ServiceConfig, error) {
-	var result ServiceConfig
-	var cfg parseableServiceConfig
 	data, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		return result, fmt.Errorf("Fatal error config file: %s", configFile)
+		return ServiceConfig{}, fmt.Errorf("Fatal error config file: %s", configFile)
 	}
-	if err = json.Unmarshal(data, &cfg); err != nil {
-		return result, fmt.Errorf("Fatal error config file: While parsing config: %s", err.Error())
+
+	return ParseJSON(data)
+}
+
+func ParseJSON(data []byte) (ServiceConfig, error) {
+	var cfg parseableServiceConfig
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		return ServiceConfig{}, fmt.Errorf("Fatal error config file: While parsing config: %s", err.Error())
 	}
-	result = cfg.normalize()
-	err = result.Init()
+	result := cfg.normalize()
+	err := result.Init()
 
 	return result, err
 }

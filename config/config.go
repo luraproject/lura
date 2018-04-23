@@ -132,12 +132,6 @@ type Backend struct {
 	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
 }
 
-// Plugin contains the config required by the plugin module
-type Plugin struct {
-	Folder  string `mapstructure:"folder"`
-	Pattern string `mapstructure:"pattern"`
-}
-
 // ExtraConfig is a type to store extra configurations for customized behaviours
 type ExtraConfig map[string]interface{}
 
