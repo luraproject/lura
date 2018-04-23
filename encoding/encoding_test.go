@@ -24,16 +24,14 @@ func TestNoOpDecoder(t *testing.T) {
 }
 
 func TestRegister(t *testing.T) {
-	decoders = initDecoderRegister()
-	defer func() { decoders = initDecoderRegister() }()
+	decoders = initStore()
+	defer func() { decoders = initStore() }()
 
-	original := GetRegister()
-
-	if len(original.data.Clone()) != 3 {
-		t.Error("Unexpected number of registered factories:", len(original.data.Clone()))
+	if len(decoders.data.Clone()) != 3 {
+		t.Error("Unexpected number of registered factories:", len(decoders.data.Clone()))
 	}
 
-	decoders = &DecoderRegister{register.NewUntyped()}
+	decoders = &Store{register.NewUntyped()}
 	Register("some", NewJSONDecoder)
 
 	if len(decoders.data.Clone()) != 1 {
@@ -42,8 +40,8 @@ func TestRegister(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	decoders = initDecoderRegister()
-	defer func() { decoders = initDecoderRegister() }()
+	decoders = initStore()
+	defer func() { decoders = initStore() }()
 
 	if len(decoders.data.Clone()) != 3 {
 		t.Error("Unexpected number of registered factories:", len(decoders.data.Clone()))
@@ -52,7 +50,7 @@ func TestGet(t *testing.T) {
 	checkDecoder(t, JSON)
 	checkDecoder(t, "some")
 
-	decoders = &DecoderRegister{register.NewUntyped()}
+	decoders = &Store{register.NewUntyped()}
 	Register("some", NewJSONDecoder)
 
 	if len(decoders.data.Clone()) != 1 {
@@ -64,8 +62,8 @@ func TestGet(t *testing.T) {
 }
 
 func TestRegister_complete_ok(t *testing.T) {
-	decoders = initDecoderRegister()
-	defer func() { decoders = initDecoderRegister() }()
+	decoders = initStore()
+	defer func() { decoders = initStore() }()
 
 	expectedMsg := "a custom message to decode"
 	expectedResponse := map[string]interface{}{"a": 42}
@@ -101,8 +99,8 @@ func TestRegister_complete_ok(t *testing.T) {
 }
 
 func TestRegister_complete_ko(t *testing.T) {
-	decoders = initDecoderRegister()
-	defer func() { decoders = initDecoderRegister() }()
+	decoders = initStore()
+	defer func() { decoders = initStore() }()
 
 	expectedMsg := "a custom message to decode"
 	expectedErr := errors.New("expect me")

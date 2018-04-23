@@ -13,22 +13,13 @@ package encoding
 
 import "io"
 
-// A Decoder is a function that reads from the reader and decodes it
+// Decoder is a function that reads from the reader and decodes it
 // into an map of interfaces
 type Decoder func(io.Reader, *map[string]interface{}) error
 
-// A DecoderFactory is a function that returns CollectionDecoder or an EntityDecoder
+// DecoderFactory is a function that returns Decoder ready to deal with collections or with entities
+// depending on the (isCollection) boolean value,
 type DecoderFactory func(bool) func(io.Reader, *map[string]interface{}) error
-
-// Deprecated: Register is deprecated
-func Register(name string, dec func(bool) func(io.Reader, *map[string]interface{}) error) error {
-	return decoders.Register(name, dec)
-}
-
-// Deprecated: Get is deprecated
-func Get(name string) DecoderFactory {
-	return decoders.Get(name)
-}
 
 // NOOP is the key for the NoOp encoding
 const NOOP = "no-op"

@@ -1,52 +1,42 @@
 package encoding
 
-import (
-	"io"
+import "io"
 
-	"github.com/devopsfaith/krakend/register"
-)
+// Deprecated: Register is deprecated
+func Register(name string, dec func(bool) func(io.Reader, *map[string]interface{}) error) error {
+	return GetRegister().Set(name, dec)
+}
+
+// Deprecated: Get is deprecated
+func Get(name string) DecoderFactory {
+	return GetRegister().Get(name)
+}
+
+// Registerer defines the interface of the package registerer
+type Registerer interface {
+	Set(name string, dec func(bool) func(io.Reader, *map[string]interface{}) error) error
+	Get(name string) func(bool) func(io.Reader, *map[string]interface{}) error
+}
 
 // GetRegister returns the package register
-func GetRegister() *DecoderRegister {
+func GetRegister() Registerer {
 	return decoders
 }
 
-// DecoderRegister is the struct responsible of registering the decoder factories
-type DecoderRegister struct {
-	data register.Untyped
-}
-
-// Register implements the RegisterSetter interface
-func (r *DecoderRegister) Register(name string, dec func(bool) func(io.Reader, *map[string]interface{}) error) error {
-	r.data.Register(name, dec)
-	return nil
-}
-
-// Get implements the RegisterGetter interface
-func (r *DecoderRegister) Get(name string) func(bool) func(io.Reader, *map[string]interface{}) error {
-	for _, n := range []string{name, JSON} {
-		if v, ok := r.data.Get(n); ok {
-			if dec, ok := v.(func(bool) func(io.Reader, *map[string]interface{}) error); ok {
-				return dec
-			}
-		}
-	}
-	return NewJSONDecoder
+// UntypedRegisterer defines the interface of the internal registerer
+type UntypedRegisterer interface {
+	Set(name string, v interface{})
+	Get(name string) (interface{}, bool)
+	Clone() map[string]interface{}
 }
 
 var (
-	decoders        = initDecoderRegister()
 	defaultDecoders = map[string]func(bool) func(io.Reader, *map[string]interface{}) error{
 		JSON:   NewJSONDecoder,
 		STRING: NewStringDecoder,
 		NOOP:   noOpDecoderFactory,
 	}
+	decoders               = initStore()
+	fallbackDecoder        = JSON
+	fallbackDecoderFactory = NewJSONDecoder
 )
-
-func initDecoderRegister() *DecoderRegister {
-	r := &DecoderRegister{register.NewUntyped()}
-	for k, v := range defaultDecoders {
-		r.Register(k, v)
-	}
-	return r
-}
