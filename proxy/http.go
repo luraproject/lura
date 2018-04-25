@@ -35,7 +35,7 @@ func NewHTTPProxy(remote *config.Backend, clientFactory HTTPClientFactory, decod
 // NewHTTPProxyWithHTTPExecutor creates a http proxy with the injected configuration, HTTPRequestExecutor and Decoder
 func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, requestExecutor HTTPRequestExecutor, dec encoding.Decoder) Proxy {
 	if remote.Encoding == encoding.NOOP {
-		return NewHTTPProxyDetailed(remote, requestExecutor, DefaultHTTPStatusHandler, NoOpHTTPResponseParser)
+		return NewHTTPProxyDetailed(remote, requestExecutor, NoOpHTTPStatusHandler, NoOpHTTPResponseParser)
 	}
 
 	ef := NewEntityFormatter(remote.Target, remote.Whitelist, remote.Blacklist, remote.Group, remote.Mapping)

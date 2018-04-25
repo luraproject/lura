@@ -16,3 +16,8 @@ func DefaultHTTPStatusHandler(ctx context.Context, resp *http.Response) (*http.R
 
 	return resp, nil
 }
+
+// NoOpHTTPStatusHandler is a NO-OP implementation of HTTPStatusHandler
+func NoOpHTTPStatusHandler(_ context.Context, resp *http.Response) (*http.Response, error) {
+	return resp, nil
+}
