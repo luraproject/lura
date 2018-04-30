@@ -3,6 +3,7 @@ package proxy
 import (
 	"context"
 	"net/http"
+	"time"
 )
 
 // HTTPRequestExecutor defines the interface of the request executor for the HTTP transport protocol
@@ -21,4 +22,4 @@ type HTTPClientFactory func(ctx context.Context) *http.Client
 // NewHTTPClient just returns the http default client
 func NewHTTPClient(ctx context.Context) *http.Client { return defaultHTTPClient }
 
-var defaultHTTPClient = &http.Client{}
+var defaultHTTPClient = &http.Client{Timeout: 15 * time.Second}
