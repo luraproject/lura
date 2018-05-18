@@ -77,14 +77,7 @@ func (r httpRouter) Run(cfg config.ServiceConfig) {
 		r.cfg.Engine.Handle(r.cfg.DebugPattern, DebugHandler(r.cfg.Logger))
 	}
 
-	transport := http.DefaultTransport.(*http.Transport)
-	transport.DisableCompression = cfg.DisableCompression
-	transport.DisableKeepAlives = cfg.DisableKeepAlives
-	transport.MaxIdleConns = cfg.MaxIdleConns
-	transport.MaxIdleConnsPerHost = cfg.MaxIdleConnsPerHost
-	transport.IdleConnTimeout = cfg.IdleConnTimeout
-	transport.ResponseHeaderTimeout = cfg.ResponseHeaderTimeout
-	transport.ExpectContinueTimeout = cfg.ExpectContinueTimeout
+	router.InitHTTPDefaultTransport(cfg)
 
 	r.registerKrakendEndpoints(cfg.Endpoints)
 

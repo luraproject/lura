@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"sync"
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/core"
@@ -51,4 +52,20 @@ var (
 	UserAgentHeaderValue = []string{core.KrakendUserAgent}
 	// ErrInternalError is the error returned by the router when something went wrong
 	ErrInternalError = errors.New("internal server error")
+
+	onceTransportConfig sync.Once
 )
+
+// InitHTTPDefaultTransport ensures the default HTTP transport is configured just once per execution
+func InitHTTPDefaultTransport(cfg config.ServiceConfig) {
+	onceTransportConfig.Do(func() {
+		transport := http.DefaultTransport.(*http.Transport)
+		transport.DisableCompression = cfg.DisableCompression
+		transport.DisableKeepAlives = cfg.DisableKeepAlives
+		transport.MaxIdleConns = cfg.MaxIdleConns
+		transport.MaxIdleConnsPerHost = cfg.MaxIdleConnsPerHost
+		transport.IdleConnTimeout = cfg.IdleConnTimeout
+		transport.ResponseHeaderTimeout = cfg.ResponseHeaderTimeout
+		transport.ExpectContinueTimeout = cfg.ExpectContinueTimeout
+	})
+}
