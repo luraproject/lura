@@ -44,38 +44,56 @@ func (p parser) Parse(configFile string) (ServiceConfig, error) {
 }
 
 type parseableServiceConfig struct {
-	Endpoints           []*parseableEndpointConfig `json:"endpoints"`
-	Timeout             string                     `json:"timeout"`
-	CacheTTL            string                     `json:"cache_ttl"`
-	Host                []string                   `json:"host"`
-	Port                int                        `json:"port"`
-	Version             int                        `json:"version"`
-	ExtraConfig         *ExtraConfig               `json:"extra_config,omitempty"`
-	ReadTimeout         string                     `json:"read_timeout"`
-	WriteTimeout        string                     `json:"write_timeout"`
-	IdleTimeout         string                     `json:"idle_timeout"`
-	ReadHeaderTimeout   string                     `json:"read_header_timeout"`
-	MaxIdleConnsPerHost int                        `json:"max_idle_connections"`
-	OutputEncoding      string                     `json:"output_encoding"`
-	Debug               bool
-	Plugin              *Plugin
+	Endpoints             []*parseableEndpointConfig `json:"endpoints"`
+	Timeout               string                     `json:"timeout"`
+	CacheTTL              string                     `json:"cache_ttl"`
+	Host                  []string                   `json:"host"`
+	Port                  int                        `json:"port"`
+	Version               int                        `json:"version"`
+	ExtraConfig           *ExtraConfig               `json:"extra_config,omitempty"`
+	ReadTimeout           string                     `json:"read_timeout"`
+	WriteTimeout          string                     `json:"write_timeout"`
+	IdleTimeout           string                     `json:"idle_timeout"`
+	ReadHeaderTimeout     string                     `json:"read_header_timeout"`
+	DisableKeepAlives     bool                       `json:"disable_keep_alives"`
+	DisableCompression    bool                       `json:"disable_compression"`
+	MaxIdleConns          int                        `json:"max_idle_connections"`
+	MaxIdleConnsPerHost   int                        `json:"max_idle_connections_per_host"`
+	IdleConnTimeout       string                     `json:"idle_connection_timeout"`
+	ResponseHeaderTimeout string                     `json:"response_header_timeout"`
+	ExpectContinueTimeout string                     `json:"expect_continue_timeout"`
+	OutputEncoding        string                     `json:"output_encoding"`
+	DialerTimeout         string                     `json:"dialer_timeout"`
+	DialerFallbackDelay   string                     `json:"dialer_fallback_delay"`
+	DialerKeepAlive       string                     `json:"dialer_keep_alive"`
+	Debug                 bool
+	Plugin                *Plugin
 }
 
 func (p *parseableServiceConfig) normalize() ServiceConfig {
 	cfg := ServiceConfig{
-		Timeout:             parseDuration(p.Timeout),
-		CacheTTL:            parseDuration(p.CacheTTL),
-		Host:                p.Host,
-		Port:                p.Port,
-		Version:             p.Version,
-		Debug:               p.Debug,
-		ReadTimeout:         parseDuration(p.ReadTimeout),
-		WriteTimeout:        parseDuration(p.WriteTimeout),
-		IdleTimeout:         parseDuration(p.IdleTimeout),
-		ReadHeaderTimeout:   parseDuration(p.ReadHeaderTimeout),
-		OutputEncoding:      p.OutputEncoding,
-		MaxIdleConnsPerHost: p.MaxIdleConnsPerHost,
-		Plugin:              p.Plugin,
+		Timeout:               parseDuration(p.Timeout),
+		CacheTTL:              parseDuration(p.CacheTTL),
+		Host:                  p.Host,
+		Port:                  p.Port,
+		Version:               p.Version,
+		Debug:                 p.Debug,
+		ReadTimeout:           parseDuration(p.ReadTimeout),
+		WriteTimeout:          parseDuration(p.WriteTimeout),
+		IdleTimeout:           parseDuration(p.IdleTimeout),
+		ReadHeaderTimeout:     parseDuration(p.ReadHeaderTimeout),
+		DisableKeepAlives:     p.DisableKeepAlives,
+		DisableCompression:    p.DisableCompression,
+		MaxIdleConns:          p.MaxIdleConns,
+		MaxIdleConnsPerHost:   p.MaxIdleConnsPerHost,
+		IdleConnTimeout:       parseDuration(p.IdleConnTimeout),
+		ResponseHeaderTimeout: parseDuration(p.ResponseHeaderTimeout),
+		ExpectContinueTimeout: parseDuration(p.ExpectContinueTimeout),
+		DialerTimeout:         parseDuration(p.DialerTimeout),
+		DialerFallbackDelay:   parseDuration(p.DialerFallbackDelay),
+		DialerKeepAlive:       parseDuration(p.DialerKeepAlive),
+		OutputEncoding:        p.OutputEncoding,
+		Plugin:                p.Plugin,
 	}
 	if p.ExtraConfig != nil {
 		cfg.ExtraConfig = *p.ExtraConfig

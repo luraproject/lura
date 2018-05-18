@@ -69,7 +69,7 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 		r.cfg.Logger.Debug("Debug enabled")
 	}
 
-	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = cfg.MaxIdleConnsPerHost
+	router.InitHTTPDefaultTransport(cfg)
 
 	r.cfg.Engine.RedirectTrailingSlash = true
 	r.cfg.Engine.RedirectFixedPath = true
