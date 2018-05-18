@@ -69,7 +69,14 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 		r.cfg.Logger.Debug("Debug enabled")
 	}
 
-	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = cfg.MaxIdleConnsPerHost
+	transport := http.DefaultTransport.(*http.Transport)
+	transport.DisableCompression = cfg.DisableCompression
+	transport.DisableKeepAlives = cfg.DisableKeepAlives
+	transport.MaxIdleConns = cfg.MaxIdleConns
+	transport.MaxIdleConnsPerHost = cfg.MaxIdleConnsPerHost
+	transport.IdleConnTimeout = cfg.IdleConnTimeout
+	transport.ResponseHeaderTimeout = cfg.ResponseHeaderTimeout
+	transport.ExpectContinueTimeout = cfg.ExpectContinueTimeout
 
 	r.cfg.Engine.RedirectTrailingSlash = true
 	r.cfg.Engine.RedirectFixedPath = true

@@ -4,3 +4,4 @@ server.rsa.key
 *.json
 *.yml
 *.toml
+coverage.out
