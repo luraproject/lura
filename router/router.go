@@ -4,8 +4,10 @@ package router
 import (
 	"context"
 	"errors"
+	"net"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/core"
@@ -59,13 +61,22 @@ var (
 // InitHTTPDefaultTransport ensures the default HTTP transport is configured just once per execution
 func InitHTTPDefaultTransport(cfg config.ServiceConfig) {
 	onceTransportConfig.Do(func() {
-		transport := http.DefaultTransport.(*http.Transport)
-		transport.DisableCompression = cfg.DisableCompression
-		transport.DisableKeepAlives = cfg.DisableKeepAlives
-		transport.MaxIdleConns = cfg.MaxIdleConns
-		transport.MaxIdleConnsPerHost = cfg.MaxIdleConnsPerHost
-		transport.IdleConnTimeout = cfg.IdleConnTimeout
-		transport.ResponseHeaderTimeout = cfg.ResponseHeaderTimeout
-		transport.ExpectContinueTimeout = cfg.ExpectContinueTimeout
+		http.DefaultTransport = &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:       cfg.DialerTimeout,
+				KeepAlive:     cfg.DialerKeepAlive,
+				FallbackDelay: cfg.DialerFallbackDelay,
+				DualStack:     true,
+			}).DialContext,
+			DisableCompression:    cfg.DisableCompression,
+			DisableKeepAlives:     cfg.DisableKeepAlives,
+			MaxIdleConns:          cfg.MaxIdleConns,
+			MaxIdleConnsPerHost:   cfg.MaxIdleConnsPerHost,
+			IdleConnTimeout:       cfg.IdleConnTimeout,
+			ResponseHeaderTimeout: cfg.ResponseHeaderTimeout,
+			ExpectContinueTimeout: cfg.ExpectContinueTimeout,
+			TLSHandshakeTimeout:   10 * time.Second,
+		}
 	})
 }

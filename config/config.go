@@ -109,6 +109,28 @@ type ServiceConfig struct {
 	// waiting for the server to approve.
 	// This time does not include the time to send the request header.
 	ExpectContinueTimeout time.Duration `mapstructure:"expect_continue_timeout"`
+	// DialerTimeout is the maximum amount of time a dial will wait for
+	// a connect to complete. If Deadline is also set, it may fail
+	// earlier.
+	//
+	// The default is no timeout.
+	//
+	// When using TCP and dialing a host name with multiple IP
+	// addresses, the timeout may be divided between them.
+	//
+	// With or without a timeout, the operating system may impose
+	// its own earlier timeout. For instance, TCP timeouts are
+	// often around 3 minutes.
+	DialerTimeout time.Duration `mapstructure:"dialer_timeout"`
+	// DialerFallbackDelay specifies the length of time to wait before
+	// spawning a fallback connection, when DualStack is enabled.
+	// If zero, a default delay of 300ms is used.
+	DialerFallbackDelay time.Duration `mapstructure:"dialer_fallback_delay"`
+	// DialerKeepAlive specifies the keep-alive period for an active
+	// network connection.
+	// If zero, keep-alives are not enabled. Network protocols
+	// that do not support keep-alives ignore this field.
+	DialerKeepAlive time.Duration `mapstructure:"dialer_keep_alive"`
 
 	// DisableStrictREST flags if the REST enforcement is disabled
 	DisableStrictREST bool `mapstructure:"disable_rest"`

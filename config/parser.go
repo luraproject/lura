@@ -63,6 +63,9 @@ type parseableServiceConfig struct {
 	ResponseHeaderTimeout string                     `json:"response_header_timeout"`
 	ExpectContinueTimeout string                     `json:"expect_continue_timeout"`
 	OutputEncoding        string                     `json:"output_encoding"`
+	DialerTimeout         string                     `json:"dialer_timeout"`
+	DialerFallbackDelay   string                     `json:"dialer_fallback_delay"`
+	DialerKeepAlive       string                     `json:"dialer_keep_alive"`
 	Debug                 bool
 	Plugin                *Plugin
 }
@@ -86,6 +89,9 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 		IdleConnTimeout:       parseDuration(p.IdleConnTimeout),
 		ResponseHeaderTimeout: parseDuration(p.ResponseHeaderTimeout),
 		ExpectContinueTimeout: parseDuration(p.ExpectContinueTimeout),
+		DialerTimeout:         parseDuration(p.DialerTimeout),
+		DialerFallbackDelay:   parseDuration(p.DialerFallbackDelay),
+		DialerKeepAlive:       parseDuration(p.DialerKeepAlive),
 		OutputEncoding:        p.OutputEncoding,
 		Plugin:                p.Plugin,
 	}
