@@ -1,3 +1,5 @@
+// +build !race
+
 package gorilla
 
 import (
@@ -12,6 +14,7 @@ import (
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/logging"
 	"github.com/devopsfaith/krakend/proxy"
+	"github.com/devopsfaith/krakend/router"
 )
 
 func TestDefaultFactory_ok(t *testing.T) {
@@ -99,6 +102,9 @@ func TestDefaultFactory_ok(t *testing.T) {
 		content := string(body)
 		if resp.Header.Get("Cache-Control") != "" {
 			t.Error(endpoint.Endpoint, "Cache-Control error:", resp.Header.Get("Cache-Control"))
+		}
+		if resp.Header.Get(router.CompleteResponseHeaderName) != router.HeaderCompleteResponseValue {
+			t.Error(router.CompleteResponseHeaderName, "error:", resp.Header.Get(router.CompleteResponseHeaderName))
 		}
 		if resp.Header.Get("Content-Type") != "application/json" {
 			t.Error(endpoint.Endpoint, "Content-Type error:", resp.Header.Get("Content-Type"))
@@ -231,6 +237,9 @@ func checkResponseIs404(t *testing.T, req *http.Request) {
 	content := string(body)
 	if resp.Header.Get("Cache-Control") != "" {
 		t.Error("Cache-Control error:", resp.Header.Get("Cache-Control"))
+	}
+	if resp.Header.Get(router.CompleteResponseHeaderName) != router.HeaderIncompleteResponseValue {
+		t.Error(req.URL.String(), router.CompleteResponseHeaderName, "error:", resp.Header.Get(router.CompleteResponseHeaderName))
 	}
 	if resp.Header.Get("Content-Type") != "text/plain; charset=utf-8" {
 		t.Error("Content-Type error:", resp.Header.Get("Content-Type"))

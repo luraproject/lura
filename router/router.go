@@ -4,7 +4,10 @@ package router
 import (
 	"context"
 	"errors"
+	"net"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/core"
@@ -37,11 +40,43 @@ func DefaultToHTTPError(_ error) int {
 	return http.StatusInternalServerError
 }
 
+const (
+	HeaderCompleteResponseValue   = "true"
+	HeaderIncompleteResponseValue = "false"
+)
+
 var (
+	// CompleteResponseHeaderName is the header to flag incomplete responses to the client
+	CompleteResponseHeaderName = "X-KrakenD-Completed"
 	// HeadersToSend are the headers to pass from the router request to the proxy
 	HeadersToSend = []string{"Content-Type"}
 	// UserAgentHeaderValue is the value of the User-Agent header to add to the proxy request
 	UserAgentHeaderValue = []string{core.KrakendUserAgent}
 	// ErrInternalError is the error returned by the router when something went wrong
 	ErrInternalError = errors.New("internal server error")
+
+	onceTransportConfig sync.Once
 )
+
+// InitHTTPDefaultTransport ensures the default HTTP transport is configured just once per execution
+func InitHTTPDefaultTransport(cfg config.ServiceConfig) {
+	onceTransportConfig.Do(func() {
+		http.DefaultTransport = &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:       cfg.DialerTimeout,
+				KeepAlive:     cfg.DialerKeepAlive,
+				FallbackDelay: cfg.DialerFallbackDelay,
+				DualStack:     true,
+			}).DialContext,
+			DisableCompression:    cfg.DisableCompression,
+			DisableKeepAlives:     cfg.DisableKeepAlives,
+			MaxIdleConns:          cfg.MaxIdleConns,
+			MaxIdleConnsPerHost:   cfg.MaxIdleConnsPerHost,
+			IdleConnTimeout:       cfg.IdleConnTimeout,
+			ResponseHeaderTimeout: cfg.ResponseHeaderTimeout,
+			ExpectContinueTimeout: cfg.ExpectContinueTimeout,
+			TLSHandshakeTimeout:   10 * time.Second,
+		}
+	})
+}

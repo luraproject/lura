@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -72,18 +73,22 @@ func (d dummyReadCloser) Close() error {
 
 func TestWrapper(t *testing.T) {
 	expected := "supu"
-	closed := false
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	r := NewReadCloserWrapper(ctx, dummyRC{bytes.NewBufferString(expected), &closed})
+	readCloser := &dummyRC{
+		r:  bytes.NewBufferString(expected),
+		mu: &sync.Mutex{},
+	}
+
+	r := NewReadCloserWrapper(ctx, readCloser)
 	var out bytes.Buffer
 	tot, err := out.ReadFrom(r)
 	if err != nil {
 		t.Errorf("Total bits read: %d. Err: %s", tot, err.Error())
 		return
 	}
-	if closed {
+	if readCloser.IsClosed() {
 		t.Error("The subject shouldn't be closed yet")
 		return
 	}
@@ -98,7 +103,7 @@ func TestWrapper(t *testing.T) {
 
 	cancel()
 	<-time.After(100 * time.Millisecond)
-	if !closed {
+	if !readCloser.IsClosed() {
 		t.Error("The subject should be already closed")
 		return
 	}
@@ -106,17 +111,32 @@ func TestWrapper(t *testing.T) {
 
 type dummyRC struct {
 	r      io.Reader
-	closed *bool
+	closed bool
+	mu     *sync.Mutex
 }
 
-func (d dummyRC) Read(b []byte) (int, error) {
-	if *(d.closed) {
+func (d *dummyRC) Read(b []byte) (int, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	if d.closed {
 		return -1, fmt.Errorf("Reading from a closed source")
 	}
 	return d.r.Read(b)
 }
 
-func (d dummyRC) Close() error {
-	*(d.closed) = true
+func (d *dummyRC) Close() error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	d.closed = true
 	return nil
+}
+
+func (d *dummyRC) IsClosed() bool {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	res := d.closed
+	return res
 }

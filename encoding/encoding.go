@@ -18,26 +18,22 @@ import "io"
 type Decoder func(io.Reader, *map[string]interface{}) error
 
 // A DecoderFactory is a function that returns CollectionDecoder or an EntityDecoder
-type DecoderFactory func(bool) Decoder
+type DecoderFactory func(bool) func(io.Reader, *map[string]interface{}) error
 
-var decoders = map[string]DecoderFactory{
-	JSON:   NewJSONDecoder,
-	STRING: NewStringDecoder,
+// Deprecated: Register is deprecated
+func Register(name string, dec func(bool) func(io.Reader, *map[string]interface{}) error) error {
+	return decoders.Register(name, dec)
 }
 
-// Register registers the decoder factory with the given name
-func Register(name string, dec DecoderFactory) error {
-	decoders[name] = dec
-	return nil
-}
-
-// Get returns (from the register) the decoder factory by name. If there is no factory with the received name
-// it returns the JSON decoder factory
+// Deprecated: Get is deprecated
 func Get(name string) DecoderFactory {
-	for _, n := range []string{name, JSON} {
-		if dec, ok := decoders[n]; ok {
-			return dec
-		}
-	}
-	return NewJSONDecoder
+	return decoders.Get(name)
 }
+
+// NOOP is the key for the NoOp encoding
+const NOOP = "no-op"
+
+// NoOpDecoder implements the Decoder interface
+func NoOpDecoder(_ io.Reader, _ *map[string]interface{}) error { return nil }
+
+func noOpDecoderFactory(_ bool) func(io.Reader, *map[string]interface{}) error { return NoOpDecoder }

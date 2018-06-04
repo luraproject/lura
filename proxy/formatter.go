@@ -1,6 +1,10 @@
 package proxy
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/devopsfaith/krakend/config"
+)
 
 // EntityFormatter formats the response data
 type EntityFormatter interface {
@@ -22,22 +26,22 @@ type entityFormatter struct {
 	Mapping        map[string]string
 }
 
-// NewEntityFormatter creates an entity formatter with the received params
-func NewEntityFormatter(target string, whitelist, blacklist []string, group string, mappings map[string]string) EntityFormatter {
+// NewEntityFormatter creates an entity formatter with the received backend definition
+func NewEntityFormatter(remote *config.Backend) EntityFormatter {
 	var propertyFilter propertyFilter
-	if len(whitelist) > 0 {
-		propertyFilter = newWhitelistingFilter(whitelist)
+	if len(remote.Whitelist) > 0 {
+		propertyFilter = newWhitelistingFilter(remote.Whitelist)
 	} else {
-		propertyFilter = newBlacklistingFilter(blacklist)
+		propertyFilter = newBlacklistingFilter(remote.Blacklist)
 	}
-	sanitizedMappings := make(map[string]string, len(mappings))
-	for i, m := range mappings {
+	sanitizedMappings := make(map[string]string, len(remote.Mapping))
+	for i, m := range remote.Mapping {
 		v := strings.Split(m, ".")
 		sanitizedMappings[i] = v[0]
 	}
 	return entityFormatter{
-		Target:         target,
-		Prefix:         group,
+		Target:         remote.Target,
+		Prefix:         remote.Group,
 		PropertyFilter: propertyFilter,
 		Mapping:        sanitizedMappings,
 	}

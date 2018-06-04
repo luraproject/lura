@@ -48,7 +48,7 @@ type factory struct {
 
 // New implements the factory interface
 func (rf factory) New() router.Router {
-	return ginRouter{rf.cfg, context.Background()}
+	return rf.NewWithContext(context.Background())
 }
 
 // NewWithContext implements the factory interface
@@ -69,7 +69,7 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 		r.cfg.Logger.Debug("Debug enabled")
 	}
 
-	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = cfg.MaxIdleConnsPerHost
+	router.InitHTTPDefaultTransport(cfg)
 
 	r.cfg.Engine.RedirectTrailingSlash = true
 	r.cfg.Engine.RedirectFixedPath = true
@@ -82,6 +82,10 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 	}
 
 	r.registerKrakendEndpoints(cfg.Endpoints)
+
+	r.cfg.Engine.NoRoute(func(c *gin.Context) {
+		c.Header(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
+	})
 
 	s := &http.Server{
 		Addr:              fmt.Sprintf(":%d", cfg.Port),

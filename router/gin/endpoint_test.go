@@ -14,6 +14,7 @@ import (
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/proxy"
+	"github.com/devopsfaith/krakend/router"
 )
 
 func TestEndpointHandler_ok(t *testing.T) {
@@ -30,10 +31,13 @@ func TestEndpointHandler_ok(t *testing.T) {
 		return &proxy.Response{
 			IsComplete: true,
 			Data:       map[string]interface{}{"supu": "tupu"},
+			Metadata: proxy.Metadata{
+				Headers: map[string][]string{"a": {"a1", "a2"}},
+			},
 		}, nil
 	}
 	expectedBody := "{\"supu\":\"tupu\"}"
-	testEndpointHandler(t, 10, p, expectedBody, "public, max-age=21600", "application/json; charset=utf-8", http.StatusOK)
+	testEndpointHandler(t, 10, p, expectedBody, "public, max-age=21600", "application/json; charset=utf-8", http.StatusOK, true)
 }
 
 var ctxContent = map[string]interface{}{
@@ -50,14 +54,14 @@ func TestEndpointHandler_incomplete(t *testing.T) {
 		}, nil
 	}
 	expectedBody := "{\"foo\":\"bar\"}"
-	testEndpointHandler(t, 10, p, expectedBody, "", "application/json; charset=utf-8", http.StatusOK)
+	testEndpointHandler(t, 10, p, expectedBody, "", "application/json; charset=utf-8", http.StatusOK, false)
 }
 
 func TestEndpointHandler_ko(t *testing.T) {
 	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
 		return nil, fmt.Errorf("This is %s", "a dummy error")
 	}
-	testEndpointHandler(t, 10, p, "", "", "", http.StatusInternalServerError)
+	testEndpointHandler(t, 10, p, "", "", "", http.StatusInternalServerError, false)
 }
 
 func TestEndpointHandler_cancel(t *testing.T) {
@@ -65,15 +69,15 @@ func TestEndpointHandler_cancel(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 		return nil, nil
 	}
-	testEndpointHandler(t, 0, p, "", "", "", http.StatusInternalServerError)
+	testEndpointHandler(t, 0, p, "", "", "", http.StatusInternalServerError, false)
 }
 
 func TestEndpointHandler_noop(t *testing.T) {
-	testEndpointHandler(t, 10, proxy.NoopProxy, "{}", "", "application/json; charset=utf-8", http.StatusOK)
+	testEndpointHandler(t, 10, proxy.NoopProxy, "{}", "", "application/json; charset=utf-8", http.StatusOK, false)
 }
 
 func testEndpointHandler(t *testing.T, timeout time.Duration, p proxy.Proxy, expectedBody, expectedCache,
-	expectedContent string, expectedStatusCode int) {
+	expectedContent string, expectedStatusCode int, completed bool) {
 	body, resp, err := setup(timeout, p)
 	if err != nil {
 		t.Error("Reading the response:", err.Error())
@@ -82,6 +86,12 @@ func testEndpointHandler(t *testing.T, timeout time.Duration, p proxy.Proxy, exp
 	content := string(body)
 	if resp.Header.Get("Cache-Control") != expectedCache {
 		t.Error("Cache-Control error:", resp.Header.Get("Cache-Control"))
+	}
+	if completed && resp.Header.Get(router.CompleteResponseHeaderName) != router.HeaderCompleteResponseValue {
+		t.Error(router.CompleteResponseHeaderName, "error:", resp.Header.Get(router.CompleteResponseHeaderName))
+	}
+	if !completed && resp.Header.Get(router.CompleteResponseHeaderName) != router.HeaderIncompleteResponseValue {
+		t.Error(router.CompleteResponseHeaderName, "error:", resp.Header.Get(router.CompleteResponseHeaderName))
 	}
 	if resp.Header.Get("Content-Type") != expectedContent {
 		t.Error("Content-Type error:", resp.Header.Get("Content-Type"))

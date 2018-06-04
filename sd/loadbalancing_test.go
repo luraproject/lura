@@ -2,6 +2,7 @@ package sd
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"testing"
 
@@ -9,37 +10,40 @@ import (
 )
 
 func TestRoundRobinLB(t *testing.T) {
-	var (
-		endpoints  = []string{"a", "b", "c"}
-		n          = len(endpoints)
-		counts     = make(map[string]int, n)
-		iterations = 100000 * n
-		want       = iterations / n
-	)
+	for _, endpoints := range balancerTestsCases {
+		t.Run(fmt.Sprintf("%d hosts", len(endpoints)), func(t *testing.T) {
+			var (
+				n          = len(endpoints)
+				counts     = make(map[string]int, n)
+				iterations = 100000 * n
+				want       = iterations / n
+			)
 
-	for _, e := range endpoints {
-		counts[e] = 0
-	}
+			for _, e := range endpoints {
+				counts[e] = 0
+			}
 
-	subscriber := FixedSubscriber(endpoints)
-	balancer := NewRoundRobinLB(subscriber)
+			subscriber := FixedSubscriber(endpoints)
+			balancer := NewRoundRobinLB(subscriber)
 
-	for i := 0; i < iterations; i++ {
-		endpoint, err := balancer.Host()
-		if err != nil {
-			t.Fail()
-		}
-		expected := i % n
-		if v := endpoints[expected]; v != endpoint {
-			t.Errorf("%d: want %s, have %s", i, endpoints[expected], endpoint)
-		}
-		counts[endpoint]++
-	}
+			for i := 0; i < iterations; i++ {
+				endpoint, err := balancer.Host()
+				if err != nil {
+					t.Fail()
+				}
+				expected := i % n
+				if v := endpoints[expected]; v != endpoint {
+					t.Errorf("%d: want %s, have %s", i, endpoints[expected], endpoint)
+				}
+				counts[endpoint]++
+			}
 
-	for i, have := range counts {
-		if have != want {
-			t.Errorf("%s: want %d, have %d", i, want, have)
-		}
+			for i, have := range counts {
+				if have != want {
+					t.Errorf("%s: want %d, have %d", i, want, have)
+				}
+			}
+		})
 	}
 }
 
@@ -82,6 +86,23 @@ func TestRandomLB(t *testing.T) {
 		delta := int(math.Abs(float64(want - have)))
 		if delta > tolerance {
 			t.Errorf("%s: want %d, have %d, delta %d > %d tolerance", i, want, have, delta, tolerance)
+		}
+	}
+}
+
+func TestRandomLB_single(t *testing.T) {
+	endpoints := []string{"a"}
+	iterations := 1000000
+	subscriber := FixedSubscriber(endpoints)
+	balancer := NewRandomLB(subscriber, int64(12345))
+
+	for i := 0; i < iterations; i++ {
+		endpoint, err := balancer.Host()
+		if err != nil {
+			t.Fail()
+		}
+		if endpoint != endpoints[0] {
+			t.Errorf("unexpected host %s", endpoint)
 		}
 	}
 }

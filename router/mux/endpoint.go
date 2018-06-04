@@ -2,7 +2,6 @@ package mux
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -27,11 +26,11 @@ func CustomEndpointHandler(rb RequestBuilder) HandlerFactory {
 
 // CustomEndpointHandlerWithHTTPError returns a HandlerFactory with the received RequestBuilder
 func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPError) HandlerFactory {
-	return func(configuration *config.EndpointConfig, proxy proxy.Proxy) http.HandlerFunc {
+	return func(configuration *config.EndpointConfig, prxy proxy.Proxy) http.HandlerFunc {
 		endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
 		cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
 		isCacheEnabled := configuration.CacheTTL.Seconds() != 0
-		emptyResponse := []byte("{}")
+		render := getRender(configuration)
 
 		headersToSend := configuration.HeadersToPass
 		if len(headersToSend) == 0 {
@@ -41,14 +40,16 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 		return func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set(core.KrakendHeaderName, core.KrakendHeaderValue)
 			if r.Method != configuration.Method {
+				w.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 				http.Error(w, "", http.StatusMethodNotAllowed)
 				return
 			}
 
 			requestCtx, cancel := context.WithTimeout(context.Background(), endpointTimeout)
 
-			response, err := proxy(requestCtx, rb(r, configuration.QueryString, headersToSend))
+			response, err := prxy(requestCtx, rb(r, configuration.QueryString, headersToSend))
 			if err != nil {
+				w.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 				http.Error(w, err.Error(), errF(err))
 				cancel()
 				return
@@ -56,31 +57,31 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 
 			select {
 			case <-requestCtx.Done():
+				w.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 				http.Error(w, router.ErrInternalError.Error(), http.StatusInternalServerError)
 				cancel()
 				return
 			default:
 			}
 
-			if response == nil {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write(emptyResponse)
-				cancel()
-				return
+			if response != nil {
+				if response.IsComplete {
+					w.Header().Set(router.CompleteResponseHeaderName, router.HeaderCompleteResponseValue)
+					if isCacheEnabled {
+						w.Header().Set("Cache-Control", cacheControlHeaderValue)
+					}
+				} else {
+					w.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
+				}
+
+				for k, v := range response.Metadata.Headers {
+					w.Header().Set(k, v[0])
+				}
+			} else {
+				w.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 			}
 
-			js, err := json.Marshal(response.Data)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				cancel()
-				return
-			}
-
-			if isCacheEnabled && response.IsComplete {
-				w.Header().Set("Cache-Control", cacheControlHeaderValue)
-			}
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(js)
+			render(w, response)
 			cancel()
 		}
 	}

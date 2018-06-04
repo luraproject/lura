@@ -183,8 +183,22 @@ func TestNewMergeDataMiddleware_nullResponse(t *testing.T) {
 
 	mustEnd := time.After(time.Duration(2*timeout) * time.Millisecond)
 	out, err := mw(NoopProxy, NoopProxy)(context.Background(), &Request{})
-	if err != errNullResult {
-		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
+	if err == nil {
+		t.Errorf("The middleware did not propagate the expected error")
+	}
+	switch mergeErr := err.(type) {
+	case mergeError:
+		if len(mergeErr.errs) != 2 {
+			t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+		}
+		if mergeErr.errs[0] != mergeErr.errs[1] {
+			t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+		}
+		if mergeErr.errs[0] != errNullResult {
+			t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+		}
+	default:
+		t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
 	}
 	if out == nil {
 		t.Errorf("The proxy returned a null result\n")
@@ -216,8 +230,22 @@ func TestNewMergeDataMiddleware_timeout(t *testing.T) {
 		delayedProxy(t, time.Duration(5*timeout)*time.Millisecond, nil))
 	mustEnd := time.After(time.Duration(2*timeout) * time.Millisecond)
 	out, err := p(context.Background(), &Request{})
-	if err == nil || err.Error() != "context deadline exceeded" {
-		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
+	if err == nil {
+		t.Errorf("The middleware did not propagate the expected error")
+	}
+	switch mergeErr := err.(type) {
+	case mergeError:
+		if len(mergeErr.errs) != 2 {
+			t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+		}
+		if mergeErr.errs[0].Error() != mergeErr.errs[1].Error() {
+			t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+		}
+		if mergeErr.errs[0].Error() != "context deadline exceeded" {
+			t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+		}
+	default:
+		t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
 	}
 	if out == nil {
 		t.Errorf("The proxy returned a null result\n")
@@ -275,14 +303,14 @@ func TestNewMergeDataMiddleware_noBackends(t *testing.T) {
 }
 func TestRegisterResponseCombiner(t *testing.T) {
 	subject := "test combiner"
-	if len(responseCombiners) != 1 {
-		t.Error("unexpected initial size of the response combiner list:", responseCombiners)
+	if len(responseCombiners.data.Clone()) != 1 {
+		t.Error("unexpected initial size of the response combiner list:", responseCombiners.data.Clone())
 	}
 	RegisterResponseCombiner(subject, getResponseCombiner(config.ExtraConfig{}))
-	defer delete(responseCombiners, subject)
+	defer func() { responseCombiners = initResponseCombiners() }()
 
-	if len(responseCombiners) != 2 {
-		t.Error("unexpected size of the response combiner list:", responseCombiners)
+	if len(responseCombiners.data.Clone()) != 2 {
+		t.Error("unexpected size of the response combiner list:", responseCombiners.data.Clone())
 	}
 	timeout := 500
 	backend := config.Backend{}
@@ -318,5 +346,57 @@ func TestRegisterResponseCombiner(t *testing.T) {
 		if !out.IsComplete {
 			t.Errorf("We were expecting a completed response but we got an incompleted one!\n")
 		}
+	}
+}
+
+func Test_incrementalMergeAccumulator_invalidResponse(t *testing.T) {
+	acc := newIncrementalMergeAccumulator(3, combineData)
+	acc.Merge(nil, nil)
+	acc.Merge(nil, nil)
+	acc.Merge(nil, nil)
+	res, err := acc.Result()
+	if res == nil {
+		t.Error("response should not be nil")
+		return
+	}
+	if err == nil {
+		t.Error("expecting error")
+		return
+	}
+	switch mergeErr := err.(type) {
+	case mergeError:
+		if len(mergeErr.errs) != 3 {
+			t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+		}
+		if mergeErr.errs[0] != mergeErr.errs[1] {
+			t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+		}
+		if mergeErr.errs[0] != mergeErr.errs[2] {
+			t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+		}
+		if mergeErr.errs[0] != errNullResult {
+			t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+		}
+	default:
+		t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
+	}
+}
+
+func Test_incrementalMergeAccumulator_incompleteResponse(t *testing.T) {
+	acc := newIncrementalMergeAccumulator(3, combineData)
+	acc.Merge(&Response{Data: make(map[string]interface{}, 0), IsComplete: true}, nil)
+	acc.Merge(&Response{Data: make(map[string]interface{}, 0), IsComplete: false}, nil)
+	acc.Merge(&Response{Data: make(map[string]interface{}, 0), IsComplete: true}, nil)
+	res, err := acc.Result()
+	if res == nil {
+		t.Error("response should not be nil")
+		return
+	}
+	if err != nil {
+		t.Errorf("unexpected error: %s", err.Error())
+		return
+	}
+	if res.IsComplete {
+		t.Error("response should not be completed")
 	}
 }

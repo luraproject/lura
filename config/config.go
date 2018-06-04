@@ -43,15 +43,94 @@ type ServiceConfig struct {
 	Port int `mapstructure:"port"`
 	// version code of the configuration
 	Version int `mapstructure:"version"`
+	// OutputEncoding defines the default encoding strategy to use for the endpoint responses
+	OutputEncoding string `mapstructure:"output_encoding"`
 	// Extra configuration for customized behaviour
 	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
 
-	ReadTimeout       time.Duration `mapstructure:"read_timeout"`
-	WriteTimeout      time.Duration `mapstructure:"write_timeout"`
-	IdleTimeout       time.Duration `mapstructure:"idle_timeout"`
+	// ReadTimeout is the maximum duration for reading the entire
+	// request, including the body.
+	//
+	// Because ReadTimeout does not let Handlers make per-request
+	// decisions on each request body's acceptable deadline or
+	// upload rate, most users will prefer to use
+	// ReadHeaderTimeout. It is valid to use them both.
+	ReadTimeout time.Duration `mapstructure:"read_timeout"`
+	// WriteTimeout is the maximum duration before timing out
+	// writes of the response. It is reset whenever a new
+	// request's header is read. Like ReadTimeout, it does not
+	// let Handlers make decisions on a per-request basis.
+	WriteTimeout time.Duration `mapstructure:"write_timeout"`
+	// IdleTimeout is the maximum amount of time to wait for the
+	// next request when keep-alives are enabled. If IdleTimeout
+	// is zero, the value of ReadTimeout is used. If both are
+	// zero, ReadHeaderTimeout is used.
+	IdleTimeout time.Duration `mapstructure:"idle_timeout"`
+	// ReadHeaderTimeout is the amount of time allowed to read
+	// request headers. The connection's read deadline is reset
+	// after reading the headers and the Handler can decide what
+	// is considered too slow for the body.
 	ReadHeaderTimeout time.Duration `mapstructure:"read_header_timeout"`
 
-	MaxIdleConnsPerHost int `mapstructure:"max_idle_connections"`
+	// DisableKeepAlives, if true, prevents re-use of TCP connections
+	// between different HTTP requests.
+	DisableKeepAlives bool `mapstructure:"disable_keep_alives"`
+	// DisableCompression, if true, prevents the Transport from
+	// requesting compression with an "Accept-Encoding: gzip"
+	// request header when the Request contains no existing
+	// Accept-Encoding value. If the Transport requests gzip on
+	// its own and gets a gzipped response, it's transparently
+	// decoded in the Response.Body. However, if the user
+	// explicitly requested gzip it is not automatically
+	// uncompressed.
+	DisableCompression bool `mapstructure:"disable_compression"`
+	// MaxIdleConns controls the maximum number of idle (keep-alive)
+	// connections across all hosts. Zero means no limit.
+	MaxIdleConns int `mapstructure:"max_idle_connections"`
+	// MaxIdleConnsPerHost, if non-zero, controls the maximum idle
+	// (keep-alive) connections to keep per-host. If zero,
+	// DefaultMaxIdleConnsPerHost is used.
+	MaxIdleConnsPerHost int `mapstructure:"max_idle_connections_per_host"`
+	// IdleConnTimeout is the maximum amount of time an idle
+	// (keep-alive) connection will remain idle before closing
+	// itself.
+	// Zero means no limit.
+	IdleConnTimeout time.Duration `mapstructure:"idle_connection_timeout"`
+	// ResponseHeaderTimeout, if non-zero, specifies the amount of
+	// time to wait for a server's response headers after fully
+	// writing the request (including its body, if any). This
+	// time does not include the time to read the response body.
+	ResponseHeaderTimeout time.Duration `mapstructure:"response_header_timeout"`
+	// ExpectContinueTimeout, if non-zero, specifies the amount of
+	// time to wait for a server's first response headers after fully
+	// writing the request headers if the request has an
+	// "Expect: 100-continue" header. Zero means no timeout and
+	// causes the body to be sent immediately, without
+	// waiting for the server to approve.
+	// This time does not include the time to send the request header.
+	ExpectContinueTimeout time.Duration `mapstructure:"expect_continue_timeout"`
+	// DialerTimeout is the maximum amount of time a dial will wait for
+	// a connect to complete. If Deadline is also set, it may fail
+	// earlier.
+	//
+	// The default is no timeout.
+	//
+	// When using TCP and dialing a host name with multiple IP
+	// addresses, the timeout may be divided between them.
+	//
+	// With or without a timeout, the operating system may impose
+	// its own earlier timeout. For instance, TCP timeouts are
+	// often around 3 minutes.
+	DialerTimeout time.Duration `mapstructure:"dialer_timeout"`
+	// DialerFallbackDelay specifies the length of time to wait before
+	// spawning a fallback connection, when DualStack is enabled.
+	// If zero, a default delay of 300ms is used.
+	DialerFallbackDelay time.Duration `mapstructure:"dialer_fallback_delay"`
+	// DialerKeepAlive specifies the keep-alive period for an active
+	// network connection.
+	// If zero, keep-alives are not enabled. Network protocols
+	// that do not support keep-alives ignore this field.
+	DialerKeepAlive time.Duration `mapstructure:"dialer_keep_alive"`
 
 	// DisableStrictREST flags if the REST enforcement is disabled
 	DisableStrictREST bool `mapstructure:"disable_rest"`
@@ -85,6 +164,8 @@ type EndpointConfig struct {
 	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
 	// HeadersToPass defines the list of headers to pass to the backends
 	HeadersToPass []string `mapstructure:"headers_to_pass"`
+	// OutputEncoding defines the encoding strategy to use for the endpoint responses
+	OutputEncoding string `mapstructure:"output_encoding"`
 }
 
 // Backend defines how krakend should connect to the backend service (the API resource to consume)
@@ -151,10 +232,11 @@ const defaultNamespace = "github.com/devopsfaith/krakend/config"
 var ConfigGetters = map[string]ConfigGetter{defaultNamespace: DefaultConfigGetter}
 
 var (
-	simpleURLKeysPattern = regexp.MustCompile(`\{([a-zA-Z\-_0-9]+)\}`)
-	debugPattern         = "^[^/]|/__debug(/.*)?$"
-	errInvalidHost       = errors.New("invalid host")
-	defaultPort          = 8080
+	simpleURLKeysPattern   = regexp.MustCompile(`\{([a-zA-Z\-_0-9]+)\}`)
+	debugPattern           = "^[^/]|/__debug(/.*)?$"
+	errInvalidHost         = errors.New("invalid host")
+	errInvalidNoOpEncoding = errors.New("can not use NoOp encoding with more than one backends connected to the same endpoint")
+	defaultPort            = 8080
 )
 
 // Init initializes the configuration struct and its defined endpoints and backends.
@@ -193,6 +275,10 @@ func (s *ServiceConfig) Init() error {
 		e.Endpoint = s.uriParser.GetEndpointPath(e.Endpoint, inputParams)
 
 		s.initEndpointDefaults(i)
+
+		if e.OutputEncoding == encoding.NOOP && len(e.Backend) > 1 {
+			return errInvalidNoOpEncoding
+		}
 
 		for j, b := range e.Backend {
 
@@ -240,6 +326,13 @@ func (s *ServiceConfig) initEndpointDefaults(e int) {
 	}
 	if endpoint.ConcurrentCalls == 0 {
 		endpoint.ConcurrentCalls = 1
+	}
+	if endpoint.OutputEncoding == "" {
+		if s.OutputEncoding != "" {
+			endpoint.OutputEncoding = s.OutputEncoding
+		} else {
+			endpoint.OutputEncoding = encoding.JSON
+		}
 	}
 }
 

@@ -1,6 +1,10 @@
 package proxy
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/devopsfaith/krakend/config"
+)
 
 func TestEntityFormatterFunc(t *testing.T) {
 	expected := Response{Data: map[string]interface{}{"one": 1}, IsComplete: true}
@@ -39,7 +43,7 @@ func TestEntityFormatter_newWhitelistingFilter(t *testing.T) {
 		},
 		IsComplete: true,
 	}
-	f := NewEntityFormatter("", []string{"supu", "a.b", "a.c", "foo.unknown"}, []string{}, "", map[string]string{})
+	f := NewEntityFormatter(&config.Backend{Whitelist: []string{"supu", "a.b", "a.c", "foo.unknown"}})
 	result := f.Format(sample)
 	if v, ok := result.Data["supu"]; !ok || v != expected.Data["supu"] {
 		t.Errorf("The formatter returned an unexpected result for the field supu: %v\n", result)
@@ -86,7 +90,7 @@ func TestEntityFormatter_newWhitelistingDeepFields(t *testing.T) {
 	expectedSupuChild := 1
 
 	var ok bool
-	f := NewEntityFormatter("", []string{"tupu.muku.supu", "tupu.muku.gutu.kugu"}, []string{}, "", map[string]string{})
+	f := NewEntityFormatter(&config.Backend{Whitelist: []string{"tupu.muku.supu", "tupu.muku.gutu.kugu"}})
 	res := f.Format(sample)
 	var tupu map[string]interface{}
 	var muku map[string]interface{}
@@ -140,7 +144,7 @@ func TestEntityFormatter_newblacklistingFilter(t *testing.T) {
 		},
 		IsComplete: true,
 	}
-	f := NewEntityFormatter("", []string{}, []string{"supu", "a.b", "a.c", "foo.unknown"}, "", map[string]string{})
+	f := NewEntityFormatter(&config.Backend{Blacklist: []string{"supu", "a.b", "a.c", "foo.unknown"}})
 	result := f.Format(sample)
 	if v, ok := result.Data["tupu"]; !ok || v != expected.Data["tupu"] {
 		t.Errorf("The formatter returned an unexpected result for the field tupu: %v\n", result)
@@ -184,7 +188,7 @@ func TestEntityFormatter_grouping(t *testing.T) {
 		},
 		IsComplete: true,
 	}
-	f := NewEntityFormatter("", []string{}, []string{}, preffix, map[string]string{})
+	f := NewEntityFormatter(&config.Backend{Group: preffix})
 	result := f.Format(sample)
 	if len(result.Data) != 1 || result.IsComplete != expected.IsComplete {
 		t.Fail()
@@ -226,7 +230,7 @@ func TestEntityFormatter_mapping(t *testing.T) {
 		},
 		IsComplete: true,
 	}
-	f := NewEntityFormatter("", []string{}, []string{}, "", mapping)
+	f := NewEntityFormatter(&config.Backend{Mapping: mapping})
 	result := f.Format(sample)
 
 	if len(result.Data) != 4 || result.IsComplete != expected.IsComplete {
@@ -272,7 +276,7 @@ func TestEntityFormatter_targeting(t *testing.T) {
 		Data:       sub,
 		IsComplete: true,
 	}
-	f := NewEntityFormatter(target, []string{}, []string{}, "", map[string]string{})
+	f := NewEntityFormatter(&config.Backend{Target: target})
 	result := f.Format(sample)
 	if len(result.Data) != 3 || result.IsComplete != expected.IsComplete {
 		t.Errorf("The formatter returned an unexpected result size: %v\n", result)
@@ -294,7 +298,7 @@ func TestEntityFormatter_targetingUnknownFields(t *testing.T) {
 		},
 		IsComplete: true,
 	}
-	f := NewEntityFormatter(target, []string{}, []string{}, "", map[string]string{})
+	f := NewEntityFormatter(&config.Backend{Target: target})
 	result := f.Format(sample)
 	if len(result.Data) != 0 || result.IsComplete != sample.IsComplete {
 		t.Errorf("The formatter returned an unexpected result size: %v\n", result)
@@ -312,7 +316,7 @@ func TestEntityFormatter_targetingNonObjects(t *testing.T) {
 		},
 		IsComplete: true,
 	}
-	f := NewEntityFormatter(target, []string{}, []string{}, "", map[string]string{})
+	f := NewEntityFormatter(&config.Backend{Target: target})
 	result := f.Format(sample)
 	if len(result.Data) != 0 || result.IsComplete != sample.IsComplete {
 		t.Errorf("The formatter returned an unexpected result size: %v\n", result)
@@ -341,7 +345,12 @@ func TestEntityFormatter_altogether(t *testing.T) {
 		},
 		IsComplete: true,
 	}
-	f := NewEntityFormatter("a", []string{"d"}, []string{}, "group", map[string]string{"d": "D"})
+	f := NewEntityFormatter(&config.Backend{
+		Target:    "a",
+		Whitelist: []string{"d"},
+		Group:     "group",
+		Mapping:   map[string]string{"d": "D"},
+	})
 	result := f.Format(sample)
 	v, ok := result.Data["group"]
 	if !ok {

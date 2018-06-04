@@ -4,6 +4,7 @@ package logging
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -43,6 +44,8 @@ var (
 		"ERROR":    LEVEL_ERROR,
 		"CRITICAL": LEVEL_CRITICAL,
 	}
+	// NoOp is the NO-OP logger
+	NoOp, _ = NewLogger("CRITICAL", ioutil.Discard, "")
 )
 
 // NewLogger creates and returns a Logger object

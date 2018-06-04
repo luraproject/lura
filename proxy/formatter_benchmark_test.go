@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"testing"
+
+	"github.com/devopsfaith/krakend/config"
 )
 
 func BenchmarkEntityFormatter_whitelistingFilter(b *testing.B) {
@@ -30,7 +32,7 @@ func BenchmarkEntityFormatter_whitelistingFilter(b *testing.B) {
 				IsComplete: true,
 			}
 			b.Run(fmt.Sprintf("with %d elements with %d extra fields", len(testCase), extraFields), func(b *testing.B) {
-				f := NewEntityFormatter("", testCase, []string{}, "", map[string]string{})
+				f := NewEntityFormatter(&config.Backend{Whitelist: testCase})
 				b.ResetTimer()
 				b.ReportAllocs()
 				for i := 0; i < b.N; i++ {
@@ -88,7 +90,7 @@ func BenchmarkEntityFormatter_deepWhitelistingFilter(b *testing.B) {
 				Data:       data,
 				IsComplete: true,
 			}
-			f := NewEntityFormatter("", whitelist, []string{}, "", map[string]string{})
+			f := NewEntityFormatter(&config.Backend{Whitelist: whitelist})
 			b.Run(fmt.Sprintf("numTargets:%d,depth:%d,extraFields:%d,extraSiblings:%d", nTargets, depth, extraFields, extraSiblings), func(b *testing.B) {
 				b.ReportAllocs()
 				b.ResetTimer()
@@ -124,7 +126,7 @@ func BenchmarkEntityFormatter_blacklistingFilter(b *testing.B) {
 				IsComplete: true,
 			}
 			b.Run(fmt.Sprintf("with %d elements with %d extra fields", len(testCase), extraFields), func(b *testing.B) {
-				f := NewEntityFormatter("", []string{}, testCase, "", map[string]string{})
+				f := NewEntityFormatter(&config.Backend{Blacklist: testCase})
 				b.ResetTimer()
 				b.ReportAllocs()
 				for i := 0; i < b.N; i++ {
@@ -147,7 +149,7 @@ func BenchmarkEntityFormatter_grouping(b *testing.B) {
 			IsComplete: true,
 		}
 		b.Run(fmt.Sprintf("with %d elements", extraFields), func(b *testing.B) {
-			f := NewEntityFormatter("", []string{}, []string{}, preffix, map[string]string{})
+			f := NewEntityFormatter(&config.Backend{Group: preffix})
 			b.ResetTimer()
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
@@ -176,7 +178,7 @@ func BenchmarkEntityFormatter_mapping(b *testing.B) {
 				IsComplete: true,
 			}
 			b.Run(fmt.Sprintf("with %d elements with %d extra fields", len(testCase), extraFields), func(b *testing.B) {
-				f := NewEntityFormatter("", []string{}, []string{}, "", testCase)
+				f := NewEntityFormatter(&config.Backend{Mapping: testCase})
 				b.ResetTimer()
 				b.ReportAllocs()
 				for i := 0; i < b.N; i++ {

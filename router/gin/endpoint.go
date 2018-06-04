@@ -24,45 +24,59 @@ func EndpointHandler(configuration *config.EndpointConfig, proxy proxy.Proxy) gi
 }
 
 // CustomErrorEndpointHandler implements the HandleFactory interface
-func CustomErrorEndpointHandler(configuration *config.EndpointConfig, proxy proxy.Proxy, errF router.ToHTTPError) gin.HandlerFunc {
+func CustomErrorEndpointHandler(configuration *config.EndpointConfig, prxy proxy.Proxy, errF router.ToHTTPError) gin.HandlerFunc {
 	endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
 	cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
 	isCacheEnabled := configuration.CacheTTL.Seconds() != 0
-	emptyResponse := gin.H{}
 	requestGenerator := NewRequest(configuration.HeadersToPass)
+	render := getRender(configuration)
 
 	return func(c *gin.Context) {
 		requestCtx, cancel := context.WithTimeout(c, endpointTimeout)
 
 		c.Header(core.KrakendHeaderName, core.KrakendHeaderValue)
 
-		response, err := proxy(requestCtx, requestGenerator(c, configuration.QueryString))
+		response, err := prxy(requestCtx, requestGenerator(c, configuration.QueryString))
 		if err != nil {
-			c.AbortWithError(errF(err), err)
+			abort(c, errF(err))
 			cancel()
 			return
 		}
 
 		select {
 		case <-requestCtx.Done():
-			c.AbortWithError(http.StatusInternalServerError, router.ErrInternalError)
+			abort(c, http.StatusInternalServerError)
 			cancel()
 			return
 		default:
 		}
 
-		if isCacheEnabled && response != nil && response.IsComplete {
-			c.Header("Cache-Control", cacheControlHeaderValue)
+		if response != nil {
+			if response.IsComplete {
+				c.Header(router.CompleteResponseHeaderName, router.HeaderCompleteResponseValue)
+				if isCacheEnabled {
+					c.Header("Cache-Control", cacheControlHeaderValue)
+				}
+			} else {
+				c.Header(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
+			}
+
+			for k, v := range response.Metadata.Headers {
+				c.Header(k, v[0])
+			}
+		} else {
+			c.Header(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 		}
 
-		if response == nil {
-			c.JSON(http.StatusOK, emptyResponse)
-			cancel()
-			return
-		}
-		c.JSON(http.StatusOK, response.Data)
+		render(c, response)
 		cancel()
 	}
+}
+
+func abort(c *gin.Context, code int) {
+	c.Status(code)
+	c.Header(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
+	c.Abort()
 }
 
 // NewRequest gets a request from the current gin context and the received query string

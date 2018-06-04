@@ -19,8 +19,7 @@ deps:
 	@echo ""
 
 test:
-	go fmt ./...
-	go test -v -cover ./...
+	go test -cover -race ./...
 
 benchmark:
 	@echo "Proxy middleware stack"

@@ -1,21 +1,51 @@
 package sd
 
-import "github.com/devopsfaith/krakend/config"
+import (
+	"github.com/devopsfaith/krakend/config"
+	"github.com/devopsfaith/krakend/register"
+)
 
-// RegisterSubscriberFactory registers the received subscriber factory for later usage
+// Deprecated: RegisterSubscriberFactory. Use the GetRegister function
 func RegisterSubscriberFactory(name string, sf SubscriberFactory) error {
-	subscriberFactories[name] = sf
+	return subscriberFactories.Register(name, sf)
+}
+
+// Deprecated: GetSubscriber. Use the GetRegister function
+func GetSubscriber(cfg *config.Backend) Subscriber {
+	return subscriberFactories.Get(cfg.SD)(cfg)
+}
+
+// GetRegister returns the package register
+func GetRegister() *Register {
+	return subscriberFactories
+}
+
+// Register is a SD register
+type Register struct {
+	data register.Untyped
+}
+
+func initRegister() *Register {
+	return &Register{register.NewUntyped()}
+}
+
+// Register implements the RegisterSetter interface
+func (r *Register) Register(name string, sf SubscriberFactory) error {
+	r.data.Register(name, sf)
 	return nil
 }
 
-// GetSubscriber gets the subscriber factory by name or a fixed subscriber factory if
-// the name is not registered
-func GetSubscriber(cfg *config.Backend) Subscriber {
-	sf, ok := subscriberFactories[cfg.SD]
+// Get implements the RegisterGetter interface
+func (r *Register) Get(name string) SubscriberFactory {
+	tmp, ok := r.data.Get(name)
 	if !ok {
-		return FixedSubscriberFactory(cfg)
+		return FixedSubscriberFactory
 	}
-	return sf(cfg)
+	sf, ok := tmp.(SubscriberFactory)
+	if !ok {
+		return FixedSubscriberFactory
+	}
+	return sf
 }
 
-var subscriberFactories = map[string]SubscriberFactory{}
+var subscriberFactories = initRegister()
