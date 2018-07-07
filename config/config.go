@@ -31,6 +31,8 @@ var RoutingPattern = ColonRouterPatternBuilder
 
 // ServiceConfig defines the krakend service
 type ServiceConfig struct {
+	// name of the service
+	Name string
 	// set of endpoint definitions
 	Endpoints []*EndpointConfig `mapstructure:"endpoints"`
 	// defafult timeout
