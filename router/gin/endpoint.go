@@ -28,7 +28,7 @@ func CustomErrorEndpointHandler(configuration *config.EndpointConfig, prxy proxy
 	endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
 	cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
 	isCacheEnabled := configuration.CacheTTL.Seconds() != 0
-	requestGenerator := NewRequest(configuration.HeadersToPass)
+	requestGenerator := NewRequest(configuration)
 	render := getRender(configuration)
 
 	return func(c *gin.Context) {
@@ -80,7 +80,8 @@ func abort(c *gin.Context, code int) {
 }
 
 // NewRequest gets a request from the current gin context and the received query string
-func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Request {
+func NewRequest(configuration *config.EndpointConfig) func(*gin.Context, []string) *proxy.Request {
+	var headersToSend = configuration.HeadersToPass
 	if len(headersToSend) == 0 {
 		headersToSend = router.HeadersToSend
 	}
@@ -101,10 +102,15 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 			}
 		}
 
-		query := make(map[string][]string, len(queryString))
-		for i := range queryString {
-			if v := c.Request.URL.Query().Get(queryString[i]); v != "" {
-				query[queryString[i]] = []string{v}
+		var query map[string][]string
+		if configuration.Method == "ANY" {
+			query = c.Request.URL.Query()
+		} else {
+			query = make(map[string][]string, len(queryString))
+			for i := range queryString {
+				if v := c.Request.URL.Query().Get(queryString[i]); v != "" {
+					query[queryString[i]] = []string{v}
+				}
 			}
 		}
 
