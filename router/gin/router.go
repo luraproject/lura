@@ -132,6 +132,8 @@ func (r ginRouter) registerKrakendEndpoint(method, path string, handler gin.Hand
 		return
 	}
 	switch method {
+	case "ANY":
+		r.cfg.Engine.GET(path, handler)
 	case "GET":
 		r.cfg.Engine.GET(path, handler)
 	case "POST":
