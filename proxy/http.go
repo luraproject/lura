@@ -86,8 +86,19 @@ func NewRequestBuilderMiddleware(remote *config.Backend) Middleware {
 		}
 		return func(ctx context.Context, request *Request) (*Response, error) {
 			r := request.Clone()
-			r.GeneratePath(remote.URLPattern)
-			r.Method = remote.Method
+
+			if remote.URLPattern == "/*path" {
+				r.Path = r.Params["Path"]
+			} else {
+				r.GeneratePath(remote.URLPattern)
+			}
+
+			if remote.Method == "ANY" {
+				r.Method = request.Method
+			} else {
+				r.Method = remote.Method
+			}
+
 			return next[0](ctx, &r)
 		}
 	}
