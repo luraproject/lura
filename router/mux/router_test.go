@@ -141,6 +141,7 @@ func TestDefaultFactory_ko(t *testing.T) {
 		HandlerFactory: EndpointHandler,
 		ProxyFactory:   noopProxyFactory(map[string]interface{}{"supu": "tupu"}),
 		Logger:         logger,
+		RunServer:      router.RunServer,
 	}).NewWithContext(ctx)
 
 	serviceCfg := config.ServiceConfig{

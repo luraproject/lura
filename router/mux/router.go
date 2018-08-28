@@ -85,7 +85,7 @@ func (r httpRouter) Run(cfg config.ServiceConfig) {
 
 	r.registerKrakendEndpoints(cfg.Endpoints)
 
-	if err := router.RunServer(r.ctx, cfg, r.handler()); err != nil {
+	if err := r.RunServer(r.ctx, cfg, r.handler()); err != nil {
 		r.cfg.Logger.Error(err.Error())
 	}
 
