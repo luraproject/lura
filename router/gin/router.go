@@ -13,6 +13,7 @@ import (
 	"github.com/devopsfaith/krakend/router"
 )
 
+// RunServerFunc is a func that will run the http Server with the given params.
 type RunServerFunc func(context.Context, config.ServiceConfig, http.Handler) error
 
 // Config is the struct that collects the parts the router should be builded from
