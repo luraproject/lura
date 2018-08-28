@@ -3,6 +3,7 @@ package gin
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 
@@ -12,6 +13,8 @@ import (
 	"github.com/devopsfaith/krakend/router"
 )
 
+type RunServerFunc func(context.Context, config.ServiceConfig, http.Handler) error
+
 // Config is the struct that collects the parts the router should be builded from
 type Config struct {
 	Engine         *gin.Engine
@@ -19,6 +22,7 @@ type Config struct {
 	HandlerFactory HandlerFactory
 	ProxyFactory   proxy.Factory
 	Logger         logging.Logger
+	Runserver      RunServerFunc
 }
 
 // DefaultFactory returns a gin router factory with the injected proxy factory and logger.
@@ -31,6 +35,7 @@ func DefaultFactory(proxyFactory proxy.Factory, logger logging.Logger) router.Fa
 			HandlerFactory: EndpointHandler,
 			ProxyFactory:   proxyFactory,
 			Logger:         logger,
+			Runserver:      router.RunServer,
 		},
 	)
 }
@@ -51,12 +56,13 @@ func (rf factory) New() router.Router {
 
 // NewWithContext implements the factory interface
 func (rf factory) NewWithContext(ctx context.Context) router.Router {
-	return ginRouter{rf.cfg, ctx}
+	return ginRouter{rf.cfg, ctx, rf.cfg.Runserver}
 }
 
 type ginRouter struct {
-	cfg Config
-	ctx context.Context
+	cfg       Config
+	ctx       context.Context
+	RunServer RunServerFunc
 }
 
 // Run implements the router interface
@@ -85,7 +91,7 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 		c.Header(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 	})
 
-	if err := router.RunServer(r.ctx, cfg, r.cfg.Engine); err != nil {
+	if err := r.RunServer(r.ctx, cfg, r.cfg.Engine); err != nil {
 		r.cfg.Logger.Error(err.Error())
 	}
 
