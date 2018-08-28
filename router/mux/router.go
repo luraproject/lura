@@ -61,7 +61,7 @@ type factory struct {
 
 // New implements the factory interface
 func (rf factory) New() router.Router {
-	return httpRouter{rf.cfg, context.Background(), rf.cfg.RunServer}
+	return rf.NewWithContext(context.Background())
 }
 
 // NewWithContext implements the factory interface

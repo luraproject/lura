@@ -100,7 +100,6 @@ func RunServer(ctx context.Context, cfg config.ServiceConfig, handler http.Handl
 
 	select {
 	case err := <-done:
-		close(done)
 		return err
 	case <-ctx.Done():
 		return s.Shutdown(context.Background())
