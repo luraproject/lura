@@ -3,7 +3,6 @@ package mux
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/devopsfaith/krakend/config"
@@ -81,23 +80,10 @@ func (r httpRouter) Run(cfg config.ServiceConfig) {
 
 	r.registerKrakendEndpoints(cfg.Endpoints)
 
-	server := http.Server{
-		Addr:              fmt.Sprintf(":%d", cfg.Port),
-		Handler:           r.handler(),
-		ReadTimeout:       cfg.ReadTimeout,
-		WriteTimeout:      cfg.WriteTimeout,
-		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
-		IdleTimeout:       cfg.IdleTimeout,
-	}
-
-	go func() {
-		r.cfg.Logger.Critical(server.ListenAndServe())
-	}()
-
-	<-r.ctx.Done()
-	if err := server.Shutdown(context.Background()); err != nil {
+	if err := router.RunServer(r.ctx, cfg, r.handler()); err != nil {
 		r.cfg.Logger.Error(err.Error())
 	}
+
 	r.cfg.Logger.Info("Router execution ended")
 }
 

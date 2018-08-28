@@ -3,8 +3,6 @@ package gin
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 
@@ -87,23 +85,10 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 		c.Header(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 	})
 
-	s := &http.Server{
-		Addr:              fmt.Sprintf(":%d", cfg.Port),
-		Handler:           r.cfg.Engine,
-		ReadTimeout:       cfg.ReadTimeout,
-		WriteTimeout:      cfg.WriteTimeout,
-		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
-		IdleTimeout:       cfg.IdleTimeout,
-	}
-
-	go func() {
-		r.cfg.Logger.Critical(s.ListenAndServe())
-	}()
-
-	<-r.ctx.Done()
-	if err := s.Shutdown(context.Background()); err != nil {
+	if err := router.RunServer(r.ctx, cfg, r.cfg.Engine); err != nil {
 		r.cfg.Logger.Error(err.Error())
 	}
+
 	r.cfg.Logger.Info("Router execution ended")
 }
 
