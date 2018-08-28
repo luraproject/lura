@@ -14,6 +14,8 @@ import (
 // DefaultDebugPattern is the default pattern used to define the debug endpoint
 const DefaultDebugPattern = "/__debug/"
 
+type RunServerFunc func(context.Context, config.ServiceConfig, http.Handler) error
+
 // Config is the struct that collects the parts the router should be builded from
 type Config struct {
 	Engine         Engine
@@ -22,6 +24,7 @@ type Config struct {
 	ProxyFactory   proxy.Factory
 	Logger         logging.Logger
 	DebugPattern   string
+	RunServer      RunServerFunc
 }
 
 // HandlerMiddleware is the interface for the decorators over the http.Handler
@@ -39,6 +42,7 @@ func DefaultFactory(pf proxy.Factory, logger logging.Logger) router.Factory {
 			ProxyFactory:   pf,
 			Logger:         logger,
 			DebugPattern:   DefaultDebugPattern,
+			RunServer:      router.RunServer,
 		},
 	}
 }
@@ -57,17 +61,18 @@ type factory struct {
 
 // New implements the factory interface
 func (rf factory) New() router.Router {
-	return httpRouter{rf.cfg, context.Background()}
+	return httpRouter{rf.cfg, context.Background(), rf.cfg.RunServer}
 }
 
 // NewWithContext implements the factory interface
 func (rf factory) NewWithContext(ctx context.Context) router.Router {
-	return httpRouter{rf.cfg, ctx}
+	return httpRouter{rf.cfg, ctx, rf.cfg.RunServer}
 }
 
 type httpRouter struct {
-	cfg Config
-	ctx context.Context
+	cfg       Config
+	ctx       context.Context
+	RunServer func(context.Context, config.ServiceConfig, http.Handler) error
 }
 
 // Run implements the router interface
