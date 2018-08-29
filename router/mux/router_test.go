@@ -5,9 +5,11 @@ package mux
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"testing"
 	"time"
 
@@ -225,6 +227,42 @@ func TestDefaultFactory_proxyFactoryCrash(t *testing.T) {
 		req, _ := http.NewRequest(subject[0], fmt.Sprintf("http://127.0.0.1:8064/%s", subject[1]), nil)
 		req.Header.Set("Content-Type", "application/json")
 		checkResponseIs404(t, req)
+	}
+}
+
+func TestRunServer_ko(t *testing.T) {
+	buff := new(bytes.Buffer)
+	logger, err := logging.NewLogger("DEBUG", buff, "")
+	if err != nil {
+		t.Error("building the logger:", err.Error())
+		return
+	}
+
+	errorMsg := "runServer error"
+	runServerFunc := func(_ context.Context, _ config.ServiceConfig, _ http.Handler) error {
+		return errors.New(errorMsg)
+	}
+
+	pf := noopProxyFactory(map[string]interface{}{"supu": "tupu"})
+	r := NewFactory(
+		Config{
+			Engine:         DefaultEngine(),
+			Middlewares:    []HandlerMiddleware{},
+			HandlerFactory: EndpointHandler,
+			ProxyFactory:   pf,
+			Logger:         logger,
+			DebugPattern:   DefaultDebugPattern,
+			RunServer:      runServerFunc,
+		},
+	).New()
+
+	serviceCfg := config.ServiceConfig{}
+
+	go func() { r.Run(serviceCfg) }()
+	time.Sleep(5 * time.Millisecond)
+	re := regexp.MustCompile(errorMsg)
+	if !re.MatchString(string(buff.Bytes())) {
+		t.Errorf("the logger doesn't contain the expected msg: %s", buff.Bytes())
 	}
 }
 
