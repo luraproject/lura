@@ -73,7 +73,7 @@ func (rf factory) NewWithContext(ctx context.Context) router.Router {
 type httpRouter struct {
 	cfg       Config
 	ctx       context.Context
-	RunServer func(context.Context, config.ServiceConfig, http.Handler) error
+	RunServer RunServerFunc
 }
 
 // Run implements the router interface
