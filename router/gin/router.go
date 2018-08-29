@@ -23,7 +23,7 @@ type Config struct {
 	HandlerFactory HandlerFactory
 	ProxyFactory   proxy.Factory
 	Logger         logging.Logger
-	Runserver      RunServerFunc
+	RunServer      RunServerFunc
 }
 
 // DefaultFactory returns a gin router factory with the injected proxy factory and logger.
@@ -36,7 +36,7 @@ func DefaultFactory(proxyFactory proxy.Factory, logger logging.Logger) router.Fa
 			HandlerFactory: EndpointHandler,
 			ProxyFactory:   proxyFactory,
 			Logger:         logger,
-			Runserver:      router.RunServer,
+			RunServer:      router.RunServer,
 		},
 	)
 }
@@ -57,7 +57,7 @@ func (rf factory) New() router.Router {
 
 // NewWithContext implements the factory interface
 func (rf factory) NewWithContext(ctx context.Context) router.Router {
-	return ginRouter{rf.cfg, ctx, rf.cfg.Runserver}
+	return ginRouter{rf.cfg, ctx, rf.cfg.RunServer}
 }
 
 type ginRouter struct {
