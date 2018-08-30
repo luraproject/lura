@@ -26,6 +26,7 @@ func DefaultConfig(pf proxy.Factory, logger logging.Logger) mux.Config {
 		ProxyFactory:   pf,
 		Logger:         logger,
 		DebugPattern:   "/__debug/{params}",
+		RunServer:      router.RunServer,
 	}
 }
 

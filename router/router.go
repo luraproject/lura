@@ -4,6 +4,7 @@ package router
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"sync"
@@ -79,4 +80,29 @@ func InitHTTPDefaultTransport(cfg config.ServiceConfig) {
 			TLSHandshakeTimeout:   10 * time.Second,
 		}
 	})
+}
+
+// RunServer runs a http.Server with the given handler and configuration
+func RunServer(ctx context.Context, cfg config.ServiceConfig, handler http.Handler) error {
+	done := make(chan error)
+	s := &http.Server{
+		Addr:              fmt.Sprintf(":%d", cfg.Port),
+		Handler:           handler,
+		ReadTimeout:       cfg.ReadTimeout,
+		WriteTimeout:      cfg.WriteTimeout,
+		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
+		IdleTimeout:       cfg.IdleTimeout,
+	}
+
+	go func() {
+		done <- s.ListenAndServe()
+	}()
+
+	select {
+	case err := <-done:
+		return err
+	case <-ctx.Done():
+		return s.Shutdown(context.Background())
+	}
+
 }
