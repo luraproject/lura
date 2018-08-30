@@ -250,9 +250,7 @@ func TestRunServer_ko(t *testing.T) {
 	).New()
 
 	serviceCfg := config.ServiceConfig{}
-
-	go func() { r.Run(serviceCfg) }()
-	time.Sleep(5 * time.Millisecond)
+	r.Run(serviceCfg)
 	re := regexp.MustCompile(errorMsg)
 	if !re.MatchString(string(buff.Bytes())) {
 		t.Errorf("the logger doesn't contain the expected msg: %s", buff.Bytes())
