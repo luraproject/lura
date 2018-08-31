@@ -3,6 +3,7 @@ package mux
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -47,7 +48,31 @@ func TestEndpointHandler_ko(t *testing.T) {
 	time.Sleep(5 * time.Millisecond)
 }
 
+func TestEndpointHandler_incompleteAndErrored(t *testing.T) {
+	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
+		return &proxy.Response{
+			IsComplete: false,
+			Data:       map[string]interface{}{"foo": "bar"},
+		}, errors.New("This is a dummy error")
+	}
+	expectedBody := "{\"foo\":\"bar\"}"
+	testEndpointHandler(t, 10, p, "GET", expectedBody, "", "application/json", http.StatusOK, false)
+	time.Sleep(5 * time.Millisecond)
+}
+
 func TestEndpointHandler_cancel(t *testing.T) {
+	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
+		time.Sleep(100 * time.Millisecond)
+		return &proxy.Response{
+			IsComplete: false,
+			Data:       map[string]interface{}{"foo": "bar"},
+		}, nil
+	}
+	testEndpointHandler(t, 0, p, "GET", "{\"foo\":\"bar\"}", "", "application/json", http.StatusOK, false)
+	time.Sleep(5 * time.Millisecond)
+}
+
+func TestEndpointHandler_cancelEmpty(t *testing.T) {
 	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
 		time.Sleep(100 * time.Millisecond)
 		return nil, nil
