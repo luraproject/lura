@@ -48,23 +48,16 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 			requestCtx, cancel := context.WithTimeout(context.Background(), endpointTimeout)
 
 			response, err := prxy(requestCtx, rb(r, configuration.QueryString, headersToSend))
-			if err != nil {
-				w.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
-				http.Error(w, err.Error(), errF(err))
-				cancel()
-				return
-			}
 
 			select {
 			case <-requestCtx.Done():
-				w.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
-				http.Error(w, router.ErrInternalError.Error(), http.StatusInternalServerError)
-				cancel()
-				return
+				if err == nil {
+					err = router.ErrInternalError
+				}
 			default:
 			}
 
-			if response != nil {
+			if response != nil && len(response.Data) > 0 {
 				if response.IsComplete {
 					w.Header().Set(router.CompleteResponseHeaderName, router.HeaderCompleteResponseValue)
 					if isCacheEnabled {
@@ -78,6 +71,12 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 					w.Header().Set(k, v[0])
 				}
 			} else {
+				if err != nil {
+					w.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
+					http.Error(w, err.Error(), errF(err))
+					cancel()
+					return
+				}
 				w.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 			}
 

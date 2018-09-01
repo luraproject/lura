@@ -3,7 +3,7 @@ package gin
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -59,17 +59,40 @@ func TestEndpointHandler_incomplete(t *testing.T) {
 
 func TestEndpointHandler_ko(t *testing.T) {
 	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
-		return nil, fmt.Errorf("This is %s", "a dummy error")
+		return nil, errors.New("This is a dummy error")
 	}
 	testEndpointHandler(t, 10, p, "", "", "", http.StatusInternalServerError, false)
 }
 
-func TestEndpointHandler_cancel(t *testing.T) {
+func TestEndpointHandler_incompleteAndErrored(t *testing.T) {
+	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
+		return &proxy.Response{
+			IsComplete: false,
+			Data:       map[string]interface{}{"foo": "bar"},
+		}, errors.New("This is a dummy error")
+	}
+	expectedBody := "{\"foo\":\"bar\"}"
+	testEndpointHandler(t, 10, p, expectedBody, "", "application/json; charset=utf-8", http.StatusOK, false)
+}
+
+func TestEndpointHandler_cancelEmpty(t *testing.T) {
 	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
 		time.Sleep(100 * time.Millisecond)
 		return nil, nil
 	}
 	testEndpointHandler(t, 0, p, "", "", "", http.StatusInternalServerError, false)
+}
+
+func TestEndpointHandler_cancel(t *testing.T) {
+	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
+		time.Sleep(100 * time.Millisecond)
+		return &proxy.Response{
+			IsComplete: false,
+			Data:       map[string]interface{}{"foo": "bar"},
+		}, nil
+	}
+	expectedBody := "{\"foo\":\"bar\"}"
+	testEndpointHandler(t, 0, p, expectedBody, "", "application/json; charset=utf-8", http.StatusOK, false)
 }
 
 func TestEndpointHandler_noop(t *testing.T) {

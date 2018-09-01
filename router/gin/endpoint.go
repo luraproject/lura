@@ -3,7 +3,6 @@ package gin
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
@@ -37,21 +36,16 @@ func CustomErrorEndpointHandler(configuration *config.EndpointConfig, prxy proxy
 		c.Header(core.KrakendHeaderName, core.KrakendHeaderValue)
 
 		response, err := prxy(requestCtx, requestGenerator(c, configuration.QueryString))
-		if err != nil {
-			abort(c, errF(err))
-			cancel()
-			return
-		}
 
 		select {
 		case <-requestCtx.Done():
-			abort(c, http.StatusInternalServerError)
-			cancel()
-			return
+			if err == nil {
+				err = router.ErrInternalError
+			}
 		default:
 		}
 
-		if response != nil {
+		if response != nil && len(response.Data) > 0 {
 			if response.IsComplete {
 				c.Header(router.CompleteResponseHeaderName, router.HeaderCompleteResponseValue)
 				if isCacheEnabled {
@@ -65,6 +59,11 @@ func CustomErrorEndpointHandler(configuration *config.EndpointConfig, prxy proxy
 				c.Header(k, v[0])
 			}
 		} else {
+			if err != nil {
+				abort(c, errF(err))
+				cancel()
+				return
+			}
 			c.Header(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 		}
 
