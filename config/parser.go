@@ -68,7 +68,8 @@ type parseableServiceConfig struct {
 	DialerFallbackDelay   string                     `json:"dialer_fallback_delay"`
 	DialerKeepAlive       string                     `json:"dialer_keep_alive"`
 	Debug                 bool
-	Plugin                *Plugin
+	Plugin                *Plugin `json:"plugin,omitempty"`
+	TLS                   *TLS    `json:"tls,omitempty"`
 }
 
 func (p *parseableServiceConfig) normalize() ServiceConfig {
@@ -96,6 +97,7 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 		DialerKeepAlive:       parseDuration(p.DialerKeepAlive),
 		OutputEncoding:        p.OutputEncoding,
 		Plugin:                p.Plugin,
+		TLS:                   p.TLS,
 	}
 	if p.ExtraConfig != nil {
 		cfg.ExtraConfig = *p.ExtraConfig
@@ -161,9 +163,9 @@ type parseableBackend struct {
 
 func (p *parseableBackend) normalize() *Backend {
 	b := Backend{
-		Group:  p.Group,
-		Method: p.Method,
-		Host:   p.Host,
+		Group:                    p.Group,
+		Method:                   p.Method,
+		Host:                     p.Host,
 		HostSanitizationDisabled: p.HostSanitizationDisabled,
 		URLPattern:               p.URLPattern,
 		Blacklist:                p.Blacklist,
