@@ -130,25 +130,29 @@ func parseTLSVersion(key string) uint16 {
 }
 
 func parseCurveIDs(cfg *config.TLS) []tls.CurveID {
-	if l := len(cfg.CurvePreferences); l > 0 {
-		curves := make([]tls.CurveID, len(cfg.CurvePreferences))
-		for i := range curves {
-			curves[i] = tls.CurveID(cfg.CurvePreferences[i])
-		}
-		return curves
+	l := len(cfg.CurvePreferences)
+	if l == 0 {
+		return defaultCurves
 	}
-	return defaultCurves
+
+	curves := make([]tls.CurveID, len(cfg.CurvePreferences))
+	for i := range curves {
+		curves[i] = tls.CurveID(cfg.CurvePreferences[i])
+	}
+	return curves
 }
 
 func parseCipherSuites(cfg *config.TLS) []uint16 {
-	if l := len(cfg.CipherSuites); l > 0 {
-		cs := make([]uint16, l)
-		for i := range cs {
-			cs[i] = uint16(cfg.CipherSuites[i])
-		}
-		return cs
+	l := len(cfg.CipherSuites)
+	if l == 0 {
+		return defaultCipherSuites
 	}
-	return defaultCipherSuites
+
+	cs := make([]uint16, l)
+	for i := range cs {
+		cs[i] = uint16(cfg.CipherSuites[i])
+	}
+	return cs
 }
 
 var (
