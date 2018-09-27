@@ -16,8 +16,8 @@ import (
 	"github.com/devopsfaith/krakend/config"
 )
 
-func TestTestRunServer_TLS(t *testing.T) {
-	test_keyAreAvailable(t)
+func TestRunServer_TLS(t *testing.T) {
+	testKeysAreAvailable(t)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -212,7 +212,7 @@ func dummyHandler(rw http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(rw, "Hello, %q", html.EscapeString(req.URL.Path))
 }
 
-func test_keyAreAvailable(t *testing.T) {
+func testKeysAreAvailable(t *testing.T) {
 	files, err := ioutil.ReadDir(".")
 	if err != nil {
 		log.Fatal(err)
