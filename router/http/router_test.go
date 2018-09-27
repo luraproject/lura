@@ -10,6 +10,7 @@ import (
 	"html"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"testing"
 
@@ -22,12 +23,14 @@ func TestRunServer_TLS(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	port := 9999 + rand.Intn(1000)
+
 	done := make(chan error)
 	go func() {
 		done <- RunServer(
 			ctx,
 			config.ServiceConfig{
-				Port: 9999,
+				Port: port,
 				TLS: &config.TLS{
 					PublicKey:  "cert.pem",
 					PrivateKey: "key.pem",
@@ -43,7 +46,7 @@ func TestRunServer_TLS(t *testing.T) {
 		return
 	}
 
-	resp, err := client.Get("https://localhost:9999")
+	resp, err := client.Get(fmt.Sprintf("https://localhost:%d", port))
 	if err != nil {
 		t.Error(err)
 		return
@@ -63,16 +66,18 @@ func TestRunServer_plain(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	port := 9999 + rand.Intn(1000)
+
 	done := make(chan error)
 	go func() {
 		done <- RunServer(
 			ctx,
-			config.ServiceConfig{Port: 9999},
+			config.ServiceConfig{Port: port},
 			http.HandlerFunc(dummyHandler),
 		)
 	}()
 
-	resp, err := http.Get("http://localhost:9999")
+	resp, err := http.Get(fmt.Sprintf("http://localhost:%d", port))
 	if err != nil {
 		t.Error(err)
 		return
@@ -93,10 +98,14 @@ func TestRunServer_disabledTLS(t *testing.T) {
 	defer cancel()
 
 	done := make(chan error)
+
+	port := 9999 + rand.Intn(1000)
+
 	go func() {
 		done <- RunServer(
 			ctx,
-			config.ServiceConfig{Port: 9999,
+			config.ServiceConfig{
+				Port: port,
 				TLS: &config.TLS{
 					IsDisabled: true,
 				}},
@@ -104,7 +113,7 @@ func TestRunServer_disabledTLS(t *testing.T) {
 		)
 	}()
 
-	resp, err := http.Get("http://localhost:9999")
+	resp, err := http.Get(fmt.Sprintf("http://localhost:%d", port))
 	if err != nil {
 		t.Error(err)
 		return
