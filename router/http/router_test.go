@@ -28,7 +28,7 @@ func TestRunServer_TLS(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	port := 9999 + rand.Intn(1000)
+	port := newPort()
 
 	done := make(chan error)
 	go func() {
@@ -51,6 +51,8 @@ func TestRunServer_TLS(t *testing.T) {
 		return
 	}
 
+	<-time.After(100 * time.Millisecond)
+
 	resp, err := client.Get(fmt.Sprintf("https://localhost:%d", port))
 	if err != nil {
 		t.Error(err)
@@ -71,7 +73,7 @@ func TestRunServer_plain(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	port := 9999 + rand.Intn(1000)
+	port := newPort()
 
 	done := make(chan error)
 	go func() {
@@ -81,6 +83,8 @@ func TestRunServer_plain(t *testing.T) {
 			http.HandlerFunc(dummyHandler),
 		)
 	}()
+
+	<-time.After(100 * time.Millisecond)
 
 	resp, err := http.Get(fmt.Sprintf("http://localhost:%d", port))
 	if err != nil {
@@ -104,7 +108,7 @@ func TestRunServer_disabledTLS(t *testing.T) {
 
 	done := make(chan error)
 
-	port := 9999 + rand.Intn(1000)
+	port := newPort()
 
 	go func() {
 		done <- RunServer(
@@ -117,6 +121,8 @@ func TestRunServer_disabledTLS(t *testing.T) {
 			http.HandlerFunc(dummyHandler),
 		)
 	}()
+
+	<-time.After(100 * time.Millisecond)
 
 	resp, err := http.Get(fmt.Sprintf("http://localhost:%d", port))
 	if err != nil {
@@ -271,4 +277,9 @@ func httpsClient(cert string) (*http.Client, error) {
 		RootCAs: roots,
 	}
 	return &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConf}}, nil
+}
+
+// newPort returns random port numbers to avoid port collisions during the tests
+func newPort() int {
+	return 16666 + rand.Intn(40000)
 }
