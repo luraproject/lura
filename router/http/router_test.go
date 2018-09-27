@@ -51,6 +51,8 @@ func TestRunServer_TLS(t *testing.T) {
 		return
 	}
 
+	<-time.After(100 * time.Millisecond)
+
 	resp, err := client.Get(fmt.Sprintf("https://localhost:%d", port))
 	if err != nil {
 		t.Error(err)
@@ -81,6 +83,8 @@ func TestRunServer_plain(t *testing.T) {
 			http.HandlerFunc(dummyHandler),
 		)
 	}()
+
+	<-time.After(100 * time.Millisecond)
 
 	resp, err := http.Get(fmt.Sprintf("http://localhost:%d", port))
 	if err != nil {
@@ -117,6 +121,8 @@ func TestRunServer_disabledTLS(t *testing.T) {
 			http.HandlerFunc(dummyHandler),
 		)
 	}()
+
+	<-time.After(100 * time.Millisecond)
 
 	resp, err := http.Get(fmt.Sprintf("http://localhost:%d", port))
 	if err != nil {
