@@ -28,7 +28,7 @@ func NewRegister() *Register {
 	}
 }
 
-// Register registers the received plugin in the propper internal registers
+// Register registers the received plugin in the proper internal registers
 func (r *Register) Register(p Plugin) error {
 	x, err := p.Lookup(REGISTRABLE_VAR)
 	if err != nil {

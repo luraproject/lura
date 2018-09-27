@@ -61,7 +61,7 @@ func TestNewRegister_responseCombiner_fallbackIfErrored(t *testing.T) {
 func TestNewRegister_responseCombiner_fallbackIfUnknown(t *testing.T) {
 	r := NewRegister()
 
-	rc, ok := r.GetResponseCombiner("unkown")
+	rc, ok := r.GetResponseCombiner("unknown")
 	if ok {
 		t.Error("the response combiner should not be found")
 		return
