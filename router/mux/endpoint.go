@@ -114,9 +114,10 @@ func NewRequestBuilder(paramExtractor ParamExtractor) RequestBuilder {
 		}
 
 		query := make(map[string][]string, len(queryString))
+		queryValues := r.URL.Query()
 		for i := range queryString {
-			if v := r.URL.Query().Get(queryString[i]); v != "" {
-				query[queryString[i]] = []string{v}
+			if v, ok := queryValues[queryString[i]]; ok && len(v) > 0 {
+				query[queryString[i]] = v
 			}
 		}
 

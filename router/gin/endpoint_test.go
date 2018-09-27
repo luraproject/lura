@@ -3,6 +3,7 @@ package gin
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -18,7 +19,7 @@ import (
 )
 
 func TestEndpointHandler_ok(t *testing.T) {
-	p := func(ctx context.Context, _ *proxy.Request) (*proxy.Response, error) {
+	p := func(ctx context.Context, req *proxy.Request) (*proxy.Response, error) {
 		if v, ok := ctx.Value("bool").(bool); !ok || !v {
 			t.Errorf("unexpected bool context value: %v", v)
 		}
@@ -27,6 +28,10 @@ func TestEndpointHandler_ok(t *testing.T) {
 		}
 		if v, ok := ctx.Value("string").(string); !ok || v != "supu" {
 			t.Errorf("unexpected string context value: %v", v)
+		}
+		data, _ := json.Marshal(req.Query)
+		if string(data) != `{"b":["1"],"c[]":["x","y"],"d":["1","2"]}` {
+			t.Errorf("unexpected querystring: %s", data)
 		}
 		return &proxy.Response{
 			IsComplete: true,
@@ -134,12 +139,12 @@ func setup(timeout time.Duration, p proxy.Proxy) (string, *http.Response, error)
 	endpoint := &config.EndpointConfig{
 		Timeout:     timeout,
 		CacheTTL:    6 * time.Hour,
-		QueryString: []string{"b"},
+		QueryString: []string{"b", "c[]", "d"},
 	}
 
 	server := startGinServer(EndpointHandler(endpoint, p))
 
-	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", ioutil.NopCloser(&bytes.Buffer{}))
+	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1&c[]=x&c[]=y&d=1&d=2", ioutil.NopCloser(&bytes.Buffer{}))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()

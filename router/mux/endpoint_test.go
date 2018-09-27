@@ -3,6 +3,7 @@ package mux
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -17,7 +18,11 @@ import (
 )
 
 func TestEndpointHandler_ok(t *testing.T) {
-	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
+	p := func(_ context.Context, req *proxy.Request) (*proxy.Response, error) {
+		data, _ := json.Marshal(req.Query)
+		if string(data) != `{"b":["1"],"c[]":["x","y"],"d":["1","2"]}` {
+			t.Errorf("unexpected querystring: %s", data)
+		}
 		return &proxy.Response{
 			IsComplete: true,
 			Data:       map[string]interface{}{"supu": "tupu"},
@@ -97,12 +102,12 @@ func testEndpointHandler(t *testing.T, timeout time.Duration, p proxy.Proxy, met
 		Method:      "GET",
 		Timeout:     timeout,
 		CacheTTL:    6 * time.Hour,
-		QueryString: []string{"b"},
+		QueryString: []string{"b", "c[]", "d"},
 	}
 
 	server := startMuxServer(EndpointHandler(endpoint, p))
 
-	req, _ := http.NewRequest(method, "http://127.0.0.1:8081/_mux_endpoint?b=1", ioutil.NopCloser(&bytes.Buffer{}))
+	req, _ := http.NewRequest(method, "http://127.0.0.1:8081/_mux_endpoint?b=1&c[]=x&c[]=y&d=1&d=2", ioutil.NopCloser(&bytes.Buffer{}))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()

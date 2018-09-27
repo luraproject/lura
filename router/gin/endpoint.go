@@ -101,9 +101,10 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 		}
 
 		query := make(map[string][]string, len(queryString))
+		queryValues := c.Request.URL.Query()
 		for i := range queryString {
-			if v := c.Request.URL.Query().Get(queryString[i]); v != "" {
-				query[queryString[i]] = []string{v}
+			if v, ok := queryValues[queryString[i]]; ok && len(v) > 0 {
+				query[queryString[i]] = v
 			}
 		}
 
