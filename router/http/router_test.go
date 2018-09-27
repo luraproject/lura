@@ -13,9 +13,14 @@ import (
 	"math/rand"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/devopsfaith/krakend/config"
 )
+
+func init() {
+	rand.Seed(time.Now().Unix())
+}
 
 func TestRunServer_TLS(t *testing.T) {
 	testKeysAreAvailable(t)
