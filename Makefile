@@ -19,6 +19,7 @@ deps:
 	@echo ""
 
 test:
+	go generate ./...
 	go test -cover -race ./...
 
 benchmark:

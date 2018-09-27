@@ -140,6 +140,10 @@ type ServiceConfig struct {
 	// Plugin defines the configuration for the plugin loader
 	Plugin *Plugin `mapstructure:"plugin"`
 
+	// TLS defines the configuration params for enabling TLS (HTTPS & HTTP/2) at
+	// the router layer
+	TLS *TLS `mapstructure:"tls"`
+
 	// run krakend in debug mode
 	Debug     bool
 	uriParser URIParser
@@ -215,6 +219,18 @@ type Backend struct {
 type Plugin struct {
 	Folder  string `mapstructure:"folder"`
 	Pattern string `mapstructure:"pattern"`
+}
+
+// TLS defines the configuration params for enabling TLS (HTTPS & HTTP/2) at the router layer
+type TLS struct {
+	IsDisabled               bool     `mapstructure:"disabled"`
+	PublicKey                string   `mapstructure:"public_key"`
+	PrivateKey               string   `mapstructure:"private_key"`
+	MinVersion               string   `mapstructure:"min_version"`
+	MaxVersion               string   `mapstructure:"max_version"`
+	CurvePreferences         []uint16 `mapstructure:"curve_preferences"`
+	PreferServerCipherSuites bool     `mapstructure:"prefer_server_cipher_suites"`
+	CipherSuites             []uint16 `mapstructure:"cipher_suites"`
 }
 
 // ExtraConfig is a type to store extra configurations for customized behaviours
