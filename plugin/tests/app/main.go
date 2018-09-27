@@ -50,7 +50,7 @@ func checkExternal(register *plugin.Register) {
 	}
 	f, ok := v.(func(int) int)
 	if !ok {
-		fmt.Println("unexpected registerd component into namespace1", v)
+		fmt.Println("unexpected registered component into namespace1", v)
 		return
 	}
 	fmt.Println("f(2) =", f(2))

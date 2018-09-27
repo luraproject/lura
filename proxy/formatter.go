@@ -122,7 +122,7 @@ func newWhitelistingFilter(whitelist []string) propertyFilter {
 }
 
 func buildDictPath(accumulator map[string]interface{}, fields []string) map[string]interface{} {
-	var ok bool = true
+	ok := true
 	var c map[string]interface{}
 	var fIdx int
 	fEnd := len(fields)

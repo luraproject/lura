@@ -5,11 +5,13 @@ import (
 	"github.com/devopsfaith/krakend/register"
 )
 
+// RegisterSubscriberFactory registers the received factory
 // Deprecated: RegisterSubscriberFactory. Use the GetRegister function
 func RegisterSubscriberFactory(name string, sf SubscriberFactory) error {
 	return subscriberFactories.Register(name, sf)
 }
 
+// GetSubscriber returns a subscriber from package register
 // Deprecated: GetSubscriber. Use the GetRegister function
 func GetSubscriber(cfg *config.Backend) Subscriber {
 	return subscriberFactories.Get(cfg.SD)(cfg)

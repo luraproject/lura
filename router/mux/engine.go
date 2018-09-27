@@ -14,7 +14,7 @@ type Engine interface {
 	Handle(pattern string, handler http.Handler)
 }
 
-// DefaultEngine returns a new engine using a sligthly customized http.ServeMux router
+// DefaultEngine returns a new engine using a slightly customized http.ServeMux router
 func DefaultEngine() *engine {
 	return &engine{http.NewServeMux()}
 }
