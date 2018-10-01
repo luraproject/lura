@@ -101,7 +101,7 @@ func TestEndpointHandler_cancel(t *testing.T) {
 }
 
 func TestEndpointHandler_noop(t *testing.T) {
-	testEndpointHandler(t, 10, proxy.NoopProxy, "{}", "", "application/json; charset=utf-8", http.StatusOK, false)
+	testEndpointHandler(t, time.Minute, proxy.NoopProxy, "{}", "", "application/json; charset=utf-8", http.StatusOK, false)
 }
 
 func testEndpointHandler(t *testing.T, timeout time.Duration, p proxy.Proxy, expectedBody, expectedCache,
