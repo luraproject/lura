@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -24,14 +23,13 @@ func EndpointHandler(configuration *config.EndpointConfig, proxy proxy.Proxy) gi
 
 // CustomErrorEndpointHandler implements the HandleFactory interface
 func CustomErrorEndpointHandler(configuration *config.EndpointConfig, prxy proxy.Proxy, errF router.ToHTTPError) gin.HandlerFunc {
-	endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
 	cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
 	isCacheEnabled := configuration.CacheTTL.Seconds() != 0
 	requestGenerator := NewRequest(configuration.HeadersToPass)
 	render := getRender(configuration)
 
 	return func(c *gin.Context) {
-		requestCtx, cancel := context.WithTimeout(c, endpointTimeout)
+		requestCtx, cancel := context.WithTimeout(c, configuration.Timeout)
 
 		c.Header(core.KrakendHeaderName, core.KrakendHeaderValue)
 

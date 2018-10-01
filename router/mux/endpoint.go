@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/core"
@@ -27,7 +26,6 @@ func CustomEndpointHandler(rb RequestBuilder) HandlerFactory {
 // CustomEndpointHandlerWithHTTPError returns a HandlerFactory with the received RequestBuilder
 func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPError) HandlerFactory {
 	return func(configuration *config.EndpointConfig, prxy proxy.Proxy) http.HandlerFunc {
-		endpointTimeout := time.Duration(configuration.Timeout) * time.Millisecond
 		cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
 		isCacheEnabled := configuration.CacheTTL.Seconds() != 0
 		render := getRender(configuration)
@@ -45,7 +43,7 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 				return
 			}
 
-			requestCtx, cancel := context.WithTimeout(context.Background(), endpointTimeout)
+			requestCtx, cancel := context.WithTimeout(context.Background(), configuration.Timeout)
 
 			response, err := prxy(requestCtx, rb(r, configuration.QueryString, headersToSend))
 

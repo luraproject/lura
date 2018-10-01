@@ -87,7 +87,7 @@ func TestEndpointHandler_cancelEmpty(t *testing.T) {
 }
 
 func TestEndpointHandler_noop(t *testing.T) {
-	testEndpointHandler(t, 10, proxy.NoopProxy, "GET", "{}", "", "application/json", http.StatusOK, false)
+	testEndpointHandler(t, time.Minute, proxy.NoopProxy, "GET", "{}", "", "application/json", http.StatusOK, false)
 	time.Sleep(5 * time.Millisecond)
 }
 
