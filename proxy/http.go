@@ -106,3 +106,9 @@ func NewRequestBuilderMiddleware(remote *config.Backend) Middleware {
 		}
 	}
 }
+
+type responseError interface {
+	Error() string
+	StatusCode() int
+	Response() *Response
+}

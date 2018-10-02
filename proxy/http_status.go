@@ -28,7 +28,7 @@ func DetailedHTTPStatusHandler(ctx context.Context, resp *http.Response) (*http.
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		body, _ := ioutil.ReadAll(resp.Body)
 		resp.Body.Close()
-		return resp, responseError{
+		return resp, HTTPResponseError{
 			Code: resp.StatusCode,
 			Msg:  string(body),
 		}
@@ -37,20 +37,20 @@ func DetailedHTTPStatusHandler(ctx context.Context, resp *http.Response) (*http.
 	return resp, nil
 }
 
-type responseError struct {
+type HTTPResponseError struct {
 	Code int    `json:"http_status_code"`
 	Msg  string `json:"http_body,omitempty"`
 }
 
-func (r responseError) Error() string {
+func (r HTTPResponseError) Error() string {
 	return r.Msg
 }
 
-func (r responseError) StatusCode() int {
+func (r HTTPResponseError) StatusCode() int {
 	return r.Code
 }
 
-func (r responseError) Response() *Response {
+func (r HTTPResponseError) Response() *Response {
 	return &Response{
 		Data:     map[string]interface{}{"error": r},
 		Metadata: Metadata{StatusCode: r.Code},
