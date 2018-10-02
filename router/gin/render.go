@@ -70,50 +70,55 @@ func negotiatedRender(c *gin.Context, response *proxy.Response) {
 }
 
 func stringRender(c *gin.Context, response *proxy.Response) {
+	status := c.Writer.Status()
+
 	if response == nil {
-		c.String(http.StatusOK, "")
+		c.String(status, "")
 		return
 	}
 	d, ok := response.Data["content"]
 	if !ok {
-		c.String(http.StatusOK, "")
+		c.String(status, "")
 		return
 	}
 	msg, ok := d.(string)
 	if !ok {
-		c.String(http.StatusOK, "")
+		c.String(status, "")
 		return
 	}
-	c.String(http.StatusOK, msg)
+	c.String(status, msg)
 }
 
 func jsonRender(c *gin.Context, response *proxy.Response) {
+	status := c.Writer.Status()
 	if response == nil {
-		c.JSON(http.StatusOK, emptyResponse)
+		c.JSON(status, emptyResponse)
 		return
 	}
-	c.JSON(http.StatusOK, response.Data)
+	c.JSON(status, response.Data)
 }
 
 func xmlRender(c *gin.Context, response *proxy.Response) {
+	status := c.Writer.Status()
 	if response == nil {
-		c.XML(http.StatusOK, nil)
+		c.XML(status, nil)
 		return
 	}
 	d, ok := response.Data["content"]
 	if !ok {
-		c.XML(http.StatusOK, nil)
+		c.XML(status, nil)
 		return
 	}
-	c.XML(http.StatusOK, d)
+	c.XML(status, d)
 }
 
 func yamlRender(c *gin.Context, response *proxy.Response) {
+	status := c.Writer.Status()
 	if response == nil {
-		c.YAML(http.StatusOK, emptyResponse)
+		c.YAML(status, emptyResponse)
 		return
 	}
-	c.YAML(http.StatusOK, response.Data)
+	c.YAML(status, response.Data)
 }
 
 func noopRender(c *gin.Context, response *proxy.Response) {
