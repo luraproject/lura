@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"bytes"
 	"context"
 	"io/ioutil"
 	"net/http"
@@ -40,16 +41,21 @@ func NoOpHTTPStatusHandler(_ context.Context, resp *http.Response) (*http.Respon
 
 // DetailedHTTPStatusHandler is a HTTPStatusHandler implementation
 func DetailedHTTPStatusHandler(ctx context.Context, resp *http.Response) (*http.Response, error) {
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		body, _ := ioutil.ReadAll(resp.Body)
-		resp.Body.Close()
-		return resp, HTTPResponseError{
-			Code: resp.StatusCode,
-			Msg:  string(body),
-		}
+	if r, err := DefaultHTTPStatusHandler(ctx, resp); err == nil {
+		return r, nil
 	}
 
-	return resp, nil
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		body = []byte{}
+	}
+	resp.Body.Close()
+	resp.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+
+	return resp, HTTPResponseError{
+		Code: resp.StatusCode,
+		Msg:  string(body),
+	}
 }
 
 type HTTPResponseError struct {

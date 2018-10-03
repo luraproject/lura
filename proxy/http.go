@@ -33,18 +33,19 @@ func NewHTTPProxy(remote *config.Backend, clientFactory HTTPClientFactory, decod
 }
 
 // NewHTTPProxyWithHTTPExecutor creates a http proxy with the injected configuration, HTTPRequestExecutor and Decoder
-func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, requestExecutor HTTPRequestExecutor, dec encoding.Decoder) Proxy {
+func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, re HTTPRequestExecutor, dec encoding.Decoder) Proxy {
 	if remote.Encoding == encoding.NOOP {
-		return NewHTTPProxyDetailed(remote, requestExecutor, NoOpHTTPStatusHandler, NoOpHTTPResponseParser)
+		return NewHTTPProxyDetailed(remote, re, NoOpHTTPStatusHandler, NoOpHTTPResponseParser)
 	}
 
 	ef := NewEntityFormatter(remote)
 	rp := DefaultHTTPResponseParserFactory(HTTPResponseParserConfig{dec, ef})
-	return NewHTTPProxyDetailed(remote, requestExecutor, getHTTPStatusHandler(remote), rp)
+	return NewHTTPProxyDetailed(remote, re, getHTTPStatusHandler(remote), rp)
 }
 
-// NewHTTPProxyDetailed creates a http proxy with the injected configuration, HTTPRequestExecutor, Decoder and HTTPResponseParser
-func NewHTTPProxyDetailed(remote *config.Backend, requestExecutor HTTPRequestExecutor, ch HTTPStatusHandler, rp HTTPResponseParser) Proxy {
+// NewHTTPProxyDetailed creates a http proxy with the injected configuration, HTTPRequestExecutor,
+// Decoder and HTTPResponseParser
+func NewHTTPProxyDetailed(remote *config.Backend, re HTTPRequestExecutor, ch HTTPStatusHandler, rp HTTPResponseParser) Proxy {
 	return func(ctx context.Context, request *Request) (*Response, error) {
 		requestToBakend, err := http.NewRequest(request.Method, request.URL.String(), request.Body)
 		if err != nil {
@@ -57,7 +58,7 @@ func NewHTTPProxyDetailed(remote *config.Backend, requestExecutor HTTPRequestExe
 			requestToBakend.Header[k] = tmp
 		}
 
-		resp, err := requestExecutor(ctx, requestToBakend)
+		resp, err := re(ctx, requestToBakend)
 		requestToBakend.Body.Close()
 		select {
 		case <-ctx.Done():
