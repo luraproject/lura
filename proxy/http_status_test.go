@@ -88,7 +88,7 @@ var statusCodes = []int{
 	http.StatusRequestedRangeNotSatisfiable,
 	http.StatusExpectationFailed,
 	http.StatusTeapot,
-	http.StatusMisdirectedRequest,
+	// http.StatusMisdirectedRequest,
 	http.StatusUnprocessableEntity,
 	http.StatusLocked,
 	http.StatusFailedDependency,
