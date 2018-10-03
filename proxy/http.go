@@ -38,20 +38,9 @@ func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, requestExecutor HTTPRe
 		return NewHTTPProxyDetailed(remote, requestExecutor, NoOpHTTPStatusHandler, NoOpHTTPResponseParser)
 	}
 
-	sh := DefaultHTTPStatusHandler
-	if e, ok := remote.ExtraConfig[Namespace]; ok {
-		if m, ok := e.(map[string]interface{}); ok {
-			if v, ok := m["return_error_details"]; ok {
-				if b, ok := v.(bool); ok && b {
-					sh = DetailedHTTPStatusHandler
-				}
-			}
-		}
-	}
-
 	ef := NewEntityFormatter(remote)
 	rp := DefaultHTTPResponseParserFactory(HTTPResponseParserConfig{dec, ef})
-	return NewHTTPProxyDetailed(remote, requestExecutor, sh, rp)
+	return NewHTTPProxyDetailed(remote, requestExecutor, getHTTPStatusHandler(remote), rp)
 }
 
 // NewHTTPProxyDetailed creates a http proxy with the injected configuration, HTTPRequestExecutor, Decoder and HTTPResponseParser

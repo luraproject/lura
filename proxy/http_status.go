@@ -4,10 +4,25 @@ import (
 	"context"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/devopsfaith/krakend/config"
 )
 
 // HTTPStatusHandler defines how we tread the http response code
 type HTTPStatusHandler func(context.Context, *http.Response) (*http.Response, error)
+
+func getHTTPStatusHandler(remote *config.Backend) HTTPStatusHandler {
+	if e, ok := remote.ExtraConfig[Namespace]; ok {
+		if m, ok := e.(map[string]interface{}); ok {
+			if v, ok := m["return_error_details"]; ok {
+				if b, ok := v.(bool); ok && b {
+					return DetailedHTTPStatusHandler
+				}
+			}
+		}
+	}
+	return DefaultHTTPStatusHandler
+}
 
 // DefaultHTTPStatusHandler is the default implementation of HTTPStatusHandler
 func DefaultHTTPStatusHandler(ctx context.Context, resp *http.Response) (*http.Response, error) {
