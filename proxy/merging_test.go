@@ -41,6 +41,62 @@ func TestNewMergeDataMiddleware_ok(t *testing.T) {
 	}
 }
 
+func TestNewMergeDataMiddleware_sequential(t *testing.T) {
+	timeout := 500
+	endpoint := config.EndpointConfig{
+		Backend: []*config.Backend{
+			{URLPattern: "/"},
+			{URLPattern: "/aaa/{resp0_supu}"},
+			{URLPattern: "/aaa/{resp0_supu}?x={resp1_tupu}"},
+		},
+		Timeout: time.Duration(timeout) * time.Millisecond,
+		ExtraConfig: config.ExtraConfig{
+			Namespace: map[string]interface{}{
+				isSequentialKey: true,
+			},
+		},
+	}
+	mw := NewMergeDataMiddleware(&endpoint)
+	p := mw(
+		dummyProxy(&Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}),
+		func(ctx context.Context, r *Request) (*Response, error) {
+			if r.Params["resp0_supu"] != "42" {
+				t.Errorf("request without the expected set of params")
+			}
+			return &Response{Data: map[string]interface{}{"tupu": "foo"}, IsComplete: true}, nil
+		},
+		func(ctx context.Context, r *Request) (*Response, error) {
+			if r.Params["resp0_supu"] != "42" {
+				t.Errorf("request without the expected set of params")
+			}
+			if r.Params["resp1_tupu"] != "foo" {
+				t.Errorf("request without the expected set of params")
+			}
+			return &Response{Data: map[string]interface{}{"aaaa": []int{1, 2, 3}}, IsComplete: true}, nil
+		},
+	)
+	mustEnd := time.After(time.Duration(2*timeout) * time.Millisecond)
+	out, err := p(context.Background(), &Request{Params: map[string]string{}})
+	if err != nil {
+		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
+	}
+	if out == nil {
+		t.Errorf("The proxy returned a null result\n")
+		return
+	}
+	select {
+	case <-mustEnd:
+		t.Errorf("We were expecting a response but we got none\n")
+	default:
+		if len(out.Data) != 3 {
+			t.Errorf("We weren't expecting a partial response but we got %v!\n", out)
+		}
+		if !out.IsComplete {
+			t.Errorf("We were expecting a completed response but we got an incompleted one!\n")
+		}
+	}
+}
+
 func TestNewMergeDataMiddleware_mergeIncompleteResults(t *testing.T) {
 	timeout := 500
 	backend := config.Backend{}

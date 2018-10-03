@@ -42,9 +42,8 @@ func shouldRunSequentialMerger(endpointConfig *config.EndpointConfig) bool {
 	if v, ok := endpointConfig.ExtraConfig[Namespace]; ok {
 		if e, ok := v.(map[string]interface{}); ok {
 			if v, ok := e[isSequentialKey]; ok {
-				if c, ok := v.(bool); ok && c {
-					return true
-				}
+				c, ok := v.(bool)
+				return ok && c
 			}
 		}
 	}
