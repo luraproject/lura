@@ -15,6 +15,7 @@ import (
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/encoding"
+	"github.com/devopsfaith/krakend/transport/http/client"
 )
 
 func TestNewHTTPProxy_ok(t *testing.T) {
@@ -179,7 +180,7 @@ func TestNewHTTPProxy_badStatusCode(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Millisecond)
 	defer cancel()
 	response, err := httpProxy(&backend)(ctx, &request)
-	if err == nil || err != ErrInvalidStatusCode {
+	if err == nil || err != client.ErrInvalidStatusCode {
 		t.Errorf("The proxy didn't propagate the backend error: %s\n", err)
 	}
 	if response != nil {

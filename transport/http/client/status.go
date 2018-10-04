@@ -1,9 +1,14 @@
-package proxy
+package client
 
 import (
 	"context"
+	"errors"
 	"net/http"
 )
+
+// ErrInvalidStatusCode is the error returned by the http proxy when the received status code
+// is not a 200 nor a 201
+var ErrInvalidStatusCode = errors.New("Invalid status code")
 
 // HTTPStatusHandler defines how we tread the http response code
 type HTTPStatusHandler func(context.Context, *http.Response) (*http.Response, error)

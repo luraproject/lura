@@ -1,4 +1,4 @@
-package proxy
+package client
 
 import (
 	"context"

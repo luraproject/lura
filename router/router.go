@@ -5,7 +5,7 @@ import (
 	"context"
 
 	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/router/http"
+	http "github.com/devopsfaith/krakend/transport/http/server"
 )
 
 // Router sets up the public layer exposed to the users
