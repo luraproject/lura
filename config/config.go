@@ -2,6 +2,9 @@
 package config
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -210,7 +213,7 @@ type Backend struct {
 	// timeout of this backend
 	Timeout time.Duration
 	// decoder to use in order to parse the received response from the API
-	Decoder encoding.Decoder
+	Decoder encoding.Decoder `json:"-"`
 	// Backend Extra configuration for customized behaviours
 	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
 }
@@ -256,6 +259,15 @@ var (
 	errInvalidNoOpEncoding = errors.New("can not use NoOp encoding with more than one backends connected to the same endpoint")
 	defaultPort            = 8080
 )
+
+func (s *ServiceConfig) Hash() (string, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return "", err
+	}
+	sum := sha256.Sum256(b)
+	return base64.StdEncoding.EncodeToString(sum[:]), nil
+}
 
 // Init initializes the configuration struct and its defined endpoints and backends.
 // Init also sanitizes the values, applies the default ones whenever necessary and
