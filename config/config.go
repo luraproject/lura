@@ -210,7 +210,7 @@ type Backend struct {
 	// timeout of this backend
 	Timeout time.Duration
 	// decoder to use in order to parse the received response from the API
-	Decoder encoding.Decoder
+	Decoder encoding.Decoder `json:"-"`
 	// Backend Extra configuration for customized behaviours
 	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
 }
