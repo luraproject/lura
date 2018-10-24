@@ -188,6 +188,15 @@ func TestConfig_init(t *testing.T) {
 	if userEndpoint.CacheTTL != subject.CacheTTL {
 		t.Error("default CacheTTL not applied to the userEndpoint")
 	}
+
+	hash, err := subject.Hash()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if hash != "Gs5PSt/5CG3jHUvnz8t1AH1IC/czFU4c3ycBoMSs3KA=" {
+		t.Errorf("unexpected hash: %s", hash)
+	}
 }
 
 func TestConfig_initKONoBackends(t *testing.T) {
