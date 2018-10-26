@@ -4,6 +4,7 @@ package gin
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -119,20 +120,21 @@ func (r ginRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) 
 }
 
 func (r ginRouter) registerKrakendEndpoint(method, path string, handler gin.HandlerFunc, totBackends int) {
-	if method != "GET" && totBackends > 1 {
+	method = strings.ToTitle(method)
+	if method != http.MethodGet && totBackends > 1 {
 		r.cfg.Logger.Error(method, "endpoints must have a single backend! Ignoring", path)
 		return
 	}
 	switch method {
-	case "GET":
+	case http.MethodGet:
 		r.cfg.Engine.GET(path, handler)
-	case "POST":
+	case http.MethodPost:
 		r.cfg.Engine.POST(path, handler)
-	case "PUT":
+	case http.MethodPut:
 		r.cfg.Engine.PUT(path, handler)
-	case "PATCH":
+	case http.MethodPatch:
 		r.cfg.Engine.PATCH(path, handler)
-	case "DELETE":
+	case http.MethodDelete:
 		r.cfg.Engine.DELETE(path, handler)
 	default:
 		r.cfg.Logger.Error("Unsupported method", method)
