@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -49,7 +50,7 @@ func TestDefaultFactory_ok(t *testing.T) {
 			},
 			{
 				Endpoint: "/post",
-				Method:   "POST",
+				Method:   "Post",
 				Timeout:  10,
 				Backend: []*config.Backend{
 					{},
@@ -57,7 +58,7 @@ func TestDefaultFactory_ok(t *testing.T) {
 			},
 			{
 				Endpoint: "/put",
-				Method:   "PUT",
+				Method:   "put",
 				Timeout:  10,
 				Backend: []*config.Backend{
 					{},
@@ -87,7 +88,7 @@ func TestDefaultFactory_ok(t *testing.T) {
 	time.Sleep(5 * time.Millisecond)
 
 	for _, endpoint := range serviceCfg.Endpoints {
-		req, _ := http.NewRequest(endpoint.Method, fmt.Sprintf("http://127.0.0.1:8062%s", endpoint.Endpoint), nil)
+		req, _ := http.NewRequest(strings.ToTitle(endpoint.Method), fmt.Sprintf("http://127.0.0.1:8062%s", endpoint.Endpoint), nil)
 		req.Header.Set("Content-Type", "application/json")
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {

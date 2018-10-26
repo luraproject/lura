@@ -310,11 +310,8 @@ func (s *ServiceConfig) Init() error {
 			return errInvalidNoOpEncoding
 		}
 
-		for j, b := range e.Backend {
-
+		for j := range e.Backend {
 			s.initBackendDefaults(i, j)
-
-			b.Method = strings.ToTitle(b.Method)
 
 			if err := s.initBackendURLMappings(i, j, inputSet); err != nil {
 				return err
@@ -345,8 +342,6 @@ func (s *ServiceConfig) initEndpointDefaults(e int) {
 	endpoint := s.Endpoints[e]
 	if endpoint.Method == "" {
 		endpoint.Method = "GET"
-	} else {
-		endpoint.Method = strings.ToTitle(endpoint.Method)
 	}
 	if s.CacheTTL != 0 && endpoint.CacheTTL == 0 {
 		endpoint.CacheTTL = s.CacheTTL
