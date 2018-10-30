@@ -71,15 +71,7 @@ func InitHTTPDefaultTransport(cfg config.ServiceConfig) {
 // It configures the TLS layer if required by the received configuration.
 func RunServer(ctx context.Context, cfg config.ServiceConfig, handler http.Handler) error {
 	done := make(chan error)
-	s := &http.Server{
-		Addr:              fmt.Sprintf(":%d", cfg.Port),
-		Handler:           handler,
-		ReadTimeout:       cfg.ReadTimeout,
-		WriteTimeout:      cfg.WriteTimeout,
-		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
-		IdleTimeout:       cfg.IdleTimeout,
-		TLSConfig:         parseTLSConfig(cfg.TLS),
-	}
+	s := NewServer(cfg, handler)
 
 	if s.TLSConfig == nil {
 		go func() {
@@ -105,7 +97,19 @@ func RunServer(ctx context.Context, cfg config.ServiceConfig, handler http.Handl
 	}
 }
 
-func parseTLSConfig(cfg *config.TLS) *tls.Config {
+func NewServer(cfg *config.TLS, handler http.Handler) *http.Server {
+	return &http.Server{
+		Addr:              fmt.Sprintf(":%d", cfg.Port),
+		Handler:           handler,
+		ReadTimeout:       cfg.ReadTimeout,
+		WriteTimeout:      cfg.WriteTimeout,
+		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
+		IdleTimeout:       cfg.IdleTimeout,
+		TLSConfig:         ParseTLSConfig(cfg.TLS),
+	}
+}
+
+func ParseTLSConfig(cfg *config.TLS) *tls.Config {
 	if cfg == nil {
 		return nil
 	}
