@@ -97,7 +97,7 @@ func RunServer(ctx context.Context, cfg config.ServiceConfig, handler http.Handl
 	}
 }
 
-func NewServer(cfg *config.TLS, handler http.Handler) *http.Server {
+func NewServer(cfg config.ServiceConfig, handler http.Handler) *http.Server {
 	return &http.Server{
 		Addr:              fmt.Sprintf(":%d", cfg.Port),
 		Handler:           handler,
