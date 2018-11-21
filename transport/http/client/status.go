@@ -1,23 +1,31 @@
-package proxy
+package client
 
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/devopsfaith/krakend/config"
 )
 
+// Namespace to be used in extra config
+const Namespace = "github.com/devopsfaith/krakend/http"
+
+// ErrInvalidStatusCode is the error returned by the http proxy when the received status code
+// is not a 200 nor a 201
+var ErrInvalidStatusCode = errors.New("Invalid status code")
+
 // HTTPStatusHandler defines how we tread the http response code
 type HTTPStatusHandler func(context.Context, *http.Response) (*http.Response, error)
 
-func getHTTPStatusHandler(remote *config.Backend) HTTPStatusHandler {
+func GetHTTPStatusHandler(remote *config.Backend) HTTPStatusHandler {
 	if e, ok := remote.ExtraConfig[Namespace]; ok {
 		if m, ok := e.(map[string]interface{}); ok {
 			if v, ok := m["return_error_details"]; ok {
 				if b, ok := v.(bool); ok && b {
-					return DetailedHTTPStatusHandler
+					return DetailedHTTPStatusHandler(DefaultHTTPStatusHandler)
 				}
 			}
 		}
@@ -40,21 +48,23 @@ func NoOpHTTPStatusHandler(_ context.Context, resp *http.Response) (*http.Respon
 }
 
 // DetailedHTTPStatusHandler is a HTTPStatusHandler implementation
-func DetailedHTTPStatusHandler(ctx context.Context, resp *http.Response) (*http.Response, error) {
-	if r, err := DefaultHTTPStatusHandler(ctx, resp); err == nil {
-		return r, nil
-	}
+func DetailedHTTPStatusHandler(next HTTPStatusHandler) HTTPStatusHandler {
+	return func(ctx context.Context, resp *http.Response) (*http.Response, error) {
+		if r, err := next(ctx, resp); err == nil {
+			return r, nil
+		}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		body = []byte{}
-	}
-	resp.Body.Close()
-	resp.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			body = []byte{}
+		}
+		resp.Body.Close()
+		resp.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 
-	return resp, HTTPResponseError{
-		Code: resp.StatusCode,
-		Msg:  string(body),
+		return resp, HTTPResponseError{
+			Code: resp.StatusCode,
+			Msg:  string(body),
+		}
 	}
 }
 
@@ -69,11 +79,4 @@ func (r HTTPResponseError) Error() string {
 
 func (r HTTPResponseError) StatusCode() int {
 	return r.Code
-}
-
-func (r HTTPResponseError) Response() *Response {
-	return &Response{
-		Data:     map[string]interface{}{"error": r},
-		Metadata: Metadata{StatusCode: r.Code},
-	}
 }

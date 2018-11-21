@@ -1,11 +1,10 @@
-package proxy
+package client
 
 import (
 	"bytes"
 	"context"
 	"io/ioutil"
 	"net/http"
-	"reflect"
 	"testing"
 
 	"github.com/devopsfaith/krakend/config"
@@ -19,7 +18,7 @@ func TestDetailedHTTPStatusHandler(t *testing.T) {
 			},
 		},
 	}
-	sh := getHTTPStatusHandler(cfg)
+	sh := GetHTTPStatusHandler(cfg)
 
 	for i, code := range statusCodes {
 		msg := http.StatusText(code)
@@ -50,20 +49,6 @@ func TestDetailedHTTPStatusHandler(t *testing.T) {
 		if e.Msg != msg {
 			t.Errorf("#%d unexpected message: %s", i, e.Msg)
 			return
-		}
-
-		expectedResponse := &Response{
-			Data: map[string]interface{}{
-				"error": HTTPResponseError{
-					Code: code,
-					Msg:  msg,
-				},
-			},
-			Metadata: Metadata{StatusCode: code},
-		}
-
-		if !reflect.DeepEqual(e.Response(), expectedResponse) {
-			t.Errorf("#%d unexpected response: %v", i, e.Response())
 		}
 	}
 }

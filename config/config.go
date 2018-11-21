@@ -2,6 +2,9 @@
 package config
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -210,7 +213,7 @@ type Backend struct {
 	// timeout of this backend
 	Timeout time.Duration
 	// decoder to use in order to parse the received response from the API
-	Decoder encoding.Decoder
+	Decoder encoding.Decoder `json:"-"`
 	// Backend Extra configuration for customized behaviours
 	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
 }
@@ -257,6 +260,15 @@ var (
 	defaultPort            = 8080
 )
 
+func (s *ServiceConfig) Hash() (string, error) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return "", err
+	}
+	sum := sha256.Sum256(b)
+	return base64.StdEncoding.EncodeToString(sum[:]), nil
+}
+
 // Init initializes the configuration struct and its defined endpoints and backends.
 // Init also sanitizes the values, applies the default ones whenever necessary and
 // normalizes all the things.
@@ -298,11 +310,8 @@ func (s *ServiceConfig) Init() error {
 			return errInvalidNoOpEncoding
 		}
 
-		for j, b := range e.Backend {
-
+		for j := range e.Backend {
 			s.initBackendDefaults(i, j)
-
-			b.Method = strings.ToTitle(b.Method)
 
 			if err := s.initBackendURLMappings(i, j, inputSet); err != nil {
 				return err
@@ -333,8 +342,6 @@ func (s *ServiceConfig) initEndpointDefaults(e int) {
 	endpoint := s.Endpoints[e]
 	if endpoint.Method == "" {
 		endpoint.Method = "GET"
-	} else {
-		endpoint.Method = strings.ToTitle(endpoint.Method)
 	}
 	if s.CacheTTL != 0 && endpoint.CacheTTL == 0 {
 		endpoint.CacheTTL = s.CacheTTL

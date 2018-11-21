@@ -15,6 +15,7 @@ import (
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/encoding"
+	"github.com/devopsfaith/krakend/transport/http/client"
 )
 
 func TestNewHTTPProxy_ok(t *testing.T) {
@@ -179,7 +180,7 @@ func TestNewHTTPProxy_badStatusCode(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Millisecond)
 	defer cancel()
 	response, err := httpProxy(&backend)(ctx, &request)
-	if err == nil || err != ErrInvalidStatusCode {
+	if err == nil || err != client.ErrInvalidStatusCode {
 		t.Errorf("The proxy didn't propagate the backend error: %s\n", err)
 	}
 	if response != nil {
@@ -203,7 +204,7 @@ func TestNewHTTPProxy_badStatusCode_detailed(t *testing.T) {
 	backend := config.Backend{
 		Decoder: encoding.JSONDecoder,
 		ExtraConfig: config.ExtraConfig{
-			Namespace: map[string]interface{}{
+			client.Namespace: map[string]interface{}{
 				"return_error_details": true,
 			},
 		},
@@ -219,21 +220,19 @@ func TestNewHTTPProxy_badStatusCode_detailed(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Millisecond)
 	defer cancel()
 	response, err := httpProxy(&backend)(ctx, &request)
-	if err == nil {
-		t.Errorf("The proxy didn't propagate the backend error: %s", err)
-	}
-	errSH, ok := err.(responseError)
-	if !ok {
-		t.Errorf("The propagated error does not implement the expected interface: %T", err)
-	}
-	if errSH.Error() != "booom\n" {
-		t.Errorf("unexpected error msg: %s", errSH.Error())
-	}
-	if errSH.StatusCode() != 500 {
-		t.Errorf("unexpected error code: %d", errSH.StatusCode())
+	if err != nil {
+		t.Errorf("The proxy propagated the backend error: %s", err.Error())
 	}
 	if response == nil {
 		t.Error("We were expecting a response but we got none")
+		return
+	}
+	if response.Metadata.StatusCode != 500 {
+		t.Errorf("unexpected error code: %d", response.Metadata.StatusCode)
+	}
+	b, _ := json.Marshal(response.Data)
+	if string(b) != `{"`+rpURL.String()+`":{"error":{"http_status_code":500,"http_body":"booom\n"}}}` {
+		t.Errorf("unexpected response content: %s", string(b))
 	}
 	select {
 	case <-mustEnd:

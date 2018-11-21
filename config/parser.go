@@ -21,16 +21,23 @@ func (f ParserFunc) Parse(configFile string) (ServiceConfig, error) { return f(c
 
 // NewParser creates a new parser using the json library
 func NewParser() Parser {
-	return parser{}
+	return NewParserWithFileReader(ioutil.ReadFile)
 }
 
-type parser struct{}
+// NewParserWithFileReader returns a Parser with the injected FileReaderFunc function
+func NewParserWithFileReader(f FileReaderFunc) Parser {
+	return parser{fileReader: f}
+}
+
+type parser struct {
+	fileReader FileReaderFunc
+}
 
 // Parser implements the Parse interface
 func (p parser) Parse(configFile string) (ServiceConfig, error) {
 	var result ServiceConfig
 	var cfg parseableServiceConfig
-	data, err := ioutil.ReadFile(configFile)
+	data, err := p.fileReader(configFile)
 	if err != nil {
 		return result, fmt.Errorf("Fatal error config file: %s", configFile)
 	}
@@ -42,6 +49,9 @@ func (p parser) Parse(configFile string) (ServiceConfig, error) {
 
 	return result, err
 }
+
+// FileReaderFunc is a function used to read the content of a config file
+type FileReaderFunc func(string) ([]byte, error)
 
 type parseableServiceConfig struct {
 	Name                  string                     `json:"name"`

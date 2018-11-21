@@ -2,6 +2,9 @@ package proxy
 
 import (
 	"context"
+	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,31 +27,102 @@ func NewMergeDataMiddleware(endpointConfig *config.EndpointConfig) Middleware {
 		if len(next) != totalBackends {
 			panic(ErrNotEnoughProxies)
 		}
-
-		return func(ctx context.Context, request *Request) (*Response, error) {
-			localCtx, cancel := context.WithTimeout(ctx, serviceTimeout)
-
-			parts := make(chan *Response, totalBackends)
-			failed := make(chan error, totalBackends)
-
-			for _, n := range next {
-				go requestPart(localCtx, n, request, parts, failed)
+		if shouldRunSequentialMerger(endpointConfig) {
+			patterns := make([]string, len(endpointConfig.Backend))
+			for i, b := range endpointConfig.Backend {
+				patterns[i] = b.URLPattern
 			}
+			return sequentialMerge(patterns, serviceTimeout, combiner, next...)
+		}
+		return parallelMerge(serviceTimeout, combiner, next...)
+	}
+}
 
-			acc := newIncrementalMergeAccumulator(totalBackends, combiner)
-			for i := 0; i < totalBackends; i++ {
-				select {
-				case err := <-failed:
-					acc.Merge(nil, err)
-				case response := <-parts:
-					acc.Merge(response, nil)
+func shouldRunSequentialMerger(endpointConfig *config.EndpointConfig) bool {
+	if v, ok := endpointConfig.ExtraConfig[Namespace]; ok {
+		if e, ok := v.(map[string]interface{}); ok {
+			if v, ok := e[isSequentialKey]; ok {
+				c, ok := v.(bool)
+				return ok && c
+			}
+		}
+	}
+	return false
+}
+
+func parallelMerge(timeout time.Duration, rc ResponseCombiner, next ...Proxy) Proxy {
+	return func(ctx context.Context, request *Request) (*Response, error) {
+		localCtx, cancel := context.WithTimeout(ctx, timeout)
+
+		parts := make(chan *Response, len(next))
+		failed := make(chan error, len(next))
+
+		for _, n := range next {
+			go requestPart(localCtx, n, request, parts, failed)
+		}
+
+		acc := newIncrementalMergeAccumulator(len(next), rc)
+		for i := 0; i < len(next); i++ {
+			select {
+			case err := <-failed:
+				acc.Merge(nil, err)
+			case response := <-parts:
+				acc.Merge(response, nil)
+			}
+		}
+
+		result, err := acc.Result()
+		cancel()
+		return result, err
+	}
+}
+
+var reMergeKey = regexp.MustCompile(`/?.*\{resp(\d+)_(.+)\}`)
+
+func sequentialMerge(patterns []string, timeout time.Duration, rc ResponseCombiner, next ...Proxy) Proxy {
+	return func(ctx context.Context, request *Request) (*Response, error) {
+		localCtx, cancel := context.WithTimeout(ctx, timeout)
+
+		parts := make([]*Response, len(next))
+		out := make(chan *Response, 1)
+		errCh := make(chan error, 1)
+
+		acc := newIncrementalMergeAccumulator(len(next), rc)
+		for i, n := range next {
+			if i > 0 {
+				for _, match := range reMergeKey.FindAllStringSubmatch(patterns[i], -1) {
+					if len(match) > 1 {
+						rNum, err := strconv.Atoi(match[1])
+						if err != nil || rNum >= i || parts[rNum] == nil {
+							continue
+						}
+						key := "resp" + match[1] + "_" + match[2]
+
+						v, ok := parts[rNum].Data[match[2]]
+						if !ok {
+							continue
+						}
+						request.Params[key] = fmt.Sprintf("%v", v)
+					}
 				}
 			}
-
-			result, err := acc.Result()
-			cancel()
-			return result, err
+			requestPart(localCtx, n, request, out, errCh)
+			select {
+			case err := <-errCh:
+				acc.Merge(nil, err)
+				break
+			case response := <-out:
+				acc.Merge(response, nil)
+				if !response.IsComplete {
+					break
+				}
+				parts[i] = response
+			}
 		}
+
+		result, err := acc.Result()
+		cancel()
+		return result, err
 	}
 }
 
@@ -149,6 +223,7 @@ func RegisterResponseCombiner(name string, f ResponseCombiner) {
 
 const (
 	mergeKey            = "combiner"
+	isSequentialKey     = "sequential"
 	defaultCombinerName = "default"
 )
 

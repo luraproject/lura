@@ -2,18 +2,15 @@ package proxy
 
 import (
 	"context"
-	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/encoding"
+	"github.com/devopsfaith/krakend/transport/http/client"
 )
 
-// ErrInvalidStatusCode is the error returned by the http proxy when the received status code
-// is not a 200 nor a 201
-var ErrInvalidStatusCode = errors.New("Invalid status code")
-
-var httpProxy = CustomHTTPProxyFactory(NewHTTPClient)
+var httpProxy = CustomHTTPProxyFactory(client.NewHTTPClient)
 
 // HTTPProxyFactory returns a BackendFactory. The Proxies it creates will use the received net/http.Client
 func HTTPProxyFactory(client *http.Client) BackendFactory {
@@ -21,33 +18,33 @@ func HTTPProxyFactory(client *http.Client) BackendFactory {
 }
 
 // CustomHTTPProxyFactory returns a BackendFactory. The Proxies it creates will use the received HTTPClientFactory
-func CustomHTTPProxyFactory(cf HTTPClientFactory) BackendFactory {
+func CustomHTTPProxyFactory(cf client.HTTPClientFactory) BackendFactory {
 	return func(backend *config.Backend) Proxy {
 		return NewHTTPProxy(backend, cf, backend.Decoder)
 	}
 }
 
 // NewHTTPProxy creates a http proxy with the injected configuration, HTTPClientFactory and Decoder
-func NewHTTPProxy(remote *config.Backend, clientFactory HTTPClientFactory, decode encoding.Decoder) Proxy {
-	return NewHTTPProxyWithHTTPExecutor(remote, DefaultHTTPRequestExecutor(clientFactory), decode)
+func NewHTTPProxy(remote *config.Backend, cf client.HTTPClientFactory, decode encoding.Decoder) Proxy {
+	return NewHTTPProxyWithHTTPExecutor(remote, client.DefaultHTTPRequestExecutor(cf), decode)
 }
 
 // NewHTTPProxyWithHTTPExecutor creates a http proxy with the injected configuration, HTTPRequestExecutor and Decoder
-func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, re HTTPRequestExecutor, dec encoding.Decoder) Proxy {
+func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, re client.HTTPRequestExecutor, dec encoding.Decoder) Proxy {
 	if remote.Encoding == encoding.NOOP {
-		return NewHTTPProxyDetailed(remote, re, NoOpHTTPStatusHandler, NoOpHTTPResponseParser)
+		return NewHTTPProxyDetailed(remote, re, client.NoOpHTTPStatusHandler, NoOpHTTPResponseParser)
 	}
 
 	ef := NewEntityFormatter(remote)
 	rp := DefaultHTTPResponseParserFactory(HTTPResponseParserConfig{dec, ef})
-	return NewHTTPProxyDetailed(remote, re, getHTTPStatusHandler(remote), rp)
+	return NewHTTPProxyDetailed(remote, re, client.GetHTTPStatusHandler(remote), rp)
 }
 
 // NewHTTPProxyDetailed creates a http proxy with the injected configuration, HTTPRequestExecutor,
 // Decoder and HTTPResponseParser
-func NewHTTPProxyDetailed(remote *config.Backend, re HTTPRequestExecutor, ch HTTPStatusHandler, rp HTTPResponseParser) Proxy {
+func NewHTTPProxyDetailed(remote *config.Backend, re client.HTTPRequestExecutor, ch client.HTTPStatusHandler, rp HTTPResponseParser) Proxy {
 	return func(ctx context.Context, request *Request) (*Response, error) {
-		requestToBakend, err := http.NewRequest(request.Method, request.URL.String(), request.Body)
+		requestToBakend, err := http.NewRequest(strings.ToTitle(request.Method), request.URL.String(), request.Body)
 		if err != nil {
 			return nil, err
 		}
@@ -59,7 +56,9 @@ func NewHTTPProxyDetailed(remote *config.Backend, re HTTPRequestExecutor, ch HTT
 		}
 
 		resp, err := re(ctx, requestToBakend)
-		requestToBakend.Body.Close()
+		if requestToBakend.Body != nil {
+			requestToBakend.Body.Close()
+		}
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
@@ -72,7 +71,12 @@ func NewHTTPProxyDetailed(remote *config.Backend, re HTTPRequestExecutor, ch HTT
 		resp, err = ch(ctx, resp)
 		if err != nil {
 			if t, ok := err.(responseError); ok {
-				return t.Response(), err
+				return &Response{
+					Data: map[string]interface{}{
+						requestToBakend.URL.String(): map[string]interface{}{"error": t},
+					},
+					Metadata: Metadata{StatusCode: t.StatusCode()},
+				}, nil
 			}
 			return nil, err
 		}
@@ -100,5 +104,4 @@ func NewRequestBuilderMiddleware(remote *config.Backend) Middleware {
 type responseError interface {
 	Error() string
 	StatusCode() int
-	Response() *Response
 }

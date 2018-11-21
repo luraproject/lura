@@ -177,8 +177,8 @@ func TestConfig_init(t *testing.T) {
 		}
 	}
 
-	if supuBackend.Method != "POST" {
-		t.Error("supuBackend method not sanitized")
+	if supuBackend.Method != "post" {
+		t.Error("unexpected supuBackend")
 	}
 
 	if userBackend.Timeout != subject.Timeout {
@@ -187,6 +187,15 @@ func TestConfig_init(t *testing.T) {
 
 	if userEndpoint.CacheTTL != subject.CacheTTL {
 		t.Error("default CacheTTL not applied to the userEndpoint")
+	}
+
+	hash, err := subject.Hash()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if hash != "lF/kGEBmuFV1Gdn3mjxXpRU5wHp51iFxf/o75PJu4LY=" {
+		t.Errorf("unexpected hash: %s", hash)
 	}
 }
 
