@@ -20,6 +20,25 @@ func TestDetailedHTTPStatusHandler(t *testing.T) {
 	}
 	sh := GetHTTPStatusHandler(cfg)
 
+	for _, code := range []int{http.StatusOK, http.StatusCreated} {
+		resp := &http.Response{
+			StatusCode: code,
+			Body:       ioutil.NopCloser(bytes.NewBufferString(`{"foo":"bar"}`)),
+		}
+
+		r, err := sh(context.Background(), resp)
+
+		if r != resp {
+			t.Errorf("#%d unexpected response: %v", code, r)
+			return
+		}
+
+		if err != nil {
+			t.Errorf("#%d unexpected error: %s", code, err.Error())
+			return
+		}
+	}
+
 	for i, code := range statusCodes {
 		msg := http.StatusText(code)
 
@@ -41,13 +60,57 @@ func TestDetailedHTTPStatusHandler(t *testing.T) {
 			return
 		}
 
-		if e.Code != code {
+		if e.StatusCode() != code {
 			t.Errorf("#%d unexpected status code: %d", i, e.Code)
 			return
 		}
 
-		if e.Msg != msg {
+		if e.Error() != msg {
 			t.Errorf("#%d unexpected message: %s", i, e.Msg)
+			return
+		}
+	}
+}
+
+func TestDefaultHTTPStatusHandler(t *testing.T) {
+	sh := GetHTTPStatusHandler(&config.Backend{})
+
+	for _, code := range []int{http.StatusOK, http.StatusCreated} {
+		resp := &http.Response{
+			StatusCode: code,
+			Body:       ioutil.NopCloser(bytes.NewBufferString(`{"foo":"bar"}`)),
+		}
+
+		r, err := sh(context.Background(), resp)
+
+		if r != resp {
+			t.Errorf("#%d unexpected response: %v", code, r)
+			return
+		}
+
+		if err != nil {
+			t.Errorf("#%d unexpected error: %s", code, err.Error())
+			return
+		}
+	}
+
+	for _, code := range statusCodes {
+		msg := http.StatusText(code)
+
+		resp := &http.Response{
+			StatusCode: code,
+			Body:       ioutil.NopCloser(bytes.NewBufferString(msg)),
+		}
+
+		r, err := sh(context.Background(), resp)
+
+		if r != nil {
+			t.Errorf("#%d unexpected response: %v", code, r)
+			return
+		}
+
+		if err != ErrInvalidStatusCode {
+			t.Errorf("#%d unexpected error: %v", code, err)
 			return
 		}
 	}

@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -73,7 +74,7 @@ func NewHTTPProxyDetailed(remote *config.Backend, re client.HTTPRequestExecutor,
 			if t, ok := err.(responseError); ok {
 				return &Response{
 					Data: map[string]interface{}{
-						requestToBakend.URL.String(): map[string]interface{}{"error": t},
+						fmt.Sprintf("error_%s", requestToBakend.URL.String()): t,
 					},
 					Metadata: Metadata{StatusCode: t.StatusCode()},
 				}, nil
