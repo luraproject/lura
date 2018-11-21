@@ -120,6 +120,6 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 }
 
 type responseError interface {
-	Error() string
+	error
 	StatusCode() int
 }
