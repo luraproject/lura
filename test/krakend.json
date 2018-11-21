@@ -1,0 +1,162 @@
+{
+    "version": 2,
+    "name": "My lovely gateway",
+    "port": {{.port}},
+    "cache_ttl": "3600s",
+    "timeout": "3s",
+    "endpoints": [
+        {
+            "endpoint": "/static",
+            "backend": [
+                {
+                    "host": [
+                        "{{.b4}}"
+                    ],
+                    "url_pattern": "/"
+                }
+            ],
+            "extra_config": {
+                "github.com/devopsfaith/krakend/proxy": {
+                    "static": {
+                        "strategy": "errored",
+                        "data": {
+                            "foo": 42,
+                            "bar": "foobar"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "endpoint": "/param_forwarding/{name}",
+            "method": "POST",
+            "headers_to_pass": [
+                "Content-Type",
+                "Authorization",
+                "X-Y-Z"
+            ],
+            "backend": [
+                {
+                    "host": [
+                        "{{.b1}}"
+                    ],
+                    "url_pattern": "/{name}"
+                }
+            ]
+        },
+        {
+            "endpoint": "/combination",
+            "backend": [
+                {
+                    "host": [
+                        "{{.b2}}"
+                    ],
+                    "url_pattern": "/",
+                    "is_collection": true,
+                    "mapping": {
+                        "collection": "posts"
+                    }
+                },
+                {
+                    "host": [
+                        "{{.b3}}"
+                    ],
+                    "url_pattern": "/",
+                    "mapping": {
+                        "email": "personal_email"
+                    }
+                }
+            ]
+        },
+        {
+            "endpoint": "/timeout",
+            "timeout": "100ms",
+            "backend": [
+                {
+                    "host": [
+                        "{{.b5}}"
+                    ],
+                    "url_pattern": "/"
+                },
+                {
+                    "host": [
+                        "{{.b3}}"
+                    ],
+                    "url_pattern": "/"
+                }
+            ]
+        },
+        {
+            "endpoint": "/partial/static",
+            "backend": [
+                {
+                    "host": [
+                        "{{.b4}}"
+                    ],
+                    "url_pattern": "/"
+                },
+                {
+                    "host": [
+                        "{{.b3}}"
+                    ],
+                    "url_pattern": "/"
+                }
+            ],
+            "extra_config": {
+                "github.com/devopsfaith/krakend/proxy": {
+                    "static": {
+                        "strategy": "incomplete",
+                        "data": {
+                            "foo": 42,
+                            "bar": "foobar"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "endpoint": "/detail_error",
+            "backend": [
+                {
+                    "host": [
+                        "{{.b4}}"
+                    ],
+                    "url_pattern": "/",
+                    "extra_config": {
+                        "github.com/devopsfaith/krakend/http": {
+                            "return_error_details": "backend_a"
+                        }
+                    }
+                },
+                {
+                    "host": [
+                        "{{.b3}}"
+                    ],
+                    "url_pattern": "/",
+                    "extra_config": {
+                        "github.com/devopsfaith/krakend/http": {
+                            "return_error_details": "backend_b"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "endpoint": "/partial",
+            "backend": [
+                {
+                    "host": [
+                        "{{.b4}}"
+                    ],
+                    "url_pattern": "/"
+                },
+                {
+                    "host": [
+                        "{{.b3}}"
+                    ],
+                    "url_pattern": "/"
+                }
+            ]
+        }
+    ]
+}
