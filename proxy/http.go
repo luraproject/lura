@@ -74,7 +74,7 @@ func NewHTTPProxyDetailed(remote *config.Backend, re client.HTTPRequestExecutor,
 			if t, ok := err.(responseError); ok {
 				return &Response{
 					Data: map[string]interface{}{
-						fmt.Sprintf("error_%s", requestToBakend.URL.String()): t,
+						fmt.Sprintf("error_%s", t.Name()): t,
 					},
 					Metadata: Metadata{StatusCode: t.StatusCode()},
 				}, nil
@@ -104,5 +104,6 @@ func NewRequestBuilderMiddleware(remote *config.Backend) Middleware {
 
 type responseError interface {
 	Error() string
+	Name() string
 	StatusCode() int
 }

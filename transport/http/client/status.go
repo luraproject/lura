@@ -24,8 +24,8 @@ func GetHTTPStatusHandler(remote *config.Backend) HTTPStatusHandler {
 	if e, ok := remote.ExtraConfig[Namespace]; ok {
 		if m, ok := e.(map[string]interface{}); ok {
 			if v, ok := m["return_error_details"]; ok {
-				if b, ok := v.(bool); ok && b {
-					return DetailedHTTPStatusHandler(DefaultHTTPStatusHandler)
+				if b, ok := v.(string); ok && b != "" {
+					return DetailedHTTPStatusHandler(DefaultHTTPStatusHandler, b)
 				}
 			}
 		}
@@ -48,7 +48,7 @@ func NoOpHTTPStatusHandler(_ context.Context, resp *http.Response) (*http.Respon
 }
 
 // DetailedHTTPStatusHandler is a HTTPStatusHandler implementation
-func DetailedHTTPStatusHandler(next HTTPStatusHandler) HTTPStatusHandler {
+func DetailedHTTPStatusHandler(next HTTPStatusHandler, name string) HTTPStatusHandler {
 	return func(ctx context.Context, resp *http.Response) (*http.Response, error) {
 		if r, err := next(ctx, resp); err == nil {
 			return r, nil
@@ -64,6 +64,7 @@ func DetailedHTTPStatusHandler(next HTTPStatusHandler) HTTPStatusHandler {
 		return resp, HTTPResponseError{
 			Code: resp.StatusCode,
 			Msg:  string(body),
+			name: name,
 		}
 	}
 }
@@ -71,10 +72,15 @@ func DetailedHTTPStatusHandler(next HTTPStatusHandler) HTTPStatusHandler {
 type HTTPResponseError struct {
 	Code int    `json:"http_status_code"`
 	Msg  string `json:"http_body,omitempty"`
+	name string `json:"-"`
 }
 
 func (r HTTPResponseError) Error() string {
 	return r.Msg
+}
+
+func (r HTTPResponseError) Name() string {
+	return r.name
 }
 
 func (r HTTPResponseError) StatusCode() int {

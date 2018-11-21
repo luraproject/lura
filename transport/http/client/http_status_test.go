@@ -14,7 +14,7 @@ func TestDetailedHTTPStatusHandler(t *testing.T) {
 	cfg := &config.Backend{
 		ExtraConfig: config.ExtraConfig{
 			Namespace: map[string]interface{}{
-				"return_error_details": true,
+				"return_error_details": "some",
 			},
 		},
 	}

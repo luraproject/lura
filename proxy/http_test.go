@@ -205,7 +205,7 @@ func TestNewHTTPProxy_badStatusCode_detailed(t *testing.T) {
 		Decoder: encoding.JSONDecoder,
 		ExtraConfig: config.ExtraConfig{
 			client.Namespace: map[string]interface{}{
-				"return_error_details": true,
+				"return_error_details": "some",
 			},
 		},
 	}
@@ -231,7 +231,7 @@ func TestNewHTTPProxy_badStatusCode_detailed(t *testing.T) {
 		t.Errorf("unexpected error code: %d", response.Metadata.StatusCode)
 	}
 	b, _ := json.Marshal(response.Data)
-	if string(b) != `{"error_`+rpURL.String()+`":{"http_status_code":500,"http_body":"booom\n"}}` {
+	if string(b) != `{"error_some":{"http_status_code":500,"http_body":"booom\n"}}` {
 		t.Errorf("unexpected response content: %s", string(b))
 	}
 	select {
