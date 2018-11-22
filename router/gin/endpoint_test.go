@@ -69,7 +69,14 @@ func TestEndpointHandler_ko(t *testing.T) {
 	testEndpointHandler(t, 10, p, "", "", "", http.StatusInternalServerError, false)
 }
 
-func TestEndpointHandler_incompleteAndErrored_responseError(t *testing.T) {
+func TestEndpointHandler_errored(t *testing.T) {
+	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
+		return nil, errors.New("this is a dummy error")
+	}
+	testEndpointHandler(t, 10, p, "", "", "", http.StatusInternalServerError, false)
+}
+
+func TestEndpointHandler_errored_responseError(t *testing.T) {
 	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
 		return nil, dummyResponseError{err: "this is a dummy error", status: http.StatusTeapot}
 	}

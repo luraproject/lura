@@ -40,17 +40,23 @@ func TestKrakenD(t *testing.T) {
 	}()
 
 	for _, tc := range []struct {
-		name    string
-		url     string
-		method  string
-		headers map[string]string
-		body    string
-		expBody string
+		name       string
+		url        string
+		method     string
+		headers    map[string]string
+		body       string
+		expBody    string
+		expHeaders map[string]string
 	}{
 		{
 			name:    "static",
 			url:     "/static",
 			headers: map[string]string{},
+			expHeaders: map[string]string{
+				"Content-Type":        "application/json; charset=utf-8",
+				"X-KrakenD-Completed": "false",
+				"X-Krakend":           "Version undefined",
+			},
 			expBody: `{"bar":"foobar","foo":42}`,
 		},
 		{
@@ -62,37 +68,67 @@ func TestKrakenD(t *testing.T) {
 				"Authorization": "bearer AuthorizationToken",
 				"X-Y-Z":         "x-y-z",
 			},
-			body:    `{"foo":"bar"}`,
+			body: `{"foo":"bar"}`,
+			expHeaders: map[string]string{
+				"Content-Type":        "application/json; charset=utf-8",
+				"X-KrakenD-Completed": "true",
+				"X-Krakend":           "Version undefined",
+			},
 			expBody: `{"path":"/foo"}`,
 		},
 		{
 			name:    "timeout",
 			url:     "/timeout",
 			headers: map[string]string{},
+			expHeaders: map[string]string{
+				"Content-Type":        "application/json; charset=utf-8",
+				"X-KrakenD-Completed": "false",
+				"X-Krakend":           "Version undefined",
+			},
 			expBody: `{"email":"some@email.com","name":"a"}`,
 		},
 		{
 			name:    "partial_with_static",
 			url:     "/partial/static",
 			headers: map[string]string{},
+			expHeaders: map[string]string{
+				"Content-Type":        "application/json; charset=utf-8",
+				"X-KrakenD-Completed": "false",
+				"X-Krakend":           "Version undefined",
+			},
 			expBody: `{"bar":"foobar","email":"some@email.com","foo":42,"name":"a"}`,
 		},
 		{
 			name:    "partial",
 			url:     "/partial",
 			headers: map[string]string{},
+			expHeaders: map[string]string{
+				"Content-Type":        "application/json; charset=utf-8",
+				"X-KrakenD-Completed": "false",
+				"X-Krakend":           "Version undefined",
+			},
 			expBody: `{"email":"some@email.com","name":"a"}`,
 		},
 		{
 			name:    "combination",
 			url:     "/combination",
 			headers: map[string]string{},
+			expHeaders: map[string]string{
+				"Content-Type":        "application/json; charset=utf-8",
+				"X-KrakenD-Completed": "true",
+				"X-Krakend":           "Version undefined",
+			},
 			expBody: `{"name":"a","personal_email":"some@email.com","posts":[{"body":"some content","date":"123456789"},{"body":"some other content","date":"123496789"}]}`,
 		},
 		{
 			name:    "detail_error",
 			url:     "/detail_error",
 			headers: map[string]string{},
+			expHeaders: map[string]string{
+				"Content-Type":        "application/json; charset=utf-8",
+				"X-KrakenD-Completed": "false",
+				"X-Krakend":           "Version undefined",
+			},
 			expBody: `{"email":"some@email.com","error_backend_a":{"http_status_code":429,"http_body":"sad panda\n"},"name":"a"}`,
 		},
 	} {
@@ -125,9 +161,11 @@ func TestKrakenD(t *testing.T) {
 				return
 			}
 
-			if c := resp.Header.Get("Content-Type"); c != "application/json; charset=utf-8" {
-				t.Errorf("%s: unexpected header content-type: %s", resp.Request.URL.Path, c)
-				return
+			for k, v := range tc.expHeaders {
+				if c := resp.Header.Get(k); c != v {
+					t.Errorf("%s: unexpected header %s: %s", resp.Request.URL.Path, k, c)
+					return
+				}
 			}
 			if resp.StatusCode != http.StatusOK {
 				t.Errorf("%s: unexpected status code: %d", resp.Request.URL.Path, resp.StatusCode)
