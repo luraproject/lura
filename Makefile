@@ -21,6 +21,7 @@ deps:
 test:
 	go generate ./...
 	go test -cover -race ./...
+	go test -tags integration ./test
 
 benchmark:
 	@echo "Proxy middleware stack"

@@ -1,10 +1,17 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"io/ioutil"
 	"net/http"
+
+	"github.com/devopsfaith/krakend/config"
 )
+
+// Namespace to be used in extra config
+const Namespace = "github.com/devopsfaith/krakend/http"
 
 // ErrInvalidStatusCode is the error returned by the http proxy when the received status code
 // is not a 200 nor a 201
@@ -12,6 +19,19 @@ var ErrInvalidStatusCode = errors.New("Invalid status code")
 
 // HTTPStatusHandler defines how we tread the http response code
 type HTTPStatusHandler func(context.Context, *http.Response) (*http.Response, error)
+
+func GetHTTPStatusHandler(remote *config.Backend) HTTPStatusHandler {
+	if e, ok := remote.ExtraConfig[Namespace]; ok {
+		if m, ok := e.(map[string]interface{}); ok {
+			if v, ok := m["return_error_details"]; ok {
+				if b, ok := v.(string); ok && b != "" {
+					return DetailedHTTPStatusHandler(DefaultHTTPStatusHandler, b)
+				}
+			}
+		}
+	}
+	return DefaultHTTPStatusHandler
+}
 
 // DefaultHTTPStatusHandler is the default implementation of HTTPStatusHandler
 func DefaultHTTPStatusHandler(ctx context.Context, resp *http.Response) (*http.Response, error) {
@@ -25,4 +45,44 @@ func DefaultHTTPStatusHandler(ctx context.Context, resp *http.Response) (*http.R
 // NoOpHTTPStatusHandler is a NO-OP implementation of HTTPStatusHandler
 func NoOpHTTPStatusHandler(_ context.Context, resp *http.Response) (*http.Response, error) {
 	return resp, nil
+}
+
+// DetailedHTTPStatusHandler is a HTTPStatusHandler implementation
+func DetailedHTTPStatusHandler(next HTTPStatusHandler, name string) HTTPStatusHandler {
+	return func(ctx context.Context, resp *http.Response) (*http.Response, error) {
+		if r, err := next(ctx, resp); err == nil {
+			return r, nil
+		}
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			body = []byte{}
+		}
+		resp.Body.Close()
+		resp.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+
+		return resp, HTTPResponseError{
+			Code: resp.StatusCode,
+			Msg:  string(body),
+			name: name,
+		}
+	}
+}
+
+type HTTPResponseError struct {
+	Code int    `json:"http_status_code"`
+	Msg  string `json:"http_body,omitempty"`
+	name string `json:"-"`
+}
+
+func (r HTTPResponseError) Error() string {
+	return r.Msg
+}
+
+func (r HTTPResponseError) Name() string {
+	return r.name
+}
+
+func (r HTTPResponseError) StatusCode() int {
+	return r.Code
 }

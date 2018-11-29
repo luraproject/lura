@@ -43,37 +43,40 @@ func CustomErrorEndpointHandler(configuration *config.EndpointConfig, prxy proxy
 		default:
 		}
 
+		complete := router.HeaderIncompleteResponseValue
+
 		if response != nil && len(response.Data) > 0 {
 			if response.IsComplete {
-				c.Header(router.CompleteResponseHeaderName, router.HeaderCompleteResponseValue)
+				complete = router.HeaderCompleteResponseValue
 				if isCacheEnabled {
 					c.Header("Cache-Control", cacheControlHeaderValue)
 				}
-			} else {
-				c.Header(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 			}
 
 			for k, v := range response.Metadata.Headers {
 				c.Header(k, v[0])
 			}
-		} else {
-			if err != nil {
-				abort(c, errF(err))
+		}
+
+		c.Header(router.CompleteResponseHeaderName, complete)
+
+		if err != nil {
+			c.Error(err)
+
+			if response == nil {
+				if t, ok := err.(responseError); ok {
+					c.Status(t.StatusCode())
+				} else {
+					c.Status(errF(err))
+				}
 				cancel()
 				return
 			}
-			c.Header(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 		}
 
 		render(c, response)
 		cancel()
 	}
-}
-
-func abort(c *gin.Context, code int) {
-	c.Status(code)
-	c.Header(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
-	c.Abort()
 }
 
 // NewRequest gets a request from the current gin context and the received query string
@@ -114,4 +117,9 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 			Headers: headers,
 		}
 	}
+}
+
+type responseError interface {
+	error
+	StatusCode() int
 }

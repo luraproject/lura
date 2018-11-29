@@ -193,6 +193,54 @@ func TestNewHTTPProxy_badStatusCode(t *testing.T) {
 	}
 }
 
+func TestNewHTTPProxy_badStatusCode_detailed(t *testing.T) {
+	expectedMethod := "GET"
+	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "booom", 500)
+	}))
+	defer backendServer.Close()
+
+	rpURL, _ := url.Parse(backendServer.URL)
+	backend := config.Backend{
+		Decoder: encoding.JSONDecoder,
+		ExtraConfig: config.ExtraConfig{
+			client.Namespace: map[string]interface{}{
+				"return_error_details": "some",
+			},
+		},
+	}
+	request := Request{
+		Method: expectedMethod,
+		Path:   "/",
+		URL:    rpURL,
+		Body:   newDummyReadCloser(""),
+	}
+	mustEnd := time.After(time.Duration(150) * time.Millisecond)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Millisecond)
+	defer cancel()
+	response, err := httpProxy(&backend)(ctx, &request)
+	if err != nil {
+		t.Errorf("The proxy propagated the backend error: %s", err.Error())
+	}
+	if response == nil {
+		t.Error("We were expecting a response but we got none")
+		return
+	}
+	if response.Metadata.StatusCode != 500 {
+		t.Errorf("unexpected error code: %d", response.Metadata.StatusCode)
+	}
+	b, _ := json.Marshal(response.Data)
+	if string(b) != `{"error_some":{"http_status_code":500,"http_body":"booom\n"}}` {
+		t.Errorf("unexpected response content: %s", string(b))
+	}
+	select {
+	case <-mustEnd:
+		t.Errorf("Error: expected response")
+	default:
+	}
+}
+
 func TestNewHTTPProxy_decodingError(t *testing.T) {
 	expectedMethod := "GET"
 	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
