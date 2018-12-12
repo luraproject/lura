@@ -121,28 +121,32 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 }
 
 type parseableEndpointConfig struct {
-	Endpoint        string              `json:"endpoint"`
-	Method          string              `json:"method"`
-	Backend         []*parseableBackend `json:"backend"`
-	ConcurrentCalls int                 `json:"concurrent_calls"`
-	Timeout         string              `json:"timeout"`
-	CacheTTL        int                 `json:"cache_ttl"`
-	QueryString     []string            `json:"querystring_params"`
-	ExtraConfig     *ExtraConfig        `json:"extra_config,omitempty"`
-	HeadersToPass   []string            `json:"headers_to_pass"`
-	OutputEncoding  string              `json:"output_encoding"`
+	Endpoint           string              `json:"endpoint"`
+	Method             string              `json:"method"`
+	Backend            []*parseableBackend `json:"backend"`
+	ConcurrentCalls    int                 `json:"concurrent_calls"`
+	Timeout            string              `json:"timeout"`
+	CacheTTL           int                 `json:"cache_ttl"`
+	QueryString        []string            `json:"querystring_params"`
+	PassAllQueryString bool                `json:"pass_all_querystring"`
+	ExtraConfig        *ExtraConfig        `json:"extra_config,omitempty"`
+	HeadersToPass      []string            `json:"headers_to_pass"`
+	PassAllHeaders     bool                `json:"pass_all_headers"`
+	OutputEncoding     string              `json:"output_encoding"`
 }
 
 func (p *parseableEndpointConfig) normalize() *EndpointConfig {
 	e := EndpointConfig{
-		Endpoint:        p.Endpoint,
-		Method:          p.Method,
-		ConcurrentCalls: p.ConcurrentCalls,
-		Timeout:         parseDuration(p.Timeout),
-		CacheTTL:        time.Duration(p.CacheTTL) * time.Second,
-		QueryString:     p.QueryString,
-		HeadersToPass:   p.HeadersToPass,
-		OutputEncoding:  p.OutputEncoding,
+		Endpoint:           p.Endpoint,
+		Method:             p.Method,
+		ConcurrentCalls:    p.ConcurrentCalls,
+		Timeout:            parseDuration(p.Timeout),
+		CacheTTL:           time.Duration(p.CacheTTL) * time.Second,
+		QueryString:        p.QueryString,
+		PassAllQueryString: p.PassAllQueryString,
+		HeadersToPass:      p.HeadersToPass,
+		PassAllHeaders:     p.PassAllHeaders,
+		OutputEncoding:     p.OutputEncoding,
 	}
 	if p.ExtraConfig != nil {
 		e.ExtraConfig = *p.ExtraConfig
