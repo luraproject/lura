@@ -11,7 +11,7 @@ import (
 // Engine defines the minimun required interface for the mux compatible engine
 type Engine interface {
 	http.Handler
-	Handle(pattern string, handler http.Handler)
+	Handle(pattern, method string, handler http.Handler)
 }
 
 // DefaultEngine returns a new engine using a slightly customized http.ServeMux router
@@ -23,8 +23,8 @@ type engine struct {
 	handler Engine
 }
 
-func (e *engine) Handle(pattern string, handler http.Handler) {
-	e.handler.Handle(pattern, handler)
+func (e *engine) Handle(pattern, method string, handler http.Handler) {
+	e.handler.Handle(pattern, method, handler)
 }
 
 func (e *engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
