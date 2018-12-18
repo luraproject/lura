@@ -80,7 +80,7 @@ type httpRouter struct {
 // Run implements the router interface
 func (r httpRouter) Run(cfg config.ServiceConfig) {
 	if cfg.Debug {
-		r.cfg.Engine.Handle(r.cfg.DebugPattern, DebugHandler(r.cfg.Logger))
+		r.cfg.Engine.Handle(r.cfg.DebugPattern, "GET", DebugHandler(r.cfg.Logger))
 	}
 
 	router.InitHTTPDefaultTransport(cfg)
@@ -124,7 +124,7 @@ func (r httpRouter) registerKrakendEndpoint(method, path string, handler http.Ha
 		return
 	}
 	r.cfg.Logger.Debug("registering the endpoint", method, path)
-	r.cfg.Engine.Handle(path, handler)
+	r.cfg.Engine.Handle(path, method, handler)
 }
 
 func (r httpRouter) handler() http.Handler {

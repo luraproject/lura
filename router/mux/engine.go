@@ -16,7 +16,7 @@ type Engine interface {
 
 // DefaultEngine returns a new engine using a slightly customized http.ServeMux router
 func DefaultEngine() *engine {
-	return &engine{http.NewServeMux()}
+	return &engine{NewHandler()}
 }
 
 type engine struct {
@@ -47,4 +47,14 @@ func (i *HTTPErrorInterceptor) WriteHeader(code int) {
 		}
 	})
 	i.ResponseWriter.WriteHeader(code)
+}
+
+type Handler struct {
+	*http.ServeMux
+}
+
+func NewHandler() *Handler { return &Handler{http.NewServeMux()} }
+
+func (e *Handler) Handle(pattern, method string, handler http.Handler) {
+	e.ServeMux.Handle(pattern, handler)
 }
