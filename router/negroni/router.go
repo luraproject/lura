@@ -53,8 +53,8 @@ type negroniEngine struct {
 }
 
 // Handle implements the mux.Engine interface from the krakend router package
-func (e negroniEngine) Handle(pattern string, handler http.Handler) {
-	e.r.Handle(pattern, handler)
+func (e negroniEngine) Handle(pattern, method string, handler http.Handler) {
+	e.r.Handle(pattern, handler).Methods(method)
 }
 
 // ServeHTTP implements the http:Handler interface from the stdlib
