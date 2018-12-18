@@ -11,24 +11,12 @@ import (
 // Engine defines the minimun required interface for the mux compatible engine
 type Engine interface {
 	http.Handler
-	Handle(pattern string, handler http.Handler)
-}
-
-// DefaultEngine returns a new engine using a slightly customized http.ServeMux router
-func DefaultEngine() *engine {
-	return &engine{http.NewServeMux()}
+	Handle(pattern, method string, handler http.Handler)
 }
 
 type engine struct {
-	handler Engine
-}
-
-func (e *engine) Handle(pattern string, handler http.Handler) {
-	e.handler.Handle(pattern, handler)
-}
-
-func (e *engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	e.handler.ServeHTTP(NewHTTPErrorInterceptor(w), r)
+	handler *http.ServeMux
+	dict    map[string]map[string]http.HandlerFunc
 }
 
 func NewHTTPErrorInterceptor(w http.ResponseWriter) *HTTPErrorInterceptor {
@@ -47,4 +35,36 @@ func (i *HTTPErrorInterceptor) WriteHeader(code int) {
 		}
 	})
 	i.ResponseWriter.WriteHeader(code)
+}
+
+// DefaultEngine returns a new engine using a slightly customized http.ServeMux router
+func DefaultEngine() *engine {
+	return &engine{
+		handler: http.NewServeMux(),
+		dict:    map[string]map[string]http.HandlerFunc{},
+	}
+}
+
+func (e *engine) Handle(pattern, method string, handler http.Handler) {
+	if _, ok := e.dict[pattern]; !ok {
+		e.dict[pattern] = map[string]http.HandlerFunc{}
+		e.handler.Handle(pattern, e.registrableHandler(pattern))
+	}
+	e.dict[pattern][method] = handler.ServeHTTP
+}
+
+func (e *engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	e.handler.ServeHTTP(NewHTTPErrorInterceptor(w), r)
+}
+
+func (e *engine) registrableHandler(pattern string) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		if handler, ok := e.dict[pattern][req.Method]; ok {
+			handler(rw, req)
+			return
+		}
+
+		rw.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
+		http.Error(rw, "", http.StatusMethodNotAllowed)
+	})
 }

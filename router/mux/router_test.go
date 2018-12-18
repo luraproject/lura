@@ -49,6 +49,14 @@ func TestDefaultFactory_ok(t *testing.T) {
 				},
 			},
 			{
+				Endpoint: "/get",
+				Method:   "POST",
+				Timeout:  10,
+				Backend: []*config.Backend{
+					{},
+				},
+			},
+			{
 				Endpoint: "/post",
 				Method:   "Post",
 				Timeout:  10,
