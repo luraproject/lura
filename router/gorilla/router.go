@@ -43,7 +43,7 @@ type gorillaEngine struct {
 }
 
 // Handle implements the mux.Engine interface from the krakend router package
-func (g gorillaEngine) Handle(pattern string, handler http.Handler) {
+func (g gorillaEngine) Handle(pattern, method string, handler http.Handler) {
 	g.r.Handle(pattern, handler)
 }
 
