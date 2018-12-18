@@ -1,6 +1,7 @@
 package gin
 
 import (
+	"net/textproto"
 	"context"
 	"fmt"
 	"strings"
@@ -96,7 +97,7 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 		headers["User-Agent"] = router.UserAgentHeaderValue
 
 		for _, k := range headersToSend {
-			if h, ok := c.Request.Header[k]; ok {
+			if h, ok := c.Request.Header[textproto.CanonicalMIMEHeaderKey(k)]; ok {
 				headers[k] = h
 			}
 		}
