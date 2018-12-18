@@ -80,7 +80,12 @@ type httpRouter struct {
 // Run implements the router interface
 func (r httpRouter) Run(cfg config.ServiceConfig) {
 	if cfg.Debug {
-		r.cfg.Engine.Handle(r.cfg.DebugPattern, "GET", DebugHandler(r.cfg.Logger))
+		debugHandler := DebugHandler(r.cfg.Logger)
+		r.cfg.Engine.Handle(r.cfg.DebugPattern, http.MethodGet, debugHandler)
+		r.cfg.Engine.Handle(r.cfg.DebugPattern, http.MethodPost, debugHandler)
+		r.cfg.Engine.Handle(r.cfg.DebugPattern, http.MethodPut, debugHandler)
+		r.cfg.Engine.Handle(r.cfg.DebugPattern, http.MethodPatch, debugHandler)
+		r.cfg.Engine.Handle(r.cfg.DebugPattern, http.MethodDelete, debugHandler)
 	}
 
 	router.InitHTTPDefaultTransport(cfg)
