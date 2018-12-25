@@ -14,6 +14,8 @@ import (
 	"github.com/devopsfaith/krakend/router"
 )
 
+const requestParamsAsterisk string = "*"
+
 // HandlerFactory creates a handler function that adapts the gin router with the injected proxy
 type HandlerFactory func(*config.EndpointConfig, proxy.Proxy) gin.HandlerFunc
 
@@ -97,6 +99,12 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 		headers["User-Agent"] = router.UserAgentHeaderValue
 
 		for _, k := range headersToSend {
+			if k == requestParamsAsterisk {
+				headers = c.Request.Header
+
+				break
+			}
+
 			if h, ok := c.Request.Header[textproto.CanonicalMIMEHeaderKey(k)]; ok {
 				headers[k] = h
 			}
@@ -105,6 +113,12 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 		query := make(map[string][]string, len(queryString))
 		queryValues := c.Request.URL.Query()
 		for i := range queryString {
+			if queryString[i] == requestParamsAsterisk {
+				query = c.Request.URL.Query()
+
+				break
+			}
+
 			if v, ok := queryValues[queryString[i]]; ok && len(v) > 0 {
 				query[queryString[i]] = v
 			}
