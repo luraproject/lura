@@ -95,8 +95,6 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 		}
 
 		headers := make(map[string][]string, 2+len(headersToSend))
-		headers["X-Forwarded-For"] = []string{c.ClientIP()}
-		headers["User-Agent"] = router.UserAgentHeaderValue
 
 		for _, k := range headersToSend {
 			if k == requestParamsAsterisk {
@@ -109,6 +107,8 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 				headers[k] = h
 			}
 		}
+		headers["X-Forwarded-For"] = []string{c.ClientIP()}
+		headers["User-Agent"] = router.UserAgentHeaderValue
 
 		query := make(map[string][]string, len(queryString))
 		queryValues := c.Request.URL.Query()
