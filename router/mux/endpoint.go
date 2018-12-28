@@ -12,6 +12,8 @@ import (
 	"github.com/devopsfaith/krakend/router"
 )
 
+const requestParamsAsterisk string = "*"
+
 // HandlerFactory creates a handler function that adapts the mux router with the injected proxy
 type HandlerFactory func(*config.EndpointConfig, proxy.Proxy) http.HandlerFunc
 
@@ -89,7 +91,7 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 // RequestBuilder is a function that creates a proxy.Request from the received http request
 type RequestBuilder func(r *http.Request, queryString, headersToSend []string) *proxy.Request
 
-// ParamExtractor is a function that extracts thes query params from the requested uri
+// ParamExtractor is a function that extracts query params from the requested uri
 type ParamExtractor func(r *http.Request) map[string]string
 
 // NewRequest is a RequestBuilder that creates a proxy request from the received http request without
@@ -99,23 +101,35 @@ var NewRequest = NewRequestBuilder(func(_ *http.Request) map[string]string {
 })
 
 // NewRequestBuilder gets a RequestBuilder with the received ParamExtractor as a query param
-// extraction mecanism
+// extraction mechanism
 func NewRequestBuilder(paramExtractor ParamExtractor) RequestBuilder {
 	return func(r *http.Request, queryString, headersToSend []string) *proxy.Request {
 		params := paramExtractor(r)
 		headers := make(map[string][]string, 2+len(headersToSend))
-		headers["X-Forwarded-For"] = []string{r.RemoteAddr}
-		headers["User-Agent"] = router.UserAgentHeaderValue
 
 		for _, k := range headersToSend {
+			if k == requestParamsAsterisk {
+				headers = r.Header
+
+				break
+			}
+
 			if h, ok := r.Header[k]; ok {
 				headers[k] = h
 			}
 		}
+		headers["X-Forwarded-For"] = []string{r.RemoteAddr}
+		headers["User-Agent"] = router.UserAgentHeaderValue
 
 		query := make(map[string][]string, len(queryString))
 		queryValues := r.URL.Query()
 		for i := range queryString {
+			if queryString[i] == requestParamsAsterisk {
+				query = queryValues
+
+				break
+			}
+
 			if v, ok := queryValues[queryString[i]]; ok && len(v) > 0 {
 				query[queryString[i]] = v
 			}
