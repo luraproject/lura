@@ -64,7 +64,7 @@ func TestShadowFactory_noBackends(t *testing.T) {
 	}
 	factory := DefaultFactory(logger)
 
-	sFactory := shadowFactory{factory}
+	sFactory := NewShadowFactory(factory)
 
 	if _, err := sFactory.New(&config.EndpointConfig{}); err != ErrNoBackends {
 		t.Errorf("Expecting ErrNoBackends. Got: %v\n", err)
