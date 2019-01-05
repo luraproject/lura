@@ -26,6 +26,7 @@ func newAssertionProxy(counter *uint64) Proxy {
 		return nil, nil
 	}
 }
+
 func TestIsShadowBackend(t *testing.T) {
 
 	cfg := &config.Backend{ExtraConfig: extraCfg}
@@ -50,6 +51,7 @@ func TestShadowMiddleware(t *testing.T) {
 	p := ShadowMiddleware(assertProxy, assertProxy)
 	request := &Request{}
 	p(context.Background(), request)
+	time.Sleep(100 * time.Millisecond)
 	if counter != 2 {
 		t.Errorf("The shadow proxy should have been called 2 times, not %d", counter)
 	}
@@ -104,6 +106,7 @@ func TestNewShadowFactory(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	time.Sleep(100 * time.Millisecond)
 	if counter != 2 {
 		t.Errorf("The shadow proxy should have been called 2 times, not %d", counter)
 	}

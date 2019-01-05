@@ -65,8 +65,7 @@ func ShadowMiddleware(next ...Proxy) Proxy {
 // the response of p2
 func NewShadowProxy(p1, p2 Proxy) Proxy {
 	return func(ctx context.Context, request *Request) (*Response, error) {
-		reqShadow := request.Clone()
-		p2(ctx, &reqShadow)
+		go p2(ctx, CloneRequest(request))
 		return p1(ctx, request)
 	}
 }
