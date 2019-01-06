@@ -52,7 +52,7 @@ func TestShadowMiddleware(t *testing.T) {
 	request := &Request{}
 	p(context.Background(), request)
 	time.Sleep(100 * time.Millisecond)
-	if counter != 2 {
+	if atomic.LoadUint64(&counter) != 2 {
 		t.Errorf("The shadow proxy should have been called 2 times, not %d", counter)
 	}
 }
@@ -107,7 +107,7 @@ func TestNewShadowFactory(t *testing.T) {
 		t.Error(err)
 	}
 	time.Sleep(100 * time.Millisecond)
-	if counter != 2 {
+	if atomic.LoadUint64(&counter) != 2 {
 		t.Errorf("The shadow proxy should have been called 2 times, not %d", counter)
 	}
 }
