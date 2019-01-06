@@ -6,6 +6,10 @@ import (
 	"github.com/devopsfaith/krakend/config"
 )
 
+const (
+	shadowKey = "shadow"
+)
+
 type shadowFactory struct {
 	f Factory
 }
@@ -71,7 +75,7 @@ func NewShadowProxy(p1, p2 Proxy) Proxy {
 }
 
 func isShadowBackend(c *config.Backend) bool {
-	if v, ok := c.ExtraConfig["shadow"]; ok {
+	if v, ok := c.ExtraConfig[shadowKey]; ok {
 		if s, ok := v.(bool); ok {
 			if s {
 				return true
