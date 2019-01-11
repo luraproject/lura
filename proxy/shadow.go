@@ -69,7 +69,7 @@ func ShadowMiddleware(next ...Proxy) Proxy {
 // the response of p2
 func NewShadowProxy(p1, p2 Proxy) Proxy {
 	return func(ctx context.Context, request *Request) (*Response, error) {
-		go p2(ctx, CloneRequest(request))
+		go p2(newcontextWrapper(ctx), CloneRequest(request))
 		return p1(ctx, request)
 	}
 }
@@ -83,4 +83,20 @@ func isShadowBackend(c *config.Backend) bool {
 		}
 	}
 	return false
+}
+
+type contextWrapper struct {
+	context.Context
+	data context.Context
+}
+
+func (c contextWrapper) Value(key interface{}) interface{} {
+	return c.data.Value(key)
+}
+
+func newcontextWrapper(data context.Context) contextWrapper {
+	return contextWrapper{
+		Context: context.Background(),
+		data:    data,
+	}
 }
