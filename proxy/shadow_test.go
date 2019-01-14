@@ -3,6 +3,7 @@ package proxy
 import (
 	"bytes"
 	"context"
+	"errors"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -49,8 +50,7 @@ func TestShadowMiddleware(t *testing.T) {
 	var counter uint64
 	assertProxy := newAssertionProxy(&counter)
 	p := ShadowMiddleware(assertProxy, assertProxy)
-	request := &Request{}
-	p(context.Background(), request)
+	p(context.Background(), &Request{})
 	time.Sleep(100 * time.Millisecond)
 	if atomic.LoadUint64(&counter) != 2 {
 		t.Errorf("The shadow proxy should have been called 2 times, not %d", counter)
@@ -101,13 +101,61 @@ func TestNewShadowFactory(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	request := &Request{}
-	_, err = p(context.Background(), request)
+	_, err = p(context.Background(), &Request{})
 	if err != nil {
 		t.Error(err)
 	}
 	time.Sleep(100 * time.Millisecond)
 	if atomic.LoadUint64(&counter) != 2 {
 		t.Errorf("The shadow proxy should have been called 2 times, not %d", counter)
+	}
+}
+
+func TestShadowMiddleware_erroredBackend(t *testing.T) {
+	timeout := 100 * time.Millisecond
+	p := ShadowMiddleware(
+		delayedProxy(t, timeout, &Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}),
+		func(_ context.Context, _ *Request) (*Response, error) {
+			return nil, errors.New("ignore me")
+		},
+	)
+	mustEnd := time.After(time.Duration(5 * timeout))
+	out, err := p(context.Background(), &Request{Params: map[string]string{}})
+	if err != nil {
+		t.Errorf("unexpected error: %s\n", err.Error())
+		return
+	}
+	if out == nil {
+		t.Errorf("The proxy returned a null result\n")
+		return
+	}
+	select {
+	case <-mustEnd:
+		t.Errorf("We were expecting a response but we got none\n")
+	default:
+		if len(out.Data) != 1 {
+			t.Errorf("We weren't expecting a partial response but we got %v!\n", out)
+		}
+		if !out.IsComplete {
+			t.Errorf("We were expecting a completed response!\n")
+		}
+	}
+}
+
+func TestShadowMiddleware_partialTimeout(t *testing.T) {
+	timeout := 200 * time.Millisecond
+	p := ShadowMiddleware(
+		delayedProxy(t, time.Duration(5*timeout), &Response{Data: map[string]interface{}{"supu": 42}}),
+		delayedProxy(t, time.Duration(timeout/2), &Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}))
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	out, err := p(ctx, &Request{})
+	if err == nil || err.Error() != "context deadline exceeded" {
+		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
+	}
+	if out != nil {
+		t.Errorf("The proxy did not return a null result: %+v\n", out)
+		return
 	}
 }
