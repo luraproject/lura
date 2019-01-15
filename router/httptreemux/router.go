@@ -20,7 +20,7 @@ func DefaultConfig(pf proxy.Factory, logger logging.Logger) mux.Config {
 	return mux.Config{
 		Engine:         Engine{httptreemux.NewContextMux()},
 		Middlewares:    []mux.HandlerMiddleware{},
-		HandlerFactory: mux.CustomEndpointHandler(mux.NewRequestBuilder(httptreemuxParamsExtractor)),
+		HandlerFactory: mux.CustomEndpointHandler(mux.NewRequestBuilder(ParamsExtractor)),
 		ProxyFactory:   pf,
 		Logger:         logger,
 		DebugPattern:   "/__debug/{params}",
@@ -28,9 +28,12 @@ func DefaultConfig(pf proxy.Factory, logger logging.Logger) mux.Config {
 	}
 }
 
-func httptreemuxParamsExtractor(r *http.Request) map[string]string {
+func ParamsExtractor(r *http.Request) map[string]string {
 	return httptreemux.ContextParams(r.Context())
+}
 
+func NewEngine(m *httptreemux.ContextMux) Engine {
+	return Engine{m}
 }
 
 type Engine struct {
