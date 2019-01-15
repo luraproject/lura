@@ -18,7 +18,7 @@ func DefaultFactory(pf proxy.Factory, logger logging.Logger) router.Factory {
 // DefaultConfig returns the struct that collects the parts the router should be built from
 func DefaultConfig(pf proxy.Factory, logger logging.Logger) mux.Config {
 	return mux.Config{
-		Engine:         httptreemuxEngine{httptreemux.NewContextMux()},
+		Engine:         Engine{httptreemux.NewContextMux()},
 		Middlewares:    []mux.HandlerMiddleware{},
 		HandlerFactory: mux.CustomEndpointHandler(mux.NewRequestBuilder(httptreemuxParamsExtractor)),
 		ProxyFactory:   pf,
@@ -33,16 +33,16 @@ func httptreemuxParamsExtractor(r *http.Request) map[string]string {
 
 }
 
-type httptreemuxEngine struct {
+type Engine struct {
 	r *httptreemux.ContextMux
 }
 
 // Handle implements the mux.Engine interface from the krakend router package
-func (g httptreemuxEngine) Handle(pattern, method string, handler http.Handler) {
+func (g Engine) Handle(pattern, method string, handler http.Handler) {
 	g.r.Handle(method, pattern, handler.(http.HandlerFunc))
 }
 
 // ServeHTTP implements the http:Handler interface from the stdlib
-func (g httptreemuxEngine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (g Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	g.r.ServeHTTP(mux.NewHTTPErrorInterceptor(w), r)
 }
