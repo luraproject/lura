@@ -2,6 +2,7 @@ package httptreemux
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/devopsfaith/krakend/logging"
 	"github.com/devopsfaith/krakend/proxy"
@@ -29,7 +30,11 @@ func DefaultConfig(pf proxy.Factory, logger logging.Logger) mux.Config {
 }
 
 func ParamsExtractor(r *http.Request) map[string]string {
-	return httptreemux.ContextParams(r.Context())
+	params := map[string]string{}
+	for key, value := range httptreemux.ContextParams(r.Context()) {
+		params[strings.Title(key)] = value
+	}
+	return params
 }
 
 func NewEngine(m *httptreemux.ContextMux) Engine {
