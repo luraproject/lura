@@ -98,6 +98,7 @@ func noopRender(w http.ResponseWriter, response *proxy.Response) {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
+	w.WriteHeader(response.Metadata.StatusCode)
 	for k, v := range response.Metadata.Headers {
 		w.Header().Set(k, v[0])
 	}
