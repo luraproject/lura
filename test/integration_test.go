@@ -4,6 +4,7 @@ package test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,17 +12,54 @@ import (
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"text/template"
 	"time"
+
+	"github.com/urfave/negroni"
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/logging"
 	"github.com/devopsfaith/krakend/proxy"
 	"github.com/devopsfaith/krakend/router/gin"
+	"github.com/devopsfaith/krakend/router/gorilla"
+	krakendnegroni "github.com/devopsfaith/krakend/router/negroni"
 )
 
-func TestKrakenD(t *testing.T) {
+func TestKrakenD_ginRouter(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	testKrakenD(t, func(logger logging.Logger, cfg *config.ServiceConfig) {
+		gin.DefaultFactory(proxy.DefaultFactory(logger), logger).NewWithContext(ctx).Run(*cfg)
+	})
+}
+
+func TestKrakenD_gorillaRouter(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	config.RoutingPattern = config.BracketsRouterPatternBuilder
+	testKrakenD(t, func(logger logging.Logger, cfg *config.ServiceConfig) {
+		gorilla.DefaultFactory(proxy.DefaultFactory(logger), logger).NewWithContext(ctx).Run(*cfg)
+	})
+	config.RoutingPattern = config.ColonRouterPatternBuilder
+}
+
+func TestKrakenD_negroniRouter(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	config.RoutingPattern = config.BracketsRouterPatternBuilder
+	testKrakenD(t, func(logger logging.Logger, cfg *config.ServiceConfig) {
+		factory := krakendnegroni.DefaultFactory(proxy.DefaultFactory(logger), logger, []negroni.Handler{})
+		factory.NewWithContext(ctx).Run(*cfg)
+	})
+	config.RoutingPattern = config.ColonRouterPatternBuilder
+}
+
+func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceConfig)) {
 	cfg, err := setupBackend(t)
 	if err != nil {
 		t.Error(err)
@@ -35,9 +73,23 @@ func TestKrakenD(t *testing.T) {
 		return
 	}
 
-	go func() {
-		gin.DefaultFactory(proxy.DefaultFactory(logger), logger).New().Run(*cfg)
-	}()
+	go runRouter(logger, cfg)
+
+	select {
+	case <-time.After(300 * time.Millisecond):
+	}
+
+	defaultHeaders := map[string]string{
+		"Content-Type":        "application/json",
+		"X-KrakenD-Completed": "true",
+		"X-Krakend":           "Version undefined",
+	}
+
+	incompleteHeader := map[string]string{
+		"Content-Type":        "application/json",
+		"X-KrakenD-Completed": "false",
+		"X-Krakend":           "Version undefined",
+	}
 
 	for _, tc := range []struct {
 		name       string
@@ -49,15 +101,11 @@ func TestKrakenD(t *testing.T) {
 		expHeaders map[string]string
 	}{
 		{
-			name:    "static",
-			url:     "/static",
-			headers: map[string]string{},
-			expHeaders: map[string]string{
-				"Content-Type":        "application/json; charset=utf-8",
-				"X-KrakenD-Completed": "false",
-				"X-Krakend":           "Version undefined",
-			},
-			expBody: `{"bar":"foobar","foo":42}`,
+			name:       "static",
+			url:        "/static",
+			headers:    map[string]string{},
+			expHeaders: incompleteHeader,
+			expBody:    `{"bar":"foobar","foo":42}`,
 		},
 		{
 			name:   "param_forwarding",
@@ -68,75 +116,106 @@ func TestKrakenD(t *testing.T) {
 				"Authorization": "bearer AuthorizationToken",
 				"X-Y-Z":         "x-y-z",
 			},
-			body: `{"foo":"bar"}`,
-			expHeaders: map[string]string{
-				"Content-Type":        "application/json; charset=utf-8",
-				"X-KrakenD-Completed": "true",
-				"X-Krakend":           "Version undefined",
-			},
-			expBody: `{"path":"/foo"}`,
+			body:       `{"foo":"bar"}`,
+			expHeaders: defaultHeaders,
+			expBody:    `{"path":"/foo"}`,
 		},
 		{
-			name:    "timeout",
-			url:     "/timeout",
-			headers: map[string]string{},
-			expHeaders: map[string]string{
-				"Content-Type":        "application/json; charset=utf-8",
-				"X-KrakenD-Completed": "false",
-				"X-Krakend":           "Version undefined",
-			},
-			expBody: `{"email":"some@email.com","name":"a"}`,
+			name:       "timeout",
+			url:        "/timeout",
+			headers:    map[string]string{},
+			expHeaders: incompleteHeader,
+			expBody:    `{"email":"some@email.com","name":"a"}`,
 		},
 		{
-			name:    "partial_with_static",
-			url:     "/partial/static",
-			headers: map[string]string{},
-			expHeaders: map[string]string{
-				"Content-Type":        "application/json; charset=utf-8",
-				"X-KrakenD-Completed": "false",
-				"X-Krakend":           "Version undefined",
-			},
-			expBody: `{"bar":"foobar","email":"some@email.com","foo":42,"name":"a"}`,
+			name:       "partial_with_static",
+			url:        "/partial/static",
+			headers:    map[string]string{},
+			expHeaders: incompleteHeader,
+			expBody:    `{"bar":"foobar","email":"some@email.com","foo":42,"name":"a"}`,
 		},
 		{
-			name:    "partial",
-			url:     "/partial",
-			headers: map[string]string{},
-			expHeaders: map[string]string{
-				"Content-Type":        "application/json; charset=utf-8",
-				"X-KrakenD-Completed": "false",
-				"X-Krakend":           "Version undefined",
-			},
-			expBody: `{"email":"some@email.com","name":"a"}`,
+			name:       "partial",
+			url:        "/partial",
+			headers:    map[string]string{},
+			expHeaders: incompleteHeader,
+			expBody:    `{"email":"some@email.com","name":"a"}`,
 		},
 		{
-			name:    "combination",
-			url:     "/combination",
-			headers: map[string]string{},
-			expHeaders: map[string]string{
-				"Content-Type":        "application/json; charset=utf-8",
-				"X-KrakenD-Completed": "true",
-				"X-Krakend":           "Version undefined",
-			},
-			expBody: `{"name":"a","personal_email":"some@email.com","posts":[{"body":"some content","date":"123456789"},{"body":"some other content","date":"123496789"}]}`,
+			name:       "combination",
+			url:        "/combination",
+			headers:    map[string]string{},
+			expHeaders: defaultHeaders,
+			expBody:    `{"name":"a","personal_email":"some@email.com","posts":[{"body":"some content","date":"123456789"},{"body":"some other content","date":"123496789"}]}`,
 		},
 		{
-			name:    "detail_error",
-			url:     "/detail_error",
-			headers: map[string]string{},
-			expHeaders: map[string]string{
-				"Content-Type":        "application/json; charset=utf-8",
-				"X-KrakenD-Completed": "false",
-				"X-Krakend":           "Version undefined",
+			name:       "detail_error",
+			url:        "/detail_error",
+			headers:    map[string]string{},
+			expHeaders: incompleteHeader,
+			expBody:    `{"email":"some@email.com","error_backend_a":{"http_status_code":429,"http_body":"sad panda\n"},"name":"a"}`,
+		},
+		{
+			name:       "querystring-params-no-params",
+			url:        "/querystring-params-test/no-params?a=1&b=2&c=3",
+			headers:    map[string]string{},
+			expHeaders: defaultHeaders,
+			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"]},"path":"/no-params","query":{}}`,
+		},
+		{
+			name:       "querystring-params-optional-query-params",
+			url:        "/querystring-params-test/query-params?a=1&b=2&c=3",
+			headers:    map[string]string{},
+			expHeaders: defaultHeaders,
+			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"]},"path":"/query-params","query":{"a":["1"],"b":["2"]}}`,
+		},
+		{
+			name:       "querystring-params-mandatory-query-params",
+			url:        "/querystring-params-test/url-params/some?a=1&b=2&c=3",
+			headers:    map[string]string{},
+			expHeaders: defaultHeaders,
+			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"]},"path":"/url-params","query":{"p":["some"]}}`,
+		},
+		{
+			name:       "querystring-params-all",
+			url:        "/querystring-params-test/all-params?a=1&b=2&c=3",
+			headers:    map[string]string{},
+			expHeaders: defaultHeaders,
+			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"]},"path":"/all-params","query":{"a":["1"],"b":["2"],"c":["3"]}}`,
+		},
+		{
+			name: "header-params-none",
+			url:  "/header-params-test/no-params",
+			headers: map[string]string{
+				"x-Test-1": "some",
+				"X-TEST-2": "none",
 			},
-			expBody: `{"email":"some@email.com","error_backend_a":{"http_status_code":429,"http_body":"sad panda\n"},"name":"a"}`,
+			expHeaders: defaultHeaders,
+			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"]},"path":"/no-params","query":{}}`,
+		},
+		{
+			name: "header-params-filter",
+			url:  "/header-params-test/filter-params",
+			headers: map[string]string{
+				"x-tESt-1": "some",
+				"X-TEST-2": "none",
+			},
+			expHeaders: defaultHeaders,
+			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"],"X-Test-1":["some"]},"path":"/filter-params","query":{}}`,
+		},
+		{
+			name: "header-params-all",
+			url:  "/header-params-test/all-params",
+			headers: map[string]string{
+				"x-Test-1": "some",
+				"X-TEST-2": "none",
+			},
+			expHeaders: defaultHeaders,
+			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"],"X-Test-1":["some"],"X-Test-2":["none"]},"path":"/all-params","query":{}}`,
 		},
 	} {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-			time.Sleep(300 * time.Millisecond)
-
 			if tc.method == "" {
 				tc.method = "GET"
 			}
@@ -146,7 +225,9 @@ func TestKrakenD(t *testing.T) {
 				body = bytes.NewBufferString(tc.body)
 			}
 
-			r, _ := http.NewRequest(tc.method, fmt.Sprintf("http://localhost:%d%s", cfg.Port, tc.url), body)
+			url := fmt.Sprintf("http://localhost:%d%s", cfg.Port, tc.url)
+
+			r, _ := http.NewRequest(tc.method, url, body)
 			for k, v := range tc.headers {
 				r.Header.Add(k, v)
 			}
@@ -161,21 +242,20 @@ func TestKrakenD(t *testing.T) {
 				return
 			}
 
-			for k, v := range tc.expHeaders {
-				if c := resp.Header.Get(k); c != v {
-					t.Errorf("%s: unexpected header %s: %s", resp.Request.URL.Path, k, c)
-					return
-				}
-			}
 			if resp.StatusCode != http.StatusOK {
 				t.Errorf("%s: unexpected status code: %d", resp.Request.URL.Path, resp.StatusCode)
-				return
+			}
+
+			for k, v := range tc.expHeaders {
+				if c := resp.Header.Get(k); !strings.Contains(c, v) {
+					t.Errorf("%s: unexpected header %s: %s", resp.Request.URL.Path, k, c)
+				}
 			}
 			b, _ := ioutil.ReadAll(resp.Body)
 			resp.Body.Close()
 			if tc.expBody != string(b) {
 				t.Errorf("%s: unexpected body: %s", resp.Request.URL.Path, string(b))
-				return
+				fmt.Println(resp.Request.URL.Path, "was expecting:", tc.expBody)
 			}
 		})
 	}
@@ -246,6 +326,17 @@ func setupBackend(t *testing.T) (*config.ServiceConfig, error) {
 		json.NewEncoder(rw).Encode(map[string]interface{}{"email": "some@email.com", "name": "a"})
 	}))
 	data["b5"] = b5.URL
+
+	// querystring-forwarding backend
+	b6 := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		rw.Header().Add("Content-Type", "application/json")
+		json.NewEncoder(rw).Encode(map[string]interface{}{
+			"path":    r.URL.Path,
+			"query":   r.URL.Query(),
+			"headers": r.Header,
+		})
+	}))
+	data["b6"] = b6.URL
 
 	c, err := loadConfig(data)
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/devopsfaith/krakend/config"
@@ -103,6 +104,7 @@ var NewRequest = NewRequestBuilder(func(_ *http.Request) map[string]string {
 // NewRequestBuilder gets a RequestBuilder with the received ParamExtractor as a query param
 // extraction mechanism
 func NewRequestBuilder(paramExtractor ParamExtractor) RequestBuilder {
+	var re = regexp.MustCompile(`^\[?([\d.:]+)\]?(:[\d]*)$`)
 	return func(r *http.Request, queryString, headersToSend []string) *proxy.Request {
 		params := paramExtractor(r)
 		headers := make(map[string][]string, 2+len(headersToSend))
@@ -118,7 +120,8 @@ func NewRequestBuilder(paramExtractor ParamExtractor) RequestBuilder {
 				headers[k] = h
 			}
 		}
-		headers["X-Forwarded-For"] = []string{r.RemoteAddr}
+		matchs := re.FindAllStringSubmatch(r.RemoteAddr, -1)
+		headers["X-Forwarded-For"] = []string{matchs[0][1]}
 		headers["User-Agent"] = router.UserAgentHeaderValue
 
 		query := make(map[string][]string, len(queryString))

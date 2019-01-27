@@ -2,6 +2,7 @@
     "version": 2,
     "name": "My lovely gateway",
     "port": {{.port}},
+    "host": [ "http://local.machine" ],
     "cache_ttl": "3600s",
     "timeout": "3s",
     "endpoints": [
@@ -155,6 +156,73 @@
                         "{{.b3}}"
                     ],
                     "url_pattern": "/"
+                }
+            ]
+        },
+        {
+            "endpoint": "/querystring-params-test/no-params",
+            "backend": [
+                {
+                    "host": [ "{{.b6}}" ],
+                    "url_pattern": "/no-params"
+                }
+            ]
+        },
+        {
+            "endpoint": "/querystring-params-test/query-params",
+            "querystring_params": [ "a", "b" ],
+            "backend": [
+                {
+                    "host": [ "{{.b6}}" ],
+                    "url_pattern": "/query-params"
+                }
+            ]
+        },
+        {
+            "endpoint": "/querystring-params-test/url-params/{param}",
+            "backend": [
+                {
+                    "host": [ "{{.b6}}" ],
+                    "url_pattern": "/url-params?p={param}"
+                }
+            ]
+        },
+        {
+            "endpoint": "/querystring-params-test/all-params",
+            "querystring_params": [ "*" ],
+            "backend": [
+                {
+                    "host": [ "{{.b6}}" ],
+                    "url_pattern": "/all-params"
+                }
+            ]
+        },
+        {
+            "endpoint": "/header-params-test/no-params",
+            "backend": [
+                {
+                    "host": [ "{{.b6}}" ],
+                    "url_pattern": "/no-params"
+                }
+            ]
+        },
+        {
+            "endpoint": "/header-params-test/filter-params",
+            "headers_to_pass": [ "X-Test-1" ],
+            "backend": [
+                {
+                    "host": [ "{{.b6}}" ],
+                    "url_pattern": "/filter-params"
+                }
+            ]
+        },
+        {
+            "endpoint": "/header-params-test/all-params",
+            "headers_to_pass": [ "*" ],
+            "backend": [
+                {
+                    "host": [ "{{.b6}}" ],
+                    "url_pattern": "/all-params"
                 }
             ]
         }
