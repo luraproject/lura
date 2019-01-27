@@ -120,8 +120,14 @@ func NewRequestBuilder(paramExtractor ParamExtractor) RequestBuilder {
 				headers[k] = h
 			}
 		}
-		matchs := re.FindAllStringSubmatch(r.RemoteAddr, -1)
-		headers["X-Forwarded-For"] = []string{matchs[0][1]}
+
+		matches := re.FindAllStringSubmatch(r.RemoteAddr, -1)
+
+		if len(matches) > 0 && len(matches[0]) > 1 {
+			headers["X-Forwarded-For"] = []string{matches[0][1]}
+		} else {
+			headers["X-Forwarded-For"] = []string{r.RemoteAddr}
+		}
 		headers["User-Agent"] = router.UserAgentHeaderValue
 
 		query := make(map[string][]string, len(queryString))
