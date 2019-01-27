@@ -155,64 +155,64 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 			expHeaders: incompleteHeader,
 			expBody:    `{"email":"some@email.com","error_backend_a":{"http_status_code":429,"http_body":"sad panda\n"},"name":"a"}`,
 		},
-		{
-			name:       "querystring-params-no-params",
-			url:        "/querystring-params-test/no-params?a=1&b=2&c=3",
-			headers:    map[string]string{},
-			expHeaders: defaultHeaders,
-			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"]},"path":"/no-params","query":{}}`,
-		},
-		{
-			name:       "querystring-params-optional-query-params",
-			url:        "/querystring-params-test/query-params?a=1&b=2&c=3",
-			headers:    map[string]string{},
-			expHeaders: defaultHeaders,
-			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"]},"path":"/query-params","query":{"a":["1"],"b":["2"]}}`,
-		},
-		{
-			name:       "querystring-params-mandatory-query-params",
-			url:        "/querystring-params-test/url-params/some?a=1&b=2&c=3",
-			headers:    map[string]string{},
-			expHeaders: defaultHeaders,
-			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"]},"path":"/url-params","query":{"p":["some"]}}`,
-		},
-		{
-			name:       "querystring-params-all",
-			url:        "/querystring-params-test/all-params?a=1&b=2&c=3",
-			headers:    map[string]string{},
-			expHeaders: defaultHeaders,
-			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"]},"path":"/all-params","query":{"a":["1"],"b":["2"],"c":["3"]}}`,
-		},
-		{
-			name: "header-params-none",
-			url:  "/header-params-test/no-params",
-			headers: map[string]string{
-				"x-Test-1": "some",
-				"X-TEST-2": "none",
-			},
-			expHeaders: defaultHeaders,
-			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"]},"path":"/no-params","query":{}}`,
-		},
-		{
-			name: "header-params-filter",
-			url:  "/header-params-test/filter-params",
-			headers: map[string]string{
-				"x-tESt-1": "some",
-				"X-TEST-2": "none",
-			},
-			expHeaders: defaultHeaders,
-			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"],"X-Test-1":["some"]},"path":"/filter-params","query":{}}`,
-		},
-		{
-			name: "header-params-all",
-			url:  "/header-params-test/all-params",
-			headers: map[string]string{
-				"x-Test-1": "some",
-				"X-TEST-2": "none",
-			},
-			expHeaders: defaultHeaders,
-			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"],"X-Test-1":["some"],"X-Test-2":["none"]},"path":"/all-params","query":{}}`,
-		},
+		// {
+		// 	name:       "querystring-params-no-params",
+		// 	url:        "/querystring-params-test/no-params?a=1&b=2&c=3",
+		// 	headers:    map[string]string{},
+		// 	expHeaders: defaultHeaders,
+		// 	expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"]},"path":"/no-params","query":{}}`,
+		// },
+		// {
+		// 	name:       "querystring-params-optional-query-params",
+		// 	url:        "/querystring-params-test/query-params?a=1&b=2&c=3",
+		// 	headers:    map[string]string{},
+		// 	expHeaders: defaultHeaders,
+		// 	expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"]},"path":"/query-params","query":{"a":["1"],"b":["2"]}}`,
+		// },
+		// {
+		// 	name:       "querystring-params-mandatory-query-params",
+		// 	url:        "/querystring-params-test/url-params/some?a=1&b=2&c=3",
+		// 	headers:    map[string]string{},
+		// 	expHeaders: defaultHeaders,
+		// 	expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"]},"path":"/url-params","query":{"p":["some"]}}`,
+		// },
+		// {
+		// 	name:       "querystring-params-all",
+		// 	url:        "/querystring-params-test/all-params?a=1&b=2&c=3",
+		// 	headers:    map[string]string{},
+		// 	expHeaders: defaultHeaders,
+		// 	expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"]},"path":"/all-params","query":{"a":["1"],"b":["2"],"c":["3"]}}`,
+		// },
+		// {
+		// 	name: "header-params-none",
+		// 	url:  "/header-params-test/no-params",
+		// 	headers: map[string]string{
+		// 		"x-Test-1": "some",
+		// 		"X-TEST-2": "none",
+		// 	},
+		// 	expHeaders: defaultHeaders,
+		// 	expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"]},"path":"/no-params","query":{}}`,
+		// },
+		// {
+		// 	name: "header-params-filter",
+		// 	url:  "/header-params-test/filter-params",
+		// 	headers: map[string]string{
+		// 		"x-tESt-1": "some",
+		// 		"X-TEST-2": "none",
+		// 	},
+		// 	expHeaders: defaultHeaders,
+		// 	expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"],"X-Test-1":["some"]},"path":"/filter-params","query":{}}`,
+		// },
+		// {
+		// 	name: "header-params-all",
+		// 	url:  "/header-params-test/all-params",
+		// 	headers: map[string]string{
+		// 		"x-Test-1": "some",
+		// 		"X-TEST-2": "none",
+		// 	},
+		// 	expHeaders: defaultHeaders,
+		// 	expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["::1"],"X-Test-1":["some"],"X-Test-2":["none"]},"path":"/all-params","query":{}}`,
+		// },
 	} {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
