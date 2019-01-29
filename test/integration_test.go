@@ -23,6 +23,7 @@ import (
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/logging"
 	"github.com/devopsfaith/krakend/proxy"
+	"github.com/devopsfaith/krakend/router/chi"
 	"github.com/devopsfaith/krakend/router/gin"
 	"github.com/devopsfaith/krakend/router/gorilla"
 	krakendnegroni "github.com/devopsfaith/krakend/router/negroni"
@@ -56,6 +57,17 @@ func TestKrakenD_negroniRouter(t *testing.T) {
 	testKrakenD(t, func(logger logging.Logger, cfg *config.ServiceConfig) {
 		factory := krakendnegroni.DefaultFactory(proxy.DefaultFactory(logger), logger, []negroni.Handler{})
 		factory.NewWithContext(ctx).Run(*cfg)
+	})
+	config.RoutingPattern = config.ColonRouterPatternBuilder
+}
+
+func TestKrakenD_chiRouter(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	config.RoutingPattern = config.BracketsRouterPatternBuilder
+	testKrakenD(t, func(logger logging.Logger, cfg *config.ServiceConfig) {
+		chi.DefaultFactory(proxy.DefaultFactory(logger), logger).NewWithContext(ctx).Run(*cfg)
 	})
 	config.RoutingPattern = config.ColonRouterPatternBuilder
 }
