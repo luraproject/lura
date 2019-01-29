@@ -148,8 +148,8 @@ func TestDefaultFactory_ko(t *testing.T) {
 	}()
 
 	r := NewFactory(Config{
-		Engine: chi.NewRouter(),
-		// Middlewares:    []HandlerMiddleware{identityMiddleware{}},
+		Engine:         chi.NewRouter(),
+		Middlewares:    chi.Middlewares{},
 		HandlerFactory: EndpointHandler,
 		ProxyFactory:   noopProxyFactory(map[string]interface{}{"supu": "tupu"}),
 		Logger:         logger,
@@ -256,8 +256,8 @@ func TestRunServer_ko(t *testing.T) {
 	pf := noopProxyFactory(map[string]interface{}{"supu": "tupu"})
 	r := NewFactory(
 		Config{
-			Engine: chi.NewRouter(),
-			// Middlewares:    []HandlerMiddleware{},
+			Engine:         chi.NewRouter(),
+			Middlewares:    chi.Middlewares{},
 			HandlerFactory: EndpointHandler,
 			ProxyFactory:   pf,
 			Logger:         logger,
@@ -326,10 +326,4 @@ type erroredProxyFactory struct {
 
 func (e erroredProxyFactory) New(_ *config.EndpointConfig) (proxy.Proxy, error) {
 	return proxy.NoopProxy, e.Error
-}
-
-type identityMiddleware struct{}
-
-func (i identityMiddleware) Handler(h http.Handler) http.Handler {
-	return h
 }

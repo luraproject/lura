@@ -35,10 +35,8 @@ type Config struct {
 func DefaultFactory(proxyFactory proxy.Factory, logger logging.Logger) router.Factory {
 	return NewFactory(
 		Config{
-			Engine: chi.NewRouter(),
-			Middlewares: chi.Middlewares{
-				middleware.Logger,
-			},
+			Engine:         chi.NewRouter(),
+			Middlewares:    chi.Middlewares{middleware.Logger},
 			HandlerFactory: EndpointHandler,
 			ProxyFactory:   proxyFactory,
 			Logger:         logger,
@@ -78,13 +76,13 @@ type chiRouter struct {
 
 // Run implements the router interface
 func (r chiRouter) Run(cfg config.ServiceConfig) {
+	r.cfg.Engine.Use(r.cfg.Middlewares...)
+
 	if cfg.Debug {
 		r.registerDebugEndpoints()
 	}
 
 	router.InitHTTPDefaultTransport(cfg)
-
-	r.cfg.Engine.Use(r.cfg.Middlewares...)
 
 	r.registerKrakendEndpoints(cfg.Endpoints)
 
