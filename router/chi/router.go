@@ -9,6 +9,7 @@ import (
 	"github.com/devopsfaith/krakend/logging"
 	"github.com/devopsfaith/krakend/proxy"
 	"github.com/devopsfaith/krakend/router"
+	"github.com/devopsfaith/krakend/router/mux"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
@@ -99,7 +100,7 @@ func (r chiRouter) Run(cfg config.ServiceConfig) {
 }
 
 func (r chiRouter) registerDebugEndpoints() {
-	debugHandler := DebugHandler(r.cfg.Logger)
+	debugHandler := mux.DebugHandler(r.cfg.Logger)
 	r.cfg.Engine.Get(r.cfg.DebugPattern, debugHandler)
 	r.cfg.Engine.Post(r.cfg.DebugPattern, debugHandler)
 	r.cfg.Engine.Put(r.cfg.DebugPattern, debugHandler)

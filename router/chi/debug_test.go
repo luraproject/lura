@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi"
 
 	"github.com/devopsfaith/krakend/logging"
+	"github.com/devopsfaith/krakend/router/mux"
 )
 
 func TestDebugHandler(t *testing.T) {
@@ -21,7 +22,7 @@ func TestDebugHandler(t *testing.T) {
 	}
 
 	router := chi.NewRouter()
-	router.Get("/_chi/{param}", DebugHandler(logger))
+	router.Get("/_chi/{param}", mux.DebugHandler(logger))
 
 	req, _ := http.NewRequest("GET", "http://127.0.0.1:8088/_chi/a?b=1", ioutil.NopCloser(&bytes.Buffer{}))
 	req.Header.Set("Content-Type", "application/json")
