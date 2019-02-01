@@ -19,15 +19,19 @@ type engine struct {
 	dict    map[string]map[string]http.HandlerFunc
 }
 
+// NewHTTPErrorInterceptor returns a HTTPErrorInterceptor over theinjected response writer
 func NewHTTPErrorInterceptor(w http.ResponseWriter) *HTTPErrorInterceptor {
 	return &HTTPErrorInterceptor{w, new(sync.Once)}
 }
 
+// HTTPErrorInterceptor is a reposnse writer that adds a header signaling incomplete response in case of
+// seeing a status code not equal to 200
 type HTTPErrorInterceptor struct {
 	http.ResponseWriter
 	once *sync.Once
 }
 
+// WriteHeader records the status code and adds a header signaling incomplete responses
 func (i *HTTPErrorInterceptor) WriteHeader(code int) {
 	i.once.Do(func() {
 		if code != http.StatusOK {
@@ -45,6 +49,7 @@ func DefaultEngine() *engine {
 	}
 }
 
+// Handle registers a handler at a given url pattern and http method
 func (e *engine) Handle(pattern, method string, handler http.Handler) {
 	if _, ok := e.dict[pattern]; !ok {
 		e.dict[pattern] = map[string]http.HandlerFunc{}
@@ -53,6 +58,8 @@ func (e *engine) Handle(pattern, method string, handler http.Handler) {
 	e.dict[pattern][method] = handler.ServeHTTP
 }
 
+// ServeHTTP adds a error interceptor and delegates the request dispatching to the
+// internal request multiplexer.
 func (e *engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	e.handler.ServeHTTP(NewHTTPErrorInterceptor(w), r)
 }

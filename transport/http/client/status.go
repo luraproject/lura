@@ -20,6 +20,9 @@ var ErrInvalidStatusCode = errors.New("Invalid status code")
 // HTTPStatusHandler defines how we tread the http response code
 type HTTPStatusHandler func(context.Context, *http.Response) (*http.Response, error)
 
+// GetHTTPStatusHandler returns a status handler. If the 'return_error_details' key is defined
+// at the extra config, it returns a DetailedHTTPStatusHandler. Otherwise, it returns a
+// DefaultHTTPStatusHandler
 func GetHTTPStatusHandler(remote *config.Backend) HTTPStatusHandler {
 	if e, ok := remote.ExtraConfig[Namespace]; ok {
 		if m, ok := e.(map[string]interface{}); ok {
@@ -69,20 +72,24 @@ func DetailedHTTPStatusHandler(next HTTPStatusHandler, name string) HTTPStatusHa
 	}
 }
 
+// HTTPResponseError is the error to be returned by the DetailedHTTPStatusHandler
 type HTTPResponseError struct {
 	Code int    `json:"http_status_code"`
 	Msg  string `json:"http_body,omitempty"`
-	name string `json:"-"`
+	name string
 }
 
+// Error returns the error message
 func (r HTTPResponseError) Error() string {
 	return r.Msg
 }
 
+// Name returns the name of the error
 func (r HTTPResponseError) Name() string {
 	return r.name
 }
 
+// StatusCode returns the status code returned by the backend
 func (r HTTPResponseError) StatusCode() int {
 	return r.Code
 }

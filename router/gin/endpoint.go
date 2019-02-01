@@ -1,9 +1,9 @@
 package gin
 
 import (
-	"net/textproto"
 	"context"
 	"fmt"
+	"net/textproto"
 	"strings"
 
 	"github.com/gin-gonic/gin"
