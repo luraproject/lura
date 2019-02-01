@@ -7,3 +7,5 @@ server.rsa.key
 *.toml
 *.dot
 coverage.out
+
+*DS_Store
