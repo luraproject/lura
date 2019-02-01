@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  digest = "1:09d3ceb4456b0b463c5730198a9138e383089b27c0c10b1032789a0618a6dfe6"
+  name = "github.com/dimfeld/httptreemux"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "a454a10de4a11f751681a0914461ab9e98c2a3ff"
+  version = "5.0.2"
+
+[[projects]]
   branch = "master"
   digest = "1:36fe9527deed01d2a317617e59304eb2c4ce9f8a24115bcc5c2e37b3aee5bae4"
   name = "github.com/gin-contrib/sse"
@@ -97,6 +105,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/dimfeld/httptreemux",
     "github.com/gin-gonic/gin",
     "github.com/gorilla/mux",
     "github.com/urfave/negroni",

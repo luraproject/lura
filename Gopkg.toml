@@ -37,6 +37,10 @@
   name = "github.com/urfave/negroni"
   version = "0.3.0"
 
+[[constraint]]
+  name = "github.com/dimfeld/httptreemux"
+  version = "5.0.2"
+
 [prune]
   go-tests = true
   unused-packages = true
