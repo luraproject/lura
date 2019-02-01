@@ -24,7 +24,11 @@ func DefaultToHTTPError(_ error) int {
 }
 
 const (
-	HeaderCompleteResponseValue   = "true"
+	// HeaderCompleteResponseValue is the value of the CompleteResponseHeader
+	// if the response is complete
+	HeaderCompleteResponseValue = "true"
+	// HeaderIncompleteResponseValue is the value of the CompleteResponseHeader
+	// if the response is not complete
 	HeaderIncompleteResponseValue = "false"
 )
 
@@ -97,6 +101,7 @@ func RunServer(ctx context.Context, cfg config.ServiceConfig, handler http.Handl
 	}
 }
 
+// NewServer returns a http.Server ready to serve the injected handler
 func NewServer(cfg config.ServiceConfig, handler http.Handler) *http.Server {
 	return &http.Server{
 		Addr:              fmt.Sprintf(":%d", cfg.Port),
@@ -109,6 +114,7 @@ func NewServer(cfg config.ServiceConfig, handler http.Handler) *http.Server {
 	}
 }
 
+// ParseTLSConfig creates a tls.Config from the TLS section of the service configuration
 func ParseTLSConfig(cfg *config.TLS) *tls.Config {
 	if cfg == nil {
 		return nil

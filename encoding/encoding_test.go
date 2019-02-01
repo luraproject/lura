@@ -118,7 +118,7 @@ func TestRegister_complete_ko(t *testing.T) {
 				t.Errorf("unexpected msg: %s", string(d))
 				return errors.New("unexpected msg to decode")
 			}
-			v = nil
+			// v = nil
 			return expectedErr
 		}
 	}); err != nil {
