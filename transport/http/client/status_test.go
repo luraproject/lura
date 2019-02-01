@@ -11,10 +11,11 @@ import (
 )
 
 func TestDetailedHTTPStatusHandler(t *testing.T) {
+	expectedErrName := "some"
 	cfg := &config.Backend{
 		ExtraConfig: config.ExtraConfig{
 			Namespace: map[string]interface{}{
-				"return_error_details": "some",
+				"return_error_details": expectedErrName,
 			},
 		},
 	}
@@ -67,6 +68,11 @@ func TestDetailedHTTPStatusHandler(t *testing.T) {
 
 		if e.Error() != msg {
 			t.Errorf("#%d unexpected message: %s", i, e.Msg)
+			return
+		}
+
+		if e.Name() != expectedErrName {
+			t.Errorf("#%d unexpected error name: %s", i, e.name)
 			return
 		}
 	}

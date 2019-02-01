@@ -19,7 +19,7 @@ func DefaultFactory(pf proxy.Factory, logger logging.Logger) router.Factory {
 // DefaultConfig returns the struct that collects the parts the router should be built from
 func DefaultConfig(pf proxy.Factory, logger logging.Logger) mux.Config {
 	return mux.Config{
-		Engine:         Engine{httptreemux.NewContextMux()},
+		Engine:         NewEngine(httptreemux.NewContextMux()),
 		Middlewares:    []mux.HandlerMiddleware{},
 		HandlerFactory: mux.CustomEndpointHandler(mux.NewRequestBuilder(ParamsExtractor)),
 		ProxyFactory:   pf,
