@@ -23,6 +23,7 @@ import (
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/logging"
 	"github.com/devopsfaith/krakend/proxy"
+	"github.com/devopsfaith/krakend/router/chi"
 	"github.com/devopsfaith/krakend/router/gin"
 	"github.com/devopsfaith/krakend/router/gorilla"
 	"github.com/devopsfaith/krakend/router/httptreemux"
@@ -68,6 +69,17 @@ func TestKrakenD_httptreemuxRouter(t *testing.T) {
 	testKrakenD(t, func(logger logging.Logger, cfg *config.ServiceConfig) {
 		httptreemux.DefaultFactory(proxy.DefaultFactory(logger), logger).NewWithContext(ctx).Run(*cfg)
 	})
+}
+
+func TestKrakenD_chiRouter(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	config.RoutingPattern = config.BracketsRouterPatternBuilder
+	testKrakenD(t, func(logger logging.Logger, cfg *config.ServiceConfig) {
+		chi.DefaultFactory(proxy.DefaultFactory(logger), logger).NewWithContext(ctx).Run(*cfg)
+	})
+	config.RoutingPattern = config.ColonRouterPatternBuilder
 }
 
 func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceConfig)) {
