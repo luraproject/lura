@@ -253,11 +253,12 @@ const defaultNamespace = "github.com/devopsfaith/krakend/config"
 var ConfigGetters = map[string]ConfigGetter{defaultNamespace: DefaultConfigGetter}
 
 var (
-	simpleURLKeysPattern   = regexp.MustCompile(`\{([a-zA-Z\-_0-9]+)\}`)
-	debugPattern           = "^[^/]|/__debug(/.*)?$"
-	errInvalidHost         = errors.New("invalid host")
-	errInvalidNoOpEncoding = errors.New("can not use NoOp encoding with more than one backends connected to the same endpoint")
-	defaultPort            = 8080
+	simpleURLKeysPattern    = regexp.MustCompile(`\{([a-zA-Z\-_0-9]+)\}`)
+	sequentialParamsPattern = regexp.MustCompile(`^resp[\d]+_.*$`)
+	debugPattern            = "^[^/]|/__debug(/.*)?$"
+	errInvalidHost          = errors.New("invalid host")
+	errInvalidNoOpEncoding  = errors.New("can not use NoOp encoding with more than one backends connected to the same endpoint")
+	defaultPort             = 8080
 )
 
 // Hash returns the sha 256 hash of the configuration in a standard base64 encoded string
@@ -397,8 +398,10 @@ func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]
 	tmp := backend.URLPattern
 	backend.URLKeys = make([]string, len(outputParams))
 	for o := range outputParams {
-		if _, ok := inputParams[outputParams[o]]; !ok {
-			return fmt.Errorf("Undefined output param [%s]! input: %v, output: %v\n", outputParams[o], inputParams, outputParams)
+		if !sequentialParamsPattern.MatchString(outputParams[o]) {
+			if _, ok := inputParams[outputParams[o]]; !ok {
+				return fmt.Errorf("Undefined output param [%s]! input: %v, output: %v\n", outputParams[o], inputParams, outputParams)
+			}
 		}
 		tmp = strings.Replace(tmp, "{"+outputParams[o]+"}", "{{."+strings.Title(outputParams[o])+"}}", -1)
 		backend.URLKeys = append(backend.URLKeys, strings.Title(outputParams[o]))
