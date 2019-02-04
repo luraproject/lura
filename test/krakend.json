@@ -225,6 +225,26 @@
                     "url_pattern": "/all-params"
                 }
             ]
+        },
+        {
+          "endpoint": "/sequential/{param}",
+          "extra_config": {
+            "github.com/devopsfaith/krakend/proxy": {
+              "sequential": true
+            }
+          },
+          "backend": [
+            {
+              "url_pattern": "/provider/{param}",
+              "host": [ "{{.b7}}" ],
+              "whitelist": [ "random" ]
+            },
+            {
+              "url_pattern": "/recipient/{resp0_random}",
+              "host": [ "{{.b7}}" ],
+              "whitelist": [ "path" ]
+            }
+          ]
         }
     ]
 }

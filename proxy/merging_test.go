@@ -47,8 +47,8 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 	endpoint := config.EndpointConfig{
 		Backend: []*config.Backend{
 			{URLPattern: "/"},
-			{URLPattern: "/aaa/{resp0_supu}"},
-			{URLPattern: "/aaa/{resp0_supu}?x={resp1_tupu}"},
+			{URLPattern: "/aaa/{{.Resp0_supu}}"},
+			{URLPattern: "/aaa/{{.Resp0_supu}}?x={{.Resp1_tupu}}"},
 		},
 		Timeout: time.Duration(timeout) * time.Millisecond,
 		ExtraConfig: config.ExtraConfig{
@@ -61,16 +61,16 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 	p := mw(
 		dummyProxy(&Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}),
 		func(ctx context.Context, r *Request) (*Response, error) {
-			if r.Params["resp0_supu"] != "42" {
+			if r.Params["Resp0_supu"] != "42" {
 				t.Errorf("request without the expected set of params")
 			}
 			return &Response{Data: map[string]interface{}{"tupu": "foo"}, IsComplete: true}, nil
 		},
 		func(ctx context.Context, r *Request) (*Response, error) {
-			if r.Params["resp0_supu"] != "42" {
+			if r.Params["Resp0_supu"] != "42" {
 				t.Errorf("request without the expected set of params")
 			}
-			if r.Params["resp1_tupu"] != "foo" {
+			if r.Params["Resp1_tupu"] != "foo" {
 				t.Errorf("request without the expected set of params")
 			}
 			return &Response{Data: map[string]interface{}{"aaaa": []int{1, 2, 3}}, IsComplete: true}, nil
@@ -103,8 +103,8 @@ func TestNewMergeDataMiddleware_sequential_unavailableParams(t *testing.T) {
 	endpoint := config.EndpointConfig{
 		Backend: []*config.Backend{
 			{URLPattern: "/"},
-			{URLPattern: "/aaa/{resp2_supu}"},
-			{URLPattern: "/aaa/{resp0_tupu}?x={resp1_tupu}"},
+			{URLPattern: "/aaa/{{.Resp2_supu}"},
+			{URLPattern: "/aaa/{{.Resp0_tupu}}?x={{.Resp1_tupu}}"},
 		},
 		Timeout: time.Duration(timeout) * time.Millisecond,
 		ExtraConfig: config.ExtraConfig{
@@ -117,19 +117,19 @@ func TestNewMergeDataMiddleware_sequential_unavailableParams(t *testing.T) {
 	p := mw(
 		dummyProxy(&Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}),
 		func(ctx context.Context, r *Request) (*Response, error) {
-			if v, ok := r.Params["resp0_supu"]; ok || v != "" {
+			if v, ok := r.Params["Resp0_supu"]; ok || v != "" {
 				t.Errorf("request with unexpected set of params")
 			}
 			return &Response{Data: map[string]interface{}{"tupu": "foo"}, IsComplete: true}, nil
 		},
 		func(ctx context.Context, r *Request) (*Response, error) {
-			if v, ok := r.Params["resp0_supu"]; ok || v != "" {
+			if v, ok := r.Params["Resp0_supu"]; ok || v != "" {
 				t.Errorf("request with unexpected set of params")
 			}
-			if r.Params["respo_tupu"] != "" {
+			if r.Params["Respo_tupu"] != "" {
 				t.Errorf("request without the expected set of params")
 			}
-			if r.Params["resp1_tupu"] != "foo" {
+			if r.Params["Resp1_tupu"] != "foo" {
 				t.Errorf("request without the expected set of params")
 			}
 			return &Response{Data: map[string]interface{}{"aaaa": []int{1, 2, 3}}, IsComplete: true}, nil
@@ -162,8 +162,8 @@ func TestNewMergeDataMiddleware_sequential_erroredBackend(t *testing.T) {
 	endpoint := config.EndpointConfig{
 		Backend: []*config.Backend{
 			{URLPattern: "/"},
-			{URLPattern: "/aaa/{resp0_supu}"},
-			{URLPattern: "/aaa/{resp0_supu}?x={resp1_tupu}"},
+			{URLPattern: "/aaa/{{.Resp0_supu}}"},
+			{URLPattern: "/aaa/{{.Resp0_supu}}?x={{.Resp1_tupu}}"},
 		},
 		Timeout: time.Duration(timeout) * time.Millisecond,
 		ExtraConfig: config.ExtraConfig{
@@ -177,7 +177,7 @@ func TestNewMergeDataMiddleware_sequential_erroredBackend(t *testing.T) {
 	p := mw(
 		dummyProxy(&Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}),
 		func(ctx context.Context, r *Request) (*Response, error) {
-			if r.Params["resp0_supu"] != "42" {
+			if r.Params["Resp0_supu"] != "42" {
 				t.Errorf("request without the expected set of params")
 			}
 			return nil, expecterErr

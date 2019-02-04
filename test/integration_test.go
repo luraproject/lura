@@ -236,6 +236,12 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 			expHeaders: defaultHeaders,
 			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Test-1":["some"],"X-Test-2":["none"]},"path":"/all-params","query":{}}`,
 		},
+		{
+			name:       "sequential",
+			url:        "/sequential/foo",
+			expHeaders: defaultHeaders,
+			expBody:    `{"path":"/recipient/42","random":42}`,
+		},
 	} {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
@@ -365,6 +371,13 @@ func setupBackend(t *testing.T) (*config.ServiceConfig, error) {
 		})
 	}))
 	data["b6"] = b6.URL
+
+	// path validator
+	b7 := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		rw.Header().Add("Content-Type", "application/json")
+		json.NewEncoder(rw).Encode(map[string]interface{}{"path": r.URL.Path, "random": 42})
+	}))
+	data["b7"] = b7.URL
 
 	c, err := loadConfig(data)
 	if err != nil {
