@@ -37,6 +37,10 @@
   name = "github.com/urfave/negroni"
   version = "0.3.0"
 
+[[constraint]]
+  name = "github.com/go-chi/chi"
+  version = "4.0.1"
+
 [prune]
   go-tests = true
   unused-packages = true
