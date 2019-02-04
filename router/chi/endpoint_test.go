@@ -107,7 +107,7 @@ func testEndpointHandler(t *testing.T, timeout time.Duration, p proxy.Proxy, met
 		QueryString: []string{"b", "c[]", "d"},
 	}
 
-	server := startChiServer(EndpointHandler(endpoint, p))
+	server := startChiServer(NewEndpointHandler(endpoint, p))
 
 	req, _ := http.NewRequest(method, "http://127.0.0.1:8081/_chi_endpoint?b=1&c[]=x&c[]=y&d=1&d=2", ioutil.NopCloser(&bytes.Buffer{}))
 	req.Header.Set("Content-Type", "application/json")

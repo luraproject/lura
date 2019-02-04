@@ -38,7 +38,7 @@ func DefaultFactory(proxyFactory proxy.Factory, logger logging.Logger) router.Fa
 		Config{
 			Engine:         chi.NewRouter(),
 			Middlewares:    chi.Middlewares{middleware.Logger},
-			HandlerFactory: EndpointHandler,
+			HandlerFactory: NewEndpointHandler,
 			ProxyFactory:   proxyFactory,
 			Logger:         logger,
 			DebugPattern:   ChiDefaultDebugPattern,

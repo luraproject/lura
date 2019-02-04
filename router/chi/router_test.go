@@ -150,7 +150,7 @@ func TestDefaultFactory_ko(t *testing.T) {
 	r := NewFactory(Config{
 		Engine:         chi.NewRouter(),
 		Middlewares:    chi.Middlewares{},
-		HandlerFactory: EndpointHandler,
+		HandlerFactory: NewEndpointHandler,
 		ProxyFactory:   noopProxyFactory(map[string]interface{}{"supu": "tupu"}),
 		Logger:         logger,
 		RunServer:      router.RunServer,
@@ -258,7 +258,7 @@ func TestRunServer_ko(t *testing.T) {
 		Config{
 			Engine:         chi.NewRouter(),
 			Middlewares:    chi.Middlewares{},
-			HandlerFactory: EndpointHandler,
+			HandlerFactory: NewEndpointHandler,
 			ProxyFactory:   pf,
 			Logger:         logger,
 			DebugPattern:   ChiDefaultDebugPattern,
