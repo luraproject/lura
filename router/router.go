@@ -27,30 +27,44 @@ type Factory interface {
 }
 
 // ToHTTPError translates an error into a HTTP status code
+// Deprecated: ToHTTPError is deprecated
 type ToHTTPError http.ToHTTPError
 
 // DefaultToHTTPError is a ToHTTPError transalator that always returns an
 // internal server error
+// Deprecated: DefaultToHTTPError is deprecated
 var DefaultToHTTPError = http.DefaultToHTTPError
 
 const (
-	HeaderCompleteResponseValue   = http.HeaderCompleteResponseValue
+	// HeaderCompleteResponseValue is the value of the CompleteResponseHeader
+	// if the response is complete
+	// Deprecated: HeaderCompleteResponseValue is deprecated
+	HeaderCompleteResponseValue = http.HeaderCompleteResponseValue
+	// HeaderIncompleteResponseValue is the value of the CompleteResponseHeader
+	// if the response is not complete
+	// Deprecated: HeaderIncompleteResponseValue is deprecated
 	HeaderIncompleteResponseValue = http.HeaderIncompleteResponseValue
 )
 
 var (
 	// CompleteResponseHeaderName is the header to flag incomplete responses to the client
+	// Deprecated: HeaderIncompleteResponseValue is deprecated
 	CompleteResponseHeaderName = http.CompleteResponseHeaderName
 	// HeadersToSend are the headers to pass from the router request to the proxy
+	// Deprecated: HeadersToSend is deprecated
 	HeadersToSend = http.HeadersToSend
 	// UserAgentHeaderValue is the value of the User-Agent header to add to the proxy request
+	// Deprecated: UserAgentHeaderValue is deprecated
 	UserAgentHeaderValue = http.UserAgentHeaderValue
 	// ErrInternalError is the error returned by the router when something went wrong
+	// Deprecated: ErrInternalError is deprecated
 	ErrInternalError = http.ErrInternalError
 )
 
 // InitHTTPDefaultTransport ensures the default HTTP transport is configured just once per execution
+// Deprecated: InitHTTPDefaultTransport is deprecated
 var InitHTTPDefaultTransport = http.InitHTTPDefaultTransport
 
 // RunServer runs a http.Server with the given handler and configuration
+// Deprecated: RunServer is deprecated
 var RunServer = http.RunServer

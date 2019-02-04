@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/dimfeld/httptreemux"
+  packages = ["."]
+  revision = "a454a10de4a11f751681a0914461ab9e98c2a3ff"
+  version = "5.0.2"
+
+[[projects]]
   branch = "master"
   name = "github.com/gin-contrib/sse"
   packages = ["."]
@@ -83,6 +89,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "55dba196a1132adc7faaabc12a95b02ea5e8c957bff16b1824119c9b1a4637bd"
+  inputs-digest = "455fd8797a376ebebaa365fa68ff28c866e203f78a38a464830874498e674596"
   solver-name = "gps-cdcl"
   solver-version = 1

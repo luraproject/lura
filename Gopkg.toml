@@ -38,6 +38,10 @@
   version = "0.3.0"
 
 [[constraint]]
+  name = "github.com/dimfeld/httptreemux"
+  version = "5.0.2"
+
+[[constraint]]
   name = "github.com/go-chi/chi"
   version = "4.0.1"
 

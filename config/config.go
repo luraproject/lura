@@ -260,6 +260,7 @@ var (
 	defaultPort            = 8080
 )
 
+// Hash returns the sha 256 hash of the configuration in a standard base64 encoded string
 func (s *ServiceConfig) Hash() (string, error) {
 	b, err := json.Marshal(s)
 	if err != nil {

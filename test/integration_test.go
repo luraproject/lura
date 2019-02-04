@@ -26,6 +26,7 @@ import (
 	"github.com/devopsfaith/krakend/router/chi"
 	"github.com/devopsfaith/krakend/router/gin"
 	"github.com/devopsfaith/krakend/router/gorilla"
+	"github.com/devopsfaith/krakend/router/httptreemux"
 	krakendnegroni "github.com/devopsfaith/krakend/router/negroni"
 )
 
@@ -59,6 +60,15 @@ func TestKrakenD_negroniRouter(t *testing.T) {
 		factory.NewWithContext(ctx).Run(*cfg)
 	})
 	config.RoutingPattern = config.ColonRouterPatternBuilder
+}
+
+func TestKrakenD_httptreemuxRouter(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	testKrakenD(t, func(logger logging.Logger, cfg *config.ServiceConfig) {
+		httptreemux.DefaultFactory(proxy.DefaultFactory(logger), logger).NewWithContext(ctx).Run(*cfg)
+	})
 }
 
 func TestKrakenD_chiRouter(t *testing.T) {
