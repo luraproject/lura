@@ -48,7 +48,7 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 				return
 			}
 
-			requestCtx, cancel := context.WithTimeout(context.Background(), configuration.Timeout)
+			requestCtx, cancel := context.WithTimeout(r.Context(), configuration.Timeout)
 
 			response, err := prxy(requestCtx, rb(r, configuration.QueryString, headersToSend))
 
