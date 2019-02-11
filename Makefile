@@ -1,6 +1,6 @@
 .PHONY: all deps test build benchmark coveralls
 
-DEP_VERSION=0.4.1
+DEP_VERSION=0.5.0
 OS := $(shell uname | tr '[:upper:]' '[:lower:]')
 
 all: deps test build
