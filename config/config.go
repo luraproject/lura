@@ -239,6 +239,19 @@ type TLS struct {
 // ExtraConfig is a type to store extra configurations for customized behaviours
 type ExtraConfig map[string]interface{}
 
+func (e *ExtraConfig) sanitize() {
+	for module, extra := range *e {
+		switch extra := extra.(type) {
+		case map[interface{}]interface{}:
+			sanitized := map[string]interface{}{}
+			for k, v := range extra {
+				sanitized[fmt.Sprintf("%v", k)] = v
+			}
+			(*e)[module] = sanitized
+		}
+	}
+}
+
 // ConfigGetter is a function for parsing ExtraConfig into a previously know type
 type ConfigGetter func(ExtraConfig) interface{}
 
@@ -291,6 +304,8 @@ func (s *ServiceConfig) Init() error {
 
 	s.Host = s.uriParser.CleanHosts(s.Host)
 
+	s.ExtraConfig.sanitize()
+
 	for i, e := range s.Endpoints {
 		e.Endpoint = s.uriParser.CleanPath(e.Endpoint)
 
@@ -312,12 +327,16 @@ func (s *ServiceConfig) Init() error {
 			return errInvalidNoOpEncoding
 		}
 
-		for j := range e.Backend {
+		e.ExtraConfig.sanitize()
+
+		for j, b := range e.Backend {
 			s.initBackendDefaults(i, j)
 
 			if err := s.initBackendURLMappings(i, j, inputSet); err != nil {
 				return err
 			}
+
+			b.ExtraConfig.sanitize()
 		}
 	}
 
