@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/textproto"
 	"regexp"
 	"strings"
 
@@ -116,7 +117,7 @@ func NewRequestBuilder(paramExtractor ParamExtractor) RequestBuilder {
 				break
 			}
 
-			if h, ok := r.Header[k]; ok {
+			if h, ok := r.Header[textproto.CanonicalMIMEHeaderKey(k)]; ok {
 				headers[k] = h
 			}
 		}
