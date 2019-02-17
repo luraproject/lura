@@ -14,10 +14,14 @@ import (
 
 var (
 	extraCfg = config.ExtraConfig{
-		"shadow": true,
+		Namespace: map[string]interface{}{
+			"shadow": true,
+		},
 	}
 	badExtra = config.ExtraConfig{
-		"shadow": "string",
+		Namespace: map[string]interface{}{
+			"shadow": "string",
+		},
 	}
 )
 
