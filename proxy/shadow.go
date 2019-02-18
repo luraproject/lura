@@ -75,10 +75,11 @@ func NewShadowProxy(p1, p2 Proxy) Proxy {
 }
 
 func isShadowBackend(c *config.Backend) bool {
-	if v, ok := c.ExtraConfig[shadowKey]; ok {
-		if s, ok := v.(bool); ok {
-			if s {
-				return true
+	if v, ok := c.ExtraConfig[Namespace]; ok {
+		if e, ok := v.(map[string]interface{}); ok {
+			if v, ok := e[shadowKey]; ok {
+				c, ok := v.(bool)
+				return ok && c
 			}
 		}
 	}
