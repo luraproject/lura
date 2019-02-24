@@ -111,7 +111,7 @@ func NewServer(cfg config.ServiceConfig, handler http.Handler) *http.Server {
 		WriteTimeout:      cfg.WriteTimeout,
 		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
 		IdleTimeout:       cfg.IdleTimeout,
-		TLSConfig:         krakendhttp.ParseTLSConfig(cfg.TLS),
+		TLSConfig:         ParseTLSConfig(cfg.TLS),
 	}
 }
 

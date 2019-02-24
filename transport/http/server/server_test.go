@@ -12,6 +12,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"sync"
 	"testing"
 	"time"
 
@@ -189,6 +190,72 @@ func TestRunServer_errBadKeys(t *testing.T) {
 	if err := <-done; err == nil || err.Error() != "open unknown: no such file or directory" {
 		t.Error(err)
 	}
+}
+
+func TestInitHTTPDefaultTransport(t *testing.T) {
+	cleanUp()
+	defer cleanUp()
+
+	InitHTTPDefaultTransport(config.ServiceConfig{
+		DialerTimeout:         time.Hour,
+		DialerKeepAlive:       2 * time.Hour,
+		DialerFallbackDelay:   3 * time.Hour,
+		DisableCompression:    true,
+		DisableKeepAlives:     true,
+		MaxIdleConns:          123,
+		MaxIdleConnsPerHost:   234,
+		IdleConnTimeout:       time.Second,
+		ResponseHeaderTimeout: 2 * time.Second,
+		ExpectContinueTimeout: 3 * time.Minute,
+	})
+
+	transport := http.DefaultTransport.(*http.Transport)
+
+	if err := equalDuration("IdleConnTimeout", transport.IdleConnTimeout, time.Second); err != nil {
+		t.Error(err)
+	}
+
+	if err := equalDuration("ResponseHeaderTimeout", transport.ResponseHeaderTimeout, 2*time.Second); err != nil {
+		t.Error(err)
+	}
+
+	if err := equalDuration("ExpectContinueTimeout", transport.ExpectContinueTimeout, 3*time.Minute); err != nil {
+		t.Error(err)
+	}
+
+	if err := equalInt("MaxIdleConns", transport.MaxIdleConns, 123); err != nil {
+		t.Error(err)
+	}
+
+	if err := equalInt("MaxIdleConnsPerHost", transport.MaxIdleConnsPerHost, 234); err != nil {
+		t.Error(err)
+	}
+
+	if !transport.DisableCompression {
+		t.Error("the DisableCompression value is 'false' when it should be 'true'")
+	}
+
+	if !transport.DisableKeepAlives {
+		t.Error("the DisableKeepAlives value is 'false' when it should be 'true'")
+	}
+}
+
+func equalDuration(name string, actual, expected time.Duration) error {
+	if actual != expected {
+		return fmt.Errorf("unexpected %s. have: %v, want: %v", name, actual, expected)
+	}
+	return nil
+}
+
+func equalInt(name string, actual, expected int) error {
+	if actual != expected {
+		return fmt.Errorf("unexpected %s. have: %d, want: %d", name, actual, expected)
+	}
+	return nil
+}
+
+func cleanUp() {
+	onceTransportConfig = sync.Once{}
 }
 
 func dummyHandler(rw http.ResponseWriter, req *http.Request) {
