@@ -234,6 +234,7 @@ type TLS struct {
 	CurvePreferences         []uint16 `mapstructure:"curve_preferences"`
 	PreferServerCipherSuites bool     `mapstructure:"prefer_server_cipher_suites"`
 	CipherSuites             []uint16 `mapstructure:"cipher_suites"`
+	LocalCA                  string   `mapstructure:"local_ca"`
 }
 
 // ExtraConfig is a type to store extra configurations for customized behaviours

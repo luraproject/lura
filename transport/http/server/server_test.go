@@ -191,43 +191,6 @@ func TestRunServer_errBadKeys(t *testing.T) {
 	}
 }
 
-func Test_parseTLSVersion(t *testing.T) {
-	for _, tc := range []struct {
-		in  string
-		out uint16
-	}{
-		{in: "SSL3.0", out: tls.VersionSSL30},
-		{in: "TLS10", out: tls.VersionTLS10},
-		{in: "TLS11", out: tls.VersionTLS11},
-		{in: "TLS12", out: tls.VersionTLS12},
-		{in: "Unknown", out: tls.VersionTLS12},
-	} {
-		if res := parseTLSVersion(tc.in); res != tc.out {
-			t.Errorf("input %s generated output %d. expected: %d", tc.in, res, tc.out)
-		}
-	}
-}
-
-func Test_parseCurveIDs(t *testing.T) {
-	original := []uint16{1, 2, 3}
-	cs := parseCurveIDs(&config.TLS{CurvePreferences: original})
-	for k, v := range cs {
-		if original[k] != uint16(v) {
-			t.Errorf("unexpected curves %v. expected: %v", cs, original)
-		}
-	}
-}
-
-func Test_parseCipherSuites(t *testing.T) {
-	original := []uint16{1, 2, 3}
-	cs := parseCipherSuites(&config.TLS{CipherSuites: original})
-	for k, v := range cs {
-		if original[k] != uint16(v) {
-			t.Errorf("unexpected ciphersuites %v. expected: %v", cs, original)
-		}
-	}
-}
-
 func dummyHandler(rw http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(rw, "Hello, %q", html.EscapeString(req.URL.Path))
 }
