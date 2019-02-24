@@ -103,6 +103,7 @@ func TestInitHTTPDefaultTransport_unknownCA(t *testing.T) {
 		s.ListenAndServeTLS("cert.pem", "key.pem")
 	}()
 
+	<-time.After(200 * time.Millisecond)
 	req, _ := http.NewRequest("GET", fmt.Sprintf("https://localhost:%d/", port), nil)
 	resp, err := defaultHTTPClient.Do(req)
 	expectedErr := fmt.Sprintf("Get https://localhost:%d/: x509: certificate signed by unknown authority", port)
