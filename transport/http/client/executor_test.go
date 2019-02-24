@@ -56,17 +56,10 @@ func TestInitHTTPDefaultTransport(t *testing.T) {
 	}
 
 	port := newPort()
-	s := http.Server{
-		Addr: fmt.Sprintf(":%d", port),
-		Handler: http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-			rw.Write([]byte("ok"))
-		}),
-	}
-	defer s.Close()
-	go func() {
-		s.ListenAndServeTLS("cert.pem", "key.pem")
-	}()
+	close := createAndStartHTTPSServer(port)
+	defer close()
 
+	<-time.After(200 * time.Millisecond)
 	req, _ := http.NewRequest("GET", fmt.Sprintf("https://localhost:%d/", port), nil)
 	resp, err := defaultHTTPClient.Do(req)
 	if err != nil {
@@ -92,16 +85,8 @@ func TestInitHTTPDefaultTransport_unknownCA(t *testing.T) {
 	}
 
 	port := newPort()
-	s := http.Server{
-		Addr: fmt.Sprintf(":%d", port),
-		Handler: http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-			rw.Write([]byte("ok"))
-		}),
-	}
-	defer s.Close()
-	go func() {
-		s.ListenAndServeTLS("cert.pem", "key.pem")
-	}()
+	close := createAndStartHTTPSServer(port)
+	defer close()
 
 	<-time.After(200 * time.Millisecond)
 	req, _ := http.NewRequest("GET", fmt.Sprintf("https://localhost:%d/", port), nil)
@@ -152,6 +137,21 @@ func testKeysAreAvailable(t *testing.T) {
 
 func newPort() int {
 	return 16600 + rand.Intn(40000)
+}
+
+func createAndStartHTTPSServer(port int) func() error {
+	s := http.Server{
+		Addr: fmt.Sprintf(":%d", port),
+		Handler: http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			rw.Write([]byte("ok"))
+		}),
+	}
+
+	go func() {
+		s.ListenAndServeTLS("cert.pem", "key.pem")
+	}()
+
+	return s.Close
 }
 
 func cleanUp() {
