@@ -71,17 +71,22 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF router.ToHTTPErr
 					w.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 				}
 
-				for k, v := range response.Metadata.Headers {
-					w.Header().Set(k, v[0])
+				for k, vs := range response.Metadata.Headers {
+					for _, v := range vs {
+						w.Header().Add(k, v)
+					}
 				}
 			} else {
+				w.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 				if err != nil {
-					w.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
-					http.Error(w, err.Error(), errF(err))
+					if t, ok := err.(responseError); ok {
+						http.Error(w, err.Error(), t.StatusCode())
+					} else {
+						http.Error(w, err.Error(), errF(err))
+					}
 					cancel()
 					return
 				}
-				w.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 			}
 
 			render(w, response)
@@ -153,4 +158,9 @@ func NewRequestBuilder(paramExtractor ParamExtractor) RequestBuilder {
 			Headers: headers,
 		}
 	}
+}
+
+type responseError interface {
+	error
+	StatusCode() int
 }
