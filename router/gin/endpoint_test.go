@@ -41,8 +41,45 @@ func TestEndpointHandler_ok(t *testing.T) {
 			},
 		}, nil
 	}
-	expectedBody := "{\"supu\":\"tupu\"}"
-	testEndpointHandler(t, 10, p, expectedBody, "public, max-age=21600", "application/json; charset=utf-8", http.StatusOK, true)
+
+	endpointHandlerTestCase{
+		timeout:            10,
+		proxy:              p,
+		method:             "GET",
+		expectedBody:       "{\"supu\":\"tupu\"}",
+		expectedCache:      "public, max-age=21600",
+		expectedContent:    "application/json; charset=utf-8",
+		expectedStatusCode: http.StatusOK,
+		completed:          true,
+	}.test(t)
+	time.Sleep(5 * time.Millisecond)
+}
+
+func TestEndpointHandler_okAllParams(t *testing.T) {
+	p := func(_ context.Context, req *proxy.Request) (*proxy.Response, error) {
+		return &proxy.Response{
+			IsComplete: true,
+			Data:       map[string]interface{}{"query": req.Query, "headers": req.Headers, "params": req.Params},
+			Metadata: proxy.Metadata{
+				Headers:    map[string][]string{"X-YZ": {"something"}},
+				StatusCode: 200,
+			},
+		}, nil
+	}
+	endpointHandlerTestCase{
+		timeout:            10,
+		proxy:              p,
+		method:             "GET",
+		expectedBody:       `{"headers":{"Content-Type":["application/json"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":[""]},"params":{"Param":"a"},"query":{"a":["42"],"b":["1"],"c[]":["x","y"],"d":["1","2"]}}`,
+		expectedCache:      "public, max-age=21600",
+		expectedContent:    "application/json; charset=utf-8",
+		expectedStatusCode: http.StatusOK,
+		completed:          true,
+		queryString:        []string{"*"},
+		headers:            []string{"*"},
+		expectedHeaders:    map[string][]string{"X-YZ": {"something"}},
+	}.test(t)
+	time.Sleep(5 * time.Millisecond)
 }
 
 var ctxContent = map[string]interface{}{
@@ -58,29 +95,51 @@ func TestEndpointHandler_incomplete(t *testing.T) {
 			Data:       map[string]interface{}{"foo": "bar"},
 		}, nil
 	}
-	expectedBody := "{\"foo\":\"bar\"}"
-	testEndpointHandler(t, 10, p, expectedBody, "", "application/json; charset=utf-8", http.StatusOK, false)
-}
-
-func TestEndpointHandler_ko(t *testing.T) {
-	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
-		return nil, errors.New("This is a dummy error")
-	}
-	testEndpointHandler(t, 10, p, "", "", "", http.StatusInternalServerError, false)
+	endpointHandlerTestCase{
+		timeout:            10,
+		proxy:              p,
+		method:             "GET",
+		expectedBody:       "{\"foo\":\"bar\"}",
+		expectedCache:      "",
+		expectedContent:    "application/json; charset=utf-8",
+		expectedStatusCode: http.StatusOK,
+		completed:          false,
+	}.test(t)
+	time.Sleep(5 * time.Millisecond)
 }
 
 func TestEndpointHandler_errored(t *testing.T) {
 	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
 		return nil, errors.New("this is a dummy error")
 	}
-	testEndpointHandler(t, 10, p, "", "", "", http.StatusInternalServerError, false)
+	endpointHandlerTestCase{
+		timeout:            10,
+		proxy:              p,
+		method:             "GET",
+		expectedBody:       "",
+		expectedCache:      "",
+		expectedContent:    "",
+		expectedStatusCode: http.StatusInternalServerError,
+		completed:          false,
+	}.test(t)
+	time.Sleep(5 * time.Millisecond)
 }
 
 func TestEndpointHandler_errored_responseError(t *testing.T) {
 	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
 		return nil, dummyResponseError{err: "this is a dummy error", status: http.StatusTeapot}
 	}
-	testEndpointHandler(t, 10, p, "", "", "", http.StatusTeapot, false)
+	endpointHandlerTestCase{
+		timeout:            10,
+		proxy:              p,
+		method:             "GET",
+		expectedBody:       "",
+		expectedCache:      "",
+		expectedContent:    "",
+		expectedStatusCode: http.StatusTeapot,
+		completed:          false,
+	}.test(t)
+	time.Sleep(5 * time.Millisecond)
 }
 
 type dummyResponseError struct {
@@ -103,8 +162,17 @@ func TestEndpointHandler_incompleteAndErrored(t *testing.T) {
 			Data:       map[string]interface{}{"foo": "bar"},
 		}, errors.New("This is a dummy error")
 	}
-	expectedBody := "{\"foo\":\"bar\"}"
-	testEndpointHandler(t, 10, p, expectedBody, "", "application/json; charset=utf-8", http.StatusOK, false)
+	endpointHandlerTestCase{
+		timeout:            10,
+		proxy:              p,
+		method:             "GET",
+		expectedBody:       "{\"foo\":\"bar\"}",
+		expectedCache:      "",
+		expectedContent:    "application/json; charset=utf-8",
+		expectedStatusCode: http.StatusOK,
+		completed:          false,
+	}.test(t)
+	time.Sleep(5 * time.Millisecond)
 }
 
 func TestEndpointHandler_cancelEmpty(t *testing.T) {
@@ -112,7 +180,17 @@ func TestEndpointHandler_cancelEmpty(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 		return nil, nil
 	}
-	testEndpointHandler(t, 0, p, "", "", "", http.StatusInternalServerError, false)
+	endpointHandlerTestCase{
+		timeout:            0,
+		proxy:              p,
+		method:             "GET",
+		expectedBody:       "",
+		expectedCache:      "",
+		expectedContent:    "",
+		expectedStatusCode: http.StatusInternalServerError,
+		completed:          false,
+	}.test(t)
+	time.Sleep(5 * time.Millisecond)
 }
 
 func TestEndpointHandler_cancel(t *testing.T) {
@@ -123,68 +201,103 @@ func TestEndpointHandler_cancel(t *testing.T) {
 			Data:       map[string]interface{}{"foo": "bar"},
 		}, nil
 	}
-	expectedBody := "{\"foo\":\"bar\"}"
-	testEndpointHandler(t, 0, p, expectedBody, "", "application/json; charset=utf-8", http.StatusOK, false)
+	endpointHandlerTestCase{
+		timeout:            0,
+		proxy:              p,
+		method:             "GET",
+		expectedBody:       "{\"foo\":\"bar\"}",
+		expectedCache:      "",
+		expectedContent:    "application/json; charset=utf-8",
+		expectedStatusCode: http.StatusOK,
+		completed:          false,
+	}.test(t)
+	time.Sleep(5 * time.Millisecond)
 }
 
 func TestEndpointHandler_noop(t *testing.T) {
-	testEndpointHandler(t, time.Minute, proxy.NoopProxy, "{}", "", "application/json; charset=utf-8", http.StatusOK, false)
+	endpointHandlerTestCase{
+		timeout:            time.Minute,
+		proxy:              proxy.NoopProxy,
+		method:             "GET",
+		expectedBody:       "{}",
+		expectedCache:      "",
+		expectedContent:    "application/json; charset=utf-8",
+		expectedStatusCode: http.StatusOK,
+		completed:          false,
+	}.test(t)
+	time.Sleep(5 * time.Millisecond)
 }
 
-func testEndpointHandler(t *testing.T, timeout time.Duration, p proxy.Proxy, expectedBody, expectedCache,
-	expectedContent string, expectedStatusCode int, completed bool) {
-	body, resp, err := setup(timeout, p)
-	if err != nil {
-		t.Error("Reading the response:", err.Error())
+type endpointHandlerTestCase struct {
+	timeout            time.Duration
+	proxy              proxy.Proxy
+	method             string
+	expectedBody       string
+	expectedCache      string
+	expectedContent    string
+	expectedHeaders    map[string][]string
+	expectedStatusCode int
+	completed          bool
+	queryString        []string
+	headers            []string
+}
+
+func (tc endpointHandlerTestCase) test(t *testing.T) {
+	endpoint := &config.EndpointConfig{
+		Method:      "GET",
+		Timeout:     tc.timeout,
+		CacheTTL:    6 * time.Hour,
+		QueryString: []string{"b", "c[]", "d"},
+	}
+	if len(tc.queryString) > 0 {
+		endpoint.QueryString = tc.queryString
+	}
+	if len(tc.headers) > 0 {
+		endpoint.HeadersToPass = tc.headers
+	}
+
+	server := startGinServer(EndpointHandler(endpoint, tc.proxy))
+
+	req, _ := http.NewRequest(tc.method, "http://127.0.0.1:8080/_gin_endpoint/a?a=42&b=1&c[]=x&c[]=y&d=1&d=2", ioutil.NopCloser(&bytes.Buffer{}))
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	server.ServeHTTP(w, req)
+
+	body, ioerr := ioutil.ReadAll(w.Result().Body)
+	if ioerr != nil {
+		t.Error("Reading the response:", ioerr.Error())
 		return
 	}
+	w.Result().Body.Close()
 	content := string(body)
-	if resp.Header.Get("Cache-Control") != expectedCache {
+	resp := w.Result()
+	if resp.Header.Get("Cache-Control") != tc.expectedCache {
 		t.Error("Cache-Control error:", resp.Header.Get("Cache-Control"))
 	}
-	if completed && resp.Header.Get(router.CompleteResponseHeaderName) != router.HeaderCompleteResponseValue {
+	if tc.completed && resp.Header.Get(router.CompleteResponseHeaderName) != router.HeaderCompleteResponseValue {
 		t.Error(router.CompleteResponseHeaderName, "error:", resp.Header.Get(router.CompleteResponseHeaderName))
 	}
-	if !completed && resp.Header.Get(router.CompleteResponseHeaderName) != router.HeaderIncompleteResponseValue {
+	if !tc.completed && resp.Header.Get(router.CompleteResponseHeaderName) != router.HeaderIncompleteResponseValue {
 		t.Error(router.CompleteResponseHeaderName, "error:", resp.Header.Get(router.CompleteResponseHeaderName))
 	}
-	if resp.Header.Get("Content-Type") != expectedContent {
+	if resp.Header.Get("Content-Type") != tc.expectedContent {
 		t.Error("Content-Type error:", resp.Header.Get("Content-Type"))
 	}
 	if resp.Header.Get("X-Krakend") != "Version undefined" {
 		t.Error("X-Krakend error:", resp.Header.Get("X-Krakend"))
 	}
-	if resp.StatusCode != expectedStatusCode {
+	if resp.StatusCode != tc.expectedStatusCode {
 		t.Error("Unexpected status code:", resp.StatusCode)
 	}
-	if content != expectedBody {
-		t.Error("Unexpected body:", content, "expected:", expectedBody)
+	if content != tc.expectedBody {
+		t.Error("Unexpected body:", content, "expected:", tc.expectedBody)
 	}
-}
-
-func setup(timeout time.Duration, p proxy.Proxy) (string, *http.Response, error) {
-	endpoint := &config.EndpointConfig{
-		Timeout:     timeout,
-		CacheTTL:    6 * time.Hour,
-		QueryString: []string{"b", "c[]", "d"},
+	for k, v := range tc.expectedHeaders {
+		if header := resp.Header.Get(k); v[0] != header {
+			t.Error("Unexpected value for header:", k, header, "expected:", v[0])
+		}
 	}
-
-	server := startGinServer(EndpointHandler(endpoint, p))
-
-	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1&c[]=x&c[]=y&d=1&d=2", ioutil.NopCloser(&bytes.Buffer{}))
-	req.Header.Set("Content-Type", "application/json")
-
-	w := httptest.NewRecorder()
-
-	server.ServeHTTP(w, req)
-
-	defer w.Result().Body.Close()
-
-	body, ioerr := ioutil.ReadAll(w.Result().Body)
-	if ioerr != nil {
-		return "", nil, ioerr
-	}
-	return string(body), w.Result(), nil
 }
 
 func startGinServer(handlerFunc gin.HandlerFunc) *gin.Engine {

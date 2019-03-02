@@ -192,6 +192,36 @@ func TestEndpointHandler_badMethod(t *testing.T) {
 	time.Sleep(5 * time.Millisecond)
 }
 
+func TestEndpointHandler_errored_responseError(t *testing.T) {
+	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
+		return nil, dummyResponseError{err: "this is a dummy error", status: http.StatusTeapot}
+	}
+	endpointHandlerTestCase{
+		timeout:            10,
+		proxy:              p,
+		method:             "GET",
+		expectedBody:       "this is a dummy error\n",
+		expectedCache:      "",
+		expectedContent:    "text/plain; charset=utf-8",
+		expectedStatusCode: http.StatusTeapot,
+		completed:          false,
+	}.test(t)
+	time.Sleep(5 * time.Millisecond)
+}
+
+type dummyResponseError struct {
+	err    string
+	status int
+}
+
+func (d dummyResponseError) Error() string {
+	return d.err
+}
+
+func (d dummyResponseError) StatusCode() int {
+	return d.status
+}
+
 type endpointHandlerTestCase struct {
 	timeout            time.Duration
 	proxy              proxy.Proxy

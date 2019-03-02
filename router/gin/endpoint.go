@@ -56,8 +56,10 @@ func CustomErrorEndpointHandler(configuration *config.EndpointConfig, prxy proxy
 				}
 			}
 
-			for k, v := range response.Metadata.Headers {
-				c.Header(k, v[0])
+			for k, vs := range response.Metadata.Headers {
+				for _, v := range vs {
+					c.Writer.Header().Add(k, v)
+				}
 			}
 		}
 
