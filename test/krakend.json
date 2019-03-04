@@ -254,6 +254,15 @@
                     "url_pattern": "/ignore-me"
                 }
             ]
+        },
+        {
+            "endpoint": "/found",
+            "backend": [
+                {
+                    "host": [ "{{.b9}}" ],
+                    "url_pattern": "/ignore-me"
+                }
+            ]
         }
     ]
 }

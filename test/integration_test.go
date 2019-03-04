@@ -248,6 +248,12 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 			expHeaders: defaultHeaders,
 			expBody:    `{"path":"/","random":42}`,
 		},
+		{
+			name:       "found",
+			url:        "/found",
+			expHeaders: defaultHeaders,
+			expBody:    `{"path":"/","random":42}`,
+		},
 	} {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
@@ -390,6 +396,12 @@ func setupBackend(t *testing.T) (*config.ServiceConfig, error) {
 		http.Redirect(rw, r, b7.URL, http.StatusMovedPermanently)
 	}))
 	data["b8"] = b8.URL
+
+	// found
+	b9 := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		http.Redirect(rw, r, b7.URL, http.StatusFound)
+	}))
+	data["b9"] = b9.URL
 
 	c, err := loadConfig(data)
 	if err != nil {
