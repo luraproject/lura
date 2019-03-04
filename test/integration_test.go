@@ -242,6 +242,12 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 			expHeaders: defaultHeaders,
 			expBody:    `{"path":"/recipient/42","random":42}`,
 		},
+		{
+			name:       "redirect",
+			url:        "/redirect",
+			expHeaders: defaultHeaders,
+			expBody:    `{"path":"/","random":42}`,
+		},
 	} {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
@@ -378,6 +384,12 @@ func setupBackend(t *testing.T) (*config.ServiceConfig, error) {
 		json.NewEncoder(rw).Encode(map[string]interface{}{"path": r.URL.Path, "random": 42})
 	}))
 	data["b7"] = b7.URL
+
+	// redirect
+	b8 := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		http.Redirect(rw, r, b7.URL, http.StatusMovedPermanently)
+	}))
+	data["b8"] = b8.URL
 
 	c, err := loadConfig(data)
 	if err != nil {
