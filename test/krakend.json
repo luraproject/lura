@@ -245,6 +245,15 @@
               "whitelist": [ "path" ]
             }
           ]
+        },
+        {
+            "endpoint": "/redirect",
+            "backend": [
+                {
+                    "host": [ "{{.b8}}" ],
+                    "url_pattern": "/ignore-me"
+                }
+            ]
         }
     ]
 }
