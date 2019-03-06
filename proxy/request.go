@@ -32,10 +32,6 @@ func (r *Request) GeneratePath(URLPattern string) {
 		buff = bytes.Replace(buff, key, []byte(v), -1)
 	}
 	r.Path = string(buff)
-	parsedPath, err := url.Parse(r.Path)
-	if err != nil {
-		r.Query = parsedPath.Query()
-	}
 }
 
 // Clone clones itself into a new request. The returned cloned request is not
