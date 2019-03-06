@@ -84,7 +84,7 @@ func testLoadBalancedMw(t *testing.T, lb Middleware) {
 		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
 	}
 
-	want = "http://127.0.0.1:8080/tupu?some=none"
+	want = "http://127.0.0.1:8080/tupu?extra=true&some=none"
 	assertion = func(ctx context.Context, request *Request) (*Response, error) {
 		if request.URL.String() != want {
 			t.Errorf("The middleware did not update the request URL! want [%s], have [%s]\n", want, request.URL)
