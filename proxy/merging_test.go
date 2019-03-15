@@ -209,6 +209,53 @@ func TestNewMergeDataMiddleware_sequential_erroredBackend(t *testing.T) {
 	}
 }
 
+func TestNewMergeDataMiddleware_sequential_erroredFirstBackend(t *testing.T) {
+	timeout := 500
+	endpoint := config.EndpointConfig{
+		Backend: []*config.Backend{
+			{URLPattern: "/"},
+			{URLPattern: "/aaa/{{.Resp0_supu}}"},
+			{URLPattern: "/aaa/{{.Resp0_supu}}?x={{.Resp1_tupu}}"},
+		},
+		Timeout: time.Duration(timeout) * time.Millisecond,
+		ExtraConfig: config.ExtraConfig{
+			Namespace: map[string]interface{}{
+				isSequentialKey: true,
+			},
+		},
+	}
+	expecterErr := errors.New("wait for me")
+	mw := NewMergeDataMiddleware(&endpoint)
+	p := mw(
+		func(ctx context.Context, _ *Request) (*Response, error) {
+			return nil, expecterErr
+		},
+		func(ctx context.Context, r *Request) (*Response, error) {
+			t.Error("this backend should never be called")
+			return nil, nil
+		},
+		func(ctx context.Context, r *Request) (*Response, error) {
+			t.Error("this backend should never be called")
+			return nil, nil
+		},
+	)
+	mustEnd := time.After(time.Duration(2*timeout) * time.Millisecond)
+	out, err := p(context.Background(), &Request{Params: map[string]string{}})
+	if err != expecterErr {
+		t.Errorf("The middleware did not propagate the expected error: %v\n", err)
+		return
+	}
+	if out != nil {
+		t.Errorf("The proxy returned a not null result %v", out)
+		return
+	}
+	select {
+	case <-mustEnd:
+		t.Errorf("We were expecting a response but we got none\n")
+	default:
+	}
+}
+
 func TestNewMergeDataMiddleware_mergeIncompleteResults(t *testing.T) {
 	timeout := 500
 	backend := config.Backend{}
