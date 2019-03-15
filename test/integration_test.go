@@ -115,13 +115,14 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 	}
 
 	for _, tc := range []struct {
-		name       string
-		url        string
-		method     string
-		headers    map[string]string
-		body       string
-		expBody    string
-		expHeaders map[string]string
+		name          string
+		url           string
+		method        string
+		headers       map[string]string
+		body          string
+		expBody       string
+		expHeaders    map[string]string
+		expStatusCode int
 	}{
 		{
 			name:       "static",
@@ -237,10 +238,25 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Test-1":["some"],"X-Test-2":["none"]},"path":"/all-params","query":{}}`,
 		},
 		{
-			name:       "sequential",
-			url:        "/sequential/foo",
+			name:       "sequential ok",
+			url:        "/sequential/ok/foo",
 			expHeaders: defaultHeaders,
 			expBody:    `{"path":"/recipient/42","random":42}`,
+		},
+		{
+			name: "sequential ko first",
+			url:  "/sequential/ko/first/foo",
+			expHeaders: map[string]string{
+				"X-KrakenD-Completed": "false",
+				"X-Krakend":           "Version undefined",
+			},
+			expStatusCode: 500,
+		},
+		{
+			name:       "sequential ko last",
+			url:        "/sequential/ko/last/foo",
+			expHeaders: incompleteHeader,
+			expBody:    `{"random":42}`,
 		},
 		{
 			name:       "redirect",
@@ -282,9 +298,12 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 				t.Errorf("%s: nil response", resp.Request.URL.Path)
 				return
 			}
-
-			if resp.StatusCode != http.StatusOK {
-				t.Errorf("%s: unexpected status code: %d", resp.Request.URL.Path, resp.StatusCode)
+			expectedStatusCode := http.StatusOK
+			if tc.expStatusCode != 0 {
+				expectedStatusCode = tc.expStatusCode
+			}
+			if resp.StatusCode != expectedStatusCode {
+				t.Errorf("%s: unexpected status code. have: %d, want: %d", resp.Request.URL.Path, resp.StatusCode, expectedStatusCode)
 			}
 
 			for k, v := range tc.expHeaders {
@@ -292,6 +311,10 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 					t.Errorf("%s: unexpected header %s: %s", resp.Request.URL.Path, k, c)
 				}
 			}
+			if tc.expBody == "" {
+				return
+			}
+
 			b, _ := ioutil.ReadAll(resp.Body)
 			resp.Body.Close()
 			if tc.expBody != string(b) {

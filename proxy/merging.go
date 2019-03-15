@@ -88,6 +88,7 @@ func sequentialMerge(patterns []string, timeout time.Duration, rc ResponseCombin
 		errCh := make(chan error, 1)
 
 		acc := newIncrementalMergeAccumulator(len(next), rc)
+	TxLoop:
 		for i, n := range next {
 			if i > 0 {
 				for _, match := range reMergeKey.FindAllStringSubmatch(patterns[i], -1) {
@@ -109,12 +110,16 @@ func sequentialMerge(patterns []string, timeout time.Duration, rc ResponseCombin
 			requestPart(localCtx, n, request, out, errCh)
 			select {
 			case err := <-errCh:
+				if i == 0 {
+					cancel()
+					return nil, err
+				}
 				acc.Merge(nil, err)
-				break
+				break TxLoop
 			case response := <-out:
 				acc.Merge(response, nil)
 				if !response.IsComplete {
-					break
+					break TxLoop
 				}
 				parts[i] = response
 			}

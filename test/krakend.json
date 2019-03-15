@@ -227,7 +227,7 @@
             ]
         },
         {
-          "endpoint": "/sequential/{param}",
+          "endpoint": "/sequential/ok/{param}",
           "extra_config": {
             "github.com/devopsfaith/krakend/proxy": {
               "sequential": true
@@ -242,6 +242,46 @@
             {
               "url_pattern": "/recipient/{resp0_random}",
               "host": [ "{{.b7}}" ],
+              "whitelist": [ "path" ]
+            }
+          ]
+        },
+        {
+          "endpoint": "/sequential/ko/first/{param}",
+          "extra_config": {
+            "github.com/devopsfaith/krakend/proxy": {
+              "sequential": true
+            }
+          },
+          "backend": [
+            {
+              "url_pattern": "/provider/{param}",
+              "host": [ "{{.b4}}" ],
+              "whitelist": [ "random" ]
+            },
+            {
+              "url_pattern": "/recipient/{resp0_random}",
+              "host": [ "{{.b7}}" ],
+              "whitelist": [ "path" ]
+            }
+          ]
+        },
+        {
+          "endpoint": "/sequential/ko/last/{param}",
+          "extra_config": {
+            "github.com/devopsfaith/krakend/proxy": {
+              "sequential": true
+            }
+          },
+          "backend": [
+            {
+              "url_pattern": "/provider/{param}",
+              "host": [ "{{.b7}}" ],
+              "whitelist": [ "random" ]
+            },
+            {
+              "url_pattern": "/recipient/{resp0_random}",
+              "host": [ "{{.b4}}" ],
               "whitelist": [ "path" ]
             }
           ]
