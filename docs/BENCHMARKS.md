@@ -91,7 +91,7 @@ Here you'll find some benchmarks of the different components of the KrakenD fram
     BenchmarkEntityFormatter_blacklistingFilter/with_3_elements_with_25_extra_fields-8          20000000           250 ns/op          48 B/op          1 allocs/op
     BenchmarkEntityFormatter_blacklistingFilter/with_4_elements_with_25_extra_fields-8          20000000           312 ns/op          48 B/op          1 allocs/op
 
-## Response property groupping
+## Response property grouping
 
     BenchmarkEntityFormatter_grouping/with_0_elements-8             20000000           277 ns/op         384 B/op          3 allocs/op
     BenchmarkEntityFormatter_grouping/with_5_elements-8             20000000           299 ns/op         384 B/op          3 allocs/op
