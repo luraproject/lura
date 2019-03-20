@@ -303,6 +303,50 @@
                     "url_pattern": "/ignore-me"
                 }
             ]
+        },
+        {
+            "endpoint": "/flatmap/delete",
+            "backend": [
+                {
+                    "host": [
+                        "{{.b2}}"
+                    ],
+                    "url_pattern": "/",
+                    "is_collection": true,
+                    "extra_config": {
+                        "github.com/devopsfaith/krakend/proxy": {
+                          "flatmap_filter": [
+                            {
+                                "type": "del",
+                                "args": ["collection.*.date"]
+                            }
+                          ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "endpoint": "/flatmap/rename",
+            "backend": [
+                {
+                    "host": [
+                        "{{.b2}}"
+                    ],
+                    "url_pattern": "/",
+                    "is_collection": true,
+                    "extra_config": {
+                        "github.com/devopsfaith/krakend/proxy": {
+                          "flatmap_filter": [
+                            {
+                                "type": "move",
+                                "args": ["collection.*.date", "collection.*.created_at"]
+                            }
+                          ]
+                        }
+                    }
+                }
+            ]
         }
     ]
 }

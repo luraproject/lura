@@ -270,6 +270,18 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 			expHeaders: defaultHeaders,
 			expBody:    `{"path":"/","random":42}`,
 		},
+		{
+			name:       "flatmap del",
+			url:        "/flatmap/delete",
+			expHeaders: defaultHeaders,
+			expBody:    `{"collection":[{"body":"some content"},{"body":"some other content"}]}`,
+		},
+		{
+			name:       "flatmap rename",
+			url:        "/flatmap/rename",
+			expHeaders: defaultHeaders,
+			expBody:    `{"collection":[{"body":"some content","created_at":"123456789"},{"body":"some other content","created_at":"123496789"}]}`,
+		},
 	} {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
