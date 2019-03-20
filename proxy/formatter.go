@@ -52,88 +52,6 @@ func NewEntityFormatter(remote *config.Backend) EntityFormatter {
 	}
 }
 
-const flatmapKey = "flatmap_filter"
-
-type flatmapFormatter struct {
-	Target string
-	Prefix string
-	Ops    []flatmapOp
-}
-
-type flatmapOp struct {
-	Type string
-	Args []string
-}
-
-// Format implements the EntityFormatter interface
-func (e flatmapFormatter) Format(entity Response) Response {
-	if e.Target != "" {
-		extractTarget(e.Target, &entity)
-	}
-
-	if len(e.Ops) > 0 {
-		e.processOps(&entity)
-	}
-
-	if e.Prefix != "" {
-		entity.Data = map[string]interface{}{e.Prefix: entity.Data}
-	}
-	return entity
-}
-
-func (e flatmapFormatter) processOps(entity *Response) {
-	flatten, err := flatmap.Flatten(entity.Data, flatmap.DefaultTokenizer)
-	if err != nil {
-		return
-	}
-	for _, op := range e.Ops {
-		switch op.Type {
-		case "move":
-			flatten.Move(op.Args[0], op.Args[1])
-		case "del":
-			flatten.Del(op.Args[0])
-		default:
-		}
-	}
-
-	entity.Data = flatten.Expand()
-}
-
-func newFlatmapFormatter(remote *config.Backend) EntityFormatter {
-	if v, ok := remote.ExtraConfig[Namespace]; ok {
-		if e, ok := v.(map[string]interface{}); ok {
-			if vs, ok := e[flatmapKey].([]interface{}); ok {
-				ops := make([]flatmapOp, len(vs))
-				for k, v := range vs {
-					m, ok := v.(map[string]interface{})
-					if !ok {
-						continue
-					}
-					op := flatmapOp{}
-					if t, ok := m["type"].(string); ok {
-						op.Type = t
-					}
-					if args, ok := m["args"].([]interface{}); ok {
-						op.Args = make([]string, len(args))
-						for k, arg := range args {
-							if t, ok := arg.(string); ok {
-								op.Args[k] = t
-							}
-						}
-					}
-					ops[k] = op
-				}
-				return &flatmapFormatter{
-					Target: remote.Target,
-					Prefix: remote.Group,
-					Ops:    ops,
-				}
-			}
-		}
-	}
-	return nil
-}
-
 // Format implements the EntityFormatter interface
 func (e entityFormatter) Format(entity Response) Response {
 	if e.Target != "" {
@@ -265,4 +183,92 @@ func blacklistFilterSub(v interface{}, blacklist []string) map[string]interface{
 		delete(tmp, key)
 	}
 	return tmp
+}
+
+const flatmapKey = "flatmap_filter"
+
+type flatmapFormatter struct {
+	Target string
+	Prefix string
+	Ops    []flatmapOp
+}
+
+type flatmapOp struct {
+	Type string
+	Args []string
+}
+
+// Format implements the EntityFormatter interface
+func (e flatmapFormatter) Format(entity Response) Response {
+	if e.Target != "" {
+		extractTarget(e.Target, &entity)
+	}
+
+	e.processOps(&entity)
+
+	if e.Prefix != "" {
+		entity.Data = map[string]interface{}{e.Prefix: entity.Data}
+	}
+	return entity
+}
+
+func (e flatmapFormatter) processOps(entity *Response) {
+	flatten, err := flatmap.Flatten(entity.Data, flatmap.DefaultTokenizer)
+	if err != nil {
+		return
+	}
+	for _, op := range e.Ops {
+		switch op.Type {
+		case "move":
+			flatten.Move(op.Args[0], op.Args[1])
+		case "del":
+			flatten.Del(op.Args[0])
+		default:
+		}
+	}
+
+	entity.Data = flatten.Expand()
+}
+
+func newFlatmapFormatter(remote *config.Backend) EntityFormatter {
+	if v, ok := remote.ExtraConfig[Namespace]; ok {
+		if e, ok := v.(map[string]interface{}); ok {
+			if vs, ok := e[flatmapKey].([]interface{}); ok {
+				if len(vs) == 0 {
+					return nil
+				}
+				ops := []flatmapOp{}
+				for _, v := range vs {
+					m, ok := v.(map[string]interface{})
+					if !ok {
+						continue
+					}
+					op := flatmapOp{}
+					if t, ok := m["type"].(string); ok {
+						op.Type = t
+					} else {
+						continue
+					}
+					if args, ok := m["args"].([]interface{}); ok {
+						op.Args = make([]string, len(args))
+						for k, arg := range args {
+							if t, ok := arg.(string); ok {
+								op.Args[k] = t
+							}
+						}
+					}
+					ops = append(ops, op)
+				}
+				if len(ops) == 0 {
+					return nil
+				}
+				return &flatmapFormatter{
+					Target: remote.Target,
+					Prefix: remote.Group,
+					Ops:    ops,
+				}
+			}
+		}
+	}
+	return nil
 }
