@@ -29,7 +29,7 @@
             }
         },
         {
-            "endpoint": "/param_forwarding/{name}",
+            "endpoint": "/param_forwarding/{first}/constant/{second}",
             "method": "POST",
             "headers_to_pass": [
                 "Content-Type",
@@ -41,7 +41,7 @@
                     "host": [
                         "{{.b1}}"
                     ],
-                    "url_pattern": "/{name}"
+                    "url_pattern": "/{first}/{second}"
                 }
             ]
         },

@@ -133,7 +133,7 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 		},
 		{
 			name:   "param_forwarding",
-			url:    "/param_forwarding/foo",
+			url:    "/param_forwarding/foo/constant/bar",
 			method: "POST",
 			headers: map[string]string{
 				"Content-Type":  "application/json",
@@ -142,7 +142,20 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 			},
 			body:       `{"foo":"bar"}`,
 			expHeaders: defaultHeaders,
-			expBody:    `{"path":"/foo"}`,
+			expBody:    `{"path":"/foo/bar"}`,
+		},
+		{
+			name:   "param_forwarding_2",
+			url:    "/param_forwarding/foo/constant/foobar",
+			method: "POST",
+			headers: map[string]string{
+				"Content-Type":  "application/json",
+				"Authorization": "bearer AuthorizationToken",
+				"X-Y-Z":         "x-y-z",
+			},
+			body:       `{"foo":"bar"}`,
+			expHeaders: defaultHeaders,
+			expBody:    `{"path":"/foo/foobar"}`,
 		},
 		{
 			name:       "timeout",
