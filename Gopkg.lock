@@ -3,11 +3,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a356d313dbf571b916a7da342611010ac23784640e02ea72d3c9b715e055cbce"
+  digest = "1:b83235a21739243acc292ad9a7b6814cd1bdfd5db5d90907e52bbc44baa84881"
   name = "github.com/devopsfaith/flatmap"
-  packages = ["."]
+  packages = ["tree"]
   pruneopts = "UT"
-  revision = "6d65ecea15043a05f19b133fd10cbdff0754f082"
+  revision = "34b763ef039f1500196df5d538db30d505f31f2e"
 
 [[projects]]
   digest = "1:09d3ceb4456b0b463c5730198a9138e383089b27c0c10b1032789a0618a6dfe6"
@@ -124,7 +124,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/devopsfaith/flatmap",
+    "github.com/devopsfaith/flatmap/tree",
     "github.com/dimfeld/httptreemux",
     "github.com/gin-gonic/gin",
     "github.com/go-chi/chi",

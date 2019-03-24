@@ -3,7 +3,7 @@ package proxy
 import (
 	"strings"
 
-	"github.com/devopsfaith/flatmap"
+	"github.com/devopsfaith/flatmap/tree"
 	"github.com/devopsfaith/krakend/config"
 )
 
@@ -213,21 +213,21 @@ func (e flatmapFormatter) Format(entity Response) Response {
 }
 
 func (e flatmapFormatter) processOps(entity *Response) {
-	flatten, err := flatmap.Flatten(entity.Data, flatmap.DefaultTokenizer)
+	flatten, err := tree.New(entity.Data)
 	if err != nil {
 		return
 	}
 	for _, op := range e.Ops {
 		switch op.Type {
 		case "move":
-			flatten.Move(op.Args[0], op.Args[1])
+			flatten.Move(strings.Split(op.Args[0], "."), strings.Split(op.Args[1], "."))
 		case "del":
-			flatten.Del(op.Args[0])
+			flatten.Del(strings.Split(op.Args[0], "."))
 		default:
 		}
 	}
 
-	entity.Data = flatten.Expand()
+	entity.Data, _ = flatten.Get([]string{}).(map[string]interface{})
 }
 
 func newFlatmapFormatter(remote *config.Backend) EntityFormatter {
