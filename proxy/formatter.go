@@ -195,7 +195,7 @@ type flatmapFormatter struct {
 
 type flatmapOp struct {
 	Type string
-	Args []string
+	Args [][]string
 }
 
 // Format implements the EntityFormatter interface
@@ -220,9 +220,9 @@ func (e flatmapFormatter) processOps(entity *Response) {
 	for _, op := range e.Ops {
 		switch op.Type {
 		case "move":
-			flatten.Move(strings.Split(op.Args[0], "."), strings.Split(op.Args[1], "."))
+			flatten.Move(op.Args[0], op.Args[1])
 		case "del":
-			flatten.Del(strings.Split(op.Args[0], "."))
+			flatten.Del(op.Args[0])
 		default:
 		}
 	}
@@ -250,10 +250,10 @@ func newFlatmapFormatter(remote *config.Backend) EntityFormatter {
 						continue
 					}
 					if args, ok := m["args"].([]interface{}); ok {
-						op.Args = make([]string, len(args))
+						op.Args = make([][]string, len(args))
 						for k, arg := range args {
 							if t, ok := arg.(string); ok {
-								op.Args[k] = t
+								op.Args[k] = strings.Split(t, ".")
 							}
 						}
 					}

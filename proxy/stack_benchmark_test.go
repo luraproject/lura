@@ -9,6 +9,8 @@ import (
 	"github.com/devopsfaith/krakend/config"
 )
 
+var result interface{}
+
 func BenchmarkProxyStack_single(b *testing.B) {
 	backend := &config.Backend{
 		ConcurrentCalls: 3,
@@ -64,11 +66,13 @@ func BenchmarkProxyStack_single(b *testing.B) {
 		Headers: map[string][]string{},
 	}
 
+	var r *Response
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		p(context.Background(), request)
+		r, _ = p(context.Background(), request)
 	}
+	result = r
 }
 
 func BenchmarkProxyStack_multi(b *testing.B) {
@@ -131,11 +135,13 @@ func BenchmarkProxyStack_multi(b *testing.B) {
 			p := NewMergeDataMiddleware(cfg)(backendProxy...)
 			p = NewStaticMiddleware(cfg)(p)
 
+			var r *Response
 			b.ResetTimer()
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
-				p(context.Background(), request)
+				r, _ = p(context.Background(), request)
 			}
+			result = r
 		})
 	}
 }
@@ -207,11 +213,13 @@ func BenchmarkProxyStack_single_flatmap(b *testing.B) {
 		Headers: map[string][]string{},
 	}
 
+	var r *Response
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		p(context.Background(), request)
+		r, _ = p(context.Background(), request)
 	}
+	result = r
 }
 
 func BenchmarkProxyStack_multi_flatmap(b *testing.B) {
@@ -286,11 +294,13 @@ func BenchmarkProxyStack_multi_flatmap(b *testing.B) {
 			p := NewMergeDataMiddleware(cfg)(backendProxy...)
 			p = NewStaticMiddleware(cfg)(p)
 
+			var r *Response
 			b.ResetTimer()
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
 				p(context.Background(), request)
 			}
+			result = r
 		})
 	}
 }
