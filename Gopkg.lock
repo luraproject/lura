@@ -3,11 +3,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b83235a21739243acc292ad9a7b6814cd1bdfd5db5d90907e52bbc44baa84881"
+  digest = "1:d539252c5fe10758379e9f86e1b9e09684d03143c966c2e71899670e1dcc4d69"
   name = "github.com/devopsfaith/flatmap"
   packages = ["tree"]
   pruneopts = "UT"
-  revision = "34b763ef039f1500196df5d538db30d505f31f2e"
+  revision = "ca610bccf69e790b3f97d1efe40882679f5cc511"
 
 [[projects]]
   digest = "1:09d3ceb4456b0b463c5730198a9138e383089b27c0c10b1032789a0618a6dfe6"
