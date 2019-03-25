@@ -1,5 +1,3 @@
-// +build !go1.9
-
 package internal
 
 import "sync"
