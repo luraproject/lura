@@ -188,3 +188,67 @@ func BenchmarkEntityFormatter_mapping(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkEntityFormatter_flatmap(b *testing.B) {
+	sub := map[string]interface{}{
+		"b": true,
+		"c": 42,
+		"d": "tupu",
+		"e": []interface{}{1, 2, 3, 4},
+	}
+	sample := Response{
+		Data: map[string]interface{}{
+			"content": map[string]interface{}{
+				"supu":       42,
+				"tupu":       false,
+				"foo":        "bar",
+				"a":          sub,
+				"collection": []interface{}{sub, sub, sub, sub},
+			},
+		},
+		IsComplete: true,
+	}
+	f := NewEntityFormatter(&config.Backend{
+		Target: "content",
+		Group:  "group",
+		ExtraConfig: config.ExtraConfig{
+			Namespace: map[string]interface{}{
+				flatmapKey: []interface{}{
+					map[string]interface{}{
+						"type": "del",
+						"args": []interface{}{"c"},
+					},
+					map[string]interface{}{
+						"type": "move",
+						"args": []interface{}{"supu", "SUPUUUUU"},
+					},
+					map[string]interface{}{
+						"type": "move",
+						"args": []interface{}{"a.b", "a.BOOOOO"},
+					},
+					map[string]interface{}{
+						"type": "del",
+						"args": []interface{}{"collection.*.b"},
+					},
+					map[string]interface{}{
+						"type": "del",
+						"args": []interface{}{"collection.*.d"},
+					},
+					map[string]interface{}{
+						"type": "del",
+						"args": []interface{}{"collection.*.e"},
+					},
+					map[string]interface{}{
+						"type": "move",
+						"args": []interface{}{"collection.*.c", "collection.*.x"},
+					},
+				},
+			},
+		},
+	})
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		f.Format(sample)
+	}
+}

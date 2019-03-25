@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/devopsfaith/krakend/config"
@@ -365,5 +366,95 @@ func TestEntityFormatter_altogether(t *testing.T) {
 	}
 	if len(result.Data) != 1 || result.IsComplete != expected.IsComplete {
 		t.Errorf("The formatter returned an unexpected result size: %v\n", result)
+	}
+}
+
+func TestEntityFormatter_flatmap(t *testing.T) {
+	sub := map[string]interface{}{
+		"b": true,
+		"c": 42,
+		"d": "tupu",
+		"e": []interface{}{1, 2, 3, 4},
+	}
+	sample := Response{
+		Data: map[string]interface{}{
+			"content": map[string]interface{}{
+				"supu":       42,
+				"tupu":       false,
+				"foo":        "bar",
+				"a":          sub,
+				"collection": []interface{}{sub, sub, sub, sub},
+			},
+		},
+		IsComplete: true,
+	}
+	expected := Response{
+		Data: map[string]interface{}{
+			"group": map[string]interface{}{
+				"SUPUUUUU": 42,
+				"tupu":     false,
+				"foo":      "bar",
+				"a": map[string]interface{}{
+					"BOOOOO": true,
+					"c":      42,
+					"d":      "tupu",
+					"e":      []interface{}{1, 2, 3, 4},
+				},
+				"collection": []interface{}{
+					map[string]interface{}{"x": 42},
+					map[string]interface{}{"x": 42},
+					map[string]interface{}{"x": 42},
+					map[string]interface{}{"x": 42},
+				},
+			},
+		},
+		IsComplete: true,
+	}
+	f := NewEntityFormatter(&config.Backend{
+		Target: "content",
+		Group:  "group",
+		ExtraConfig: config.ExtraConfig{
+			Namespace: map[string]interface{}{
+				flatmapKey: []interface{}{
+					map[string]interface{}{
+						"type": "del",
+						"args": []interface{}{"c"},
+					},
+					map[string]interface{}{
+						"type": "move",
+						"args": []interface{}{"supu", "SUPUUUUU"},
+					},
+					map[string]interface{}{
+						"type": "move",
+						"args": []interface{}{"a.b", "a.BOOOOO"},
+					},
+					map[string]interface{}{
+						"type": "del",
+						"args": []interface{}{"collection.*.b"},
+					},
+					map[string]interface{}{
+						"type": "del",
+						"args": []interface{}{"collection.*.d"},
+					},
+					map[string]interface{}{
+						"type": "del",
+						"args": []interface{}{"collection.*.e"},
+					},
+					map[string]interface{}{
+						"type": "move",
+						"args": []interface{}{"collection.*.c", "collection.*.x"},
+					},
+				},
+			},
+		},
+	})
+	result := f.Format(sample)
+
+	if len(result.Data) != len(expected.Data) || result.IsComplete != expected.IsComplete {
+		t.Errorf("The formatter returned an unexpected result size: %v\n", result.Data)
+	}
+
+	if !reflect.DeepEqual(expected.Data, result.Data) {
+		t.Errorf("unexpected result: %v", result.Data)
 	}
 }
