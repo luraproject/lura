@@ -3,6 +3,7 @@ package proxy
 import (
 	"context"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/devopsfaith/krakend/config"
@@ -45,10 +46,10 @@ func newLoadBalancedMiddleware(lb sd.Balancer) Middleware {
 			}
 			r := request.Clone()
 
-			rawURL := []byte{}
-			rawURL = append(rawURL, host...)
-			rawURL = append(rawURL, r.Path...)
-			r.URL, err = url.Parse(string(rawURL))
+			var b strings.Builder
+			b.WriteString(host)
+			b.WriteString(r.Path)
+			r.URL, err = url.Parse(b.String())
 			if err != nil {
 				return nil, err
 			}
