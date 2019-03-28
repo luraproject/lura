@@ -2,6 +2,7 @@
 
 DEP_VERSION=0.5.0
 OS := $(shell uname | tr '[:upper:]' '[:lower:]')
+GIT_COMMIT := $(shell git rev-parse --short=7 HEAD)
 
 all: deps test build
 
@@ -24,21 +25,9 @@ test:
 	go test -tags integration ./test
 
 benchmark:
-	@echo "Proxy middleware stack"
-	@go test -bench=BenchmarkProxyStack -benchtime=3s ./proxy
-	@echo "Proxy middlewares"
-	@go test -bench="BenchmarkNewLoadBalanced|BenchmarkNewConcurrent|BenchmarkNewRequestBuilder|BenchmarkNewMergeData" -benchtime=3s ./proxy
-	@echo "Response manipulation"
-	@echo "Response property whitelisting"
-	@go test -bench=BenchmarkEntityFormatter_whitelistingFilter -benchtime=3s ./proxy
-	@echo "Response property blacklisting"
-	@go test -bench=BenchmarkEntityFormatter_blacklistingFilter -benchtime=3s ./proxy
-	@echo "Response property groupping"
-	@go test -bench=BenchmarkEntityFormatter_grouping -benchtime=3s ./proxy
-	@echo "Response property mapping"
-	@go test -bench=BenchmarkEntityFormatter_mapping -benchtime=3s ./proxy
-	@echo "Request generator"
-	@go test -bench=BenchmarkRequestGeneratePath -benchtime=3s ./proxy
+	@mkdir -p bench_res
+	@touch bench_res/${GIT_COMMIT}.out
+	@go test -run none -bench . -benchmem ./... >> bench_res/${GIT_COMMIT}.out
 
 build:
 	go build ./...
