@@ -3,6 +3,7 @@ package proxy
 import (
 	"bytes"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/devopsfaith/krakend/config"
@@ -189,25 +190,7 @@ func BenchmarkEntityFormatter_mapping(b *testing.B) {
 	}
 }
 
-func BenchmarkEntityFormatter_flatmap(b *testing.B) {
-	sub := map[string]interface{}{
-		"b": true,
-		"c": 42,
-		"d": "tupu",
-		"e": []interface{}{1, 2, 3, 4},
-	}
-	sample := Response{
-		Data: map[string]interface{}{
-			"content": map[string]interface{}{
-				"supu":       42,
-				"tupu":       false,
-				"foo":        "bar",
-				"a":          sub,
-				"collection": []interface{}{sub, sub, sub, sub},
-			},
-		},
-		IsComplete: true,
-	}
+func BenchmarkEntityFormatter_flatmapAlt(b *testing.B) {
 	f := NewEntityFormatter(&config.Backend{
 		Target: "content",
 		Group:  "group",
@@ -246,9 +229,81 @@ func BenchmarkEntityFormatter_flatmap(b *testing.B) {
 			},
 		},
 	})
-	b.ResetTimer()
-	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		f.Format(sample)
+
+	for _, size := range []int{1, 2, 5, 10, 20, 50, 100, 500} {
+		b.Run(strconv.Itoa(size), func(b *testing.B) {
+			sub := map[string]interface{}{
+				"b": true,
+				"c": 42,
+				"d": "tupu",
+				"e": []interface{}{1, 2, 3, 4},
+			}
+			sample := Response{
+				Data: map[string]interface{}{
+					"content": map[string]interface{}{
+						"supu":       42,
+						"tupu":       false,
+						"foo":        "bar",
+						"a":          sub,
+						"collection": []interface{}{sub, sub, sub, sub},
+					},
+				},
+				IsComplete: true,
+			}
+			subCol := []interface{}{}
+			for i := 0; i < size; i++ {
+				subCol = append(subCol, i)
+			}
+			sub["e"] = subCol
+			sampleSubCol := []interface{}{}
+			for i := 0; i < size; i++ {
+				sampleSubCol = append(sampleSubCol, sub)
+			}
+			sample.Data["collection"] = sampleSubCol
+
+			b.ResetTimer()
+			b.ReportAllocs()
+			for i := 0; i < b.N; i++ {
+				f.Format(sample)
+			}
+		})
+	}
+}
+
+func BenchmarkEntityFormatter_flatmap(b *testing.B) {
+	numTargets := []int{0, 1, 2, 5, 10}
+	depths := []int{1, 3, 7}
+	for _, nTargets := range numTargets {
+		for _, depth := range depths {
+			extraFields := nTargets + depth*2
+			extraSiblings := nTargets
+			data, blacklist := benchmarkDeepStructure(nTargets, depth, extraFields, extraSiblings)
+			sample := Response{
+				Data:       data,
+				IsComplete: true,
+			}
+
+			cmds := []interface{}{}
+			for _, path := range blacklist {
+				cmds = append(cmds, map[string]interface{}{
+					"type": "del",
+					"args": []interface{}{path},
+				})
+			}
+			f := NewEntityFormatter(&config.Backend{
+				ExtraConfig: config.ExtraConfig{
+					Namespace: map[string]interface{}{
+						flatmapKey: cmds,
+					},
+				},
+			})
+			b.Run(fmt.Sprintf("numTargets:%d,depth:%d,extraFields:%d,extraSiblings:%d", nTargets, depth, extraFields, extraSiblings), func(b *testing.B) {
+				b.ReportAllocs()
+				b.ResetTimer()
+				for i := 0; i < b.N; i++ {
+					f.Format(sample)
+				}
+			})
+		}
 	}
 }
