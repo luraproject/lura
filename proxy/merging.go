@@ -103,7 +103,18 @@ func sequentialMerge(patterns []string, timeout time.Duration, rc ResponseCombin
 						if !ok {
 							continue
 						}
-						request.Params[key] = fmt.Sprintf("%v", v)
+						switch clean := v.(type) {
+						case string:
+							request.Params[key] = clean
+						case int:
+							request.Params[key] = strconv.Itoa(clean)
+						case float64:
+							request.Params[key] = strconv.FormatFloat(clean, 'E', -1, 32)
+						case bool:
+							request.Params[key] = strconv.FormatBool(clean)
+						default:
+							request.Params[key] = fmt.Sprintf("%v", v)
+						}
 					}
 				}
 			}
