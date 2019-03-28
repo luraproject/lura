@@ -6,6 +6,7 @@ server.rsa.key
 *.yml
 *.toml
 *.dot
-coverage.out
+*.out
+bench_res
 
 *DS_Store
