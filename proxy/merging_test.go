@@ -43,12 +43,12 @@ func TestNewMergeDataMiddleware_ok(t *testing.T) {
 }
 
 func TestNewMergeDataMiddleware_sequential(t *testing.T) {
-	timeout := 500
+	timeout := 1000
 	endpoint := config.EndpointConfig{
 		Backend: []*config.Backend{
 			{URLPattern: "/"},
-			{URLPattern: "/aaa/{{.Resp0_supu}}"},
-			{URLPattern: "/aaa/{{.Resp0_supu}}?x={{.Resp1_tupu}}"},
+			{URLPattern: "/aaa/{{.Resp0_int}}/{{.Resp0_string}}/{{.Resp0_bool}}/{{.Resp0_float}}"},
+			{URLPattern: "/aaa/{{.Resp0_int}}/{{.Resp0_string}}/{{.Resp0_bool}}/{{.Resp0_float}}?x={{.Resp1_tupu}}"},
 		},
 		Timeout: time.Duration(timeout) * time.Millisecond,
 		ExtraConfig: config.ExtraConfig{
@@ -59,19 +59,42 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 	}
 	mw := NewMergeDataMiddleware(&endpoint)
 	p := mw(
-		dummyProxy(&Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}),
+		dummyProxy(&Response{Data: map[string]interface{}{
+			"int":    42,
+			"string": "some",
+			"bool":   true,
+			"float":  3.14,
+		}, IsComplete: true}),
 		func(ctx context.Context, r *Request) (*Response, error) {
-			if r.Params["Resp0_supu"] != "42" {
-				t.Errorf("request without the expected set of params")
+			if r.Params["Resp0_int"] != "42" {
+				t.Errorf("request without the expected set of params: %s", r.Params["Resp0_int"])
+			}
+			if r.Params["Resp0_string"] != "some" {
+				t.Errorf("request without the expected set of params: %s", r.Params["Resp0_string"])
+			}
+			if r.Params["Resp0_float"] != "3.14E+00" {
+				t.Errorf("request without the expected set of params: %s", r.Params["Resp0_float"])
+			}
+			if r.Params["Resp0_bool"] != "true" {
+				t.Errorf("request without the expected set of params: %s", r.Params["Resp0_bool"])
 			}
 			return &Response{Data: map[string]interface{}{"tupu": "foo"}, IsComplete: true}, nil
 		},
 		func(ctx context.Context, r *Request) (*Response, error) {
-			if r.Params["Resp0_supu"] != "42" {
-				t.Errorf("request without the expected set of params")
+			if r.Params["Resp0_int"] != "42" {
+				t.Errorf("request without the expected set of params: %s", r.Params["Resp0_int"])
+			}
+			if r.Params["Resp0_string"] != "some" {
+				t.Errorf("request without the expected set of params: %s", r.Params["Resp0_string"])
+			}
+			if r.Params["Resp0_float"] != "3.14E+00" {
+				t.Errorf("request without the expected set of params: %s", r.Params["Resp0_float"])
+			}
+			if r.Params["Resp0_bool"] != "true" {
+				t.Errorf("request without the expected set of params: %s", r.Params["Resp0_bool"])
 			}
 			if r.Params["Resp1_tupu"] != "foo" {
-				t.Errorf("request without the expected set of params")
+				t.Errorf("request without the expected set of params: %s", r.Params["Resp1_tupu"])
 			}
 			return &Response{Data: map[string]interface{}{"aaaa": []int{1, 2, 3}}, IsComplete: true}, nil
 		},
@@ -89,7 +112,7 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 	case <-mustEnd:
 		t.Errorf("We were expecting a response but we got none\n")
 	default:
-		if len(out.Data) != 3 {
+		if len(out.Data) != 6 {
 			t.Errorf("We weren't expecting a partial response but we got %v!\n", out)
 		}
 		if !out.IsComplete {
