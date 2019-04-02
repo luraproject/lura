@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/devopsfaith/krakend/config"
@@ -54,6 +55,13 @@ func NewHTTPProxyDetailed(remote *config.Backend, re client.HTTPRequestExecutor,
 			tmp := make([]string, len(vs))
 			copy(tmp, vs)
 			requestToBakend.Header[k] = tmp
+		}
+		if request.Body != nil {
+			if v, ok := request.Headers["Content-Length"]; ok && len(v) == 1 && v[0] != "chunked" {
+				if size, err := strconv.Atoi(v[0]); err == nil {
+					requestToBakend.ContentLength = int64(size)
+				}
+			}
 		}
 
 		resp, err := re(ctx, requestToBakend)
