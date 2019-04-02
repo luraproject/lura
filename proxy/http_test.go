@@ -21,6 +21,12 @@ import (
 func TestNewHTTPProxy_ok(t *testing.T) {
 	expectedMethod := "GET"
 	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.ContentLength != 11 {
+			t.Errorf("unexpected request size. Want: 11. Have: %d", r.ContentLength)
+		}
+		if h := r.Header.Get("Content-Length"); h != "11" {
+			t.Errorf("unexpected content-length header. Want: 11. Have: %s", h)
+		}
 		if r.Method != expectedMethod {
 			t.Errorf("Wrong request method. Want: %s. Have: %s", expectedMethod, r.Method)
 		}
@@ -43,10 +49,11 @@ func TestNewHTTPProxy_ok(t *testing.T) {
 		Method: expectedMethod,
 		Path:   "/",
 		URL:    rpURL,
-		Body:   newDummyReadCloser(""),
+		Body:   newDummyReadCloser(`{"abc": 42}`),
 		Headers: map[string][]string{
-			"X-First":  {"first"},
-			"X-Second": {"second"},
+			"X-First":        {"first"},
+			"X-Second":       {"second"},
+			"Content-Length": {"11"},
 		},
 	}
 	mustEnd := time.After(time.Duration(150) * time.Millisecond)
