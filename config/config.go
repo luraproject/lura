@@ -406,11 +406,19 @@ func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]
 	outputParams := s.extractPlaceHoldersFromURLTemplate(backend.URLPattern, simpleURLKeysPattern)
 
 	outputSet := map[string]interface{}{}
+	outputSetSize := 0
 	for op := range outputParams {
+		if _, ok := outputSet[outputParams[op]]; ok {
+			continue
+		}
 		outputSet[outputParams[op]] = nil
+		if sequentialParamsPattern.MatchString(outputParams[op]) {
+			continue
+		}
+		outputSetSize++
 	}
 
-	if len(outputSet) > len(inputParams) {
+	if outputSetSize > len(inputParams) {
 		return fmt.Errorf("Too many output params! input: %v, output: %v\n", outputSet, outputParams)
 	}
 

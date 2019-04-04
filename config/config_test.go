@@ -39,6 +39,7 @@ func TestConfig_initBackendURLMappings_ok(t *testing.T) {
 		"supu/{tupu_56}/{supu-5t6}?a={foo}&b={foo}",
 		"supu/{tupu_56}{supu-5t6}?a={foo}&b={foo}",
 		"supu/tupu{supu-5t6}?a={foo}&b={foo}",
+		"{resp0_x}/{tupu1}/{tupu_56}{supu-5t6}?a={tupu}&b={foo}",
 	}
 
 	expected := []string{
@@ -48,6 +49,7 @@ func TestConfig_initBackendURLMappings_ok(t *testing.T) {
 		"/supu/{{.Tupu_56}}/{{.Supu-5t6}}?a={{.Foo}}&b={{.Foo}}",
 		"/supu/{{.Tupu_56}}{{.Supu-5t6}}?a={{.Foo}}&b={{.Foo}}",
 		"/supu/tupu{{.Supu-5t6}}?a={{.Foo}}&b={{.Foo}}",
+		"/{{.Resp0_x}}/{{.Tupu1}}/{{.Tupu_56}}{{.Supu-5t6}}?a={{.Tupu}}&b={{.Foo}}",
 	}
 
 	backend := Backend{}
@@ -101,7 +103,7 @@ func TestConfig_initBackendURLMappings_undefinedOutput(t *testing.T) {
 
 	err := subject.initBackendURLMappings(0, 0, inputSet)
 	if err == nil || strings.Index(err.Error(), "Undefined output param [") != 0 {
-		t.Error("Error expected")
+		t.Errorf("error expected. have: %v", err)
 	}
 }
 
