@@ -3,7 +3,6 @@ package config
 import (
 	"io/ioutil"
 	"os"
-	"strings"
 	"testing"
 )
 
@@ -108,6 +107,93 @@ func TestNewParser_ok(t *testing.T) {
 	}
 }
 
+func TestNewParser_errorMessages(t *testing.T) {
+	for _, configContent := range []struct {
+		name    string
+		path    string
+		content []byte
+		expErr  string
+	}{
+		{
+			name:    "case0",
+			path:    "/tmp/ok.json",
+			content: []byte(`{`),
+			expErr:  "'/tmp/ok.json': unexpected end of JSON input, offset: 1, row: 0, col: 1",
+		},
+		{
+			name:    "case1",
+			path:    "/tmp/ok.json",
+			content: []byte(`>`),
+			expErr:  "'/tmp/ok.json': invalid character '>' looking for beginning of value, offset: 1, row: 0, col: 1",
+		},
+		{
+			name:    "case2",
+			path:    "/tmp/ok.json",
+			content: []byte(`"`),
+			expErr:  "'/tmp/ok.json': unexpected end of JSON input, offset: 1, row: 0, col: 1",
+		},
+		{
+			name:    "case3",
+			path:    "/tmp/ok.json",
+			content: []byte(``),
+			expErr:  "'/tmp/ok.json': unexpected end of JSON input, offset: 0, row: 0, col: 0",
+		},
+		{
+			name:    "case4",
+			path:    "/tmp/ok.json",
+			content: []byte(`[{}]`),
+			expErr:  "'/tmp/ok.json': json: cannot unmarshal array into Go value of type config.parseableServiceConfig, offset: 1, row: 0, col: 1",
+		},
+		{
+			name:    "case5",
+			path:    "/tmp/ok.json",
+			content: []byte(`42`),
+			expErr:  "'/tmp/ok.json': json: cannot unmarshal number into Go value of type config.parseableServiceConfig, offset: 2, row: 0, col: 2",
+		},
+		{
+			name:    "case6",
+			path:    "/tmp/ok.json",
+			content: []byte("\r\n42"),
+			expErr:  "'/tmp/ok.json': json: cannot unmarshal number into Go value of type config.parseableServiceConfig, offset: 4, row: 1, col: 2",
+		},
+		{
+			name: "case7",
+			path: "/tmp/ok.json",
+			content: []byte(`{
+	"version": 2,
+	"name": "My lovely gateway",
+	"port": 8080,
+	"cache_ttl": 3600
+	"timeout": "3s",
+	"endpoints": []
+}`),
+			expErr: "'/tmp/ok.json': invalid character '\"' after object key:value pair, offset: 83, row: 5, col: 2",
+		},
+	} {
+		t.Run(configContent.name, func(t *testing.T) {
+			if err := ioutil.WriteFile(configContent.path, configContent.content, 0644); err != nil {
+				t.Error(err)
+				return
+			}
+
+			_, err := NewParser().Parse(configContent.path)
+			if err == nil {
+				t.Errorf("%s: Expecting error", configContent.name)
+				return
+			}
+			if errMsg := err.Error(); errMsg != configContent.expErr {
+				t.Errorf("%s: Unexpected error. Got '%s' want '%s'", configContent.name, errMsg, configContent.expErr)
+				return
+			}
+
+			if err := os.Remove(configContent.path); err != nil {
+				t.Errorf("%s: %s", err.Error(), configContent.name)
+				return
+			}
+		})
+	}
+}
+
 func testExtraConfig(extraConfig map[string]interface{}, t *testing.T) {
 	userVar := extraConfig["user"]
 	if userVar != "test" {
@@ -124,8 +210,8 @@ func testExtraConfig(extraConfig map[string]interface{}, t *testing.T) {
 
 func TestNewParser_unknownFile(t *testing.T) {
 	_, err := NewParser().Parse("/nowhere/in/the/fs.json")
-	if err == nil || strings.Index(err.Error(), "Fatal error config file:") != 0 {
-		t.Error("Error expected. Got", err)
+	if err == nil || err.Error() != "'/nowhere/in/the/fs.json' (open): no such file or directory" {
+		t.Errorf("error expected. got '%v'", err)
 	}
 }
 
@@ -136,9 +222,9 @@ func TestNewParser_readingError(t *testing.T) {
 		t.FailNow()
 	}
 
-	expected := "Fatal error config file: While parsing config: invalid character 'h' looking for beginning of object key string"
+	expected := "'/tmp/reading.json': invalid character 'h' looking for beginning of object key string, offset: 2, row: 0, col: 2"
 	_, err := NewParser().Parse(wrongConfigPath)
-	if err == nil || strings.Index(err.Error(), expected) != 0 {
+	if err == nil || err.Error() != expected {
 		t.Error("Error expected. Got", err)
 	}
 	if err = os.Remove(wrongConfigPath); err != nil {
@@ -154,7 +240,7 @@ func TestNewParser_initError(t *testing.T) {
 	}
 
 	_, err := NewParser().Parse(wrongConfigPath)
-	if err == nil || strings.Index(err.Error(), "Unsupported version: 0") != 0 {
+	if err == nil || err.Error() != "'/tmp/unmarshall.json': Unsupported version: 0 (want: 2)" {
 		t.Error("Error expected. Got", err)
 	}
 	if err = os.Remove(wrongConfigPath); err != nil {

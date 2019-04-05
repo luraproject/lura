@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"time"
+	"os"
 )
 
 // Parser reads a configuration file, parses it and returns the content as an init ServiceConfig struct
@@ -39,15 +40,84 @@ func (p parser) Parse(configFile string) (ServiceConfig, error) {
 	var cfg parseableServiceConfig
 	data, err := p.fileReader(configFile)
 	if err != nil {
-		return result, fmt.Errorf("Fatal error config file: %s", configFile)
+		return result, CheckErr(err, configFile)
 	}
 	if err = json.Unmarshal(data, &cfg); err != nil {
-		return result, fmt.Errorf("Fatal error config file: While parsing config: %s", err.Error())
+		return result, CheckErr(err, configFile)
 	}
 	result = cfg.normalize()
 	err = result.Init()
 
-	return result, err
+	if err = result.Init(); err != nil {
+		return result, CheckErr(err, configFile)
+	}
+
+	return result, nil
+}
+
+func CheckErr(err error, configFile string) error {
+	switch e := err.(type) {
+	case *json.SyntaxError:
+		return NewParseError(err, configFile, int(e.Offset))
+	case *json.UnmarshalTypeError:
+		return NewParseError(err, configFile, int(e.Offset))
+	case *os.PathError:
+		return fmt.Errorf(
+			"'%s' (%s): %s",
+			configFile,
+			e.Op,
+			e.Err.Error(),
+		)
+	default:
+		return fmt.Errorf("'%s': %v", configFile, err)
+	}
+}
+
+func NewParseError(err error, configFile string, offset int) *ParseError {
+	b, _ := ioutil.ReadFile(configFile)
+	row, col := getErrorRowCol(b, offset)
+	return &ParseError{
+		ConfigFile: configFile,
+		Err:        err,
+		Offset:     offset,
+		Row:        row,
+		Col:        col,
+	}
+}
+
+func getErrorRowCol(source []byte, offset int) (row, col int) {
+	for i := 0; i < offset; i++ {
+		v := source[i]
+		if v == '\r' {
+			continue
+		}
+		if v == '\n' {
+			col = 0
+			row++
+			continue
+		}
+		col++
+	}
+	return
+}
+
+type ParseError struct {
+	ConfigFile string
+	Offset     int
+	Row        int
+	Col        int
+	Err        error
+}
+
+func (p *ParseError) Error() string {
+	return fmt.Sprintf(
+		"'%s': %v, offset: %v, row: %v, col: %v",
+		p.ConfigFile,
+		p.Err.Error(),
+		p.Offset,
+		p.Row,
+		p.Col,
+	)
 }
 
 // FileReaderFunc is a function used to read the content of a config file
