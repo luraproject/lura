@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"time"
 	"os"
+	"time"
 )
 
 // Parser reads a configuration file, parses it and returns the content as an init ServiceConfig struct
@@ -55,6 +55,7 @@ func (p parser) Parse(configFile string) (ServiceConfig, error) {
 	return result, nil
 }
 
+// CheckErr returns a proper documented error
 func CheckErr(err error, configFile string) error {
 	switch e := err.(type) {
 	case *json.SyntaxError:
@@ -73,6 +74,7 @@ func CheckErr(err error, configFile string) error {
 	}
 }
 
+// NewParseError returns a new ParseError
 func NewParseError(err error, configFile string, offset int) *ParseError {
 	b, _ := ioutil.ReadFile(configFile)
 	row, col := getErrorRowCol(b, offset)
@@ -101,6 +103,8 @@ func getErrorRowCol(source []byte, offset int) (row, col int) {
 	return
 }
 
+// ParseError is an error containing details regarding the row and column where
+// an parse error occurred
 type ParseError struct {
 	ConfigFile string
 	Offset     int
@@ -109,6 +113,7 @@ type ParseError struct {
 	Err        error
 }
 
+// Error returns the error message for the ParseError
 func (p *ParseError) Error() string {
 	return fmt.Sprintf(
 		"'%s': %v, offset: %v, row: %v, col: %v",
