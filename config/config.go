@@ -289,9 +289,20 @@ func (s *ServiceConfig) Hash() (string, error) {
 // normalizes all the things.
 func (s *ServiceConfig) Init() error {
 	s.uriParser = NewURIParser()
+
 	if s.Version != ConfigVersion {
-		return &UnsupportedVersionError{Have: s.Version, Want: ConfigVersion}
+		return &UnsupportedVersionError{
+			Have: s.Version,
+			Want: ConfigVersion,
+		}
 	}
+
+	s.initGlobalParams()
+
+	return s.initEndpoints()
+}
+
+func (s *ServiceConfig) initGlobalParams() {
 	if s.Port == 0 {
 		s.Port = defaultPort
 	}
@@ -305,7 +316,9 @@ func (s *ServiceConfig) Init() error {
 	s.Host = s.uriParser.CleanHosts(s.Host)
 
 	s.ExtraConfig.sanitize()
+}
 
+func (s *ServiceConfig) initEndpoints() error {
 	for i, e := range s.Endpoints {
 		e.Endpoint = s.uriParser.CleanPath(e.Endpoint)
 
@@ -339,7 +352,6 @@ func (s *ServiceConfig) Init() error {
 			b.ExtraConfig.sanitize()
 		}
 	}
-
 	return nil
 }
 
