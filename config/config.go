@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"sort"
 	"strings"
@@ -404,45 +403,22 @@ func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]
 
 	backend.URLPattern = s.uriParser.CleanPath(backend.URLPattern)
 
-	outputParams := s.extractPlaceHoldersFromURLTemplate(backend.URLPattern, simpleURLKeysPattern)
+	outputParams, outputSetSize := uniqueOutput(s.extractPlaceHoldersFromURLTemplate(backend.URLPattern, simpleURLKeysPattern))
 
-	outputSet := map[string]interface{}{}
-	outputSetSize := 0
-	for _, op := range outputParams {
-		if _, ok := outputSet[op]; ok {
-			continue
-		}
-		outputSet[op] = nil
-		if sequentialParamsPattern.MatchString(op) {
-			continue
-		}
-		outputSetSize++
-	}
+	ip := fromSetToSortedSlice(inputParams)
 
-	ip := []string{}
-	for i := range inputParams {
-		ip = append(ip, i)
-	}
-	sort.Strings(ip)
-
-	op := []string{}
-	for o := range outputSet {
-		op = append(op, o)
-	}
-	sort.Strings(op)
-
-	if outputSetSize > len(inputParams) {
+	if outputSetSize > len(ip) {
 		return &WrongNumberOfParamsError{
 			Endpoint:     s.Endpoints[e].Endpoint,
 			Method:       s.Endpoints[e].Method,
 			Backend:      b,
 			InputParams:  ip,
-			OutputParams: op,
+			OutputParams: outputParams,
 		}
 	}
 
 	backend.URLKeys = []string{}
-	for _, output := range op {
+	for _, output := range outputParams {
 		if !sequentialParamsPattern.MatchString(output) {
 			if _, ok := inputParams[output]; !ok {
 				return &UndefinedOutputParamError{
@@ -451,7 +427,7 @@ func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]
 					Method:       s.Endpoints[e].Method,
 					Backend:      b,
 					InputParams:  ip,
-					OutputParams: op,
+					OutputParams: outputParams,
 				}
 			}
 		}
@@ -462,11 +438,43 @@ func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]
 	return nil
 }
 
+func fromSetToSortedSlice(set map[string]interface{}) []string {
+	res := []string{}
+	for element := range set {
+		res = append(res, element)
+	}
+	sort.Strings(res)
+	return res
+}
+
+func uniqueOutput(output []string) ([]string, int) {
+	sort.Strings(output)
+	j := 0
+	outputSetSize := 0
+	for i := 1; i < len(output); i++ {
+		if output[j] == output[i] {
+			continue
+		}
+		if !sequentialParamsPattern.MatchString(output[j]) {
+			outputSetSize++
+		}
+		j++
+		output[j] = output[i]
+	}
+	if j == len(output) {
+		return output, outputSetSize
+	}
+	return output[:j+1], outputSetSize
+}
+
 func (e *EndpointConfig) validate() error {
 	matched, err := regexp.MatchString(debugPattern, e.Endpoint)
 	if err != nil {
-		log.Printf("ERROR: parsing the endpoint url '%s': %s. Ignoring\n", e.Endpoint, err.Error())
-		return err
+		return &EndpointMatchError{
+			Err:    err,
+			Path:   e.Endpoint,
+			Method: e.Method,
+		}
 	}
 	if matched {
 		return &EndpointPathError{Path: e.Endpoint, Method: e.Method}
@@ -476,6 +484,19 @@ func (e *EndpointConfig) validate() error {
 		return &NoBackendsError{Path: e.Endpoint, Method: e.Method}
 	}
 	return nil
+}
+
+// EndpointMatchError is the error returned by the configuration init process when the endpoint pattern
+// check fails
+type EndpointMatchError struct {
+	Path   string
+	Method string
+	Err    error
+}
+
+// Error returns a string representation of the EndpointMatchError
+func (e *EndpointMatchError) Error() string {
+	return fmt.Sprintf("ERROR: parsing the endpoint url '%s %s': %s. Ignoring", e.Method, e.Path, e.Err.Error())
 }
 
 // NoBackendsError is the error returned by the configuration init process when an endpoint

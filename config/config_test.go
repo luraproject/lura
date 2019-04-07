@@ -285,14 +285,14 @@ func TestConfig_initKOInvalidDebugPattern(t *testing.T) {
 		Endpoints: []*EndpointConfig{
 			{
 				Endpoint: "/__debug/supu",
-				Method:   "get",
+				Method:   "GET",
 				Backend:  []*Backend{},
 			},
 		},
 	}
 
 	if err := subject.Init(); err == nil ||
-		err.Error() != "error parsing regexp: missing closing ): `a(b`" {
+		err.Error() != "ERROR: parsing the endpoint url 'GET /__debug/supu': error parsing regexp: missing closing ): `a(b`. Ignoring" {
 		t.Error("Expecting an error at the configuration init!", err)
 	}
 
