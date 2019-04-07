@@ -24,9 +24,9 @@ func TestConfig_rejectInvalidEndpoints(t *testing.T) {
 	}
 
 	for _, e := range samples {
-		subject := ServiceConfig{Version: ConfigVersion, Endpoints: []*EndpointConfig{{Endpoint: e}}}
+		subject := ServiceConfig{Version: ConfigVersion, Endpoints: []*EndpointConfig{{Endpoint: e, Method: "GET"}}}
 		err := subject.Init()
-		if err == nil || err.Error() != fmt.Sprintf("ERROR: the endpoint url path '%s' is not a valid one!!! Ignoring", e) {
+		if err == nil || err.Error() != fmt.Sprintf("ERROR: the endpoint url path 'GET %s' is not a valid one!!! Ignoring", e) {
 			t.Errorf("Unexpected error processing '%s': %v", e, err)
 		}
 	}
@@ -78,22 +78,28 @@ func TestConfig_initBackendURLMappings_ok(t *testing.T) {
 
 func TestConfig_initBackendURLMappings_tooManyOutput(t *testing.T) {
 	backend := Backend{URLPattern: "supu/{tupu_56}/{supu-5t6}?a={foo}&b={foo}"}
-	endpoint := EndpointConfig{Backend: []*Backend{&backend}}
+	endpoint := EndpointConfig{
+		Method:   "GET",
+		Endpoint: "/some/{tupu}",
+		Backend:  []*Backend{&backend},
+	}
 	subject := ServiceConfig{Endpoints: []*EndpointConfig{&endpoint}, uriParser: NewURIParser()}
 
 	inputSet := map[string]interface{}{
 		"tupu": nil,
 	}
 
+	expectedErrMsg := "input and output params do not match. endpoint: GET /some/{tupu}, backend: 0. input: [tupu], output: [foo supu-5t6 tupu_56]"
+
 	err := subject.initBackendURLMappings(0, 0, inputSet)
-	if err == nil || err.Error() != "Too many output params! input: [tupu], output: [foo supu-5t6 tupu_56]" {
+	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("Unexpected error: %v", err)
 	}
 }
 
 func TestConfig_initBackendURLMappings_undefinedOutput(t *testing.T) {
 	backend := Backend{URLPattern: "supu/{tupu_56}/{supu-5t6}?a={foo}&b={foo}"}
-	endpoint := EndpointConfig{Backend: []*Backend{&backend}}
+	endpoint := EndpointConfig{Endpoint: "/", Method: "GET", Backend: []*Backend{&backend}}
 	subject := ServiceConfig{Endpoints: []*EndpointConfig{&endpoint}, uriParser: NewURIParser()}
 
 	inputSet := map[string]interface{}{
@@ -102,8 +108,9 @@ func TestConfig_initBackendURLMappings_undefinedOutput(t *testing.T) {
 		"foo":  nil,
 	}
 
+	expectedErrMsg := "Undefined output param 'supu-5t6'! endpoint: GET /, backend: 0. input: [foo supu tupu], output: [foo supu-5t6 tupu_56]"
 	err := subject.initBackendURLMappings(0, 0, inputSet)
-	if err == nil || err.Error() != "Undefined output param 'supu-5t6'! input: [foo supu tupu], output: [foo supu-5t6 tupu_56]" {
+	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("error expected. have: %v", err)
 	}
 }
@@ -209,14 +216,14 @@ func TestConfig_initKONoBackends(t *testing.T) {
 		Endpoints: []*EndpointConfig{
 			{
 				Endpoint: "/supu",
-				Method:   "post",
+				Method:   "POST",
 				Backend:  []*Backend{},
 			},
 		},
 	}
 
 	if err := subject.Init(); err == nil ||
-		err.Error() != "WARNING: the '/supu' endpoint has 0 backends defined! Ignoring" {
+		err.Error() != "WARNING: the 'POST /supu' endpoint has 0 backends defined! Ignoring" {
 		t.Error("Unexpected error at the configuration init!", err)
 	}
 }

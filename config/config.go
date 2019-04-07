@@ -291,7 +291,7 @@ func (s *ServiceConfig) Hash() (string, error) {
 func (s *ServiceConfig) Init() error {
 	s.uriParser = NewURIParser()
 	if s.Version != ConfigVersion {
-		return fmt.Errorf("Unsupported version: %d (want: %d)", s.Version, ConfigVersion)
+		return &UnsupportedVersionError{Have: s.Version, Want: ConfigVersion}
 	}
 	if s.Port == 0 {
 		s.Port = defaultPort
@@ -432,14 +432,27 @@ func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]
 	sort.Strings(op)
 
 	if outputSetSize > len(inputParams) {
-		return fmt.Errorf("Too many output params! input: %v, output: %v", ip, op)
+		return &WrongNumberOfParamsError{
+			Endpoint:     s.Endpoints[e].Endpoint,
+			Method:       s.Endpoints[e].Method,
+			Backend:      b,
+			InputParams:  ip,
+			OutputParams: op,
+		}
 	}
 
 	backend.URLKeys = []string{}
 	for _, output := range op {
 		if !sequentialParamsPattern.MatchString(output) {
 			if _, ok := inputParams[output]; !ok {
-				return fmt.Errorf("Undefined output param '%s'! input: %v, output: %v", output, ip, op)
+				return &UndefinedOutputParamError{
+					Param:        output,
+					Endpoint:     s.Endpoints[e].Endpoint,
+					Method:       s.Endpoints[e].Method,
+					Backend:      b,
+					InputParams:  ip,
+					OutputParams: op,
+				}
 			}
 		}
 		key := strings.Title(output)
@@ -456,11 +469,93 @@ func (e *EndpointConfig) validate() error {
 		return err
 	}
 	if matched {
-		return fmt.Errorf("ERROR: the endpoint url path '%s' is not a valid one!!! Ignoring", e.Endpoint)
+		return &EndpointPathError{Path: e.Endpoint, Method: e.Method}
 	}
 
 	if len(e.Backend) == 0 {
-		return fmt.Errorf("WARNING: the '%s' endpoint has 0 backends defined! Ignoring", e.Endpoint)
+		return &NoBackendsError{Path: e.Endpoint, Method: e.Method}
 	}
 	return nil
+}
+
+// NoBackendsError is the error returned by the configuration init process when an endpoint
+// is connected to 0 backends
+type NoBackendsError struct {
+	Path   string
+	Method string
+}
+
+// Error returns a string representation of the NoBackendsError
+func (n *NoBackendsError) Error() string {
+	return "WARNING: the '" + n.Method + " " + n.Path + "' endpoint has 0 backends defined! Ignoring"
+}
+
+// UnsupportedVersionError is the error returned by the configuration init process when the configuration
+// version is not supoprted
+type UnsupportedVersionError struct {
+	Have int
+	Want int
+}
+
+// Error returns a string representation of the UnsupportedVersionError
+func (u *UnsupportedVersionError) Error() string {
+	return fmt.Sprintf("Unsupported version: %d (want: %d)", u.Have, u.Want)
+}
+
+// EndpointPathError is the error returned by the configuration init process when an endpoint
+// is using a forbiden path
+type EndpointPathError struct {
+	Path   string
+	Method string
+}
+
+// Error returns a string representation of the EndpointPathError
+func (e *EndpointPathError) Error() string {
+	return "ERROR: the endpoint url path '" + e.Method + " " + e.Path + "' is not a valid one!!! Ignoring"
+}
+
+// UndefinedOutputParamError is the error returned by the configuration init process when an output
+// param is not present in the input param set
+type UndefinedOutputParamError struct {
+	Endpoint     string
+	Method       string
+	Backend      int
+	InputParams  []string
+	OutputParams []string
+	Param        string
+}
+
+// Error returns a string representation of the UndefinedOutputParamError
+func (u *UndefinedOutputParamError) Error() string {
+	return fmt.Sprintf(
+		"Undefined output param '%s'! endpoint: %s %s, backend: %d. input: %v, output: %v",
+		u.Param,
+		u.Method,
+		u.Endpoint,
+		u.Backend,
+		u.InputParams,
+		u.OutputParams,
+	)
+}
+
+// WrongNumberOfParamsError is the error returned by the configuration init process when the number of output
+// params is greatter than the number of input params
+type WrongNumberOfParamsError struct {
+	Endpoint     string
+	Method       string
+	Backend      int
+	InputParams  []string
+	OutputParams []string
+}
+
+// Error returns a string representation of the WrongNumberOfParamsError
+func (w *WrongNumberOfParamsError) Error() string {
+	return fmt.Sprintf(
+		"input and output params do not match. endpoint: %s %s, backend: %d. input: %v, output: %v",
+		w.Method,
+		w.Endpoint,
+		w.Backend,
+		w.InputParams,
+		w.OutputParams,
+	)
 }
