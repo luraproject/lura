@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -25,8 +26,8 @@ func TestConfig_rejectInvalidEndpoints(t *testing.T) {
 	for _, e := range samples {
 		subject := ServiceConfig{Version: ConfigVersion, Endpoints: []*EndpointConfig{{Endpoint: e}}}
 		err := subject.Init()
-		if err == nil || strings.Index(err.Error(), "ERROR: the endpoint url path [") != 0 {
-			t.Error("Error expected processing", e)
+		if err == nil || err.Error() != fmt.Sprintf("ERROR: the endpoint url path '%s' is not a valid one!!! Ignoring", e) {
+			t.Errorf("Unexpected error processing '%s': %v", e, err)
 		}
 	}
 }
@@ -88,17 +89,17 @@ func TestConfig_initBackendURLMappings_tooManyOutput(t *testing.T) {
 		"tupu": nil,
 	}
 
-	expectedErrMsg := "input and output params do not match. endpoint: GET /some/{tupu}, backend: 0. input: [tupu], output: map[foo:<nil> supu-5t6:<nil> tupu_56:<nil>]"
+	expectedErrMsg := "input and output params do not match. endpoint: GET /some/{tupu}, backend: 0. input: [tupu], output: [foo supu-5t6 tupu_56]"
 
 	err := subject.initBackendURLMappings(0, 0, inputSet)
 	if err == nil || err.Error() != expectedErrMsg {
-		t.Errorf("Error expected: %v", err)
+		t.Errorf("Unexpected error: %v", err)
 	}
 }
 
 func TestConfig_initBackendURLMappings_undefinedOutput(t *testing.T) {
 	backend := Backend{URLPattern: "supu/{tupu_56}/{supu-5t6}?a={foo}&b={foo}"}
-	endpoint := EndpointConfig{Backend: []*Backend{&backend}}
+	endpoint := EndpointConfig{Endpoint: "/", Method: "GET", Backend: []*Backend{&backend}}
 	subject := ServiceConfig{Endpoints: []*EndpointConfig{&endpoint}, uriParser: NewURIParser()}
 
 	inputSet := map[string]interface{}{
@@ -107,8 +108,9 @@ func TestConfig_initBackendURLMappings_undefinedOutput(t *testing.T) {
 		"foo":  nil,
 	}
 
+	expectedErrMsg := "Undefined output param 'supu-5t6'! endpoint: GET /, backend: 0. input: [foo supu tupu], output: [foo supu-5t6 tupu_56]"
 	err := subject.initBackendURLMappings(0, 0, inputSet)
-	if err == nil || strings.Index(err.Error(), "Undefined output param [") != 0 {
+	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("error expected. have: %v", err)
 	}
 }
@@ -202,7 +204,7 @@ func TestConfig_init(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	if hash != "lF/kGEBmuFV1Gdn3mjxXpRU5wHp51iFxf/o75PJu4LY=" {
+	if hash != "08DTVE8Iwh1M8aRURBgk/rYcWc6BIwIgW/BflQo1OnE=" {
 		t.Errorf("unexpected hash: %s", hash)
 	}
 }
@@ -221,8 +223,8 @@ func TestConfig_initKONoBackends(t *testing.T) {
 	}
 
 	if err := subject.Init(); err == nil ||
-		!strings.HasPrefix(err.Error(), "WARNING: the [/supu] endpoint has 0 backends defined! Ignoring") {
-		t.Error("Expecting an error at the configuration init!", err)
+		err.Error() != "WARNING: the '/supu' endpoint has 0 backends defined! Ignoring" {
+		t.Error("Unexpected error at the configuration init!", err)
 	}
 }
 
@@ -290,7 +292,7 @@ func TestConfig_initKOInvalidDebugPattern(t *testing.T) {
 	}
 
 	if err := subject.Init(); err == nil ||
-		!strings.HasPrefix(err.Error(), "error parsing regexp: missing closing ): `a(b`") {
+		err.Error() != "error parsing regexp: missing closing ): `a(b`" {
 		t.Error("Expecting an error at the configuration init!", err)
 	}
 

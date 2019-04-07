@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -407,77 +408,118 @@ func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]
 
 	outputSet := map[string]interface{}{}
 	outputSetSize := 0
-	for op := range outputParams {
-		if _, ok := outputSet[outputParams[op]]; ok {
+	for _, op := range outputParams {
+		if _, ok := outputSet[op]; ok {
 			continue
 		}
-		outputSet[outputParams[op]] = nil
-		if sequentialParamsPattern.MatchString(outputParams[op]) {
+		outputSet[op] = nil
+		if sequentialParamsPattern.MatchString(op) {
 			continue
 		}
 		outputSetSize++
 	}
 
+	ip := []string{}
+	for i := range inputParams {
+		ip = append(ip, i)
+	}
+	sort.Strings(ip)
+
+	op := []string{}
+	for o := range outputSet {
+		op = append(op, o)
+	}
+	sort.Strings(op)
+
 	if outputSetSize > len(inputParams) {
-		inputKeys := []string{}
-		for k := range inputParams {
-			inputKeys = append(inputKeys, k)
-		}
 		return &WrongNumberOfParamsError{
-			enpoint:       s.Endpoints[e].Endpoint,
-			enpointMethod: s.Endpoints[e].Method,
-			backend:       b,
-			inputParams:   inputKeys,
-			outputParams:  outputSet,
+			Enpoint:       s.Endpoints[e].Endpoint,
+			EnpointMethod: s.Endpoints[e].Method,
+			Backend:       b,
+			InputParams:   ip,
+			OutputParams:  op,
 		}
 	}
 
-	tmp := backend.URLPattern
-	backend.URLKeys = make([]string, len(outputParams))
-	for o := range outputParams {
-		if !sequentialParamsPattern.MatchString(outputParams[o]) {
-			if _, ok := inputParams[outputParams[o]]; !ok {
-				return fmt.Errorf("Undefined output param [%s]! input: %v, output: %v\n", outputParams[o], inputParams, outputParams)
+	backend.URLKeys = []string{}
+	for _, output := range op {
+		if !sequentialParamsPattern.MatchString(output) {
+			if _, ok := inputParams[output]; !ok {
+				return &UndefinedOutputParamError{
+					Param:         output,
+					Enpoint:       s.Endpoints[e].Endpoint,
+					EnpointMethod: s.Endpoints[e].Method,
+					Backend:       b,
+					InputParams:   ip,
+					OutputParams:  op,
+				}
 			}
 		}
-		tmp = strings.Replace(tmp, "{"+outputParams[o]+"}", "{{."+strings.Title(outputParams[o])+"}}", -1)
-		backend.URLKeys = append(backend.URLKeys, strings.Title(outputParams[o]))
+		key := strings.Title(output)
+		backend.URLPattern = strings.Replace(backend.URLPattern, "{"+output+"}", "{{."+key+"}}", -1)
+		backend.URLKeys = append(backend.URLKeys, key)
 	}
-	backend.URLPattern = tmp
 	return nil
-}
-
-type WrongNumberOfParamsError struct {
-	enpoint       string
-	enpointMethod string
-	backend       int
-	inputParams   []string
-	outputParams  map[string]interface{}
-}
-
-func (w *WrongNumberOfParamsError) Error() string {
-	return fmt.Sprintf(
-		"input and output params do not match. endpoint: %s %s, backend: %d. input: %v, output: %v",
-		w.enpointMethod,
-		w.enpoint,
-		w.backend,
-		w.inputParams,
-		w.outputParams,
-	)
 }
 
 func (e *EndpointConfig) validate() error {
 	matched, err := regexp.MatchString(debugPattern, e.Endpoint)
 	if err != nil {
-		log.Printf("ERROR: parsing the endpoint url [%s]: %s. Ignoring\n", e.Endpoint, err.Error())
+		log.Printf("ERROR: parsing the endpoint url '%s': %s. Ignoring\n", e.Endpoint, err.Error())
 		return err
 	}
 	if matched {
-		return fmt.Errorf("ERROR: the endpoint url path [%s] is not a valid one!!! Ignoring\n", e.Endpoint)
+		return fmt.Errorf("ERROR: the endpoint url path '%s' is not a valid one!!! Ignoring", e.Endpoint)
 	}
 
 	if len(e.Backend) == 0 {
-		return fmt.Errorf("WARNING: the [%s] endpoint has 0 backends defined! Ignoring\n", e.Endpoint)
+		return fmt.Errorf("WARNING: the '%s' endpoint has 0 backends defined! Ignoring", e.Endpoint)
 	}
 	return nil
+}
+
+// UndefinedOutputParamError is the error returned by the configuration init process when an output
+// param is not present in the input param set
+type UndefinedOutputParamError struct {
+	Enpoint       string
+	EnpointMethod string
+	Backend       int
+	InputParams   []string
+	OutputParams  []string
+	Param         string
+}
+
+// Error returns a string representation of the UndefinedOutputParamError
+func (u *UndefinedOutputParamError) Error() string {
+	return fmt.Sprintf(
+		"Undefined output param '%s'! endpoint: %s %s, backend: %d. input: %v, output: %v",
+		u.Param,
+		u.EnpointMethod,
+		u.Enpoint,
+		u.Backend,
+		u.InputParams,
+		u.OutputParams,
+	)
+}
+
+// WrongNumberOfParamsError is the error returned by the configuration init process when the number of output
+// params is greatter than the number of input params
+type WrongNumberOfParamsError struct {
+	Enpoint       string
+	EnpointMethod string
+	Backend       int
+	InputParams   []string
+	OutputParams  []string
+}
+
+// Error returns a string representation of the WrongNumberOfParamsError
+func (w *WrongNumberOfParamsError) Error() string {
+	return fmt.Sprintf(
+		"input and output params do not match. endpoint: %s %s, backend: %d. input: %v, output: %v",
+		w.EnpointMethod,
+		w.Enpoint,
+		w.Backend,
+		w.InputParams,
+		w.OutputParams,
+	)
 }
