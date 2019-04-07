@@ -77,16 +77,22 @@ func TestConfig_initBackendURLMappings_ok(t *testing.T) {
 
 func TestConfig_initBackendURLMappings_tooManyOutput(t *testing.T) {
 	backend := Backend{URLPattern: "supu/{tupu_56}/{supu-5t6}?a={foo}&b={foo}"}
-	endpoint := EndpointConfig{Backend: []*Backend{&backend}}
+	endpoint := EndpointConfig{
+		Method:   "GET",
+		Endpoint: "/some/{tupu}",
+		Backend:  []*Backend{&backend},
+	}
 	subject := ServiceConfig{Endpoints: []*EndpointConfig{&endpoint}, uriParser: NewURIParser()}
 
 	inputSet := map[string]interface{}{
 		"tupu": nil,
 	}
 
+	expectedErrMsg := "input and output params do not match. endpoint: GET /some/{tupu}, backend: 0. input: [tupu], output: map[foo:<nil> supu-5t6:<nil> tupu_56:<nil>]"
+
 	err := subject.initBackendURLMappings(0, 0, inputSet)
-	if err == nil || strings.Index(err.Error(), "Too many output params!") != 0 {
-		t.Error("Error expected")
+	if err == nil || err.Error() != expectedErrMsg {
+		t.Errorf("Error expected: %v", err)
 	}
 }
 

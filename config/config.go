@@ -419,7 +419,17 @@ func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]
 	}
 
 	if outputSetSize > len(inputParams) {
-		return fmt.Errorf("Too many output params! input: %v, output: %v\n", outputSet, outputParams)
+		inputKeys := []string{}
+		for k := range inputParams {
+			inputKeys = append(inputKeys, k)
+		}
+		return &WrongNumberOfParamsError{
+			enpoint:       s.Endpoints[e].Endpoint,
+			enpointMethod: s.Endpoints[e].Method,
+			backend:       b,
+			inputParams:   inputKeys,
+			outputParams:  outputSet,
+		}
 	}
 
 	tmp := backend.URLPattern
@@ -435,6 +445,25 @@ func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]
 	}
 	backend.URLPattern = tmp
 	return nil
+}
+
+type WrongNumberOfParamsError struct {
+	enpoint       string
+	enpointMethod string
+	backend       int
+	inputParams   []string
+	outputParams  map[string]interface{}
+}
+
+func (w *WrongNumberOfParamsError) Error() string {
+	return fmt.Sprintf(
+		"input and output params do not match. endpoint: %s %s, backend: %d. input: %v, output: %v",
+		w.enpointMethod,
+		w.enpoint,
+		w.backend,
+		w.inputParams,
+		w.outputParams,
+	)
 }
 
 func (e *EndpointConfig) validate() error {
