@@ -24,9 +24,9 @@ func TestConfig_rejectInvalidEndpoints(t *testing.T) {
 	}
 
 	for _, e := range samples {
-		subject := ServiceConfig{Version: ConfigVersion, Endpoints: []*EndpointConfig{{Endpoint: e}}}
+		subject := ServiceConfig{Version: ConfigVersion, Endpoints: []*EndpointConfig{{Endpoint: e, Method: "GET"}}}
 		err := subject.Init()
-		if err == nil || err.Error() != fmt.Sprintf("ERROR: the endpoint url path '%s' is not a valid one!!! Ignoring", e) {
+		if err == nil || err.Error() != fmt.Sprintf("ERROR: the endpoint url path 'GET %s' is not a valid one!!! Ignoring", e) {
 			t.Errorf("Unexpected error processing '%s': %v", e, err)
 		}
 	}
@@ -216,14 +216,14 @@ func TestConfig_initKONoBackends(t *testing.T) {
 		Endpoints: []*EndpointConfig{
 			{
 				Endpoint: "/supu",
-				Method:   "post",
+				Method:   "POST",
 				Backend:  []*Backend{},
 			},
 		},
 	}
 
 	if err := subject.Init(); err == nil ||
-		err.Error() != "WARNING: the '/supu' endpoint has 0 backends defined! Ignoring" {
+		err.Error() != "WARNING: the 'POST /supu' endpoint has 0 backends defined! Ignoring" {
 		t.Error("Unexpected error at the configuration init!", err)
 	}
 }
