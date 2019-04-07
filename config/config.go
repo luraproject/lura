@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -407,48 +408,59 @@ func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]
 
 	outputSet := map[string]interface{}{}
 	outputSetSize := 0
-	for op := range outputParams {
-		if _, ok := outputSet[outputParams[op]]; ok {
+	for _, op := range outputParams {
+		if _, ok := outputSet[op]; ok {
 			continue
 		}
-		outputSet[outputParams[op]] = nil
-		if sequentialParamsPattern.MatchString(outputParams[op]) {
+		outputSet[op] = nil
+		if sequentialParamsPattern.MatchString(op) {
 			continue
 		}
 		outputSetSize++
 	}
 
+	ip := []string{}
+	for i := range inputParams {
+		ip = append(ip, i)
+	}
+	sort.Strings(ip)
+
+	op := []string{}
+	for o := range outputSet {
+		op = append(op, o)
+	}
+	sort.Strings(op)
+
 	if outputSetSize > len(inputParams) {
-		return fmt.Errorf("Too many output params! input: %v, output: %v\n", outputSet, outputParams)
+		return fmt.Errorf("Too many output params! input: %v, output: %v", ip, op)
 	}
 
-	tmp := backend.URLPattern
-	backend.URLKeys = make([]string, len(outputParams))
-	for o := range outputParams {
-		if !sequentialParamsPattern.MatchString(outputParams[o]) {
-			if _, ok := inputParams[outputParams[o]]; !ok {
-				return fmt.Errorf("Undefined output param [%s]! input: %v, output: %v\n", outputParams[o], inputParams, outputParams)
+	backend.URLKeys = []string{}
+	for _, output := range op {
+		if !sequentialParamsPattern.MatchString(output) {
+			if _, ok := inputParams[output]; !ok {
+				return fmt.Errorf("Undefined output param '%s'! input: %v, output: %v", output, ip, op)
 			}
 		}
-		tmp = strings.Replace(tmp, "{"+outputParams[o]+"}", "{{."+strings.Title(outputParams[o])+"}}", -1)
-		backend.URLKeys = append(backend.URLKeys, strings.Title(outputParams[o]))
+		key := strings.Title(output)
+		backend.URLPattern = strings.Replace(backend.URLPattern, "{"+output+"}", "{{."+key+"}}", -1)
+		backend.URLKeys = append(backend.URLKeys, key)
 	}
-	backend.URLPattern = tmp
 	return nil
 }
 
 func (e *EndpointConfig) validate() error {
 	matched, err := regexp.MatchString(debugPattern, e.Endpoint)
 	if err != nil {
-		log.Printf("ERROR: parsing the endpoint url [%s]: %s. Ignoring\n", e.Endpoint, err.Error())
+		log.Printf("ERROR: parsing the endpoint url '%s': %s. Ignoring\n", e.Endpoint, err.Error())
 		return err
 	}
 	if matched {
-		return fmt.Errorf("ERROR: the endpoint url path [%s] is not a valid one!!! Ignoring\n", e.Endpoint)
+		return fmt.Errorf("ERROR: the endpoint url path '%s' is not a valid one!!! Ignoring", e.Endpoint)
 	}
 
 	if len(e.Backend) == 0 {
-		return fmt.Errorf("WARNING: the [%s] endpoint has 0 backends defined! Ignoring\n", e.Endpoint)
+		return fmt.Errorf("WARNING: the '%s' endpoint has 0 backends defined! Ignoring", e.Endpoint)
 	}
 	return nil
 }
