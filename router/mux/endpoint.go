@@ -134,7 +134,13 @@ func NewRequestBuilder(paramExtractor ParamExtractor) RequestBuilder {
 		} else {
 			headers["X-Forwarded-For"] = []string{r.RemoteAddr}
 		}
-		headers["User-Agent"] = router.UserAgentHeaderValue
+		// if User-Agent is not forwarded using headersToSend, we set
+		// the KrakenD router User Agent value
+		if _, ok := headers["User-Agent"]; !ok {
+			headers["User-Agent"] = router.UserAgentHeaderValue
+		} else {
+			headers["X-Forwarded-Via"] = router.UserAgentHeaderValue
+		}
 
 		query := make(map[string][]string, len(queryString))
 		queryValues := r.URL.Query()

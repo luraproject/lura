@@ -109,8 +109,15 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 				headers[k] = h
 			}
 		}
+
 		headers["X-Forwarded-For"] = []string{c.ClientIP()}
-		headers["User-Agent"] = router.UserAgentHeaderValue
+		// if User-Agent is not forwarded using headersToSend, we set
+		// the KrakenD router User Agent value
+		if _, ok := headers["User-Agent"]; !ok {
+			headers["User-Agent"] = router.UserAgentHeaderValue
+		} else {
+			headers["X-Forwarded-Via"] = router.UserAgentHeaderValue
+		}
 
 		query := make(map[string][]string, len(queryString))
 		queryValues := c.Request.URL.Query()
