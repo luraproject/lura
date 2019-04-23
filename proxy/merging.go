@@ -77,7 +77,7 @@ func parallelMerge(timeout time.Duration, rc ResponseCombiner, next ...Proxy) Pr
 	}
 }
 
-var reMergeKey = regexp.MustCompile(`\{\{\.Resp(\d+)_([\d\w-_]+)\}\}`)
+var reMergeKey = regexp.MustCompile(`\{\{\.Resp(\d+)_([\d\w-_\.]+)\}\}`)
 
 func sequentialMerge(patterns []string, timeout time.Duration, rc ResponseCombiner, next ...Proxy) Proxy {
 	return func(ctx context.Context, request *Request) (*Response, error) {
@@ -99,7 +99,27 @@ func sequentialMerge(patterns []string, timeout time.Duration, rc ResponseCombin
 						}
 						key := "Resp" + match[1] + "_" + match[2]
 
-						v, ok := parts[rNum].Data[match[2]]
+						var v interface{}
+						var ok bool
+
+						data := parts[rNum].Data
+						keys := strings.Split(match[2], ".")
+						if len(keys) > 1 {
+							for _, k := range keys[:len(keys)-1] {
+								v, ok = data[k]
+								if !ok {
+									break
+								}
+								switch clean := v.(type) {
+								case map[string]interface{}:
+									data = clean
+								default:
+									break
+								}
+							}
+						}
+
+						v, ok = data[keys[len(keys)-1]]
 						if !ok {
 							continue
 						}
