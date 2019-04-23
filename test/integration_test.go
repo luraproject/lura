@@ -246,9 +246,10 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 			headers: map[string]string{
 				"x-Test-1": "some",
 				"X-TEST-2": "none",
+				"User-Agent": "KrakenD Test",
 			},
 			expHeaders: defaultHeaders,
-			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Test-1":["some"],"X-Test-2":["none"]},"path":"/all-params","query":{}}`,
+			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Test"],"X-Forwarded-Via":["KrakenD Version undefined"],"X-Test-1":["some"],"X-Test-2":["none"]},"path":"/all-params","query":{}}`,
 		},
 		{
 			name:       "sequential ok",
