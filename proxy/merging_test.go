@@ -47,8 +47,9 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 	endpoint := config.EndpointConfig{
 		Backend: []*config.Backend{
 			{URLPattern: "/"},
-			{URLPattern: "/aaa/{{.Resp0_int}}/{{.Resp0_string}}/{{.Resp0_bool}}/{{.Resp0_float}}"},
-			{URLPattern: "/aaa/{{.Resp0_int}}/{{.Resp0_string}}/{{.Resp0_bool}}/{{.Resp0_float}}?x={{.Resp1_tupu}}"},
+			{URLPattern: "/aaa/{{.Resp0_int}}/{{.Resp0_string}}/{{.Resp0_bool}}/{{.Resp0_float}}/{{.Resp0_struct.foo}}"},
+			{URLPattern: "/aaa/{{.Resp0_int}}/{{.Resp0_string}}/{{.Resp0_bool}}/{{.Resp0_float}}/{{.Resp0_struct.foo}}?x={{.Resp1_tupu}}"},
+			{URLPattern: "/aaa/{{.Resp0_struct.foo}}/{{.Resp0_struct.struct.foo}}/{{.Resp0_struct.struct.struct.foo}}"},
 		},
 		Timeout: time.Duration(timeout) * time.Millisecond,
 		ExtraConfig: config.ExtraConfig{
@@ -64,39 +65,38 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 			"string": "some",
 			"bool":   true,
 			"float":  3.14,
+			"struct": map[string]interface{}{
+				"foo": "bar",
+				"struct": map[string]interface{}{
+					"foo": "bar",
+					"struct": map[string]interface{}{
+						"foo": "bar",
+					},
+				},
+			},
 		}, IsComplete: true}),
 		func(ctx context.Context, r *Request) (*Response, error) {
-			if r.Params["Resp0_int"] != "42" {
-				t.Errorf("request without the expected set of params: %s", r.Params["Resp0_int"])
-			}
-			if r.Params["Resp0_string"] != "some" {
-				t.Errorf("request without the expected set of params: %s", r.Params["Resp0_string"])
-			}
-			if r.Params["Resp0_float"] != "3.14E+00" {
-				t.Errorf("request without the expected set of params: %s", r.Params["Resp0_float"])
-			}
-			if r.Params["Resp0_bool"] != "true" {
-				t.Errorf("request without the expected set of params: %s", r.Params["Resp0_bool"])
-			}
+			checkRequestParam(t, r, "Resp0_int", "42")
+			checkRequestParam(t, r, "Resp0_string", "some")
+			checkRequestParam(t, r, "Resp0_float", "3.14E+00")
+			checkRequestParam(t, r, "Resp0_bool", "true")
+			checkRequestParam(t, r, "Resp0_struct.foo", "bar")
 			return &Response{Data: map[string]interface{}{"tupu": "foo"}, IsComplete: true}, nil
 		},
 		func(ctx context.Context, r *Request) (*Response, error) {
-			if r.Params["Resp0_int"] != "42" {
-				t.Errorf("request without the expected set of params: %s", r.Params["Resp0_int"])
-			}
-			if r.Params["Resp0_string"] != "some" {
-				t.Errorf("request without the expected set of params: %s", r.Params["Resp0_string"])
-			}
-			if r.Params["Resp0_float"] != "3.14E+00" {
-				t.Errorf("request without the expected set of params: %s", r.Params["Resp0_float"])
-			}
-			if r.Params["Resp0_bool"] != "true" {
-				t.Errorf("request without the expected set of params: %s", r.Params["Resp0_bool"])
-			}
-			if r.Params["Resp1_tupu"] != "foo" {
-				t.Errorf("request without the expected set of params: %s", r.Params["Resp1_tupu"])
-			}
+			checkRequestParam(t, r, "Resp0_int", "42")
+			checkRequestParam(t, r, "Resp0_string", "some")
+			checkRequestParam(t, r, "Resp0_float", "3.14E+00")
+			checkRequestParam(t, r, "Resp0_bool", "true")
+			checkRequestParam(t, r, "Resp0_struct.foo", "bar")
+			checkRequestParam(t, r, "Resp1_tupu", "foo")
 			return &Response{Data: map[string]interface{}{"aaaa": []int{1, 2, 3}}, IsComplete: true}, nil
+		},
+		func(ctx context.Context, r *Request) (*Response, error) {
+			checkRequestParam(t, r, "Resp0_struct.foo", "bar")
+			checkRequestParam(t, r, "Resp0_struct.struct.foo", "bar")
+			checkRequestParam(t, r, "Resp0_struct.struct.struct.foo", "bar")
+			return &Response{Data: map[string]interface{}{"bbbb": []bool{true, false}}, IsComplete: true}, nil
 		},
 	)
 	mustEnd := time.After(time.Duration(2*timeout) * time.Millisecond)
@@ -112,12 +112,18 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 	case <-mustEnd:
 		t.Errorf("We were expecting a response but we got none\n")
 	default:
-		if len(out.Data) != 6 {
+		if len(out.Data) != 8 {
 			t.Errorf("We weren't expecting a partial response but we got %v!\n", out)
 		}
 		if !out.IsComplete {
 			t.Errorf("We were expecting a completed response but we got an incompleted one!\n")
 		}
+	}
+}
+
+func checkRequestParam(t *testing.T, r *Request, k, v string) {
+	if r.Params[k] != v {
+		t.Errorf("request without the expected set of params: %s - %+v", k, r.Params)
 	}
 }
 
