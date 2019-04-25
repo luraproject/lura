@@ -27,14 +27,16 @@ func NewMergeDataMiddleware(endpointConfig *config.EndpointConfig) Middleware {
 		if len(next) != totalBackends {
 			panic(ErrNotEnoughProxies)
 		}
-		if shouldRunSequentialMerger(endpointConfig) {
-			patterns := make([]string, len(endpointConfig.Backend))
-			for i, b := range endpointConfig.Backend {
-				patterns[i] = b.URLPattern
-			}
-			return sequentialMerge(patterns, serviceTimeout, combiner, next...)
+
+		if !shouldRunSequentialMerger(endpointConfig) {
+			return parallelMerge(serviceTimeout, combiner, next...)
 		}
-		return parallelMerge(serviceTimeout, combiner, next...)
+
+		patterns := make([]string, len(endpointConfig.Backend))
+		for i, b := range endpointConfig.Backend {
+			patterns[i] = b.URLPattern
+		}
+		return sequentialMerge(patterns, serviceTimeout, combiner, next...)
 	}
 }
 
