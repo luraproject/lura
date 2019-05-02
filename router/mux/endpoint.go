@@ -101,11 +101,12 @@ type RequestBuilder func(r *http.Request, queryString, headersToSend []string) *
 // ParamExtractor is a function that extracts query params from the requested uri
 type ParamExtractor func(r *http.Request) map[string]string
 
+// NoopParamExtractor is a No Op ParamExtractor (returns an empty map of params)
+func NoopParamExtractor(_ *http.Request) map[string]string { return map[string]string{} }
+
 // NewRequest is a RequestBuilder that creates a proxy request from the received http request without
 // processing the uri params
-var NewRequest = NewRequestBuilder(func(_ *http.Request) map[string]string {
-	return map[string]string{}
-})
+var NewRequest = NewRequestBuilder(NoopParamExtractor)
 
 // NewRequestBuilder gets a RequestBuilder with the received ParamExtractor as a query param
 // extraction mechanism
