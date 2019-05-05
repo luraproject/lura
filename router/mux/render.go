@@ -78,10 +78,6 @@ func jsonRender(w http.ResponseWriter, response *proxy.Response) {
 
 func gobRender(w http.ResponseWriter, response *proxy.Response) {
 	w.Header().Set("Content-Type", "application/x-gob")
-	if response == nil {
-		w.Write(emptyResponse)
-		return
-	}
 
 	if err := gob.NewEncoder(w).Encode(response.Data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
