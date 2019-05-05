@@ -19,6 +19,8 @@ type Render func(*gin.Context, *proxy.Response)
 // NEGOTIATE defines the value of the OutputEncoding for the negotiated render
 const NEGOTIATE = "negotiate"
 
+const gobMIME = "application/x-gob"
+
 var (
 	mutex          = &sync.RWMutex{}
 	renderRegister = map[string]Render{
@@ -61,12 +63,12 @@ func getWithFallback(key string, fallback Render) Render {
 }
 
 func negotiatedRender(c *gin.Context, response *proxy.Response) {
-	switch c.NegotiateFormat(gin.MIMEJSON, gin.MIMEPlain, gin.MIMEXML) {
+	switch c.NegotiateFormat(gin.MIMEJSON, gin.MIMEPlain, gin.MIMEXML, gobMIME) {
 	case gin.MIMEXML:
 		xmlRender(c, response)
 	case gin.MIMEPlain:
 		yamlRender(c, response)
-	case "application/x-gob":
+	case gobMIME:
 		gobRender(c, response)
 	default:
 		jsonRender(c, response)
@@ -103,7 +105,7 @@ func jsonRender(c *gin.Context, response *proxy.Response) {
 }
 
 func gobRender(c *gin.Context, response *proxy.Response) {
-	c.Header("Content-Type", "application/x-gob")
+	c.Header("Content-Type", gobMIME)
 
 	if err := gob.NewEncoder(c.Writer).Encode(response.Data); err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
