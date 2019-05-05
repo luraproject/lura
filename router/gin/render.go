@@ -1,6 +1,7 @@
 package gin
 
 import (
+	"encoding/gob"
 	"io"
 	"net/http"
 	"sync"
@@ -25,6 +26,7 @@ var (
 		encoding.STRING: stringRender,
 		encoding.JSON:   jsonRender,
 		encoding.NOOP:   noopRender,
+		encoding.GOB:    gobRender,
 	}
 )
 
@@ -64,6 +66,8 @@ func negotiatedRender(c *gin.Context, response *proxy.Response) {
 		xmlRender(c, response)
 	case gin.MIMEPlain:
 		yamlRender(c, response)
+	case "application/x-gob":
+		gobRender(c, response)
 	default:
 		jsonRender(c, response)
 	}
@@ -96,6 +100,15 @@ func jsonRender(c *gin.Context, response *proxy.Response) {
 		return
 	}
 	c.JSON(status, response.Data)
+}
+
+func gobRender(c *gin.Context, response *proxy.Response) {
+	c.Header("Content-Type", "application/x-gob")
+
+	if err := gob.NewEncoder(c.Writer).Encode(response.Data); err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
 }
 
 func xmlRender(c *gin.Context, response *proxy.Response) {

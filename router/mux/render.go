@@ -1,6 +1,7 @@
 package mux
 
 import (
+	"encoding/gob"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -24,6 +25,7 @@ var (
 		encoding.STRING: stringRender,
 		encoding.JSON:   jsonRender,
 		encoding.NOOP:   noopRender,
+		encoding.GOB:    gobRender,
 	}
 )
 
@@ -72,6 +74,19 @@ func jsonRender(w http.ResponseWriter, response *proxy.Response) {
 		return
 	}
 	w.Write(js)
+}
+
+func gobRender(w http.ResponseWriter, response *proxy.Response) {
+	w.Header().Set("Content-Type", "application/x-gob")
+	if response == nil {
+		w.Write(emptyResponse)
+		return
+	}
+
+	if err := gob.NewEncoder(w).Encode(response.Data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func stringRender(w http.ResponseWriter, response *proxy.Response) {
