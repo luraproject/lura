@@ -40,6 +40,7 @@ var (
 		JSON:   NewJSONDecoder,
 		STRING: NewStringDecoder,
 		NOOP:   noOpDecoderFactory,
+		GOB:    NewGobDecoder,
 	}
 )
 
