@@ -90,13 +90,13 @@ func open(pluginName string, rcf RegisterClientFunc) (err error) {
 		return
 	}
 	var r interface{}
-	r, err = p.Lookup("GRPCRegisterer")
+	r, err = p.Lookup("ClientRegisterer")
 	if err != nil {
 		return
 	}
 	registerer, ok := r.(Registerer)
 	if !ok {
-		return fmt.Errorf("gRPC plugin loader: unknown type")
+		return fmt.Errorf("http-request-executor plugin loader: unknown type")
 	}
 	registerer.RegisterClients(rcf)
 	return
