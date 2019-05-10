@@ -11,28 +11,28 @@ import (
 	"github.com/devopsfaith/krakend/register"
 )
 
-var clientRegister = register.New()
+var serverRegister = register.New()
 
-func RegisterClient(
+func RegisterHandler(
 	name string,
-	handler func(context.Context, map[string]interface{}) (http.Handler, error),
+	handler func(context.Context, map[string]interface{}, http.Handler) (http.Handler, error),
 ) {
-	clientRegister.Register(Namespace, name, handler)
+	serverRegister.Register(Namespace, name, handler)
 }
 
 type Registerer interface {
-	RegisterClients(func(
+	RegisterHandlers(func(
 		name string,
-		handler func(context.Context, map[string]interface{}) (http.Handler, error),
+		handler func(context.Context, map[string]interface{}, http.Handler) (http.Handler, error),
 	))
 }
 
-type RegisterClientFunc func(
+type RegisterHandlerFunc func(
 	name string,
-	handler func(context.Context, map[string]interface{}) (http.Handler, error),
+	handler func(context.Context, map[string]interface{}, http.Handler) (http.Handler, error),
 )
 
-func Load(path, pattern string, rcf RegisterClientFunc) (int, error) {
+func Load(path, pattern string, rcf RegisterHandlerFunc) (int, error) {
 	plugins, err := krakendplugin.Scan(path, pattern)
 	if err != nil {
 		return 0, err
@@ -40,7 +40,7 @@ func Load(path, pattern string, rcf RegisterClientFunc) (int, error) {
 	return load(plugins, rcf)
 }
 
-func load(plugins []string, rcf RegisterClientFunc) (int, error) {
+func load(plugins []string, rcf RegisterHandlerFunc) (int, error) {
 	errors := []error{}
 	loadedPlugins := 0
 	for k, pluginName := range plugins {
@@ -57,7 +57,7 @@ func load(plugins []string, rcf RegisterClientFunc) (int, error) {
 	return loadedPlugins, nil
 }
 
-func open(pluginName string, rcf RegisterClientFunc) (err error) {
+func open(pluginName string, rcf RegisterHandlerFunc) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			var ok bool
@@ -74,15 +74,15 @@ func open(pluginName string, rcf RegisterClientFunc) (err error) {
 		return
 	}
 	var r interface{}
-	r, err = p.Lookup("ClientRegisterer")
+	r, err = p.Lookup("HandlerRegisterer")
 	if err != nil {
 		return
 	}
 	registerer, ok := r.(Registerer)
 	if !ok {
-		return fmt.Errorf("http-request-executor plugin loader: unknown type")
+		return fmt.Errorf("http-server-handler plugin loader: unknown type")
 	}
-	registerer.RegisterClients(rcf)
+	registerer.RegisterHandlers(rcf)
 	return
 }
 

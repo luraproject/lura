@@ -17,14 +17,14 @@ type Plugin interface {
 // Load loads all the plugins in pluginFolder with pattern in its filename.
 // It returns the number of plugins loaded and an error if something goes wrong.
 func Load(cfg config.Plugin, reg *Register) (int, error) {
-	plugins, err := scan(cfg.Folder, cfg.Pattern)
+	plugins, err := Scan(cfg.Folder, cfg.Pattern)
 	if err != nil {
 		return 0, err
 	}
 	return load(plugins, reg)
 }
 
-func scan(folder, pattern string) ([]string, error) {
+func Scan(folder, pattern string) ([]string, error) {
 	files, err := ioutil.ReadDir(folder)
 	if err != nil {
 		return []string{}, err
