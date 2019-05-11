@@ -8,7 +8,7 @@ import (
 	"github.com/devopsfaith/krakend/logging"
 )
 
-const Namespace = "github.com/devopsfaith/krakend/transport/http/server/handler"
+const Namespace = "github_com/devopsfaith/krakend/transport/http/server/handler"
 
 type RunServer func(context.Context, config.ServiceConfig, http.Handler) error
 
