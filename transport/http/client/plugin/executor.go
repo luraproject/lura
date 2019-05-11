@@ -59,6 +59,7 @@ func HTTPRequestExecutor(
 			return next(cfg)
 		}
 
+		logger.Debug("http-request-executor: injecting plugin", name, "at", cfg.URLPattern)
 		return func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			w := httptest.NewRecorder()
 			handler.ServeHTTP(w, req.WithContext(ctx))

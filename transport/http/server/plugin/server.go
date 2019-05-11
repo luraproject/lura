@@ -56,6 +56,7 @@ func New(logger logging.Logger, next RunServer) RunServer {
 			return next(ctx, cfg, handler)
 		}
 
+		logger.Debug("http-server-handler: injecting plugin", name)
 		return next(ctx, cfg, handlerWrapper)
 	}
 }
