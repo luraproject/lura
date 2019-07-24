@@ -296,6 +296,15 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 			expHeaders: defaultHeaders,
 			expBody:    `{"collection":[{"body":"some content","created_at":"123456789"},{"body":"some other content","created_at":"123496789"}]}`,
 		},
+		{
+			name: "x-forwarded-for",
+			url:  "/x-forwarded-for",
+			headers: map[string]string{
+				"x-forwarded-for": "123.45.67.89",
+			},
+			expHeaders: defaultHeaders,
+			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["123.45.67.89"]}}`,
+		},
 	} {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
@@ -451,6 +460,15 @@ func setupBackend(t *testing.T) (*config.ServiceConfig, error) {
 		http.Redirect(rw, r, b7.URL, http.StatusFound)
 	}))
 	data["b9"] = b9.URL
+
+	// X-Forwarded-For backend
+	b11 := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		rw.Header().Add("Content-Type", "application/json")
+		json.NewEncoder(rw).Encode(map[string]interface{}{
+			"headers": r.Header,
+		})
+	}))
+	data["b11"] = b11.URL
 
 	c, err := loadConfig(data)
 	if err != nil {
