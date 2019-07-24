@@ -347,6 +347,15 @@
                     }
                 }
             ]
+        },
+        {
+            "endpoint": "/x-forwarded-for",
+            "backend": [
+                {
+                    "host": [ "{{.b11}}" ],
+                    "url_pattern": "/"
+                }
+            ]
         }
     ]
 }
