@@ -3,9 +3,9 @@ package mux
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"net/textproto"
-	"regexp"
 	"strings"
 
 	"github.com/devopsfaith/krakend/config"
@@ -111,7 +111,6 @@ var NewRequest = NewRequestBuilder(NoopParamExtractor)
 // NewRequestBuilder gets a RequestBuilder with the received ParamExtractor as a query param
 // extraction mechanism
 func NewRequestBuilder(paramExtractor ParamExtractor) RequestBuilder {
-	var re = regexp.MustCompile(`^\[?([\d.:]+)\]?(:[\d]*)$`)
 	return func(r *http.Request, queryString, headersToSend []string) *proxy.Request {
 		params := paramExtractor(r)
 		headers := make(map[string][]string, 2+len(headersToSend))
@@ -128,13 +127,7 @@ func NewRequestBuilder(paramExtractor ParamExtractor) RequestBuilder {
 			}
 		}
 
-		matches := re.FindAllStringSubmatch(r.RemoteAddr, -1)
-
-		if len(matches) > 0 && len(matches[0]) > 1 {
-			headers["X-Forwarded-For"] = []string{matches[0][1]}
-		} else {
-			headers["X-Forwarded-For"] = []string{r.RemoteAddr}
-		}
+		headers["X-Forwarded-For"] = []string{clientIP(r)}
 		// if User-Agent is not forwarded using headersToSend, we set
 		// the KrakenD router User Agent value
 		if _, ok := headers["User-Agent"]; !ok {
@@ -170,4 +163,35 @@ func NewRequestBuilder(paramExtractor ParamExtractor) RequestBuilder {
 type responseError interface {
 	error
 	StatusCode() int
+}
+
+// clientIP implements a best effort algorithm to return the real client IP, it parses
+// X-Real-IP and X-Forwarded-For in order to work properly with reverse-proxies such us: nginx or haproxy.
+// Use X-Forwarded-For before X-Real-Ip as nginx uses X-Real-Ip with the proxy's IP.
+func clientIP(r *http.Request) string {
+	clientIP := requestHeader(r, "X-Forwarded-For")
+	clientIP = strings.TrimSpace(strings.Split(clientIP, ",")[0])
+	if clientIP == "" {
+		clientIP = strings.TrimSpace(requestHeader(r, "X-Real-Ip"))
+	}
+	if clientIP != "" {
+		return clientIP
+	}
+
+	if addr := requestHeader(r, "X-Appengine-Remote-Addr"); addr != "" {
+		return addr
+	}
+
+	if ip, _, err := net.SplitHostPort(strings.TrimSpace(r.RemoteAddr)); err == nil {
+		return ip
+	}
+
+	return ""
+}
+
+func requestHeader(r *http.Request, key string) string {
+	if values, _ := r.Header[key]; len(values) > 0 {
+		return values[0]
+	}
+	return ""
 }
