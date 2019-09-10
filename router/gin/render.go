@@ -127,8 +127,10 @@ func noopRender(c *gin.Context, response *proxy.Response) {
 		return
 	}
 	c.Status(response.Metadata.StatusCode)
-	for k, v := range response.Metadata.Headers {
-		c.Header(k, v[0])
+	for k, vs := range response.Metadata.Headers {
+		for _, v := range vs {
+			c.Writer.Header().Add(k, v)
+		}
 	}
 	io.Copy(c.Writer, response.Io)
 }
