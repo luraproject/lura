@@ -99,8 +99,10 @@ func noopRender(w http.ResponseWriter, response *proxy.Response) {
 		return
 	}
 
-	for k, v := range response.Metadata.Headers {
-		w.Header().Set(k, v[0])
+	for k, vs := range response.Metadata.Headers {
+		for _, v := range vs {
+			w.Header().Add(k, v)
+		}
 	}
 	w.WriteHeader(response.Metadata.StatusCode)
 

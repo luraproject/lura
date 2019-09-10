@@ -227,12 +227,16 @@ func TestRegisterRender(t *testing.T) {
 func TestRender_noop(t *testing.T) {
 	expectedContent := "supu"
 	expectedHeader := "text/plain; charset=utf-8"
+	expectedSetCookieValue := []string{"test1=test1", "test2=test2"}
 
 	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
 		return &proxy.Response{
 			Metadata: proxy.Metadata{
 				StatusCode: 200,
-				Headers:    map[string][]string{"Content-Type": {expectedHeader}},
+				Headers: map[string][]string{
+					"Content-Type": {expectedHeader},
+					"Set-Cookie":   []string{"test1=test1", "test2=test2"},
+				},
 			},
 			Io: bytes.NewBufferString(expectedContent),
 		}, nil
@@ -274,6 +278,10 @@ func TestRender_noop(t *testing.T) {
 	}
 	if content != expectedContent {
 		t.Error("Unexpected body:", content, "expected:", expectedContent)
+	}
+	gotCookie := w.Header()["Set-Cookie"]
+	if !reflect.DeepEqual(gotCookie, expectedSetCookieValue) {
+		t.Error("Unexpected Set-Cookie header:", gotCookie, "expected:", expectedSetCookieValue)
 	}
 }
 
