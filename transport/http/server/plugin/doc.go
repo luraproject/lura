@@ -19,7 +19,7 @@
 //
 // 	func (r registerer) RegisterHandlers(f func(
 // 		name string,
-// 		handler func(context.Context, map[string]interface{}) (http.Handler, error),
+// 		handler func(context.Context, map[string]interface{}, http.Handler) (http.Handler, error),
 // 	)) {
 // 		f(string(r), r.registerHandlers)
 // 	}
