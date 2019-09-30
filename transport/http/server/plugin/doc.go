@@ -24,7 +24,7 @@
 // 		f(string(r), r.registerHandlers)
 // 	}
 //
-// 	func (r registerer) registerHandlers(ctx context.Context, extra map[string]interface{}) (http.Handler, error) {
+// 	func (r registerer) registerHandlers(ctx context.Context, extra map[string]interface{}, _ http.Handler) (http.Handler, error) {
 //		// check the passed configuration and initialize the plugin
 // 		name, ok := extra["name"].(string)
 // 		if !ok {
@@ -34,9 +34,9 @@
 // 			return nil, fmt.Errorf("unknown register %s", name)
 // 		}
 //		// return the actual handler wrapping or your custom logic so it can be used as a replacement for the default http handler
-// 		return func(w http.ResponseWriter, req *http.Request) {
+// 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 // 			fmt.Fprintf(w, "Hello, %q", html.EscapeString(req.URL.Path))
-// 		}, nil
+// 		}), nil
 // 	}
 //
 // 	func init() {
