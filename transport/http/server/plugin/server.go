@@ -25,38 +25,53 @@ func New(logger logging.Logger, next RunServer) RunServer {
 			return next(ctx, cfg, handler)
 		}
 
-		// load plugin
+		// load plugin(s)
 		r, ok := serverRegister.Get(Namespace)
 		if !ok {
 			logger.Debug("http-server-handler: no plugins registered for the module")
 			return next(ctx, cfg, handler)
 		}
 
-		name, ok := extra["name"].(string)
-		if !ok {
-			logger.Debug("http-server-handler: no name defined in the extra config")
+		name, nameOk := extra["name"].(string)
+		fifoRaw, fifoOk := extra["name"].([]interface{})
+		if !nameOk && !fifoOk {
+			logger.Debug("http-server-handler: no plugins required in the extra config")
 			return next(ctx, cfg, handler)
 		}
+		fifo := []string{}
 
-		rawHf, ok := r.Get(name)
-		if !ok {
-			logger.Debug("http-server-handler: no plugin resgistered as", name)
-			return next(ctx, cfg, handler)
+		if !fifoOk {
+			fifo = []string{name}
+		} else {
+			for _, x := range fifoRaw {
+				if v, ok := x.(string); ok {
+					fifo = append(fifo, v)
+				}
+			}
 		}
 
-		hf, ok := rawHf.(func(context.Context, map[string]interface{}, http.Handler) (http.Handler, error))
-		if !ok {
-			logger.Warning("http-server-handler: wrong plugin handler type:", name)
-			return next(ctx, cfg, handler)
-		}
+		for _, name := range fifo {
+			rawHf, ok := r.Get(name)
+			if !ok {
+				logger.Debug("http-server-handler: no plugin resgistered as", name)
+				return next(ctx, cfg, handler)
+			}
 
-		handlerWrapper, err := hf(context.Background(), extra, handler)
-		if err != nil {
-			logger.Warning("http-server-handler: error getting the plugin handler:", err.Error())
-			return next(ctx, cfg, handler)
-		}
+			hf, ok := rawHf.(func(context.Context, map[string]interface{}, http.Handler) (http.Handler, error))
+			if !ok {
+				logger.Warning("http-server-handler: wrong plugin handler type:", name)
+				return next(ctx, cfg, handler)
+			}
 
-		logger.Debug("http-server-handler: injecting plugin", name)
-		return next(ctx, cfg, handlerWrapper)
+			handlerWrapper, err := hf(context.Background(), extra, handler)
+			if err != nil {
+				logger.Warning("http-server-handler: error getting the plugin handler:", err.Error())
+				return next(ctx, cfg, handler)
+			}
+
+			logger.Debug("http-server-handler: injecting plugin", name)
+			handler = handlerWrapper
+		}
+		return next(ctx, cfg, handler)
 	}
 }
