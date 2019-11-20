@@ -33,7 +33,7 @@ func New(logger logging.Logger, next RunServer) RunServer {
 		}
 
 		name, nameOk := extra["name"].(string)
-		fifoRaw, fifoOk := extra["fifo"].([]interface{})
+		fifoRaw, fifoOk := extra["name"].([]interface{})
 		if !nameOk && !fifoOk {
 			logger.Debug("http-server-handler: no plugins required in the extra config")
 			return next(ctx, cfg, handler)
@@ -75,26 +75,3 @@ func New(logger logging.Logger, next RunServer) RunServer {
 		return next(ctx, cfg, handler)
 	}
 }
-
-// func singlePlugin(name string) error {
-// 	rawHf, ok := r.Get(name)
-// 	if !ok {
-// 		logger.Debug("http-server-handler: no plugin resgistered as", name)
-// 		return next(ctx, cfg, handler)
-// 	}
-
-// 	hf, ok := rawHf.(func(context.Context, map[string]interface{}, http.Handler) (http.Handler, error))
-// 	if !ok {
-// 		logger.Warning("http-server-handler: wrong plugin handler type:", name)
-// 		return next(ctx, cfg, handler)
-// 	}
-
-// 	handlerWrapper, err := hf(context.Background(), extra, handler)
-// 	if err != nil {
-// 		logger.Warning("http-server-handler: error getting the plugin handler:", err.Error())
-// 		return next(ctx, cfg, handler)
-// 	}
-
-// 	logger.Debug("http-server-handler: injecting plugin", name)
-// 	return next(ctx, cfg, handlerWrapper)
-// }
