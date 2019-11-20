@@ -23,17 +23,8 @@ func BenchmarkLB(b *testing.B) {
 			b.Run(fmt.Sprintf("%s/%d", tc.name, len(testCase)), func(b *testing.B) {
 				balancer := tc.f(testCase)
 				b.ResetTimer()
-				hits := map[string]int64{}
 				for i := 0; i < b.N; i++ {
-					h, err := balancer.Host()
-					if err != nil {
-						b.Errorf("accessing the balancer: %s", err.Error())
-						return
-					}
-					hits[h]++
-				}
-				for k, v := range hits {
-					b.ReportMetric(float64(v)/float64(b.N), fmt.Sprintf("bucket-%s/op", k))
+					balancer.Host()
 				}
 			})
 		}
