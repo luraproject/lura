@@ -11,40 +11,44 @@ var balancerTestsCases = [][]string{
 	{"a", "b", "c", "e", "f"},
 }
 
-func BenchmarkRoundRobinLB(b *testing.B) {
-	for _, testCase := range balancerTestsCases {
-		b.Run(fmt.Sprintf("%d hosts", len(testCase)), func(b *testing.B) {
-			balancer := NewRoundRobinLB(FixedSubscriber(testCase))
-			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
-				balancer.Host()
-			}
-		})
-	}
-}
-
-func BenchmarkRoundRobinLB_parallel(b *testing.B) {
-	for _, testCase := range balancerTestsCases {
-		b.Run(fmt.Sprintf("%d hosts", len(testCase)), func(b *testing.B) {
-			balancer := NewRoundRobinLB(FixedSubscriber(testCase))
-			b.ResetTimer()
-			b.RunParallel(func(pb *testing.PB) {
-				for pb.Next() {
+func BenchmarkLB(b *testing.B) {
+	for _, tc := range []struct {
+		name string
+		f    func([]string) Balancer
+	}{
+		{name: "round_robin", f: func(hs []string) Balancer { return NewRoundRobinLB(FixedSubscriber(hs)) }},
+		{name: "random", f: func(hs []string) Balancer { return NewRandomLB(FixedSubscriber(hs)) }},
+	} {
+		for _, testCase := range balancerTestsCases {
+			b.Run(fmt.Sprintf("%s/%d", tc.name, len(testCase)), func(b *testing.B) {
+				balancer := tc.f(testCase)
+				b.ResetTimer()
+				for i := 0; i < b.N; i++ {
 					balancer.Host()
 				}
 			})
-		})
+		}
 	}
 }
 
-func BenchmarkRandomLB(b *testing.B) {
-	for _, testCase := range balancerTestsCases {
-		b.Run(fmt.Sprintf("%d hosts", len(testCase)), func(b *testing.B) {
-			balancer := NewRandomLB(FixedSubscriber(testCase), 1415926)
-			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
-				balancer.Host()
-			}
-		})
+func BenchmarkLB_parallel(b *testing.B) {
+	for _, tc := range []struct {
+		name string
+		f    func([]string) Balancer
+	}{
+		{name: "round_robin", f: func(hs []string) Balancer { return NewRoundRobinLB(FixedSubscriber(hs)) }},
+		{name: "random", f: func(hs []string) Balancer { return NewRandomLB(FixedSubscriber(hs)) }},
+	} {
+		for _, testCase := range balancerTestsCases {
+			b.Run(fmt.Sprintf("%s/%d", tc.name, len(testCase)), func(b *testing.B) {
+				balancer := tc.f(testCase)
+				b.ResetTimer()
+				b.RunParallel(func(pb *testing.PB) {
+					for pb.Next() {
+						balancer.Host()
+					}
+				})
+			})
+		}
 	}
 }

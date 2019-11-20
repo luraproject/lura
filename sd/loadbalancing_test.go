@@ -61,7 +61,6 @@ func TestRandomLB(t *testing.T) {
 		endpoints  = []string{"a", "b", "c", "d", "e", "f", "g"}
 		n          = len(endpoints)
 		counts     = make(map[string]int, n)
-		seed       = int64(12345)
 		iterations = 1000000
 		want       = iterations / n
 		tolerance  = want / 100 // 1%
@@ -72,7 +71,7 @@ func TestRandomLB(t *testing.T) {
 	}
 
 	subscriber := FixedSubscriber(endpoints)
-	balancer := NewRandomLB(subscriber, seed)
+	balancer := NewRandomLB(subscriber)
 
 	for i := 0; i < iterations; i++ {
 		endpoint, err := balancer.Host()
@@ -94,7 +93,7 @@ func TestRandomLB_single(t *testing.T) {
 	endpoints := []string{"a"}
 	iterations := 1000000
 	subscriber := FixedSubscriber(endpoints)
-	balancer := NewRandomLB(subscriber, int64(12345))
+	balancer := NewRandomLB(subscriber)
 
 	for i := 0; i < iterations; i++ {
 		endpoint, err := balancer.Host()
@@ -109,7 +108,7 @@ func TestRandomLB_single(t *testing.T) {
 
 func TestRandomLB_noEndpoints(t *testing.T) {
 	subscriber := FixedSubscriberFactory(&config.Backend{})
-	balancer := NewRandomLB(subscriber, 1415926)
+	balancer := NewRandomLB(subscriber)
 	_, err := balancer.Host()
 	if want, have := ErrNoHosts, err; want != have {
 		t.Errorf("want %v, have %v", want, have)
@@ -131,7 +130,7 @@ func TestRoundRobinLB_erroredSubscriber(t *testing.T) {
 
 func TestRandomLB_erroredSubscriber(t *testing.T) {
 	want := "supu"
-	balancer := NewRandomLB(erroredSubscriber(want), 1415926)
+	balancer := NewRandomLB(erroredSubscriber(want))
 	host, have := balancer.Host()
 	if host != "" || want != have.Error() {
 		t.Errorf("want %s, have %s", want, have.Error())

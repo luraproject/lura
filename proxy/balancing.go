@@ -4,11 +4,22 @@ import (
 	"context"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/devopsfaith/krakend/config"
 	"github.com/devopsfaith/krakend/sd"
 )
+
+// NewLoadBalancedMiddleware creates proxy middleware adding the most perfomant balancer
+// over a default subscriber
+func NewLoadBalancedMiddleware(remote *config.Backend) Middleware {
+	return NewLoadBalancedMiddlewareWithSubscriber(sd.GetSubscriber(remote))
+}
+
+// NewLoadBalancedMiddlewareWithSubscriber creates proxy middleware adding the most perfomant balancer
+// over the received subscriber
+func NewLoadBalancedMiddlewareWithSubscriber(subscriber sd.Subscriber) Middleware {
+	return newLoadBalancedMiddleware(sd.NewBalancer(subscriber))
+}
 
 // NewRoundRobinLoadBalancedMiddleware creates proxy middleware adding a round robin balancer
 // over a default subscriber
@@ -31,7 +42,7 @@ func NewRoundRobinLoadBalancedMiddlewareWithSubscriber(subscriber sd.Subscriber)
 // NewRandomLoadBalancedMiddlewareWithSubscriber creates proxy middleware adding a random
 // balancer over the received subscriber
 func NewRandomLoadBalancedMiddlewareWithSubscriber(subscriber sd.Subscriber) Middleware {
-	return newLoadBalancedMiddleware(sd.NewRandomLB(subscriber, time.Now().UnixNano()))
+	return newLoadBalancedMiddleware(sd.NewRandomLB(subscriber))
 }
 
 func newLoadBalancedMiddleware(lb sd.Balancer) Middleware {
