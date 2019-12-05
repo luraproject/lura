@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"compress/gzip"
 	"context"
 	"io"
 	"net/http"
@@ -29,10 +30,19 @@ type HTTPResponseParserFactory func(HTTPResponseParserConfig) HTTPResponseParser
 // DefaultHTTPResponseParserFactory is the default implementation of HTTPResponseParserFactory
 func DefaultHTTPResponseParserFactory(cfg HTTPResponseParserConfig) HTTPResponseParser {
 	return func(ctx context.Context, resp *http.Response) (*Response, error) {
+		defer resp.Body.Close()
+
+		var reader io.ReadCloser
+		switch resp.Header.Get("Content-Encoding") {
+		case "gzip":
+			reader, _ = gzip.NewReader(resp.Body)
+			defer reader.Close()
+		default:
+			reader = resp.Body
+		}
+
 		var data map[string]interface{}
-		err := cfg.Decoder(resp.Body, &data)
-		resp.Body.Close()
-		if err != nil {
+		if err := cfg.Decoder(reader, &data); err != nil {
 			return nil, err
 		}
 
