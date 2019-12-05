@@ -153,8 +153,8 @@ type parseableServiceConfig struct {
 	DialerFallbackDelay   string                     `json:"dialer_fallback_delay"`
 	DialerKeepAlive       string                     `json:"dialer_keep_alive"`
 	Debug                 bool
-	Plugin                *Plugin `json:"plugin,omitempty"`
-	TLS                   *TLS    `json:"tls,omitempty"`
+	Plugin                *Plugin       `json:"plugin,omitempty"`
+	TLS                   *parseableTLS `json:"tls,omitempty"`
 }
 
 func (p *parseableServiceConfig) normalize() ServiceConfig {
@@ -182,7 +182,18 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 		DialerKeepAlive:       parseDuration(p.DialerKeepAlive),
 		OutputEncoding:        p.OutputEncoding,
 		Plugin:                p.Plugin,
-		TLS:                   p.TLS,
+	}
+	if p.TLS != nil {
+		cfg.TLS = &TLS{
+			IsDisabled:               p.TLS.IsDisabled,
+			PublicKey:                p.TLS.PublicKey,
+			PrivateKey:               p.TLS.PrivateKey,
+			MinVersion:               p.TLS.MinVersion,
+			MaxVersion:               p.TLS.MaxVersion,
+			CurvePreferences:         p.TLS.CurvePreferences,
+			PreferServerCipherSuites: p.TLS.PreferServerCipherSuites,
+			CipherSuites:             p.TLS.CipherSuites,
+		}
 	}
 	if p.ExtraConfig != nil {
 		cfg.ExtraConfig = *p.ExtraConfig
@@ -193,6 +204,17 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 	}
 	cfg.Endpoints = endpoints
 	return cfg
+}
+
+type parseableTLS struct {
+	IsDisabled               bool     `json:"disabled"`
+	PublicKey                string   `json:"public_key"`
+	PrivateKey               string   `json:"private_key"`
+	MinVersion               string   `json:"min_version"`
+	MaxVersion               string   `json:"max_version"`
+	CurvePreferences         []uint16 `json:"curve_preferences"`
+	PreferServerCipherSuites bool     `json:"prefer_server_cipher_suites"`
+	CipherSuites             []uint16 `json:"cipher_suites"`
 }
 
 type parseableEndpointConfig struct {

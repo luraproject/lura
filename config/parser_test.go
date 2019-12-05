@@ -14,6 +14,10 @@ func TestNewParser_ok(t *testing.T) {
     "port": 8080,
     "cache_ttl": "3600s",
     "timeout": "3s",
+    "tls": {
+		"public_key":  "cert.pem",
+		"private_key": "key.pem"
+	},
     "endpoints": [
         {
             "endpoint": "/github",
@@ -85,6 +89,11 @@ func TestNewParser_ok(t *testing.T) {
 	}
 	testExtraConfig(serviceConfig.ExtraConfig, t)
 
+	if endpoints := len(serviceConfig.Endpoints); endpoints != 3 {
+		t.Errorf("Unexpected number of endpoints: %d", endpoints)
+		return
+	}
+
 	endpoint := serviceConfig.Endpoints[0]
 	endpointExtraConfiguration := endpoint.ExtraConfig
 
@@ -92,6 +101,17 @@ func TestNewParser_ok(t *testing.T) {
 		testExtraConfig(endpointExtraConfiguration, t)
 	} else {
 		t.Error("Extra config is not present in EndpointConfig")
+	}
+
+	if serviceConfig.TLS == nil {
+		t.Error("TLS config not present")
+	} else {
+		if serviceConfig.TLS.PublicKey != "cert.pem" {
+			t.Error("Unexpected TLS Public key")
+		}
+		if serviceConfig.TLS.PrivateKey != "key.pem" {
+			t.Error("Unexpected TLS Private key")
+		}
 	}
 
 	backend := endpoint.Backend[0]
@@ -199,11 +219,11 @@ func testExtraConfig(extraConfig map[string]interface{}, t *testing.T) {
 	if userVar != "test" {
 		t.Error("User in extra config is not test")
 	}
-	parents := extraConfig["parents"].([]interface{})
-	if parents[0] != "gomez" {
+	parents, ok := extraConfig["parents"].([]interface{})
+	if !ok || parents[0] != "gomez" {
 		t.Error("Parent 0 of user us not gomez")
 	}
-	if parents[1] != "morticia" {
+	if !ok || parents[1] != "morticia" {
 		t.Error("Parent 1 of user us not morticia")
 	}
 }
