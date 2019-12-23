@@ -2,6 +2,7 @@ package sd
 
 import (
 	"errors"
+	"math"
 	"runtime"
 	"sync/atomic"
 
