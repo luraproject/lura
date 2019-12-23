@@ -49,6 +49,8 @@ func (r *roundRobinLB) Host() (string, error) {
 		return "", err
 	}
 	offset := (atomic.AddUint64(&r.counter, 1) - 1) % uint64(len(hosts))
+	//avoid overflow
+	offset = math.Abs(offset)
 	return hosts[offset], nil
 }
 
