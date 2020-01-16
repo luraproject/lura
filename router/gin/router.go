@@ -84,7 +84,7 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 	r.cfg.Engine.Use(r.cfg.Middlewares...)
 
 	if cfg.Debug {
-		r.registerDebugEndpoints()
+		r.cfg.Engine.Any("/__debug/*param", DebugHandler(r.cfg.Logger))
 	}
 
 	r.registerKrakendEndpoints(cfg.Endpoints)
@@ -98,13 +98,6 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 	}
 
 	r.cfg.Logger.Info("Router execution ended")
-}
-
-func (r ginRouter) registerDebugEndpoints() {
-	handler := DebugHandler(r.cfg.Logger)
-	r.cfg.Engine.GET("/__debug/*param", handler)
-	r.cfg.Engine.POST("/__debug/*param", handler)
-	r.cfg.Engine.PUT("/__debug/*param", handler)
 }
 
 func (r ginRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) {

@@ -81,11 +81,19 @@ type httpRouter struct {
 func (r httpRouter) Run(cfg config.ServiceConfig) {
 	if cfg.Debug {
 		debugHandler := DebugHandler(r.cfg.Logger)
-		r.cfg.Engine.Handle(r.cfg.DebugPattern, http.MethodGet, debugHandler)
-		r.cfg.Engine.Handle(r.cfg.DebugPattern, http.MethodPost, debugHandler)
-		r.cfg.Engine.Handle(r.cfg.DebugPattern, http.MethodPut, debugHandler)
-		r.cfg.Engine.Handle(r.cfg.DebugPattern, http.MethodPatch, debugHandler)
-		r.cfg.Engine.Handle(r.cfg.DebugPattern, http.MethodDelete, debugHandler)
+		for _, method := range []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodPatch,
+			http.MethodDelete,
+			http.MethodHead,
+			http.MethodOptions,
+			http.MethodConnect,
+			http.MethodTrace,
+		} {
+			r.cfg.Engine.Handle(r.cfg.DebugPattern, method, debugHandler)
+		}
 	}
 
 	router.InitHTTPDefaultTransport(cfg)
