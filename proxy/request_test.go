@@ -1,6 +1,10 @@
 package proxy
 
-import "testing"
+import (
+	"io/ioutil"
+	"strings"
+	"testing"
+)
 
 func TestRequestGeneratePath(t *testing.T) {
 	r := Request{
@@ -81,8 +85,9 @@ func TestRequest_Clone(t *testing.T) {
 }
 
 func TestCloneRequest(t *testing.T) {
+	body := `{"a":1,"b":2}`
 	r := Request{
-		Method: "GET",
+		Method: "POST",
 		Params: map[string]string{
 			"Supu": "42",
 			"Tupu": "false",
@@ -91,6 +96,7 @@ func TestCloneRequest(t *testing.T) {
 		Headers: map[string][]string{
 			"Content-Type": {"application/json"},
 		},
+		Body: ioutil.NopCloser(strings.NewReader(body)),
 	}
 	clone := CloneRequest(&r)
 
@@ -129,5 +135,12 @@ func TestCloneRequest(t *testing.T) {
 
 	if _, ok := clone.Params["Supu"]; !ok {
 		t.Error("the cloned instance shares its params with the original one")
+	}
+
+	rb, _ := ioutil.ReadAll(r.Body)
+	cb, _ := ioutil.ReadAll(clone.Body)
+
+	if string(cb) != string(rb) || body != string(rb) {
+		t.Errorf("unexpected bodies. original: %s, returned: %s", string(rb), string(cb))
 	}
 }
