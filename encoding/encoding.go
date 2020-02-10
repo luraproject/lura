@@ -18,7 +18,7 @@ import "io"
 type Decoder func(io.Reader, *map[string]interface{}) error
 
 // A DecoderFactory is a function that returns CollectionDecoder or an EntityDecoder
-type DecoderFactory func(bool) func(io.Reader, *map[string]interface{}) error
+type DecoderFactory func(bool) Decoder
 
 // Register stores the decoder under a key
 // Deprecated: Register is deprecated
