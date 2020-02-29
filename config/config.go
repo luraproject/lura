@@ -266,7 +266,7 @@ const defaultNamespace = "github.com/devopsfaith/krakend/config"
 var ConfigGetters = map[string]ConfigGetter{defaultNamespace: DefaultConfigGetter}
 
 var (
-	simpleURLKeysPattern    = regexp.MustCompile(`\{([a-zA-Z\-_0-9]+)\}`)
+	simpleURLKeysPattern    = regexp.MustCompile(`\{([a-zA-Z\-_0-9\.]+)\}`)
 	sequentialParamsPattern = regexp.MustCompile(`^resp[\d]+_.*$`)
 	debugPattern            = "^[^/]|/__debug(/.*)?$"
 	errInvalidHost          = errors.New("invalid host")
@@ -443,7 +443,7 @@ func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]
 				}
 			}
 		}
-		key := strings.Title(output)
+		key := strings.Title(output[:1]) + output[1:]
 		backend.URLPattern = strings.Replace(backend.URLPattern, "{"+output+"}", "{{."+key+"}}", -1)
 		backend.URLKeys = append(backend.URLKeys, key)
 	}

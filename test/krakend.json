@@ -237,12 +237,12 @@
             {
               "url_pattern": "/provider/{param}",
               "host": [ "{{.b7}}" ],
-              "whitelist": [ "random" ]
+              "group": "first"
             },
             {
-              "url_pattern": "/recipient/{resp0_random}",
+              "url_pattern": "/recipient/{resp0_first.random}",
               "host": [ "{{.b7}}" ],
-              "whitelist": [ "path" ]
+              "group": "second"
             }
           ]
         },
