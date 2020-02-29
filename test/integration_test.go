@@ -244,8 +244,8 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 			name: "header-params-all",
 			url:  "/header-params-test/all-params",
 			headers: map[string]string{
-				"x-Test-1": "some",
-				"X-TEST-2": "none",
+				"x-Test-1":   "some",
+				"X-TEST-2":   "none",
 				"User-Agent": "KrakenD Test",
 			},
 			expHeaders: defaultHeaders,
@@ -255,7 +255,7 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 			name:       "sequential ok",
 			url:        "/sequential/ok/foo",
 			expHeaders: defaultHeaders,
-			expBody:    `{"path":"/recipient/42","random":42}`,
+			expBody:    `{"first":{"path":"/provider/foo","random":42},"second":{"path":"/recipient/42","random":42}}`,
 		},
 		{
 			name: "sequential ko first",

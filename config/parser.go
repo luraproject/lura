@@ -46,7 +46,6 @@ func (p parser) Parse(configFile string) (ServiceConfig, error) {
 		return result, CheckErr(err, configFile)
 	}
 	result = cfg.normalize()
-	err = result.Init()
 
 	if err = result.Init(); err != nil {
 		return result, CheckErr(err, configFile)
