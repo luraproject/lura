@@ -106,5 +106,8 @@ func noopRender(w http.ResponseWriter, response *proxy.Response) {
 	}
 	w.WriteHeader(response.Metadata.StatusCode)
 
+	if response.Io == nil {
+		return
+	}
 	io.Copy(w, response.Io)
 }

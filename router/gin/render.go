@@ -132,6 +132,9 @@ func noopRender(c *gin.Context, response *proxy.Response) {
 			c.Writer.Header().Add(k, v)
 		}
 	}
+	if response.Io == nil {
+		return
+	}
 	io.Copy(c.Writer, response.Io)
 }
 
