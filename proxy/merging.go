@@ -298,6 +298,9 @@ func combineData(total int, parts []*Response) *Response {
 			retResponse = part
 			continue
 		}
+		if part.Metadata.IsStatusCodeDictator {
+			retResponse.Metadata.StatusCode = part.Metadata.StatusCode
+		}
 		for k, v := range part.Data {
 			retResponse.Data[k] = v
 		}
