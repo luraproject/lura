@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"github.com/devopsfaith/krakend/test"
 	"io/ioutil"
 	"strings"
 	"testing"
@@ -27,6 +28,20 @@ func TestRequestGeneratePath(t *testing.T) {
 			t.Errorf("%d: want %s, have %s", i, testCase[1], r.Path)
 		}
 	}
+}
+
+func TestRequestGeneratePathForWildcard(t *testing.T) {
+	r := Request{
+		Method: "GET",
+		Params: map[string]string{
+			"A": "/some/very/long/path/88/55",
+		},
+	}
+
+	r.GeneratePath("/foo/{{.A}}")
+	test.AssertEqual(t, "/foo/some/very/long/path/88/55", r.Path, "Error for /foo")
+	r.GeneratePath("/bar/{{.A}}")
+	test.AssertEqual(t, "/bar/some/very/long/path/88/55", r.Path, "Error for /bar")
 }
 
 func TestRequest_Clone(t *testing.T) {

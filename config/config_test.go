@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/devopsfaith/krakend/test"
 	"strings"
 	"testing"
 	"time"
@@ -74,6 +75,31 @@ func TestConfig_initBackendURLMappings_ok(t *testing.T) {
 			t.Errorf("want: %s, have: %s\n", expected[i], backend.URLPattern)
 		}
 	}
+}
+
+func TestConfig_initBackendURLMappings_with_wildcard_ok(t *testing.T) {
+	fooBackend := Backend{
+		URLPattern: "/foo/{A}",
+	}
+	barBackend := Backend{
+		URLPattern: "/bar/{A}",
+	}
+	endpoint := EndpointConfig{
+		Endpoint: "/test/*A",
+		Backend: []*Backend{&fooBackend, &barBackend},
+	}
+	subject := ServiceConfig{
+		Version: ConfigVersion,
+		Endpoints: []*EndpointConfig{&endpoint},
+	}
+
+	err := subject.Init()
+
+	if err != nil {
+		t.Error(err)
+	}
+	test.AssertEqual(t, "/foo/{{.A}}", fooBackend.URLPattern, "Unexpected url pattern for fooBackend")
+	test.AssertEqual(t, "/bar/{{.A}}", barBackend.URLPattern, "Unexpected url pattern for barBackend")
 }
 
 func TestConfig_initBackendURLMappings_tooManyOutput(t *testing.T) {
