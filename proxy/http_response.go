@@ -56,6 +56,13 @@ func DefaultHTTPResponseParserFactory(cfg HTTPResponseParserConfig) HTTPResponse
 		if cfg.remote != nil && cfg.remote.StatusCodeDictator {
 			newResponse.Metadata.StatusCode = resp.StatusCode
 			newResponse.Metadata.IsStatusCodeDictator = true
+			contentType := resp.Header.Get("Content-Type")
+			if contentType != "" {
+				if newResponse.Metadata.Headers == nil {
+					newResponse.Metadata.Headers = make(map[string][]string)
+				}
+				newResponse.Metadata.Headers["Content-Type"] = []string{contentType}
+			}
 		}
 		newResponse = cfg.EntityFormatter.Format(newResponse)
 		return &newResponse, nil
