@@ -34,9 +34,9 @@
 // 			return nil, fmt.Errorf("unknown register %s", name)
 // 		}
 //		// return the actual handler wrapping or your custom logic so it can be used as a replacement for the default http client
-// 		return func(w http.ResponseWriter, req *http.Request) {
+// 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 // 			fmt.Fprintf(w, "Hello, %q", html.EscapeString(req.URL.Path))
-// 		}, nil
+// 		}), nil
 // 	}
 //
 // 	func init() {
