@@ -536,7 +536,7 @@ func (u *UnsupportedVersionError) Error() string {
 }
 
 // EndpointPathError is the error returned by the configuration init process when an endpoint
-// is using a forbiden path
+// is using a forbidden path
 type EndpointPathError struct {
 	Path   string
 	Method string
