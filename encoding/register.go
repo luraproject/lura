@@ -37,9 +37,10 @@ func (r *DecoderRegister) Get(name string) func(bool) func(io.Reader, *map[strin
 var (
 	decoders        = initDecoderRegister()
 	defaultDecoders = map[string]func(bool) func(io.Reader, *map[string]interface{}) error{
-		JSON:   NewJSONDecoder,
-		STRING: NewStringDecoder,
-		NOOP:   noOpDecoderFactory,
+		JSON:      NewJSONDecoder,
+		SAFE_JSON: NewSafeJSONDecoder,
+		STRING:    NewStringDecoder,
+		NOOP:      noOpDecoderFactory,
 	}
 )
 

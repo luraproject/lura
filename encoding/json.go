@@ -34,3 +34,30 @@ func JSONCollectionDecoder(r io.Reader, v *map[string]interface{}) error {
 	*(v) = map[string]interface{}{"collection": collection}
 	return nil
 }
+
+// SAFE_JSON is the key for the json encoding
+const SAFE_JSON = "safejson"
+
+// NewJSONDecoder return the right JSON decoder
+func NewSafeJSONDecoder(isCollection bool) func(io.Reader, *map[string]interface{}) error {
+	return SafeJSONDecoder
+}
+
+// JSONDecoder implements the Decoder interface
+func SafeJSONDecoder(r io.Reader, v *map[string]interface{}) error {
+	d := json.NewDecoder(r)
+	d.UseNumber()
+	var t interface{}
+	if err := d.Decode(&t); err != nil {
+		return err
+	}
+	switch tt := t.(type) {
+	case map[string]interface{}:
+		*v = tt
+	case []interface{}:
+		*v = map[string]interface{}{"collection": tt}
+	default:
+		*v = map[string]interface{}{"result": tt}
+	}
+	return nil
+}
