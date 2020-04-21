@@ -289,6 +289,40 @@ func TestEntityFormatter_targeting(t *testing.T) {
 	}
 }
 
+func TestEntityFormatter_targetingNested(t *testing.T) {
+	target := "group1"
+	sub := map[string]interface{}{
+		"b": true,
+		"c": 42,
+		"d": "tupu",
+	}
+	sample := Response{
+		Data: map[string]interface{}{
+			target: map[string]interface{}{
+				"supu": 42,
+				"tupu": false,
+				"foo":  "bar",
+				target: sub,
+			},
+		},
+		IsComplete: true,
+	}
+	expected := Response{
+		Data:       sub,
+		IsComplete: true,
+	}
+	f := NewEntityFormatter(&config.Backend{Target: target + "." + target})
+	result := f.Format(sample)
+	if len(result.Data) != 3 || result.IsComplete != expected.IsComplete {
+		t.Errorf("The formatter returned an unexpected result size: %v\n", result)
+	}
+	for k, expectedValue := range expected.Data {
+		if v, ok := result.Data[k]; !ok || v != expectedValue {
+			t.Errorf("The formatter returned an unexpected result for the key %s: %v\n", k, v)
+		}
+	}
+}
+
 func TestEntityFormatter_targetingUnknownFields(t *testing.T) {
 	target := "group1"
 	sample := Response{
