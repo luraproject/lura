@@ -75,13 +75,17 @@ func (e entityFormatter) Format(entity Response) Response {
 }
 
 func extractTarget(target string, entity *Response) {
-	if tmp, ok := entity.Data[target]; ok {
-		entity.Data, ok = tmp.(map[string]interface{})
-		if !ok {
+	for _, part := range strings.Split(target, ".") {
+		if tmp, ok := entity.Data[part]; ok {
+			entity.Data, ok = tmp.(map[string]interface{})
+			if !ok {
+				entity.Data = map[string]interface{}{}
+				return
+			}
+		} else {
 			entity.Data = map[string]interface{}{}
+			return
 		}
-	} else {
-		entity.Data = map[string]interface{}{}
 	}
 }
 
