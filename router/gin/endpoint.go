@@ -61,6 +61,8 @@ func CustomErrorEndpointHandler(configuration *config.EndpointConfig, prxy proxy
 					c.Writer.Header().Add(k, v)
 				}
 			}
+
+			c.Status(response.Metadata.StatusCode)
 		}
 
 		c.Header(router.CompleteResponseHeaderName, complete)
