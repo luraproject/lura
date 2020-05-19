@@ -29,7 +29,7 @@ func TestRegister(t *testing.T) {
 
 	original := GetRegister()
 
-	if len(original.data.Clone()) != 3 {
+	if len(original.data.Clone()) != 4 {
 		t.Error("Unexpected number of registered factories:", len(original.data.Clone()))
 	}
 
@@ -45,7 +45,7 @@ func TestGet(t *testing.T) {
 	decoders = initDecoderRegister()
 	defer func() { decoders = initDecoderRegister() }()
 
-	if len(decoders.data.Clone()) != 3 {
+	if len(decoders.data.Clone()) != 4 {
 		t.Error("Unexpected number of registered factories:", len(decoders.data.Clone()))
 	}
 
