@@ -418,6 +418,8 @@ func TestEntityFormatter_flatmap(t *testing.T) {
 				"foo":        "bar",
 				"a":          sub,
 				"collection": []interface{}{sub, sub, sub, sub},
+				"y":          []interface{}{0, 1, 2, 3, 4, 5, 6},
+				"z":          []interface{}{10, 11, 12, 13, 14, 15, 16},
 			},
 		},
 		IsComplete: true,
@@ -440,6 +442,7 @@ func TestEntityFormatter_flatmap(t *testing.T) {
 					map[string]interface{}{"x": 42},
 					map[string]interface{}{"x": 42},
 				},
+				"z": []interface{}{10, 11, 12, 13, 14, 15, 16, 0, 1, 2, 3, 4, 5, 6},
 			},
 		},
 		IsComplete: true,
@@ -453,6 +456,10 @@ func TestEntityFormatter_flatmap(t *testing.T) {
 					map[string]interface{}{
 						"type": "del",
 						"args": []interface{}{"c"},
+					},
+					map[string]interface{}{
+						"type": "append",
+						"args": []interface{}{"y", "z"},
 					},
 					map[string]interface{}{
 						"type": "move",

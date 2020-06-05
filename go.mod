@@ -3,7 +3,7 @@ module github.com/devopsfaith/krakend
 go 1.13
 
 require (
-	github.com/devopsfaith/flatmap v0.0.0-20190628155411-90b768d6668b
+	github.com/devopsfaith/flatmap v0.0.0-20200601181759-8521186182fc
 	github.com/dimfeld/httptreemux v5.0.1+incompatible
 	github.com/gin-contrib/sse v0.0.0-20170109093832-22d885f9ecc7 // indirect
 	github.com/gin-gonic/gin v1.1.5-0.20170702092826-d459835d2b07

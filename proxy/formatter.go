@@ -225,6 +225,8 @@ func (e flatmapFormatter) processOps(entity *Response) {
 		switch op.Type {
 		case "move":
 			flatten.Move(op.Args[0], op.Args[1])
+		case "append":
+			flatten.Append(op.Args[0], op.Args[1])
 		case "del":
 			flatten.Del(op.Args[0])
 		default:
