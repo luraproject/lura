@@ -2,6 +2,8 @@ github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/devopsfaith/flatmap v0.0.0-20190628155411-90b768d6668b h1:mToxoDhxMLiuRxit4/kotDMfVbK9Hd90BLBUhTpOw9k=
 github.com/devopsfaith/flatmap v0.0.0-20190628155411-90b768d6668b/go.mod h1:J9Y/58s7wx7HbHT3i4UKNwLGuBB9qCf0/JUdEFGDPmA=
+github.com/devopsfaith/flatmap v0.0.0-20200601181759-8521186182fc h1:WM1VdC8LW8GIZUJuvXgQWm6LcZ8niL0D0WVuC3lKkQU=
+github.com/devopsfaith/flatmap v0.0.0-20200601181759-8521186182fc/go.mod h1:J9Y/58s7wx7HbHT3i4UKNwLGuBB9qCf0/JUdEFGDPmA=
 github.com/dimfeld/httptreemux v5.0.1+incompatible h1:Qj3gVcDNoOthBAqftuD596rm4wg/adLLz5xh5CmpiCA=
 github.com/dimfeld/httptreemux v5.0.1+incompatible/go.mod h1:rbUlSV+CCpv/SuqUTP/8Bk2O3LyUV436/yaRGkhP6Z0=
 github.com/gin-contrib/sse v0.0.0-20170109093832-22d885f9ecc7 h1:AzN37oI0cOS+cougNAV9szl6CVoj2RYwzS3DpUQNtlY=
