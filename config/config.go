@@ -180,21 +180,27 @@ type EndpointConfig struct {
 // Backend defines how krakend should connect to the backend service (the API resource to consume)
 // and how it should process the received response
 type Backend struct {
-	// the name of the group the response should be moved to. If empty, the response is
+	// Group defines the name of the property the response should be moved to. If empty, the response is
 	// not changed
 	Group string `mapstructure:"group"`
-	// HTTP method of the request to send to the backend
+	// Method defines the HTTP method of the request to send to the backend
 	Method string `mapstructure:"method"`
-	// Set of hosts of the API
+	// Host is a set of hosts of the API
 	Host []string `mapstructure:"host"`
-	// False if the hostname should be sanitized
+	// HostSanitizationDisabled can be set to false if the hostname should be sanitized
 	HostSanitizationDisabled bool `mapstructure:"disable_host_sanitize"`
-	// URL pattern to use to locate the resource to be consumed
+	// URLPattern is the URL pattern to use to locate the resource to be consumed
 	URLPattern string `mapstructure:"url_pattern"`
-	// set of response fields to remove. If empty, the filter id not used
+	// Deprecated: use DenyList
+	// Blacklist is a set of response fields to remove. If empty, the filter id not used
 	Blacklist []string `mapstructure:"blacklist"`
-	// set of response fields to allow. If empty, the filter id not used
+	// Deprecated: use AllowList
+	// Whitelist is a set of response fields to allow. If empty, the filter id not used
 	Whitelist []string `mapstructure:"whitelist"`
+	// AllowList is a set of response fields to remove. If empty, the filter id not used
+	AllowList []string `mapstructure:"deny"`
+	// DenyList is a set of response fields to allow. If empty, the filter id not used
+	DenyList []string `mapstructure:"allow"`
 	// map of response fields to be renamed and their new names
 	Mapping map[string]string `mapstructure:"mapping"`
 	// the encoding format
@@ -343,6 +349,15 @@ func (s *ServiceConfig) initEndpoints() error {
 		e.ExtraConfig.sanitize()
 
 		for j, b := range e.Backend {
+			// TODO: remove when white/black lists are deprecated
+			if len(b.AllowList) != 0 && len(b.Whitelist) == 0 {
+				b.Whitelist = b.AllowList
+			}
+
+			if len(b.DenyList) != 0 && len(b.Blacklist) == 0 {
+				b.Blacklist = b.DenyList
+			}
+
 			s.initBackendDefaults(i, j)
 
 			if err := s.initBackendURLMappings(i, j, inputSet); err != nil {
