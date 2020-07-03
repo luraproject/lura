@@ -65,7 +65,11 @@ func newLoadBalancedMiddleware(lb sd.Balancer) Middleware {
 				return nil, err
 			}
 			if len(r.Query) > 0 {
-				r.URL.RawQuery += "&" + r.Query.Encode()
+				if len(r.URL.RawQuery) > 0 {
+					r.URL.RawQuery += "&" + r.Query.Encode()
+				} else {
+					r.URL.RawQuery += r.Query.Encode()
+				}
 			}
 
 			return next[0](ctx, &r)
