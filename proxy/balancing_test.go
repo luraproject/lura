@@ -58,44 +58,42 @@ func TestNewRandomLoadBalancedMiddleware(t *testing.T) {
 }
 
 func testLoadBalancedMw(t *testing.T, lb Middleware) {
-	want := "http://127.0.0.1:8080/tupu"
-	assertion := func(ctx context.Context, request *Request) (*Response, error) {
-		if request.URL.String() != want {
-			t.Errorf("The middleware did not update the request URL! want [%s], have [%s]\n", want, request.URL)
+	for _, tc := range []struct {
+		path     string
+		query    url.Values
+		expected string
+	}{
+		{
+			path:     "/tupu",
+			expected: "http://127.0.0.1:8080/tupu",
+		},
+		{
+			path:     "/tupu?extra=true",
+			expected: "http://127.0.0.1:8080/tupu?extra=true",
+		},
+		{
+			path:     "/tupu?extra=true",
+			query:    url.Values{"some": []string{"none"}},
+			expected: "http://127.0.0.1:8080/tupu?extra=true&some=none",
+		},
+		{
+			path:     "/tupu",
+			query:    url.Values{"some": []string{"none"}},
+			expected: "http://127.0.0.1:8080/tupu?some=none",
+		},
+	} {
+		assertion := func(ctx context.Context, request *Request) (*Response, error) {
+			if request.URL.String() != tc.expected {
+				t.Errorf("The middleware did not update the request URL! want [%s], have [%s]\n", tc.expected, request.URL)
+			}
+			return nil, nil
 		}
-		return nil, nil
-	}
-	if _, err := lb(assertion)(context.Background(), &Request{
-		Path: "/tupu",
-	}); err != nil {
-		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
-	}
-
-	want = "http://127.0.0.1:8080/tupu?extra=true"
-	assertion = func(ctx context.Context, request *Request) (*Response, error) {
-		if request.URL.String() != want {
-			t.Errorf("The middleware did not update the request URL! want [%s], have [%s]\n", want, request.URL)
+		if _, err := lb(assertion)(context.Background(), &Request{
+			Path:  tc.path,
+			Query: tc.query,
+		}); err != nil {
+			t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
 		}
-		return nil, nil
-	}
-	if _, err := lb(assertion)(context.Background(), &Request{
-		Path: "/tupu?extra=true",
-	}); err != nil {
-		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
-	}
-
-	want = "http://127.0.0.1:8080/tupu?extra=true&some=none"
-	assertion = func(ctx context.Context, request *Request) (*Response, error) {
-		if request.URL.String() != want {
-			t.Errorf("The middleware did not update the request URL! want [%s], have [%s]\n", want, request.URL)
-		}
-		return nil, nil
-	}
-	if _, err := lb(assertion)(context.Background(), &Request{
-		Path:  "/tupu?extra=true",
-		Query: url.Values{"some": []string{"none"}},
-	}); err != nil {
-		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
 	}
 }
 
