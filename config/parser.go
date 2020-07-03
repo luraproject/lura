@@ -259,6 +259,8 @@ type parseableBackend struct {
 	URLPattern               string            `json:"url_pattern"`
 	Blacklist                []string          `json:"blacklist"`
 	Whitelist                []string          `json:"whitelist"`
+	AllowList                []string          `json:"allow"`
+	DenyList                 []string          `json:"deny"`
 	Mapping                  map[string]string `json:"mapping"`
 	Encoding                 string            `json:"encoding"`
 	IsCollection             bool              `json:"is_collection"`
@@ -281,6 +283,8 @@ func (p *parseableBackend) normalize() *Backend {
 		IsCollection:             p.IsCollection,
 		Target:                   p.Target,
 		SD:                       p.SD,
+		AllowList:                p.AllowList,
+		DenyList:                 p.DenyList,
 	}
 	if p.ExtraConfig != nil {
 		b.ExtraConfig = *p.ExtraConfig
