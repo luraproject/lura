@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
@@ -493,6 +494,108 @@ func TestEntityFormatter_flatmap(t *testing.T) {
 
 	if len(result.Data) != len(expected.Data) || result.IsComplete != expected.IsComplete {
 		t.Errorf("The formatter returned an unexpected result size: %v\n", result.Data)
+	}
+
+	if !reflect.DeepEqual(expected.Data, result.Data) {
+		t.Errorf("unexpected result: %v", result.Data)
+	}
+}
+
+func TestNewFlatmapMiddleware(t *testing.T) {
+	sub := map[string]interface{}{
+		"b": true,
+		"c": 42,
+		"d": "tupu",
+		"e": []interface{}{1, 2, 3, 4},
+	}
+	sample := Response{
+		Data: map[string]interface{}{
+			"supu":       42,
+			"tupu":       false,
+			"foo":        "bar",
+			"a":          sub,
+			"collection": []interface{}{sub, sub, sub, sub},
+			"y":          []interface{}{0, 1, 2, 3, 4, 5, 6},
+			"z":          []interface{}{10, 11, 12, 13, 14, 15, 16},
+		},
+		IsComplete: true,
+	}
+	expected := Response{
+		Data: map[string]interface{}{
+			"SUPUUUUU": 42,
+			"tupu":     false,
+			"foo":      "bar",
+			"a": map[string]interface{}{
+				"BOOOOO": true,
+				"c":      42,
+				"d":      "tupu",
+				"e":      []interface{}{1, 2, 3, 4},
+			},
+			"collection": []interface{}{
+				map[string]interface{}{"x": 42},
+				map[string]interface{}{"x": 42},
+				map[string]interface{}{"x": 42},
+				map[string]interface{}{"x": 42},
+			},
+			"z": []interface{}{10, 11, 12, 13, 14, 15, 16, 0, 1, 2, 3, 4, 5, 6},
+		},
+		IsComplete: true,
+	}
+	p := NewFlatmapMiddleware(&config.EndpointConfig{
+		ExtraConfig: config.ExtraConfig{
+			Namespace: map[string]interface{}{
+				flatmapKey: []interface{}{
+					map[string]interface{}{
+						"type": "del",
+						"args": []interface{}{"c"},
+					},
+					map[string]interface{}{
+						"type": "append",
+						"args": []interface{}{"y", "z"},
+					},
+					map[string]interface{}{
+						"type": "move",
+						"args": []interface{}{"supu", "SUPUUUUU"},
+					},
+					map[string]interface{}{
+						"type": "move",
+						"args": []interface{}{"a.b", "a.BOOOOO"},
+					},
+					map[string]interface{}{
+						"type": "del",
+						"args": []interface{}{"collection.*.b"},
+					},
+					map[string]interface{}{
+						"type": "del",
+						"args": []interface{}{"collection.*.d"},
+					},
+					map[string]interface{}{
+						"type": "del",
+						"args": []interface{}{"collection.*.e"},
+					},
+					map[string]interface{}{
+						"type": "move",
+						"args": []interface{}{"collection.*.c", "collection.*.x"},
+					},
+				},
+			},
+		},
+	})(func(_ context.Context, _ *Request) (*Response, error) {
+		return &sample, nil
+	})
+
+	result, err := p(context.TODO(), nil)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(result.Data) != len(expected.Data) {
+		t.Errorf("The formatter returned an unexpected result size: %v\n", result.Data)
+	}
+
+	if result.IsComplete != expected.IsComplete {
+		t.Errorf("The formatter returned an unexpected completion flag: %v\n", result.IsComplete)
 	}
 
 	if !reflect.DeepEqual(expected.Data, result.Data) {

@@ -73,6 +73,7 @@ func (pf defaultFactory) newMulti(cfg *config.EndpointConfig) (p Proxy, err erro
 		backendProxy[i] = pf.newStack(backend)
 	}
 	p = NewMergeDataMiddleware(cfg)(backendProxy...)
+	p = NewFlatmapMiddleware(cfg)(p)
 	return
 }
 
