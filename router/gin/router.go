@@ -108,16 +108,34 @@ func (r ginRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) 
 			continue
 		}
 
-		r.registerKrakendEndpoint(c.Method, c.Endpoint, r.cfg.HandlerFactory(c, proxyStack), len(c.Backend))
+		r.registerKrakendEndpoint(c.Method, c, r.cfg.HandlerFactory(c, proxyStack), len(c.Backend))
 	}
 }
 
-func (r ginRouter) registerKrakendEndpoint(method, path string, handler gin.HandlerFunc, totBackends int) {
+func (r ginRouter) registerKrakendEndpoint(method string, endpoint *config.EndpointConfig, handler gin.HandlerFunc, totBackends int) {
 	method = strings.ToTitle(method)
+	path := endpoint.Endpoint
 	if method != http.MethodGet && totBackends > 1 {
-		r.cfg.Logger.Error(method, "endpoints must have a single backend! Ignoring", path)
-		return
+		if endpoint.ExtraConfig["github.com/devopsfaith/krakend/proxy"] == nil {
+			r.cfg.Logger.Error(method, "endpoints must have a single backend! Ignoring", path)
+			return
+		}
+
+		proxyCfg := endpoint.ExtraConfig["github.com/devopsfaith/krakend/proxy"].(map[string]interface{})
+		if proxyCfg["sequential"] == false {
+			r.cfg.Logger.Error(method, "endpoints must have a single backend! Ignoring", path)
+			return
+		}
+
+		for i, backend := range endpoint.Backend {
+			r.cfg.Logger.Info(i, " -> ", backend.Method)
+			if backend.Method != http.MethodGet && (i+1) != totBackends {
+				r.cfg.Logger.Error(method, " endpoints with sequential enabled is only the last one is allowed to be non GET! Ignoring", path)
+				return
+			}
+		}
 	}
+
 	switch method {
 	case http.MethodGet:
 		r.cfg.Engine.GET(path, handler)
