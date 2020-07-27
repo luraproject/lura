@@ -123,23 +123,9 @@ func (r httpRouter) registerKrakendEndpoint(method string, endpoint *config.Endp
 	method = strings.ToTitle(method)
 	path := endpoint.Endpoint
 	if method != http.MethodGet && totBackends > 1 {
-		if endpoint.ExtraConfig["github.com/devopsfaith/krakend/proxy"] == nil {
-			r.cfg.Logger.Error(method, "endpoints must have a single backend! Ignoring", path)
+		if !router.IsValidSequentialEndpoint(endpoint) {
+			r.cfg.Logger.Error(method, " endpoints with sequential enabled is only the last one is allowed to be non GET! Ignoring", path)
 			return
-		}
-
-		proxyCfg := endpoint.ExtraConfig["github.com/devopsfaith/krakend/proxy"].(map[string]interface{})
-		if proxyCfg["sequential"] == false {
-			r.cfg.Logger.Error(method, "endpoints must have a single backend! Ignoring", path)
-			return
-		}
-
-		for i, backend := range endpoint.Backend {
-			r.cfg.Logger.Info(i, " -> ", backend.Method)
-			if backend.Method != http.MethodGet && (i+1) != totBackends {
-				r.cfg.Logger.Error(method, " endpoints with sequential enabled is only the last one is allowed to be non GET! Ignoring", path)
-				return
-			}
 		}
 	}
 
