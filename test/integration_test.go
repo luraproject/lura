@@ -305,6 +305,12 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 			expHeaders: defaultHeaders,
 			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["123.45.67.89"]}}`,
 		},
+		{
+			method:     "PUT",
+			name:       "sequence-accept",
+			url:        "/sequence-accept",
+			expHeaders: defaultHeaders,
+		},
 	} {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {

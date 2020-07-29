@@ -356,6 +356,31 @@
                     "url_pattern": "/"
                 }
             ]
+        },
+        {
+            "endpoint": "/sequence-accept",
+            "method": "PUT",
+            "extra_config": {
+                "github.com/devopsfaith/krakend/proxy": {
+                    "sequential": true
+                }
+            },
+            "backend": [
+                {
+                    "method": "GET",
+                    "host": [
+                        "{{.b3}}"
+                    ],
+                    "url_pattern": "/"
+                },
+                {
+                    "method": "PUT",
+                    "host": [
+                        "{{.b3}}"
+                    ],
+                    "url_pattern": "/"
+                }
+            ]
         }
     ]
 }
