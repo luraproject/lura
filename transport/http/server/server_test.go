@@ -1,4 +1,4 @@
-//go:generate go run $GOROOT/src/crypto/tls/generate_cert.go --rsa-bits 1024 --host 127.0.0.1,::1,localhost --ca --start-date "Jan 1 00:00:00 1970" --duration=1000000h
+//go:generate openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -out cert.pem -keyout key.pem -subj "/C=US/ST=California/L=Mountain View/O=Your Organization/OU=Your Unit/CN=localhost"
 package server
 
 import (
@@ -52,6 +52,54 @@ func TestRunServer_TLS(t *testing.T) {
 	}
 
 	<-time.After(100 * time.Millisecond)
+
+	resp, err := client.Get(fmt.Sprintf("https://localhost:%d", port))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if resp.StatusCode != 200 {
+		t.Errorf("unexpected status code: %d", resp.StatusCode)
+		return
+	}
+	cancel()
+
+	if err = <-done; err != nil {
+		t.Error(err)
+	}
+}
+
+func TestRunServer_MTLS(t *testing.T) {
+	testKeysAreAvailable(t)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	port := newPort()
+	port = 36517
+	done := make(chan error)
+	go func() {
+		done <- RunServer(
+			ctx,
+			config.ServiceConfig{
+				Port: port,
+				TLS: &config.TLS{
+					PublicKey:  "cert.pem",
+					PrivateKey: "key.pem",
+					EnableMTLS: true,
+				},
+			},
+			http.HandlerFunc(dummyHandler),
+		)
+	}()
+
+	client, err := mtlsClient("cert.pem", "key.pem")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	<-time.After(1000 * time.Millisecond)
 
 	resp, err := client.Get(fmt.Sprintf("https://localhost:%d", port))
 	if err != nil {
@@ -275,6 +323,39 @@ func httpsClient(cert string) (*http.Client, error) {
 			tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
 		},
 		RootCAs: roots,
+	}
+	return &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConf}}, nil
+}
+
+func mtlsClient(certPath, keyPath string) (*http.Client, error) {
+	cert, err := tls.LoadX509KeyPair(certPath, keyPath)
+	if err != nil {
+		return nil, err
+	}
+
+	cacer, err := ioutil.ReadFile(certPath)
+	if err != nil {
+		return nil, err
+	}
+	roots := x509.NewCertPool()
+	ok := roots.AppendCertsFromPEM(cacer)
+	if !ok {
+		return nil, errors.New("failed to parse root certificate")
+	}
+	tlsConf := &tls.Config{
+		MinVersion:               tls.VersionTLS12,
+		CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
+		PreferServerCipherSuites: true,
+		CipherSuites: []uint16{
+			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+			tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+		},
+		RootCAs:      roots,
+		Certificates: []tls.Certificate{cert},
 	}
 	return &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConf}}, nil
 }

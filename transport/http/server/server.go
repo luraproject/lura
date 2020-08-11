@@ -3,8 +3,10 @@ package server
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"sync"
@@ -123,13 +125,32 @@ func ParseTLSConfig(cfg *config.TLS) *tls.Config {
 		return nil
 	}
 
-	return &tls.Config{
+	tlsConfig := &tls.Config{
 		MinVersion:               parseTLSVersion(cfg.MinVersion),
 		MaxVersion:               parseTLSVersion(cfg.MaxVersion),
 		CurvePreferences:         parseCurveIDs(cfg),
 		PreferServerCipherSuites: cfg.PreferServerCipherSuites,
 		CipherSuites:             parseCipherSuites(cfg),
 	}
+	if !cfg.EnableMTLS {
+		return tlsConfig
+	}
+
+	certPool, err := x509.SystemCertPool()
+	if err != nil {
+		certPool = x509.NewCertPool()
+	}
+
+	caCert, err := ioutil.ReadFile(cfg.PublicKey)
+	if err != nil {
+		return tlsConfig
+	}
+	certPool.AppendCertsFromPEM(caCert)
+
+	tlsConfig.ClientCAs = certPool
+	tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
+
+	return tlsConfig
 }
 
 func parseTLSVersion(key string) uint16 {

@@ -192,6 +192,7 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 			CurvePreferences:         p.TLS.CurvePreferences,
 			PreferServerCipherSuites: p.TLS.PreferServerCipherSuites,
 			CipherSuites:             p.TLS.CipherSuites,
+			EnableMTLS:               p.TLS.EnableMTLS,
 		}
 	}
 	if p.ExtraConfig != nil {
@@ -214,6 +215,7 @@ type parseableTLS struct {
 	CurvePreferences         []uint16 `json:"curve_preferences"`
 	PreferServerCipherSuites bool     `json:"prefer_server_cipher_suites"`
 	CipherSuites             []uint16 `json:"cipher_suites"`
+	EnableMTLS               bool     `json:"enable_mtls"`
 }
 
 type parseableEndpointConfig struct {
