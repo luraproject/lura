@@ -30,7 +30,7 @@ func extractParamsFromEndpoint(r *http.Request) map[string]string {
 	params := map[string]string{}
 	if len(rctx.URLParams.Keys) > 0 {
 		for _, param := range rctx.URLParams.Keys {
-			params[strings.Title(param)] = chi.URLParam(r, param)
+			params[strings.Title(param[:1])+param[1:]] = chi.URLParam(r, param)
 		}
 	}
 	return params
