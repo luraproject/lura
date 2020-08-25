@@ -93,7 +93,7 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 	return func(c *gin.Context, queryString []string) *proxy.Request {
 		params := make(map[string]string, len(c.Params))
 		for _, param := range c.Params {
-			params[strings.Title(param.Key)] = param.Value
+			params[strings.Title(param.Key[:1])+param.Key[1:]] = param.Value
 		}
 
 		headers := make(map[string][]string, 2+len(headersToSend))
