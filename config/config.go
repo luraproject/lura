@@ -197,10 +197,10 @@ type Backend struct {
 	// Deprecated: use AllowList
 	// Whitelist is a set of response fields to allow. If empty, the filter id not used
 	Whitelist []string `mapstructure:"whitelist"`
-	// AllowList is a set of response fields to remove. If empty, the filter id not used
-	AllowList []string `mapstructure:"deny"`
-	// DenyList is a set of response fields to allow. If empty, the filter id not used
-	DenyList []string `mapstructure:"allow"`
+	// AllowList is a set of response fields to allow. If empty, the filter id not used
+	AllowList []string `mapstructure:"allow"`
+	// DenyList is a set of response fields to remove. If empty, the filter id not used
+	DenyList []string `mapstructure:"deny"`
 	// map of response fields to be renamed and their new names
 	Mapping map[string]string `mapstructure:"mapping"`
 	// the encoding format
