@@ -77,6 +77,12 @@ type httpRouter struct {
 	RunServer RunServerFunc
 }
 
+// HealthHandler is a dummy http.HandlerFunc implementation for exposing a health check endpoint
+func HealthHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"status": "ok"}`))
+}
+
 // Run implements the router interface
 func (r httpRouter) Run(cfg config.ServiceConfig) {
 	if cfg.Debug {
@@ -95,6 +101,7 @@ func (r httpRouter) Run(cfg config.ServiceConfig) {
 			r.cfg.Engine.Handle(r.cfg.DebugPattern, method, debugHandler)
 		}
 	}
+	r.cfg.Engine.Handle("/__health", "GET", http.HandlerFunc(HealthHandler))
 
 	router.InitHTTPDefaultTransport(cfg)
 

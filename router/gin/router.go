@@ -87,6 +87,10 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 		r.cfg.Engine.Any("/__debug/*param", DebugHandler(r.cfg.Logger))
 	}
 
+	r.cfg.Engine.GET("/__health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
+
 	r.registerKrakendEndpoints(cfg.Endpoints)
 
 	r.cfg.Engine.NoRoute(func(c *gin.Context) {

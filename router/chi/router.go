@@ -83,6 +83,8 @@ func (r chiRouter) Run(cfg config.ServiceConfig) {
 		r.registerDebugEndpoints()
 	}
 
+	r.cfg.Engine.Get("/__health", mux.HealthHandler)
+
 	router.InitHTTPDefaultTransport(cfg)
 
 	r.registerKrakendEndpoints(cfg.Endpoints)
