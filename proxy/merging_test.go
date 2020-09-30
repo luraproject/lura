@@ -47,6 +47,7 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 	endpoint := config.EndpointConfig{
 		Backend: []*config.Backend{
 			{URLPattern: "/"},
+			{URLPattern: "/aaa/{{.Resp0_array}}"},
 			{URLPattern: "/aaa/{{.Resp0_int}}/{{.Resp0_string}}/{{.Resp0_bool}}/{{.Resp0_float}}/{{.Resp0_struct.foo}}"},
 			{URLPattern: "/aaa/{{.Resp0_int}}/{{.Resp0_string}}/{{.Resp0_bool}}/{{.Resp0_float}}/{{.Resp0_struct.foo}}?x={{.Resp1_tupu}}"},
 			{URLPattern: "/aaa/{{.Resp0_struct.foo}}/{{.Resp0_struct.struct.foo}}/{{.Resp0_struct.struct.struct.foo}}"},
@@ -74,7 +75,12 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 					},
 				},
 			},
+			"array": []interface{}{"1", "2"},
 		}, IsComplete: true}),
+		func(ctx context.Context, r *Request) (*Response, error) {
+			checkRequestParam(t, r, "Resp0_array", "1,2")
+			return &Response{Data: map[string]interface{}{"tupu": "foo"}, IsComplete: true}, nil
+		},
 		func(ctx context.Context, r *Request) (*Response, error) {
 			checkRequestParam(t, r, "Resp0_int", "42")
 			checkRequestParam(t, r, "Resp0_string", "some")
@@ -112,7 +118,7 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 	case <-mustEnd:
 		t.Errorf("We were expecting a response but we got none\n")
 	default:
-		if len(out.Data) != 8 {
+		if len(out.Data) != 9 {
 			t.Errorf("We weren't expecting a partial response but we got %v!\n", out)
 		}
 		if !out.IsComplete {

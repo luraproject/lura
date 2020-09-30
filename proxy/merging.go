@@ -126,6 +126,17 @@ func sequentialMerge(patterns []string, timeout time.Duration, rc ResponseCombin
 							continue
 						}
 						switch clean := v.(type) {
+						case []interface{}:
+							if len(clean) == 0 {
+								request.Params[key] = ""
+								continue
+							}
+							var b strings.Builder
+							for i := 0; i < len(clean)-1; i++ {
+								fmt.Fprintf(&b, "%v,", clean[i])
+							}
+							fmt.Fprintf(&b, "%v", clean[len(clean)-1])
+							request.Params[key] = b.String()
 						case string:
 							request.Params[key] = clean
 						case int:
