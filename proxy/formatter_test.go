@@ -472,15 +472,11 @@ func TestEntityFormatter_flatmap(t *testing.T) {
 					},
 					map[string]interface{}{
 						"type": "del",
-						"args": []interface{}{"collection.*.b"},
-					},
-					map[string]interface{}{
-						"type": "del",
-						"args": []interface{}{"collection.*.d"},
-					},
-					map[string]interface{}{
-						"type": "del",
-						"args": []interface{}{"collection.*.e"},
+						"args": []interface{}{
+							"collection.*.b",
+							"collection.*.d",
+							"collection.*.e",
+						},
 					},
 					map[string]interface{}{
 						"type": "move",
