@@ -1,8 +1,11 @@
 package proxy
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"regexp"
 	"strconv"
 	"strings"
@@ -60,7 +63,7 @@ func parallelMerge(timeout time.Duration, rc ResponseCombiner, next ...Proxy) Pr
 		failed := make(chan error, len(next))
 
 		for _, n := range next {
-			go requestPart(localCtx, n, request, parts, failed)
+			go requestPart(localCtx, n, request, false, parts, failed)
 		}
 
 		acc := newIncrementalMergeAccumulator(len(next), rc)
@@ -151,7 +154,7 @@ func sequentialMerge(patterns []string, timeout time.Duration, rc ResponseCombin
 					}
 				}
 			}
-			requestPart(localCtx, n, request, out, errCh)
+			requestPart(localCtx, n, request, true, out, errCh)
 			select {
 			case err := <-errCh:
 				if i == 0 {
@@ -221,10 +224,23 @@ func (i *incrementalMergeAccumulator) Result() (*Response, error) {
 	return i.data, newMergeError(i.errs)
 }
 
-func requestPart(ctx context.Context, next Proxy, request *Request, out chan<- *Response, failed chan<- error) {
+func requestPart(ctx context.Context, next Proxy, request *Request, sequential bool, out chan<- *Response, failed chan<- error) {
 	localCtx, cancel := context.WithCancel(ctx)
 
+	var copyBody io.ReadCloser
+	if sequential {
+		buf, _ := ioutil.ReadAll(request.Body)
+		requestBody := ioutil.NopCloser(bytes.NewBuffer(buf))
+		copyBody = ioutil.NopCloser(bytes.NewBuffer(buf))
+		request.Body = requestBody
+	}
+
 	in, err := next(localCtx, request)
+
+	if sequential {
+		request.Body = copyBody
+	}
+
 	if err != nil {
 		failed <- err
 		cancel()
