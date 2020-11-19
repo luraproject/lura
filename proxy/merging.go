@@ -1,11 +1,8 @@
 package proxy
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"regexp"
 	"strconv"
 	"strings"
@@ -227,18 +224,15 @@ func (i *incrementalMergeAccumulator) Result() (*Response, error) {
 func requestPart(ctx context.Context, next Proxy, request *Request, sequential bool, out chan<- *Response, failed chan<- error) {
 	localCtx, cancel := context.WithCancel(ctx)
 
-	var copyBody io.ReadCloser
+	var copy *Request
 	if sequential {
-		buf, _ := ioutil.ReadAll(request.Body)
-		requestBody := ioutil.NopCloser(bytes.NewBuffer(buf))
-		copyBody = ioutil.NopCloser(bytes.NewBuffer(buf))
-		request.Body = requestBody
+		copy = CloneRequest(request)
 	}
 
 	in, err := next(localCtx, request)
 
 	if sequential {
-		request.Body = copyBody
+		request = copy
 	}
 
 	if err != nil {
