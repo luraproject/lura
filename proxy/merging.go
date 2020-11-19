@@ -224,15 +224,15 @@ func (i *incrementalMergeAccumulator) Result() (*Response, error) {
 func requestPart(ctx context.Context, next Proxy, request *Request, sequential bool, out chan<- *Response, failed chan<- error) {
 	localCtx, cancel := context.WithCancel(ctx)
 
-	var copy *Request
+	var copyRequest *Request
 	if sequential {
-		copy = CloneRequest(request)
+		copyRequest = CloneRequest(request)
 	}
 
 	in, err := next(localCtx, request)
 
 	if sequential {
-		request = copy
+		request = copyRequest
 	}
 
 	if err != nil {
