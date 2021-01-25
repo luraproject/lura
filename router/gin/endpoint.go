@@ -96,7 +96,7 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 			params[strings.Title(param.Key[:1])+param.Key[1:]] = param.Value
 		}
 
-		headers := make(map[string][]string, 2+len(headersToSend))
+		headers := make(map[string][]string, 3+len(headersToSend))
 
 		for _, k := range headersToSend {
 			if k == requestParamsAsterisk {
@@ -111,6 +111,7 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 		}
 
 		headers["X-Forwarded-For"] = []string{c.ClientIP()}
+		headers["X-Forwarded-Host"] = []string{c.Request.Host}
 		// if User-Agent is not forwarded using headersToSend, we set
 		// the KrakenD router User Agent value
 		if _, ok := headers["User-Agent"]; !ok {

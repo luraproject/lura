@@ -203,28 +203,28 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 			url:        "/querystring-params-test/no-params?a=1&b=2&c=3",
 			headers:    map[string]string{},
 			expHeaders: defaultHeaders,
-			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"]},"path":"/no-params","query":{}}`,
+			expBody:    fmt.Sprintf(`{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-Host":["localhost:%d"]},"path":"/no-params","query":{}}`, cfg.Port),
 		},
 		{
 			name:       "querystring-params-optional-query-params",
 			url:        "/querystring-params-test/query-params?a=1&b=2&c=3",
 			headers:    map[string]string{},
 			expHeaders: defaultHeaders,
-			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"]},"path":"/query-params","query":{"a":["1"],"b":["2"]}}`,
+			expBody:    fmt.Sprintf(`{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-Host":["localhost:%d"]},"path":"/query-params","query":{"a":["1"],"b":["2"]}}`, cfg.Port),
 		},
 		{
 			name:       "querystring-params-mandatory-query-params",
 			url:        "/querystring-params-test/url-params/some?a=1&b=2&c=3",
 			headers:    map[string]string{},
 			expHeaders: defaultHeaders,
-			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"]},"path":"/url-params","query":{"p":["some"]}}`,
+			expBody:    fmt.Sprintf(`{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-Host":["localhost:%d"]},"path":"/url-params","query":{"p":["some"]}}`, cfg.Port),
 		},
 		{
 			name:       "querystring-params-all",
 			url:        "/querystring-params-test/all-params?a=1&b=2&c=3",
 			headers:    map[string]string{},
 			expHeaders: defaultHeaders,
-			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"]},"path":"/all-params","query":{"a":["1"],"b":["2"],"c":["3"]}}`,
+			expBody:    fmt.Sprintf(`{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-Host":["localhost:%d"]},"path":"/all-params","query":{"a":["1"],"b":["2"],"c":["3"]}}`, cfg.Port),
 		},
 		{
 			name: "header-params-none",
@@ -234,7 +234,7 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 				"X-TEST-2": "none",
 			},
 			expHeaders: defaultHeaders,
-			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"]},"path":"/no-params","query":{}}`,
+			expBody:    fmt.Sprintf(`{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-Host":["localhost:%d"]},"path":"/no-params","query":{}}`, cfg.Port),
 		},
 		{
 			name: "header-params-filter",
@@ -244,7 +244,7 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 				"X-TEST-2": "none",
 			},
 			expHeaders: defaultHeaders,
-			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Test-1":["some"]},"path":"/filter-params","query":{}}`,
+			expBody:    fmt.Sprintf(`{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-Host":["localhost:%d"],"X-Test-1":["some"]},"path":"/filter-params","query":{}}`, cfg.Port),
 		},
 		{
 			name: "header-params-all",
@@ -255,7 +255,7 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 				"User-Agent": "KrakenD Test",
 			},
 			expHeaders: defaultHeaders,
-			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Test"],"X-Forwarded-Via":["KrakenD Version undefined"],"X-Test-1":["some"],"X-Test-2":["none"]},"path":"/all-params","query":{}}`,
+			expBody:    fmt.Sprintf(`{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Test"],"X-Forwarded-Host":["localhost:%d"],"X-Forwarded-Via":["KrakenD Version undefined"],"X-Test-1":["some"],"X-Test-2":["none"]},"path":"/all-params","query":{}}`, cfg.Port),
 		},
 		{
 			name:       "sequential ok",
@@ -309,7 +309,7 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 				"x-forwarded-for": "123.45.67.89",
 			},
 			expHeaders: defaultHeaders,
-			expBody:    `{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["123.45.67.89"]}}`,
+			expBody:    fmt.Sprintf(`{"headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["123.45.67.89"],"X-Forwarded-Host":["localhost:%d"]}}`, cfg.Port),
 		},
 		{
 			method:     "PUT",
