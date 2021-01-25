@@ -56,7 +56,7 @@ func TestEndpointHandler_okAllParams(t *testing.T) {
 		timeout:            10,
 		proxy:              p,
 		method:             "GET",
-		expectedBody:       `{"headers":{"Content-Type":["application/json"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":[""]},"params":{},"query":{"a":["42"],"b":["1"],"c[]":["x","y"],"d":["1","2"]}}`,
+		expectedBody:       `{"headers":{"Content-Type":["application/json"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":[""],"X-Forwarded-Host":["127.0.0.1:8081"]},"params":{},"query":{"a":["42"],"b":["1"],"c[]":["x","y"],"d":["1","2"]}}`,
 		expectedCache:      "public, max-age=21600",
 		expectedContent:    "application/json",
 		expectedStatusCode: http.StatusOK,
