@@ -111,6 +111,7 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 		}
 
 		headers["X-Forwarded-For"] = []string{c.ClientIP()}
+		headers["X-Forwarded-Host"] = []string{c.Request.Host}
 		// if User-Agent is not forwarded using headersToSend, we set
 		// the KrakenD router User Agent value
 		if _, ok := headers["User-Agent"]; !ok {
