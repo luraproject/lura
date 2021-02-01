@@ -2,7 +2,7 @@
 package logging
 
 import (
-	"fmt"
+	"errors"
 	"io"
 	"io/ioutil"
 	"log"
@@ -35,8 +35,8 @@ const (
 
 var (
 	// ErrInvalidLogLevel is used when an invalid log level has been used.
-	ErrInvalidLogLevel = fmt.Errorf("invalid log level")
-	defaultLogger      = logger{Level: LEVEL_CRITICAL, Prefix: ""}
+	ErrInvalidLogLevel = errors.New("invalid log level")
+	defaultLogger      = logger{Level: LEVEL_CRITICAL, Logger: log.New(os.Stderr, "", log.LstdFlags)}
 	logLevels          = map[string]int{
 		"DEBUG":    LEVEL_DEBUG,
 		"INFO":     LEVEL_INFO,
@@ -50,17 +50,17 @@ var (
 
 // NewLogger creates and returns a Logger object
 func NewLogger(level string, out io.Writer, prefix string) (Logger, error) {
-	log.SetOutput(out)
 	l, ok := logLevels[strings.ToUpper(level)]
 	if !ok {
 		return defaultLogger, ErrInvalidLogLevel
 	}
-	return logger{Level: l, Prefix: prefix}, nil
+	return logger{Level: l, Prefix: prefix, Logger: log.New(out, "", log.LstdFlags)}, nil
 }
 
 type logger struct {
 	Level  int
 	Prefix string
+	Logger *log.Logger
 }
 
 // Debug logs a message using DEBUG as log level.
@@ -107,5 +107,5 @@ func (l logger) Fatal(v ...interface{}) {
 }
 
 func (l logger) prependLog(level string, v []interface{}) {
-	log.Println(append([]interface{}{l.Prefix, level}, v...)...)
+	l.Logger.Println(l.Prefix, level, v)
 }
