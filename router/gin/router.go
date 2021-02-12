@@ -5,6 +5,7 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 
@@ -58,17 +59,26 @@ func (rf factory) New() router.Router {
 
 // NewWithContext implements the factory interface
 func (rf factory) NewWithContext(ctx context.Context) router.Router {
-	return ginRouter{rf.cfg, ctx, rf.cfg.RunServer}
+	return ginRouter{
+		cfg:        rf.cfg,
+		ctx:        ctx,
+		runServerF: rf.cfg.RunServer,
+		mu:         new(sync.Mutex),
+	}
 }
 
 type ginRouter struct {
-	cfg       Config
-	ctx       context.Context
-	RunServer RunServerFunc
+	cfg        Config
+	ctx        context.Context
+	runServerF RunServerFunc
+	mu         *sync.Mutex
 }
 
 // Run implements the router interface
 func (r ginRouter) Run(cfg config.ServiceConfig) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	if !cfg.Debug {
 		gin.SetMode(gin.ReleaseMode)
 	} else {
@@ -81,8 +91,6 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 	r.cfg.Engine.RedirectFixedPath = true
 	r.cfg.Engine.HandleMethodNotAllowed = true
 
-	r.cfg.Engine.Use(r.cfg.Middlewares...)
-
 	if cfg.Debug {
 		r.cfg.Engine.Any("/__debug/*param", DebugHandler(r.cfg.Logger))
 	}
@@ -91,20 +99,23 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
 
-	r.registerKrakendEndpoints(cfg.Endpoints)
+	endpointGroup := r.cfg.Engine.Group("/")
+	endpointGroup.Use(r.cfg.Middlewares...)
+
+	r.registerKrakendEndpoints(endpointGroup, cfg.Endpoints)
 
 	r.cfg.Engine.NoRoute(func(c *gin.Context) {
 		c.Header(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 	})
 
-	if err := r.RunServer(r.ctx, cfg, r.cfg.Engine); err != nil {
+	if err := r.runServerF(r.ctx, cfg, r.cfg.Engine); err != nil {
 		r.cfg.Logger.Error(err.Error())
 	}
 
 	r.cfg.Logger.Info("Router execution ended")
 }
 
-func (r ginRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) {
+func (r ginRouter) registerKrakendEndpoints(rg *gin.RouterGroup, endpoints []*config.EndpointConfig) {
 	for _, c := range endpoints {
 		proxyStack, err := r.cfg.ProxyFactory.New(c)
 		if err != nil {
@@ -112,15 +123,15 @@ func (r ginRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) 
 			continue
 		}
 
-		r.registerKrakendEndpoint(c.Method, c, r.cfg.HandlerFactory(c, proxyStack), len(c.Backend))
+		r.registerKrakendEndpoint(rg, c.Method, c, r.cfg.HandlerFactory(c, proxyStack), len(c.Backend))
 	}
 }
 
-func (r ginRouter) registerKrakendEndpoint(method string, endpoint *config.EndpointConfig, handler gin.HandlerFunc, totBackends int) {
+func (r ginRouter) registerKrakendEndpoint(rg *gin.RouterGroup, method string, e *config.EndpointConfig, h gin.HandlerFunc, total int) {
 	method = strings.ToTitle(method)
-	path := endpoint.Endpoint
-	if method != http.MethodGet && totBackends > 1 {
-		if !router.IsValidSequentialEndpoint(endpoint) {
+	path := e.Endpoint
+	if method != http.MethodGet && total > 1 {
+		if !router.IsValidSequentialEndpoint(e) {
 			r.cfg.Logger.Error(method, " endpoints with sequential enabled is only the last one is allowed to be non GET! Ignoring", path)
 			return
 		}
@@ -128,15 +139,15 @@ func (r ginRouter) registerKrakendEndpoint(method string, endpoint *config.Endpo
 
 	switch method {
 	case http.MethodGet:
-		r.cfg.Engine.GET(path, handler)
+		rg.GET(path, h)
 	case http.MethodPost:
-		r.cfg.Engine.POST(path, handler)
+		rg.POST(path, h)
 	case http.MethodPut:
-		r.cfg.Engine.PUT(path, handler)
+		rg.PUT(path, h)
 	case http.MethodPatch:
-		r.cfg.Engine.PATCH(path, handler)
+		rg.PATCH(path, h)
 	case http.MethodDelete:
-		r.cfg.Engine.DELETE(path, handler)
+		rg.DELETE(path, h)
 	default:
 		r.cfg.Logger.Error("Unsupported method", method)
 	}
