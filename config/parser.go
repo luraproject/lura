@@ -198,7 +198,7 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 	if p.ExtraConfig != nil {
 		cfg.ExtraConfig = *p.ExtraConfig
 	}
-	endpoints := []*EndpointConfig{}
+	endpoints := make([]*EndpointConfig, 0, len(p.Endpoints))
 	for _, e := range p.Endpoints {
 		endpoints = append(endpoints, e.normalize())
 	}
@@ -245,7 +245,7 @@ func (p *parseableEndpointConfig) normalize() *EndpointConfig {
 	if p.ExtraConfig != nil {
 		e.ExtraConfig = *p.ExtraConfig
 	}
-	backends := []*Backend{}
+	backends := make([]*Backend, 0, len(p.Backend))
 	for _, b := range p.Backend {
 		backends = append(backends, b.normalize())
 	}

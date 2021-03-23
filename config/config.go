@@ -467,7 +467,7 @@ func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]
 }
 
 func fromSetToSortedSlice(set map[string]interface{}) []string {
-	res := []string{}
+	res := make([]string, 0, len(set))
 	for element := range set {
 		res = append(res, element)
 	}
