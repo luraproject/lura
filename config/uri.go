@@ -28,7 +28,7 @@ type URI int
 
 // CleanHosts applies the CleanHost method to every member of the received array of hosts
 func (u URI) CleanHosts(hosts []string) []string {
-	cleaned := []string{}
+	cleaned := make([]string, 0, len(hosts))
 	for i := range hosts {
 		cleaned = append(cleaned, u.CleanHost(hosts[i]))
 	}
