@@ -11,11 +11,11 @@ KrakenD is the fastest *API* *Gateway* solution in the market.
 
 It's also known as a *Backend* *For* *Frontend* as it sits between the client (frontend) and source servers (backends) offering a custom API that provides only the information that the UI needs. No coding required!
 
-*Agreggates* information from many sources into single endpoints.
+*Aggregates* information from many sources into single endpoints.
 
 *Manipulates* responses and allows you to group, wrap, rename, hide attributes and shrink responses.
 
-*Extends* your ecosystem as it supports a myriad of middelwares and plugins, such as OAuth or security layers.
+*Extends* your ecosystem as it supports a myriad of middlewares and plugins, such as OAuth or security layers.
 
 *Speaks* different encoding formats and protocols.
 
@@ -38,14 +38,14 @@ Typical scenarios:
 
 - *Open* *source*: the core of the KrakenD is an open sourced library that everyone can use, extend and modify. The project has several examples for the integration with other third party libs (gorilla, negroni, gin, etc)
 - *Free*: A sneak peak of the enterprise edition, with limitations in its usage.
-- Enterprise: The full version with all the KrakenD functionalitites.
+- Enterprise: The full version with all the KrakenD functionalities.
 - SaaS (coming soon): Cloud version without any infrastructure needed.
 
 * The KrakenD rules
 
 - Reactive is key (even failing fast is better than succeeding slow)
 - The simpler, the better
-- Everything is plugglable
+- Everything is pluggable
 - Each request must be processed in its own request-scoped context
 
 .image http://www.reactivemanifesto.org/images/reactive-traits.svg
@@ -56,7 +56,7 @@ KrakenD uses two different states: *building* and *working*.
 
 In the *building* stage, all the pipes are defined, with their tasks, helpers and generators. Each pipe is binded to an endpoint via their outter common interface, resulting in a HTTP handler function.
 
-*Building:* When the service is initially being prepared to serve the requests, prepares all the middelwares and defines the pipes. Each pipe is binded to an endpoint via their outter common interface, resulting in a HTTP handler function.
+*Building:* When the service is initially being prepared to serve the requests, prepares all the middlewares and defines the pipes. Each pipe is binded to an endpoint via their outter common interface, resulting in a HTTP handler function.
 Only when the configuration is parsed and the service being prepared.
 
 *Working:* The router maps every request to a HTTP handler function and triggers the pipe execution. As HTTP handler functions are built in the previous step, KrakenD doesn't penalize the performance depending on the number of endpoints or the possible cardinality of the URI requested by the users.
@@ -113,7 +113,7 @@ The KrakenD framework provides a default implementation of the proxy stack facto
 * Proxy Middlewares available
 
 - The `balancing` middleware uses some type of strategy for selecting a backend host to query.
-- The `concurrent` middleware improves the QoS by sending several concurrent requests to the next step of the chain and returning the first succesful response using a timeout for canceling the generated workload.
+- The `concurrent` middleware improves the QoS by sending several concurrent requests to the next step of the chain and returning the first successful response using a timeout for canceling the generated workload.
 - The `logging` middleware logs the received request and response and also the duration of the segment execution.
 - The `merging` middleware is a fork-and-join middleware. It is intended to split the process of the request into several concurrent processes, each one against a different backend, and to merge all the received responses from those created pipes into a single one. It applies a timeout, as the concurrent one does.
 - The `http` middleware completes the received proxy request by replacing the parameters extracted from the user request in the defined URLPattern.
@@ -154,9 +154,9 @@ The easiest way of extending a behaviour without using inheritance or complex ob
 	// exposing a proxy interface.
 	type Middleware func(next ...Proxy) Proxy
 
-This pattern is very usefull for adding orthogonal features like logging, load balancing, encoding and decoding, etc.
+This pattern is very useful for adding orthogonal features like logging, load balancing, encoding and decoding, etc.
 
-It also plays nice with the Single Responsiblity Principle, aka. Separation of Concerns, aka. Do one thing and do it well!
+It also plays nice with the Single Responsibility Principle, aka. Separation of Concerns, aka. Do one thing and do it well!
 
 * Decorator/middleware pattern
 
@@ -165,7 +165,7 @@ Stacking middlewares is as easy as
 	func (pf defaultFactory) newStack(backend *config.Backend) (p Proxy) {
 		// get the basic behaviour
 		p = pf.backendFactory(backend)
-		// add a load balancing startegy
+		// add a load balancing strategy
 		p = NewRoundRobinLoadBalancedMiddleware(backend)(p)
 		// add a concurrent strategy
 		if backend.ConcurrentCalls > 1 {
@@ -247,7 +247,7 @@ We're looking forward to improve this part even more with [[https://github.com/m
 
 Every user's request creates its own context so the KrakenD can cancel all the running tasks and go routines created for serving a response back to the user whenever it's required (pipe completed, timeout, custom events, etc).
 
-This strategy allows the KrakenD to just keep the required processes running, releasing all the resources as soon as posible. And the profiler loves it!
+This strategy allows the KrakenD to just keep the required processes running, releasing all the resources as soon as possible. And the profiler loves it!
 
 Contexts made the stdlib with go 1.7 and they already are key in applying reactive principles to the language, like managing subscriptions to concurrent data streams.
 
