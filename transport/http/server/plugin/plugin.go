@@ -3,6 +3,7 @@ package plugin
 import (
 	"context"
 	"fmt"
+	"github.com/devopsfaith/krakend/logging"
 	"net/http"
 	"plugin"
 	"strings"
@@ -20,10 +21,24 @@ func RegisterHandler(
 	serverRegister.Register(Namespace, name, handler)
 }
 
+func RegisterHandlerWithLogger(
+	name string,
+	handler func(context.Context, logging.Logger, map[string]interface{}, http.Handler) (http.Handler, error),
+) {
+	serverRegister.Register(Namespace, name, handler)
+}
+
 type Registerer interface {
 	RegisterHandlers(func(
 		name string,
 		handler func(context.Context, map[string]interface{}, http.Handler) (http.Handler, error),
+	))
+}
+
+type RegistererWithLogger interface {
+	RegisterHandlers(func(
+		name string,
+		handler func(context.Context, logging.Logger, map[string]interface{}, http.Handler) (http.Handler, error),
 	))
 }
 
@@ -32,19 +47,24 @@ type RegisterHandlerFunc func(
 	handler func(context.Context, map[string]interface{}, http.Handler) (http.Handler, error),
 )
 
+type RegisterHandlerWithLoggerFunc func(
+	name string,
+	handler func(context.Context, logging.Logger, map[string]interface{}, http.Handler) (http.Handler, error),
+)
+
 func Load(path, pattern string, rcf RegisterHandlerFunc) (int, error) {
 	plugins, err := krakendplugin.Scan(path, pattern)
 	if err != nil {
 		return 0, err
 	}
-	return load(plugins, rcf)
+	return load(plugins, rcf, RegisterHandlerWithLogger)
 }
 
-func load(plugins []string, rcf RegisterHandlerFunc) (int, error) {
+func load(plugins []string, rcf RegisterHandlerFunc, rclf RegisterHandlerWithLoggerFunc) (int, error) {
 	errors := []error{}
 	loadedPlugins := 0
 	for k, pluginName := range plugins {
-		if err := open(pluginName, rcf); err != nil {
+		if err := open(pluginName, rcf, rclf); err != nil {
 			errors = append(errors, fmt.Errorf("opening plugin %d (%s): %s", k, pluginName, err.Error()))
 			continue
 		}
@@ -57,7 +77,7 @@ func load(plugins []string, rcf RegisterHandlerFunc) (int, error) {
 	return loadedPlugins, nil
 }
 
-func open(pluginName string, rcf RegisterHandlerFunc) (err error) {
+func open(pluginName string, rcf RegisterHandlerFunc, rclf RegisterHandlerWithLoggerFunc) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			var ok bool
@@ -78,11 +98,15 @@ func open(pluginName string, rcf RegisterHandlerFunc) (err error) {
 	if err != nil {
 		return
 	}
-	registerer, ok := r.(Registerer)
-	if !ok {
+	registerer, registererOk := r.(Registerer)
+	registererWithLogger, registererWithLoggerOk := r.(RegistererWithLogger)
+	if registererOk {
+		registerer.RegisterHandlers(rcf)
+	} else if registererWithLoggerOk {
+		registererWithLogger.RegisterHandlers(rclf)
+	} else {
 		return fmt.Errorf("http-server-handler plugin loader: unknown type")
 	}
-	registerer.RegisterHandlers(rcf)
 	return
 }
 

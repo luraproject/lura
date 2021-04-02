@@ -57,13 +57,21 @@ func New(logger logging.Logger, next RunServer) RunServer {
 				return next(ctx, cfg, handler)
 			}
 
-			hf, ok := rawHf.(func(context.Context, map[string]interface{}, http.Handler) (http.Handler, error))
-			if !ok {
+			hf, hfOk := rawHf.(func(context.Context, map[string]interface{}, http.Handler) (http.Handler, error))
+			hfl, hflOk := rawHf.(func(context.Context, logging.Logger, map[string]interface{}, http.Handler) (http.Handler, error))
+
+			var handlerWrapper http.Handler
+			var err error
+
+			if hfOk {
+				handlerWrapper, err = hf(context.Background(), extra, handler)
+			} else if hflOk {
+				handlerWrapper, err = hfl(context.Background(), logger, extra, handler)
+			} else {
 				logger.Warning("http-server-handler: wrong plugin handler type:", name)
 				return next(ctx, cfg, handler)
 			}
 
-			handlerWrapper, err := hf(context.Background(), extra, handler)
 			if err != nil {
 				logger.Warning("http-server-handler: error getting the plugin handler:", err.Error())
 				return next(ctx, cfg, handler)
