@@ -53,7 +53,7 @@ func New(logger logging.Logger, next RunServer) RunServer {
 		for _, name := range fifo {
 			rawHf, ok := r.Get(name)
 			if !ok {
-				logger.Debug("http-server-handler: no plugin resgistered as", name)
+				logger.Debug("http-server-handler: no plugin registered as", name)
 				return next(ctx, cfg, handler)
 			}
 
