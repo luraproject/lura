@@ -47,13 +47,21 @@ func HTTPRequestExecutor(
 			return next(cfg)
 		}
 
-		hf, ok := rawHf.(func(context.Context, map[string]interface{}) (http.Handler, error))
-		if !ok {
+		hf, hfOk := rawHf.(func(context.Context, map[string]interface{}) (http.Handler, error))
+		hfl, hflOk := rawHf.(func(context.Context, logging.Logger, map[string]interface{}) (http.Handler, error))
+
+		var handler http.Handler
+		var err error
+
+		if hfOk {
+			handler, err = hf(context.Background(), extra)
+		} else if hflOk {
+			handler, err = hfl(context.Background(), logger, extra)
+		} else {
 			logger.Warning("http-request-executor: wrong plugin handler type:", name)
 			return next(cfg)
 		}
 
-		handler, err := hf(context.Background(), extra)
 		if err != nil {
 			logger.Warning("http-request-executor: error getting the plugin handler:", err.Error())
 			return next(cfg)
