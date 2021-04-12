@@ -21,10 +21,11 @@ const NEGOTIATE = "negotiate"
 var (
 	mutex          = &sync.RWMutex{}
 	renderRegister = map[string]Render{
-		NEGOTIATE:       negotiatedRender,
-		encoding.STRING: stringRender,
-		encoding.JSON:   jsonRender,
-		encoding.NOOP:   noopRender,
+		NEGOTIATE:         negotiatedRender,
+		encoding.STRING:   stringRender,
+		encoding.JSON:     jsonRender,
+		encoding.NOOP:     noopRender,
+		"json-collection": jsonCollectionRender,
 	}
 )
 
@@ -96,6 +97,20 @@ func jsonRender(c *gin.Context, response *proxy.Response) {
 		return
 	}
 	c.JSON(status, response.Data)
+}
+
+func jsonCollectionRender(c *gin.Context, response *proxy.Response) {
+	status := c.Writer.Status()
+	if response == nil {
+		c.JSON(status, []struct{}{})
+		return
+	}
+	col, ok := response.Data["collection"]
+	if !ok {
+		c.JSON(status, []struct{}{})
+		return
+	}
+	c.JSON(status, col)
 }
 
 func xmlRender(c *gin.Context, response *proxy.Response) {
