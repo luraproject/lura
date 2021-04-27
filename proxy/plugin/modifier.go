@@ -76,23 +76,13 @@ type Registerer interface {
 	))
 }
 
-// RegisterModifierFunc type is an adapter to allow the use of ordinary functions as Registerer
+// RegisterModifierFunc type is the function passed to the loaded Registerers
 type RegisterModifierFunc func(
 	name string,
 	modifierFactory func(map[string]interface{}) func(interface{}) (interface{}, error),
 	appliesToRequest bool,
 	appliesToResponse bool,
 )
-
-// RegisterModifiers calls r(f)
-func (r RegisterModifierFunc) RegisterModifiers(f func(
-	string,
-	func(map[string]interface{}) func(interface{}) (interface{}, error),
-	bool,
-	bool,
-)) {
-	r(f)
-}
 
 // LoadModifiers scans the given path using the pattern and registers all the found modifier plugins into the rmf
 func LoadModifiers(path, pattern string, rmf RegisterModifierFunc) (int, error) {
