@@ -21,9 +21,10 @@ const NEGOTIATE = "negotiate"
 var (
 	mutex          = &sync.RWMutex{}
 	renderRegister = map[string]Render{
-		encoding.STRING: stringRender,
-		encoding.JSON:   jsonRender,
-		encoding.NOOP:   noopRender,
+		encoding.STRING:   stringRender,
+		encoding.JSON:     jsonRender,
+		encoding.NOOP:     noopRender,
+		"json-collection": jsonCollectionRender,
 	}
 )
 
@@ -57,7 +58,10 @@ func getWithFallback(key string, fallback Render) Render {
 	return r
 }
 
-var emptyResponse = []byte("{}")
+var (
+	emptyResponse   = []byte("{}")
+	emptyCollection = []byte("[]")
+)
 
 func jsonRender(w http.ResponseWriter, response *proxy.Response) {
 	w.Header().Set("Content-Type", "application/json")
@@ -67,6 +71,26 @@ func jsonRender(w http.ResponseWriter, response *proxy.Response) {
 	}
 
 	js, err := json.Marshal(response.Data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(js)
+}
+
+func jsonCollectionRender(w http.ResponseWriter, response *proxy.Response) {
+	w.Header().Set("Content-Type", "application/json")
+	if response == nil {
+		w.Write(emptyCollection)
+		return
+	}
+	col, ok := response.Data["collection"]
+	if !ok {
+		w.Write(emptyCollection)
+		return
+	}
+
+	js, err := json.Marshal(col)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
