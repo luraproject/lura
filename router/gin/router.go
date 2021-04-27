@@ -1,4 +1,5 @@
 // Package gin provides some basic implementations for building routers based on gin-gonic/gin
+// SPDX-License-Identifier: Apache-2.0
 package gin
 
 import (

@@ -1,4 +1,5 @@
 //Package proxy provides proxy and proxy middleware interfaces and implementations.
+// SPDX-License-Identifier: Apache-2.0
 package proxy
 
 import (
