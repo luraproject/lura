@@ -23,10 +23,12 @@ var modifierRegister = register.New()
 // ModifierFactory is a function that, given a config passed as a map, returns a modifier
 type ModifierFactory func(map[string]interface{}) func(interface{}) (interface{}, error)
 
+// GetRequestModifier returns a ModifierFactory from the request namespace by name
 func GetRequestModifier(name string) (ModifierFactory, bool) {
 	return getModifier(requestNamespace, name)
 }
 
+// GetResponseModifier returns a ModifierFactory from the response namespace by name
 func GetResponseModifier(name string) (ModifierFactory, bool) {
 	return getModifier(responseNamespace, name)
 }
@@ -47,6 +49,7 @@ func getModifier(namespace, name string) (ModifierFactory, bool) {
 	return ModifierFactory(res), ok
 }
 
+// RegisterModifier registers the injected modifier factory with the given name at the selected namespace
 func RegisterModifier(
 	name string,
 	modifierFactory func(map[string]interface{}) func(interface{}) (interface{}, error),
@@ -63,6 +66,7 @@ func RegisterModifier(
 	}
 }
 
+// Registerer defines the interface for the plugins to expose in order to be able to be loaded/registered
 type Registerer interface {
 	RegisterModifiers(func(
 		name string,
@@ -72,6 +76,7 @@ type Registerer interface {
 	))
 }
 
+// RegisterModifierFunc type is an adapter to allow the use of ordinary functions as Registerer
 type RegisterModifierFunc func(
 	name string,
 	modifierFactory func(map[string]interface{}) func(interface{}) (interface{}, error),
@@ -79,6 +84,17 @@ type RegisterModifierFunc func(
 	appliesToResponse bool,
 )
 
+// RegisterModifiers calls r(f)
+func (r RegisterModifierFunc) RegisterModifiers(f func(
+	string,
+	func(map[string]interface{}) func(interface{}) (interface{}, error),
+	bool,
+	bool,
+)) {
+	r(f)
+}
+
+// LoadModifiers scans the given path using the pattern and registers all the found modifier plugins into the rmf
 func LoadModifiers(path, pattern string, rmf RegisterModifierFunc) (int, error) {
 	plugins, err := krakendplugin.Scan(path, pattern)
 	if err != nil {

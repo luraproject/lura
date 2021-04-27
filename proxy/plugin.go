@@ -9,6 +9,10 @@ import (
 	"github.com/devopsfaith/krakend/proxy/plugin"
 )
 
+// NewPluginMiddleware returns an endpoint middleware wrapped (if required) with the plugin middleware.
+// The plugin middleware will try to load all the required plugins from the register and execute them in order.
+// RequestModifiers are executed before passing the request to the next middlware. ResponseModifiers are executed
+// once the response is returned from the next middleware.
 func NewPluginMiddleware(endpoint *config.EndpointConfig) Middleware {
 	cfg, ok := endpoint.ExtraConfig[plugin.Namespace].(map[string]interface{})
 
@@ -19,6 +23,10 @@ func NewPluginMiddleware(endpoint *config.EndpointConfig) Middleware {
 	return newPluginMiddleware(cfg)
 }
 
+// NewBackendPluginMiddleware returns a backend middleware wrapped (if required) with the plugin middleware.
+// The plugin middleware will try to load all the required plugins from the register and execute them in order.
+// RequestModifiers are executed before passing the request to the next middlware. ResponseModifiers are executed
+// once the response is returned from the next middleware.
 func NewBackendPluginMiddleware(remote *config.Backend) Middleware {
 	cfg, ok := remote.ExtraConfig[plugin.Namespace].(map[string]interface{})
 
@@ -174,6 +182,7 @@ func executeResponseModifiers(respModifiers []func(interface{}) (interface{}, er
 	return r, nil
 }
 
+// RequestWrapper is an interface for passing proxy request between the krakend pipe and the loaded plugins
 type RequestWrapper interface {
 	Params() map[string]string
 	Headers() map[string][]string
@@ -184,11 +193,13 @@ type RequestWrapper interface {
 	Path() string
 }
 
+// ResponseWrapper is an interface for passing proxy response metadata between the krakend pipe and the loaded plugins
 type ResponseMetadataWrapper interface {
 	Headers() map[string][]string
 	StatusCode() int
 }
 
+// ResponseWrapper is an interface for passing proxy response between the krakend pipe and the loaded plugins
 type ResponseWrapper interface {
 	Data() map[string]interface{}
 	Io() io.Reader
