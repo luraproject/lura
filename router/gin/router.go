@@ -104,10 +104,6 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 
 	r.registerKrakendEndpoints(endpointGroup, cfg.Endpoints)
 
-	r.cfg.Engine.NoRoute(func(c *gin.Context) {
-		c.Header(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
-	})
-
 	if err := r.runServerF(r.ctx, cfg, r.cfg.Engine); err != nil {
 		r.cfg.Logger.Error(err.Error())
 	}
