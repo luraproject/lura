@@ -1,4 +1,5 @@
 // Package sd defines some interfaces and implementations for service discovery
+// SPDX-License-Identifier: Apache-2.0
 package sd
 
 import "github.com/devopsfaith/krakend/config"
