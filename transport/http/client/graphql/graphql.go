@@ -64,6 +64,9 @@ func GetOptions(cfg config.ExtraConfig) (*Options, error) {
 		return nil, err
 	}
 
+	opt.Method = OperationMethod(strings.ToUpper(string(opt.Method)))
+	opt.Type = OperationType(strings.ToLower(string(opt.Type)))
+
 	if opt.Method != MethodGet && opt.Method != MethodPost {
 		opt.Method = MethodPost
 	}

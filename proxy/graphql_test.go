@@ -70,8 +70,9 @@ func TestNewGraphQLMiddleware_query(t *testing.T) {
 	mw := NewGraphQLMiddleware(&config.Backend{
 		ExtraConfig: config.ExtraConfig{
 			graphql.Namespace: map[string]interface{}{
-				"type":  "query",
-				"query": query,
+				"method": "get",
+				"type":   "query",
+				"query":  query,
 				"variables": map[string]interface{}{
 					"name":  "{foo}",
 					"dob":   "{bar}",
@@ -81,19 +82,29 @@ func TestNewGraphQLMiddleware_query(t *testing.T) {
 		},
 	})
 
-	expectedResponse := &Response{
-		Data: map[string]interface{}{"foo": "bar"},
-	}
+	expectedResponse := &Response{Data: map[string]interface{}{"foo": "bar"}}
+
 	prxy := mw(func(ctx context.Context, req *Request) (*Response, error) {
-		b, err := ioutil.ReadAll(req.Body)
-		req.Body.Close()
-		if err != nil {
-			return nil, err
+		request := graphql.GraphQLRequest{
+			Query:         req.Query.Get("query"),
+			OperationName: req.Query.Get("operationName"),
+			Variables:     map[string]interface{}{},
 		}
-		var request graphql.GraphQLRequest
-		if err := json.Unmarshal(b, &request); err != nil {
-			return nil, err
+		json.Unmarshal([]byte(req.Query.Get("variables")), &request.Variables)
+
+		if request.Query != query {
+			t.Errorf("unexpected query: %s", request.Query)
 		}
+		if len(request.Variables) != 3 {
+			t.Errorf("unexpected variables: %v", request.Variables)
+		}
+		if v, ok := request.Variables["name"].(string); !ok || v != "foo" {
+			t.Errorf("unexpected var name: %v", request.Variables["name"])
+		}
+		if v, ok := request.Variables["dob"].(string); !ok || v != "bar" {
+			t.Errorf("unexpected var dob: %v", request.Variables["dob"])
+		}
+
 		return expectedResponse, nil
 	})
 

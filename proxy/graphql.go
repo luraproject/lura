@@ -69,10 +69,20 @@ func NewGraphQLMiddleware(remote *config.Backend) Middleware {
 				if err != nil {
 					return nil, err
 				}
+
 				req.Body = ioutil.NopCloser(bytes.NewReader([]byte{}))
 				req.Method = string(opt.Method)
 				req.Headers["Content-Length"] = []string{"0"}
-				req.Query = q
+				if req.Query != nil {
+					for k, vs := range q {
+						for _, v := range vs {
+							req.Query.Add(k, v)
+						}
+					}
+				} else {
+					req.Query = q
+				}
+
 				return next[0](ctx, req)
 			}
 		}
@@ -82,9 +92,11 @@ func NewGraphQLMiddleware(remote *config.Backend) Middleware {
 			if err != nil {
 				return nil, err
 			}
+
 			req.Body = ioutil.NopCloser(bytes.NewReader(b))
 			req.Method = string(opt.Method)
 			req.Headers["Content-Length"] = []string{strconv.Itoa(len(string(b)))}
+
 			return next[0](ctx, req)
 		}
 	}
