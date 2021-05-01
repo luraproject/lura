@@ -2,16 +2,15 @@ package graphql
 
 import (
 	"fmt"
-	"testing"
 
 	"github.com/devopsfaith/krakend/config"
 )
 
-func TestNewGraphQLParamExtractor(t *testing.T) {
+func ExampleNewGraphQLParamExtractor() {
 	cfg, err := GetOptions(config.ExtraConfig{
 		Namespace: map[string]interface{}{
 			"type":  OperationQuery,
-			"query": "{\n  find_follower(func: uid(\"0x3\")) {\n    name \n    }\n  }\n}",
+			"query": "{\n  find_follower(func: uid(\"0x3\")) {\n    name \n    }\n  }\n",
 			"variables": map[string]interface{}{
 				"foo": "{foo}",
 				"bar": "1234abc",
@@ -19,33 +18,21 @@ func TestNewGraphQLParamExtractor(t *testing.T) {
 		},
 	})
 	if err != nil {
-		t.Error(err)
+		fmt.Println(err)
 		return
 	}
 	extractor := New(*cfg)
 
-	body, err := extractor.ParamExtractor(map[string]string{
+	body, err := extractor.BodyFromParams(map[string]string{
 		"Foo": "foobar",
 	})
 	if err != nil {
-		t.Error(err)
+		fmt.Println(err)
 		return
 	}
 
 	fmt.Println(string(body))
+
+	// output:
+	// {"query":"{\n  find_follower(func: uid(\"0x3\")) {\n    name \n    }\n  }\n","variables":{"bar":"1234abc","foo":"foobar"}}
 }
-
-/*
-
-/query/foo/{foo}
-
-
-{
-	"query": "{\n  find_follower(func: uid(\"0x3\")) {\n    name \n    }\n  }\n}",
-	"variables": {
-		"foo": "{foo}",
-		"bar": "1234abc",
-	}
-}
-
-*/

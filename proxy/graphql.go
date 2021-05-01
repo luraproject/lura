@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io/ioutil"
-	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -27,22 +27,31 @@ func NewGraphQLMiddleware(remote *config.Backend) Middleware {
 
 	extractor := graphql.New(*opt)
 	var generateBodyFn func(*Request) ([]byte, error)
+	var generateQueryFn func(*Request) (url.Values, error)
 
 	switch opt.Type {
 	case graphql.OperationMutation:
-		f := extractor.BodyExtractor
 		generateBodyFn = func(req *Request) ([]byte, error) {
 			if req.Body == nil {
-				return f(strings.NewReader(""))
+				return extractor.BodyFromBody(strings.NewReader(""))
 			}
 			defer req.Body.Close()
-			return f(req.Body)
+			return extractor.BodyFromBody(req.Body)
+		}
+		generateQueryFn = func(req *Request) (url.Values, error) {
+			if req.Body == nil {
+				return extractor.QueryFromBody(strings.NewReader(""))
+			}
+			defer req.Body.Close()
+			return extractor.QueryFromBody(req.Body)
 		}
 
 	case graphql.OperationQuery:
-		f := extractor.ParamExtractor
 		generateBodyFn = func(req *Request) ([]byte, error) {
-			return f(req.Params)
+			return extractor.BodyFromParams(req.Params)
+		}
+		generateQueryFn = func(req *Request) (url.Values, error) {
+			return extractor.QueryFromParams(req.Params)
 		}
 
 	default:
@@ -53,14 +62,29 @@ func NewGraphQLMiddleware(remote *config.Backend) Middleware {
 		if len(next) > 1 {
 			panic(ErrTooManyProxies)
 		}
+
+		if opt.Method == graphql.MethodGet {
+			return func(ctx context.Context, req *Request) (*Response, error) {
+				q, err := generateQueryFn(req)
+				if err != nil {
+					return nil, err
+				}
+				req.Body = ioutil.NopCloser(bytes.NewReader([]byte{}))
+				req.Method = string(opt.Method)
+				req.Headers["Content-Length"] = []string{"0"}
+				req.Query = q
+				return next[0](ctx, req)
+			}
+		}
+
 		return func(ctx context.Context, req *Request) (*Response, error) {
 			b, err := generateBodyFn(req)
 			if err != nil {
 				return nil, err
 			}
 			req.Body = ioutil.NopCloser(bytes.NewReader(b))
-			req.Method = http.MethodPost
-			req.Headers["Content-Length"] = []string{strconv.Itoa(len(b))}
+			req.Method = string(opt.Method)
+			req.Headers["Content-Length"] = []string{strconv.Itoa(len(string(b)))}
 			return next[0](ctx, req)
 		}
 	}
