@@ -68,6 +68,7 @@ func NewHTTPProxyDetailed(remote *config.Backend, re client.HTTPRequestExecutor,
 		if requestToBakend.Body != nil {
 			requestToBakend.Body.Close()
 		}
+
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
