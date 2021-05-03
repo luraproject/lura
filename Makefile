@@ -8,7 +8,10 @@ all: test build
 test:
 	go generate ./...
 	go test -cover -race ./...
-	go test -tags integration ./test
+	go build -buildmode=plugin -o ./transport/http/client/plugin/tests/krakend-client-example.so ./transport/http/client/plugin/tests
+	# go build -buildmode=plugin -o ./transport/http/server/plugin/tests/krakend-server-example.so ./transport/http/server/plugin/tests
+	go build -buildmode=plugin -o ./proxy/plugin/tests/krakend-client-example.so ./proxy/plugin/tests
+	go test -tags integration ./...
 
 benchmark:
 	@mkdir -p bench_res

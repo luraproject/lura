@@ -7,6 +7,7 @@ import (
 	"plugin"
 	"strings"
 
+	"github.com/devopsfaith/krakend/logging"
 	krakendplugin "github.com/devopsfaith/krakend/plugin"
 	"github.com/devopsfaith/krakend/register"
 )
@@ -27,6 +28,10 @@ type Registerer interface {
 	))
 }
 
+type LoggerRegisterer interface {
+	RegisterLogger(interface{})
+}
+
 type RegisterClientFunc func(
 	name string,
 	handler func(context.Context, map[string]interface{}) (http.Handler, error),
@@ -37,14 +42,22 @@ func Load(path, pattern string, rcf RegisterClientFunc) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	return load(plugins, rcf)
+	return load(plugins, rcf, nil)
 }
 
-func load(plugins []string, rcf RegisterClientFunc) (int, error) {
+func LoadWithLogger(path, pattern string, rcf RegisterClientFunc, logger logging.Logger) (int, error) {
+	plugins, err := krakendplugin.Scan(path, pattern)
+	if err != nil {
+		return 0, err
+	}
+	return load(plugins, rcf, logger)
+}
+
+func load(plugins []string, rcf RegisterClientFunc, logger logging.Logger) (int, error) {
 	errors := []error{}
 	loadedPlugins := 0
 	for k, pluginName := range plugins {
-		if err := open(pluginName, rcf); err != nil {
+		if err := open(pluginName, rcf, logger); err != nil {
 			errors = append(errors, fmt.Errorf("opening plugin %d (%s): %s", k, pluginName, err.Error()))
 			continue
 		}
@@ -57,7 +70,7 @@ func load(plugins []string, rcf RegisterClientFunc) (int, error) {
 	return loadedPlugins, nil
 }
 
-func open(pluginName string, rcf RegisterClientFunc) (err error) {
+func open(pluginName string, rcf RegisterClientFunc, logger logging.Logger) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			var ok bool
@@ -82,6 +95,13 @@ func open(pluginName string, rcf RegisterClientFunc) (err error) {
 	if !ok {
 		return fmt.Errorf("http-request-executor plugin loader: unknown type")
 	}
+
+	if logger != nil {
+		if lr, ok := r.(LoggerRegisterer); ok {
+			lr.RegisterLogger(logger)
+		}
+	}
+
 	registerer.RegisterClients(rcf)
 	return
 }
