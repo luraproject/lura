@@ -82,6 +82,11 @@ func TestDefaultFactory_ok(t *testing.T) {
 				},
 			},
 		},
+		ExtraConfig: map[string]interface{}{
+			Namespace: map[string]interface{}{
+				"auto_options": true,
+			},
+		},
 	}
 
 	go func() { r.Run(serviceCfg) }()
@@ -286,9 +291,6 @@ func checkResponseIs404(t *testing.T, req *http.Request) {
 	content := string(body)
 	if resp.Header.Get("Cache-Control") != "" {
 		t.Error(req.URL.String(), "Cache-Control error:", resp.Header.Get("Cache-Control"))
-	}
-	if resp.Header.Get(router.CompleteResponseHeaderName) != router.HeaderIncompleteResponseValue {
-		t.Error(req.URL.String(), router.CompleteResponseHeaderName, "error:", resp.Header.Get(router.CompleteResponseHeaderName))
 	}
 	if resp.Header.Get("Content-Type") != "text/plain" {
 		t.Error(req.URL.String(), "Content-Type error:", resp.Header.Get("Content-Type"))

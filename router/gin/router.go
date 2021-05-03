@@ -17,6 +17,8 @@ import (
 	"github.com/devopsfaith/krakend/router"
 )
 
+const Namespace = "github_com/devopsfaith/krakend/router/gin"
+
 // RunServerFunc is a func that will run the http Server with the given params.
 type RunServerFunc func(context.Context, config.ServiceConfig, http.Handler) error
 
@@ -108,7 +110,11 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 
 	r.registerKrakendEndpoints(endpointGroup, cfg.Endpoints)
 
-	r.registerOptionEndpoints(endpointGroup)
+	if opt, ok := cfg.ExtraConfig[Namespace].(map[string]interface{}); ok {
+		if enabled, ok := opt["auto_options"].(bool); ok && enabled {
+			r.registerOptionEndpoints(endpointGroup)
+		}
+	}
 
 	if err := r.runServerF(r.ctx, cfg, r.cfg.Engine); err != nil {
 		r.cfg.Logger.Error(err.Error())
