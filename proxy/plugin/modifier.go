@@ -5,6 +5,7 @@ import (
 	"plugin"
 	"strings"
 
+	"github.com/devopsfaith/krakend/logging"
 	krakendplugin "github.com/devopsfaith/krakend/plugin"
 	"github.com/devopsfaith/krakend/register"
 )
@@ -76,6 +77,10 @@ type Registerer interface {
 	))
 }
 
+type LoggerRegisterer interface {
+	RegisterLogger(interface{})
+}
+
 // RegisterModifierFunc type is the function passed to the loaded Registerers
 type RegisterModifierFunc func(
 	name string,
@@ -90,14 +95,23 @@ func LoadModifiers(path, pattern string, rmf RegisterModifierFunc) (int, error) 
 	if err != nil {
 		return 0, err
 	}
-	return load(plugins, rmf)
+	return load(plugins, rmf, nil)
 }
 
-func load(plugins []string, rmf RegisterModifierFunc) (int, error) {
+// LoadModifiersWithLogger scans the given path using the pattern and registers all the found modifier plugins into the rmf
+func LoadModifiersWithLogger(path, pattern string, rmf RegisterModifierFunc, logger logging.Logger) (int, error) {
+	plugins, err := krakendplugin.Scan(path, pattern)
+	if err != nil {
+		return 0, err
+	}
+	return load(plugins, rmf, logger)
+}
+
+func load(plugins []string, rmf RegisterModifierFunc, logger logging.Logger) (int, error) {
 	errors := []error{}
 	loadedPlugins := 0
 	for k, pluginName := range plugins {
-		if err := open(pluginName, rmf); err != nil {
+		if err := open(pluginName, rmf, logger); err != nil {
 			errors = append(errors, fmt.Errorf("opening plugin %d (%s): %s", k, pluginName, err.Error()))
 			continue
 		}
@@ -110,7 +124,7 @@ func load(plugins []string, rmf RegisterModifierFunc) (int, error) {
 	return loadedPlugins, nil
 }
 
-func open(pluginName string, rmf RegisterModifierFunc) (err error) {
+func open(pluginName string, rmf RegisterModifierFunc, logger logging.Logger) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			var ok bool
@@ -135,6 +149,13 @@ func open(pluginName string, rmf RegisterModifierFunc) (err error) {
 	if !ok {
 		return fmt.Errorf("modifier plugin loader: unknown type")
 	}
+
+	if logger != nil {
+		if lr, ok := r.(LoggerRegisterer); ok {
+			lr.RegisterLogger(logger)
+		}
+	}
+
 	registerer.RegisterModifiers(rmf)
 	return
 }
