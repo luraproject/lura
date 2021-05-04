@@ -9,6 +9,7 @@ Decode decodes HTTP responses:
 	err := JSONDecoder(resp.Body, &data)
 
 */
+// SPDX-License-Identifier: Apache-2.0
 package encoding
 
 import "io"
