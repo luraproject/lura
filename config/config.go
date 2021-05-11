@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/devopsfaith/krakend/encoding"
+	"github.com/luraproject/lura/encoding"
 )
 
 const (

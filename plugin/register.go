@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/devopsfaith/krakend/encoding"
-	"github.com/devopsfaith/krakend/register"
-	"github.com/devopsfaith/krakend/sd"
+	"github.com/luraproject/lura/encoding"
+	"github.com/luraproject/lura/register"
+	"github.com/luraproject/lura/sd"
 )
 
 // REGISTRABLE_VAR is the name to lookup after loading the plugin for the module registering

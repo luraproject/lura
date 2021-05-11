@@ -8,7 +8,7 @@ import (
 	"plugin"
 	"strings"
 
-	"github.com/devopsfaith/krakend/config"
+	"github.com/luraproject/lura/config"
 )
 
 // Plugin is the interface of the loaded plugins

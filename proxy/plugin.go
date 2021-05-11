@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/url"
 
-	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/proxy/plugin"
+	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/proxy/plugin"
 )
 
 // NewPluginMiddleware returns an endpoint middleware wrapped (if required) with the plugin middleware.

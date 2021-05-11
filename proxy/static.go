@@ -4,7 +4,7 @@ package proxy
 import (
 	"context"
 
-	"github.com/devopsfaith/krakend/config"
+	"github.com/luraproject/lura/config"
 )
 
 // NewStaticMiddleware creates proxy middleware for adding static values to the processed responses
@@ -98,8 +98,10 @@ func getStaticMiddlewareCfg(extra config.ExtraConfig) (staticConfig, bool) {
 	return cfg, true
 }
 
-func staticAlwaysMatch(_ *Response, _ error) bool       { return true }
-func staticIfSuccessMatch(_ *Response, err error) bool  { return err == nil }
-func staticIfErroredMatch(_ *Response, err error) bool  { return err != nil }
-func staticIfCompleteMatch(r *Response, err error) bool { return err == nil && r != nil && r.IsComplete }
+func staticAlwaysMatch(_ *Response, _ error) bool      { return true }
+func staticIfSuccessMatch(_ *Response, err error) bool { return err == nil }
+func staticIfErroredMatch(_ *Response, err error) bool { return err != nil }
+func staticIfCompleteMatch(r *Response, err error) bool {
+	return err == nil && r != nil && r.IsComplete
+}
 func staticIfIncompleteMatch(r *Response, _ error) bool { return r == nil || !r.IsComplete }

@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/sd"
+	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/sd"
 )
 
 // NewLoadBalancedMiddleware creates proxy middleware adding the most perfomant balancer

@@ -5,7 +5,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/devopsfaith/krakend/config"
+	"github.com/luraproject/lura/config"
 )
 
 func BenchmarkNewRequestBuilderMiddleware(b *testing.B) {
