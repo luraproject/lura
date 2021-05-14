@@ -1,6 +1,6 @@
 # Overview
 
-## The KrakenD rules
+## The Lura rules
 
 * [Reactive is key](http://www.reactivemanifesto.org/)
 * Reactive is key (yes, it is very very important)
@@ -11,7 +11,7 @@
 
 ## The big picture
 
-The KrakenD framework is composed of a set of packages designed as building blocks for creating pipes and processors between an exposed endpoint and one or several API resources served by your backends.
+The Lura framework is composed of a set of packages designed as building blocks for creating pipes and processors between an exposed endpoint and one or several API resources served by your backends.
 
 The most important packages are:
 
@@ -31,7 +31,7 @@ The `config` package also defines an interface for a file config parser and a pa
 
 ## The `router` package
 
-The `router` package contains an interface and several implementations for the KrakenD router layer using the `mux` router from the `net/http` and the `httprouter` wrapped in the `gin` framework.
+The `router` package contains an interface and several implementations for the Lura router layer using the `mux` router from the `net/http` and the `httprouter` wrapped in the `gin` framework.
 
 The router layer is responsible for setting up the HTTP(S) services, binding the endpoints defined at the `ServiceConfig` struct and transforming the http request into proxy requests before delegating the task to the inner layer (proxy). Once the internal proxy layer returns a proxy response, the router layer converts it into a proper HTTP response and sends it to the user.
 
@@ -39,7 +39,7 @@ This layer can be easily extended in order to use any HTTP router, framework or 
 
 ## The `proxy` package
 
-The `proxy` package is where the most part of the KrakenD components and features are placed. It defines two important interfaces, designed to be stacked:
+The `proxy` package is where the most part of the Lura components and features are placed. It defines two important interfaces, designed to be stacked:
 
 * *Proxy* is a function that converts a given context and request into a response.
 * *Middleware* is a function that accepts one or more proxies and returns a single proxy wrapping them.
@@ -48,7 +48,7 @@ This layer transforms the request received from the outter layer (router) into a
 
 Middlewares generates custom proxies that are chained depending on the workflow defined in the configuration until each possible branch ends in a transport-related proxy. Every one of these generated proxies is able to transform the input or even clone it several times and pass it or them to the next element in the chain. Finally, they can also modify the received response or responses adding all kinds of features to the generated pipe.
 
-The KrakenD framework provides a default implementation of the proxy stack factory.
+The Lura framework provides a default implementation of the proxy stack factory.
 
 ### Middlewares available
 
