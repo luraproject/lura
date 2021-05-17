@@ -284,6 +284,10 @@ var (
 
 // Hash returns the sha 256 hash of the configuration in a standard base64 encoded string
 func (s *ServiceConfig) Hash() (string, error) {
+	var name string
+	name, s.Name = s.Name, ""
+	defer func() { s.Name = name }()
+
 	b, err := json.Marshal(s)
 	if err != nil {
 		return "", err
