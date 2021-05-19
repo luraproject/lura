@@ -17,7 +17,7 @@ Consumers of REST API content (specially in microservices) often query backend s
 
 Lura is an **API Gateway** builder and proxy generator that sits between the client and all the source servers, adding a new layer that removes all the complexity to the clients, providing them only the information that the UI needs. Lura acts as an **aggregator** of many sources into single endpoints and allows you to group, wrap, transform and shrink responses. Additionally it supports a myriad of middlewares and plugins that allow you to extend the functionality, such as adding Oauth authorization or security layers.
 
-Lura not only supports HTTP(S), but because it is a set of generic libraries you can build all type of API Gateways and proxies, including for instance, a RPC gateway.
+Lura not only supports HTTP(S), but because it is a set of generic libraries you can build all type of API Gateways and proxies, including for instance, an RPC gateway.
 
 ### Practical Example
 
@@ -44,17 +44,17 @@ Visit the [Lura Project website](https://luraproject.org) for more information.
 
 ## What's in this repository?
 
-The source code on which the [Lura project](https://luraproject.org) framework. It is designed to work with your own middleware and extend the functionality by using small, independent, reusable components following the Unix philosophy.
+The source code for the [Lura project](https://luraproject.org) framework. It is designed to work with your own middleware and extend the functionality by using small, independent, reusable components following the Unix philosophy.
 
-Use this repository if want to **build from source your API Gateway** or if you want to **reuse the components in another application**.
+Use this repository if you want to **build from source your API Gateway** or if you want to **reuse the components in another application**.
 
 If you need a fully functional API Gateway you can [download the KrakenD binary for your architecture](http://www.krakend.io/download) or [build it yourself](https://github.com/devopsfaith/krakend-ce).
 
 
 ## Library Usage
-The Lura project is presented as a **go library** that you can include in your own go application to build a powerful proxy or API gateway. In order to get you started several examples of implementations are included in the `examples` folder.
+The Lura project is presented as a **Go library** that you can include in your own Go application to build a powerful proxy or API gateway. In order to get you started several examples of implementations are included in the `examples` folder.
 
-Of course, you will need [golang installed](https://golang.org/doc/install) in your system to compile the code.
+Of course, you will need [Go installed](https://golang.org/doc/install) in your system to compile the code.
 
 A ready to use example:
 
