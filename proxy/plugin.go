@@ -183,7 +183,7 @@ func executeResponseModifiers(respModifiers []func(interface{}) (interface{}, er
 	return r, nil
 }
 
-// RequestWrapper is an interface for passing proxy request between the krakend pipe and the loaded plugins
+// RequestWrapper is an interface for passing proxy request between the lura pipe and the loaded plugins
 type RequestWrapper interface {
 	Params() map[string]string
 	Headers() map[string][]string
@@ -194,13 +194,13 @@ type RequestWrapper interface {
 	Path() string
 }
 
-// ResponseWrapper is an interface for passing proxy response metadata between the krakend pipe and the loaded plugins
+// ResponseWrapper is an interface for passing proxy response metadata between the lura pipe and the loaded plugins
 type ResponseMetadataWrapper interface {
 	Headers() map[string][]string
 	StatusCode() int
 }
 
-// ResponseWrapper is an interface for passing proxy response between the krakend pipe and the loaded plugins
+// ResponseWrapper is an interface for passing proxy response between the lura pipe and the loaded plugins
 type ResponseWrapper interface {
 	Data() map[string]interface{}
 	Io() io.Reader

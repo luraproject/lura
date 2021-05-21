@@ -43,7 +43,7 @@ type gorillaEngine struct {
 	r *gorilla.Router
 }
 
-// Handle implements the mux.Engine interface from the krakend router package
+// Handle implements the mux.Engine interface from the lura router package
 func (g gorillaEngine) Handle(pattern, method string, handler http.Handler) {
 	g.r.Handle(pattern, handler).Methods(method)
 }

@@ -13,7 +13,7 @@
 // 	)
 //
 // 	// ClientRegisterer is the symbol the plugin loader will try to load. It must implement the RegisterClient interface
-// 	var ClientRegisterer = registerer("krakend-example")
+// 	var ClientRegisterer = registerer("lura-example")
 //
 // 	type registerer string
 //
@@ -40,7 +40,7 @@
 // 	}
 //
 // 	func init() {
-// 		fmt.Println("krakend-example client plugin loaded!!!")
+// 		fmt.Println("lura-example client plugin loaded!!!")
 // 	}
 //
 // 	func main() {}

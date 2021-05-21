@@ -10,7 +10,7 @@ import (
 	"github.com/luraproject/lura/logging"
 	"github.com/luraproject/lura/proxy"
 	"github.com/luraproject/lura/router"
-	krakendgorilla "github.com/luraproject/lura/router/gorilla"
+	luragorilla "github.com/luraproject/lura/router/gorilla"
 	"github.com/luraproject/lura/router/mux"
 )
 
@@ -27,7 +27,7 @@ func DefaultConfig(pf proxy.Factory, logger logging.Logger, middlewares []negron
 // DefaultConfigWithRouter returns the struct that collects the parts the router should be builded from with the
 // injected gorilla mux router
 func DefaultConfigWithRouter(pf proxy.Factory, logger logging.Logger, muxEngine *gorilla.Router, middlewares []negroni.Handler) mux.Config {
-	cfg := krakendgorilla.DefaultConfig(pf, logger)
+	cfg := luragorilla.DefaultConfig(pf, logger)
 	cfg.Engine = newNegroniEngine(muxEngine, middlewares...)
 	return cfg
 }
@@ -53,7 +53,7 @@ type negroniEngine struct {
 	n *negroni.Negroni
 }
 
-// Handle implements the mux.Engine interface from the krakend router package
+// Handle implements the mux.Engine interface from the lura router package
 func (e negroniEngine) Handle(pattern, method string, handler http.Handler) {
 	e.r.Handle(pattern, handler).Methods(method)
 }

@@ -46,7 +46,7 @@ type Engine struct {
 	r *httptreemux.ContextMux
 }
 
-// Handle implements the mux.Engine interface from the krakend router package
+// Handle implements the mux.Engine interface from the lura router package
 func (g Engine) Handle(pattern, method string, handler http.Handler) {
 	g.r.Handle(method, pattern, handler.(http.HandlerFunc))
 }

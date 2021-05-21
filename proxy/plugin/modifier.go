@@ -6,7 +6,7 @@ import (
 	"plugin"
 	"strings"
 
-	krakendplugin "github.com/luraproject/lura/plugin"
+	luraplugin "github.com/luraproject/lura/plugin"
 	"github.com/luraproject/lura/register"
 )
 
@@ -87,7 +87,7 @@ type RegisterModifierFunc func(
 
 // LoadModifiers scans the given path using the pattern and registers all the found modifier plugins into the rmf
 func LoadModifiers(path, pattern string, rmf RegisterModifierFunc) (int, error) {
-	plugins, err := krakendplugin.Scan(path, pattern)
+	plugins, err := luraplugin.Scan(path, pattern)
 	if err != nil {
 		return 0, err
 	}
