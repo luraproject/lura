@@ -1,3 +1,5 @@
+/* Package httptreemux provides some basic implementations for building routers based on dimfeld/httptreemux
+ */
 // SPDX-License-Identifier: Apache-2.0
 package httptreemux
 

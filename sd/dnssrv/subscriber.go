@@ -1,4 +1,5 @@
-// Package dnssrv defines some implementations for a dns based service discovery
+/* Package dnssrv defines some implementations for a dns based service discovery
+ */
 // SPDX-License-Identifier: Apache-2.0
 package dnssrv
 
