@@ -2,9 +2,10 @@
 package router
 
 import (
-	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/proxy"
 	"net/http"
+
+	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/proxy"
 )
 
 func IsValidSequentialEndpoint(endpoint *config.EndpointConfig) bool {

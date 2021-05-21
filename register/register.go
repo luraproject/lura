@@ -2,7 +2,7 @@
 package register
 
 import (
-	"github.com/devopsfaith/krakend/register/internal"
+	"github.com/luraproject/lura/register/internal"
 )
 
 func New() *Namespaced {

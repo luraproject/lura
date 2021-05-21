@@ -2,8 +2,8 @@
 package sd
 
 import (
-	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/register"
+	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/register"
 )
 
 // RegisterSubscriberFactory registers the received factory

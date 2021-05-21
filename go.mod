@@ -1,4 +1,4 @@
-module github.com/devopsfaith/krakend
+module github.com/luraproject/lura
 
 go 1.13
 

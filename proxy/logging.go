@@ -5,7 +5,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/devopsfaith/krakend/logging"
+	"github.com/luraproject/lura/logging"
 )
 
 // NewLoggingMiddleware creates proxy middleware for logging requests and responses

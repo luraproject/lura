@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/encoding"
-	"github.com/devopsfaith/krakend/proxy"
 	"github.com/gin-gonic/gin"
+	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/encoding"
+	"github.com/luraproject/lura/proxy"
 )
 
 func TestRender_Negotiated_ok(t *testing.T) {

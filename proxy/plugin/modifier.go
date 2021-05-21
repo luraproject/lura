@@ -6,8 +6,8 @@ import (
 	"plugin"
 	"strings"
 
-	krakendplugin "github.com/devopsfaith/krakend/plugin"
-	"github.com/devopsfaith/krakend/register"
+	krakendplugin "github.com/luraproject/lura/plugin"
+	"github.com/luraproject/lura/register"
 )
 
 const (

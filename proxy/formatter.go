@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/devopsfaith/flatmap/tree"
-	"github.com/devopsfaith/krakend/config"
+	"github.com/luraproject/lura/config"
 )
 
 // EntityFormatter formats the response data

@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/proxy/plugin"
+	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/proxy/plugin"
 )
 
 func TestNewPluginMiddleware(t *testing.T) {

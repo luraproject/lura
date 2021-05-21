@@ -7,7 +7,7 @@ import (
 	"plugin"
 	"testing"
 
-	"github.com/devopsfaith/krakend/config"
+	"github.com/luraproject/lura/config"
 )
 
 func TestLoad_ok(t *testing.T) {

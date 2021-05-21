@@ -4,7 +4,7 @@ package sd
 import (
 	"testing"
 
-	"github.com/devopsfaith/krakend/config"
+	"github.com/luraproject/lura/config"
 )
 
 func TestRegisterSubscriberFactory_ok(t *testing.T) {

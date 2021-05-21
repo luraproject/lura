@@ -10,10 +10,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/logging"
-	"github.com/devopsfaith/krakend/proxy"
-	"github.com/devopsfaith/krakend/router"
+	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/logging"
+	"github.com/luraproject/lura/proxy"
+	"github.com/luraproject/lura/router"
 )
 
 // RunServerFunc is a func that will run the http Server with the given params.
