@@ -282,8 +282,13 @@ var (
 	defaultPort             = 8080
 )
 
-// Hash returns the sha 256 hash of the configuration in a standard base64 encoded string
+// Hash returns the sha 256 hash of the configuration in a standard base64 encoded string. It ignores the
+// name in order to reduce the noise.
 func (s *ServiceConfig) Hash() (string, error) {
+	var name string
+	name, s.Name = s.Name, ""
+	defer func() { s.Name = name }()
+
 	b, err := json.Marshal(s)
 	if err != nil {
 		return "", err
