@@ -1,3 +1,6 @@
+/* Package server provides tools to create http servers and handlers wrapping the
+   lura router
+*/
 // SPDX-License-Identifier: Apache-2.0
 package server
 

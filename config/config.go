@@ -1,4 +1,5 @@
-// Package config defines the config structs and some config parser interfaces and implementations
+/* Package config defines the config structs and some config parser interfaces and implementations
+ */
 // SPDX-License-Identifier: Apache-2.0
 package config
 

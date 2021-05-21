@@ -1,4 +1,5 @@
-// Package router defines some interfaces for router adapters
+/* Package router defines some interfaces for router adapters
+ */
 // SPDX-License-Identifier: Apache-2.0
 package router
 
