@@ -26,7 +26,7 @@ func TestNewPluginMiddleware(t *testing.T) {
 		&config.Backend{
 			ExtraConfig: map[string]interface{}{
 				plugin.Namespace: map[string]interface{}{
-					"name": []interface{}{"krakend-request-modifier-example"},
+					"name": []interface{}{"lura-request-modifier-example"},
 				},
 			},
 		},
@@ -36,7 +36,7 @@ func TestNewPluginMiddleware(t *testing.T) {
 		&config.EndpointConfig{
 			ExtraConfig: map[string]interface{}{
 				plugin.Namespace: map[string]interface{}{
-					"name": []interface{}{"krakend-request-modifier-example"},
+					"name": []interface{}{"lura-request-modifier-example"},
 				},
 			},
 		},

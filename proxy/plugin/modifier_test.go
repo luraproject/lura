@@ -19,7 +19,7 @@ func TestLoadModifiers(t *testing.T) {
 		t.Errorf("unexpected number of loaded plugins!. have %d, want 1", total)
 	}
 
-	modFactory, ok := GetRequestModifier("krakend-request-modifier-example")
+	modFactory, ok := GetRequestModifier("lura-request-modifier-example")
 	if !ok {
 		t.Error("modifier factory not found in the register")
 		t.Fail()

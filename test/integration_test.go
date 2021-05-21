@@ -28,7 +28,7 @@ import (
 	"github.com/luraproject/lura/router/gin"
 	"github.com/luraproject/lura/router/gorilla"
 	"github.com/luraproject/lura/router/httptreemux"
-	krakendnegroni "github.com/luraproject/lura/router/negroni"
+	luranegroni "github.com/luraproject/lura/router/negroni"
 )
 
 func TestKrakenD_ginRouter(t *testing.T) {
@@ -57,7 +57,7 @@ func TestKrakenD_negroniRouter(t *testing.T) {
 
 	config.RoutingPattern = config.BracketsRouterPatternBuilder
 	testKrakenD(t, func(logger logging.Logger, cfg *config.ServiceConfig) {
-		factory := krakendnegroni.DefaultFactory(proxy.DefaultFactory(logger), logger, []negroni.Handler{})
+		factory := luranegroni.DefaultFactory(proxy.DefaultFactory(logger), logger, []negroni.Handler{})
 		factory.NewWithContext(ctx).Run(*cfg)
 	})
 	config.RoutingPattern = config.ColonRouterPatternBuilder
@@ -492,7 +492,7 @@ func setupBackend(t *testing.T) (*config.ServiceConfig, error) {
 }
 
 func loadConfig(data map[string]interface{}) (*config.ServiceConfig, error) {
-	content, _ := ioutil.ReadFile("krakend.json")
+	content, _ := ioutil.ReadFile("lura.json")
 	tmpl, err := template.New("test").Parse(string(content))
 	if err != nil {
 		return nil, err

@@ -33,7 +33,7 @@ const (
 // RoutingPattern to use during route conversion. By default, use the colon router pattern
 var RoutingPattern = ColonRouterPatternBuilder
 
-// ServiceConfig defines the krakend service
+// ServiceConfig defines the lura service
 type ServiceConfig struct {
 	// name of the service
 	Name string `mapstructure:"name"`
@@ -45,7 +45,7 @@ type ServiceConfig struct {
 	CacheTTL time.Duration `mapstructure:"cache_ttl"`
 	// default set of hosts
 	Host []string `mapstructure:"host"`
-	// port to bind the krakend service
+	// port to bind the lura service
 	Port int `mapstructure:"port"`
 	// version code of the configuration
 	Version int `mapstructure:"version"`
@@ -148,13 +148,13 @@ type ServiceConfig struct {
 	// the router layer
 	TLS *TLS `mapstructure:"tls"`
 
-	// run krakend in debug mode
+	// run lura in debug mode
 	Debug     bool
 	uriParser URIParser
 }
 
 // EndpointConfig defines the configuration of a single endpoint to be exposed
-// by the krakend service
+// by the lura service
 type EndpointConfig struct {
 	// url pattern to be registered and exposed to the world
 	Endpoint string `mapstructure:"endpoint"`
@@ -178,7 +178,7 @@ type EndpointConfig struct {
 	OutputEncoding string `mapstructure:"output_encoding"`
 }
 
-// Backend defines how krakend should connect to the backend service (the API resource to consume)
+// Backend defines how lura should connect to the backend service (the API resource to consume)
 // and how it should process the received response
 type Backend struct {
 	// Group defines the name of the property the response should be moved to. If empty, the response is

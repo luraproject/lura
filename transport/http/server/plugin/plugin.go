@@ -8,7 +8,7 @@ import (
 	"plugin"
 	"strings"
 
-	krakendplugin "github.com/luraproject/lura/plugin"
+	luraplugin "github.com/luraproject/lura/plugin"
 	"github.com/luraproject/lura/register"
 )
 
@@ -34,7 +34,7 @@ type RegisterHandlerFunc func(
 )
 
 func Load(path, pattern string, rcf RegisterHandlerFunc) (int, error) {
-	plugins, err := krakendplugin.Scan(path, pattern)
+	plugins, err := luraplugin.Scan(path, pattern)
 	if err != nil {
 		return 0, err
 	}
