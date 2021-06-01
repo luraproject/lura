@@ -17,7 +17,7 @@ func init() {
 	fmt.Println(string(ModifierRegisterer), "loaded!!!")
 }
 
-var ModifierRegisterer = registerer("krakend-request-modifier-example")
+var ModifierRegisterer = registerer("lura-request-modifier-example")
 
 var logger logging.Logger = nil
 
@@ -43,7 +43,9 @@ func (r registerer) RegisterLogger(in interface{}) {
 
 }
 
-func (r registerer) modifierFactory(map[string]interface{}) func(interface{}) (interface{}, error) {
+func (r registerer) modifierFactory(
+	map[string]interface{},
+) func(interface{}) (interface{}, error) {
 	// check the config
 	// return the modifier
 	fmt.Println(string(ModifierRegisterer), "injected!!!")

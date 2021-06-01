@@ -9,10 +9,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/core"
-	"github.com/devopsfaith/krakend/proxy"
-	"github.com/devopsfaith/krakend/router"
+	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/core"
+	"github.com/luraproject/lura/proxy"
+	"github.com/luraproject/lura/router"
 )
 
 const requestParamsAsterisk string = "*"

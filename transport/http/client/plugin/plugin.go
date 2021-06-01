@@ -8,9 +8,9 @@ import (
 	"plugin"
 	"strings"
 
-	"github.com/devopsfaith/krakend/logging"
-	krakendplugin "github.com/devopsfaith/krakend/plugin"
-	"github.com/devopsfaith/krakend/register"
+	"github.com/luraproject/lura/logging"
+	luraplugin "github.com/luraproject/lura/plugin"
+	"github.com/luraproject/lura/register"
 )
 
 var clientRegister = register.New()
@@ -39,7 +39,7 @@ type RegisterClientFunc func(
 )
 
 func Load(path, pattern string, rcf RegisterClientFunc) (int, error) {
-	plugins, err := krakendplugin.Scan(path, pattern)
+	plugins, err := luraplugin.Scan(path, pattern)
 	if err != nil {
 		return 0, err
 	}

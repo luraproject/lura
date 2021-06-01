@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/devopsfaith/krakend/config"
+	"github.com/luraproject/lura/config"
 )
 
 var result interface{}

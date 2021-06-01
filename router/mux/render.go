@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/encoding"
-	"github.com/devopsfaith/krakend/proxy"
+	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/encoding"
+	"github.com/luraproject/lura/proxy"
 )
 
 // Render defines the signature of the functions to be use for the final response

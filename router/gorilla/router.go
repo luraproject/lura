@@ -1,3 +1,5 @@
+/* Package gorilla provides some basic implementations for building routers based on gorilla/mux
+ */
 // SPDX-License-Identifier: Apache-2.0
 package gorilla
 
@@ -7,10 +9,10 @@ import (
 
 	gorilla "github.com/gorilla/mux"
 
-	"github.com/devopsfaith/krakend/logging"
-	"github.com/devopsfaith/krakend/proxy"
-	"github.com/devopsfaith/krakend/router"
-	"github.com/devopsfaith/krakend/router/mux"
+	"github.com/luraproject/lura/logging"
+	"github.com/luraproject/lura/proxy"
+	"github.com/luraproject/lura/router"
+	"github.com/luraproject/lura/router/mux"
 )
 
 // DefaultFactory returns a net/http mux router factory with the injected proxy factory and logger
@@ -43,7 +45,7 @@ type gorillaEngine struct {
 	r *gorilla.Router
 }
 
-// Handle implements the mux.Engine interface from the krakend router package
+// Handle implements the mux.Engine interface from the lura router package
 func (g gorillaEngine) Handle(pattern, method string, handler http.Handler) {
 	g.r.Handle(pattern, handler).Methods(method)
 }

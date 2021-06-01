@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/logging"
-	"github.com/devopsfaith/krakend/transport/http/client"
+	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/logging"
+	"github.com/luraproject/lura/transport/http/client"
 )
 
 const Namespace = "github.com/devopsfaith/krakend/transport/http/client/executor"

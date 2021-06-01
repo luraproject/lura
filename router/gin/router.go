@@ -1,4 +1,5 @@
-// Package gin provides some basic implementations for building routers based on gin-gonic/gin
+/* Package gin provides some basic implementations for building routers based on gin-gonic/gin
+ */
 // SPDX-License-Identifier: Apache-2.0
 package gin
 
@@ -10,10 +11,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/logging"
-	"github.com/devopsfaith/krakend/proxy"
-	"github.com/devopsfaith/krakend/router"
+	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/logging"
+	"github.com/luraproject/lura/proxy"
+	"github.com/luraproject/lura/router"
 )
 
 // RunServerFunc is a func that will run the http Server with the given params.

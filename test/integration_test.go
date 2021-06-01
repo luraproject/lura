@@ -21,14 +21,14 @@ import (
 
 	"github.com/urfave/negroni"
 
-	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/logging"
-	"github.com/devopsfaith/krakend/proxy"
-	"github.com/devopsfaith/krakend/router/chi"
-	"github.com/devopsfaith/krakend/router/gin"
-	"github.com/devopsfaith/krakend/router/gorilla"
-	"github.com/devopsfaith/krakend/router/httptreemux"
-	krakendnegroni "github.com/devopsfaith/krakend/router/negroni"
+	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/logging"
+	"github.com/luraproject/lura/proxy"
+	"github.com/luraproject/lura/router/chi"
+	"github.com/luraproject/lura/router/gin"
+	"github.com/luraproject/lura/router/gorilla"
+	"github.com/luraproject/lura/router/httptreemux"
+	luranegroni "github.com/luraproject/lura/router/negroni"
 )
 
 func TestKrakenD_ginRouter(t *testing.T) {
@@ -57,7 +57,7 @@ func TestKrakenD_negroniRouter(t *testing.T) {
 
 	config.RoutingPattern = config.BracketsRouterPatternBuilder
 	testKrakenD(t, func(logger logging.Logger, cfg *config.ServiceConfig) {
-		factory := krakendnegroni.DefaultFactory(proxy.DefaultFactory(logger), logger, []negroni.Handler{})
+		factory := luranegroni.DefaultFactory(proxy.DefaultFactory(logger), logger, []negroni.Handler{})
 		factory.NewWithContext(ctx).Run(*cfg)
 	})
 	config.RoutingPattern = config.ColonRouterPatternBuilder
@@ -492,7 +492,7 @@ func setupBackend(t *testing.T) (*config.ServiceConfig, error) {
 }
 
 func loadConfig(data map[string]interface{}) (*config.ServiceConfig, error) {
-	content, _ := ioutil.ReadFile("krakend.json")
+	content, _ := ioutil.ReadFile("lura.json")
 	tmpl, err := template.New("test").Parse(string(content))
 	if err != nil {
 		return nil, err

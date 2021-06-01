@@ -1,3 +1,5 @@
+/* Package negroni provides some basic implementations for building routers based on urfave/negroni
+ */
 // SPDX-License-Identifier: Apache-2.0
 package negroni
 
@@ -7,11 +9,11 @@ import (
 	gorilla "github.com/gorilla/mux"
 	"github.com/urfave/negroni"
 
-	"github.com/devopsfaith/krakend/logging"
-	"github.com/devopsfaith/krakend/proxy"
-	"github.com/devopsfaith/krakend/router"
-	krakendgorilla "github.com/devopsfaith/krakend/router/gorilla"
-	"github.com/devopsfaith/krakend/router/mux"
+	"github.com/luraproject/lura/logging"
+	"github.com/luraproject/lura/proxy"
+	"github.com/luraproject/lura/router"
+	luragorilla "github.com/luraproject/lura/router/gorilla"
+	"github.com/luraproject/lura/router/mux"
 )
 
 // DefaultFactory returns a net/http mux router factory with the injected proxy factory and logger
@@ -27,7 +29,7 @@ func DefaultConfig(pf proxy.Factory, logger logging.Logger, middlewares []negron
 // DefaultConfigWithRouter returns the struct that collects the parts the router should be builded from with the
 // injected gorilla mux router
 func DefaultConfigWithRouter(pf proxy.Factory, logger logging.Logger, muxEngine *gorilla.Router, middlewares []negroni.Handler) mux.Config {
-	cfg := krakendgorilla.DefaultConfig(pf, logger)
+	cfg := luragorilla.DefaultConfig(pf, logger)
 	cfg.Engine = newNegroniEngine(muxEngine, middlewares...)
 	return cfg
 }
@@ -53,7 +55,7 @@ type negroniEngine struct {
 	n *negroni.Negroni
 }
 
-// Handle implements the mux.Engine interface from the krakend router package
+// Handle implements the mux.Engine interface from the lura router package
 func (e negroniEngine) Handle(pattern, method string, handler http.Handler) {
 	e.r.Handle(pattern, handler).Methods(method)
 }

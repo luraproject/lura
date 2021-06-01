@@ -1,3 +1,5 @@
+/* Package plugin provides tools for loading and registering proxy plugins
+ */
 // SPDX-License-Identifier: Apache-2.0
 package plugin
 
@@ -6,9 +8,9 @@ import (
 	"plugin"
 	"strings"
 
-	"github.com/devopsfaith/krakend/logging"
-	krakendplugin "github.com/devopsfaith/krakend/plugin"
-	"github.com/devopsfaith/krakend/register"
+	"github.com/luraproject/lura/logging"
+	luraplugin "github.com/luraproject/lura/plugin"
+	"github.com/luraproject/lura/register"
 )
 
 const (
@@ -92,7 +94,7 @@ type RegisterModifierFunc func(
 
 // LoadModifiers scans the given path using the pattern and registers all the found modifier plugins into the rmf
 func LoadModifiers(path, pattern string, rmf RegisterModifierFunc) (int, error) {
-	plugins, err := krakendplugin.Scan(path, pattern)
+	plugins, err := luraplugin.Scan(path, pattern)
 	if err != nil {
 		return 0, err
 	}

@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/devopsfaith/krakend/config"
+	"github.com/luraproject/lura/config"
 )
 
 func BenchmarkEntityFormatter_whitelistingFilter(b *testing.B) {

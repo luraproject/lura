@@ -1,3 +1,6 @@
+/* Package server provides tools to create http servers and handlers wrapping the
+   lura router
+*/
 // SPDX-License-Identifier: Apache-2.0
 package server
 
@@ -13,8 +16,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/core"
+	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/core"
 )
 
 // ToHTTPError translates an error into a HTTP status code

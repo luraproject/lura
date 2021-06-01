@@ -1,8 +1,10 @@
+/* Package register offers tools for creating and managing registers.
+ */
 // SPDX-License-Identifier: Apache-2.0
 package register
 
 import (
-	"github.com/devopsfaith/krakend/register/internal"
+	"github.com/luraproject/lura/register/internal"
 )
 
 func New() *Namespaced {

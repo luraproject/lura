@@ -1,3 +1,5 @@
+/* Package httptreemux provides some basic implementations for building routers based on dimfeld/httptreemux
+ */
 // SPDX-License-Identifier: Apache-2.0
 package httptreemux
 
@@ -5,11 +7,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/devopsfaith/krakend/logging"
-	"github.com/devopsfaith/krakend/proxy"
-	"github.com/devopsfaith/krakend/router"
-	"github.com/devopsfaith/krakend/router/mux"
 	"github.com/dimfeld/httptreemux"
+	"github.com/luraproject/lura/logging"
+	"github.com/luraproject/lura/proxy"
+	"github.com/luraproject/lura/router"
+	"github.com/luraproject/lura/router/mux"
 )
 
 // DefaultFactory returns a net/http mux router factory with the injected proxy factory and logger
@@ -46,7 +48,7 @@ type Engine struct {
 	r *httptreemux.ContextMux
 }
 
-// Handle implements the mux.Engine interface from the krakend router package
+// Handle implements the mux.Engine interface from the lura router package
 func (g Engine) Handle(pattern, method string, handler http.Handler) {
 	g.r.Handle(method, pattern, handler.(http.HandlerFunc))
 }

@@ -1,7 +1,7 @@
 Benchmarks
 ---
 
-Here you'll find some benchmarks of the different components of the KrakenD framework in several scenarios.
+Here you'll find some benchmarks of the different components of the Lura framework in several scenarios.
 
 # Proxy components
 

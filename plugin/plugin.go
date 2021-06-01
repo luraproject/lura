@@ -1,3 +1,5 @@
+/* Package plugin provides tools for loading and registering plugins
+ */
 // SPDX-License-Identifier: Apache-2.0
 package plugin
 
@@ -8,7 +10,7 @@ import (
 	"plugin"
 	"strings"
 
-	"github.com/devopsfaith/krakend/config"
+	"github.com/luraproject/lura/config"
 )
 
 // Plugin is the interface of the loaded plugins

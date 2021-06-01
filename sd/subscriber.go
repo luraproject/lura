@@ -1,8 +1,9 @@
-// Package sd defines some interfaces and implementations for service discovery
+/* Package sd defines some interfaces and implementations for service discovery
+ */
 // SPDX-License-Identifier: Apache-2.0
 package sd
 
-import "github.com/devopsfaith/krakend/config"
+import "github.com/luraproject/lura/config"
 
 // Subscriber keeps the set of backend hosts up to date
 type Subscriber interface {
