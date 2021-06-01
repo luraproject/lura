@@ -2,7 +2,7 @@
 
 # The Lura Project framework
 
-![Go Report Card](https://goreportcard.com/badge/github.com/luraproject/lura)
+[![Go Report Card](https://goreportcard.com/badge/github.com/luraproject/lura)](https://goreportcard.com/report/github.com/luraproject/lura)
 [![GoDoc](https://godoc.org/github.com/luraproject/lura?status.svg)](https://godoc.org/github.com/luraproject/lura)
 ![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/3151/badge)
 ![Docker Pulls](https://img.shields.io/docker/pulls/devopsfaith/krakend.svg)
