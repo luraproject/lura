@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/url"
 	"path"
+
+	"github.com/luraproject/lura/logging"
 )
 
 func main() {}
@@ -16,6 +18,8 @@ func init() {
 }
 
 var ModifierRegisterer = registerer("lura-request-modifier-example")
+
+var logger logging.Logger = nil
 
 type registerer string
 
@@ -29,27 +33,62 @@ func (r registerer) RegisterModifiers(f func(
 	fmt.Println(string(ModifierRegisterer), "registered!!!")
 }
 
+func (r registerer) RegisterLogger(in interface{}) {
+	l, ok := in.(logging.Logger)
+	if !ok {
+		return
+	}
+	logger = l
+	logger.Debug(string(ModifierRegisterer), "logger registered!!!")
+
+}
+
 func (r registerer) modifierFactory(
 	map[string]interface{},
 ) func(interface{}) (interface{}, error) {
 	// check the config
 	// return the modifier
 	fmt.Println(string(ModifierRegisterer), "injected!!!")
+
+	if logger == nil {
+		return func(input interface{}) (interface{}, error) {
+			req, ok := input.(RequestWrapper)
+			if !ok {
+				return nil, unkownTypeErr
+			}
+
+			return modifier(req), nil
+		}
+	}
+
 	return func(input interface{}) (interface{}, error) {
 		req, ok := input.(RequestWrapper)
 		if !ok {
 			return nil, unkownTypeErr
 		}
 
-		return requestWrapper{
-			params:  req.Params(),
-			headers: req.Headers(),
-			body:    req.Body(),
-			method:  req.Method(),
-			url:     req.URL(),
-			query:   req.Query(),
-			path:    path.Join(req.Path(), "/fooo"),
-		}, nil
+		r := modifier(req)
+
+		logger.Debug("params:", r.params)
+		logger.Debug("headers:", r.headers)
+		logger.Debug("method:", r.method)
+		logger.Debug("url:", r.url)
+		logger.Debug("query:", r.query)
+		logger.Debug("path:", r.path)
+
+		return r, nil
+	}
+}
+
+func modifier(req RequestWrapper) requestWrapper {
+	return requestWrapper{
+		params:  req.Params(),
+		headers: req.Headers(),
+		body:    req.Body(),
+		method:  req.Method(),
+		url:     req.URL(),
+		query:   req.Query(),
+		path:    path.Join(req.Path(), "/fooo"),
 	}
 }
 
