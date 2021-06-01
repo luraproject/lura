@@ -44,12 +44,18 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 	if name != string(r) {
 		return nil, fmt.Errorf("unknown register %s", name)
 	}
+
+	if logger == nil {
+		// return the actual handler wrapping or your custom logic so it can be used as a replacement for the default http client
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			fmt.Fprintf(w, "Hello, %q", html.EscapeString(req.URL.Path))
+		}), nil
+	}
+
 	// return the actual handler wrapping or your custom logic so it can be used as a replacement for the default http client
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, "Hello, %q", html.EscapeString(req.URL.Path))
-		if logger != nil {
-			logger.Debug("request:", html.EscapeString(req.URL.Path))
-		}
+		logger.Debug("request:", html.EscapeString(req.URL.Path))
 	}), nil
 }
 
