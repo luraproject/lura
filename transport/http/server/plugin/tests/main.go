@@ -8,7 +8,7 @@ import (
 	"html"
 	"net/http"
 
-	"github.com/devopsfaith/krakend/logging"
+	"github.com/luraproject/lura/logging"
 )
 
 // HandlerRegisterer is the symbol the plugin loader will try to load. It must implement the Registerer interface

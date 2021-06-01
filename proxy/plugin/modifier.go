@@ -103,7 +103,7 @@ func LoadModifiers(path, pattern string, rmf RegisterModifierFunc) (int, error) 
 
 // LoadModifiersWithLogger scans the given path using the pattern and registers all the found modifier plugins into the rmf
 func LoadModifiersWithLogger(path, pattern string, rmf RegisterModifierFunc, logger logging.Logger) (int, error) {
-	plugins, err := krakendplugin.Scan(path, pattern)
+	plugins, err := luraplugin.Scan(path, pattern)
 	if err != nil {
 		return 0, err
 	}

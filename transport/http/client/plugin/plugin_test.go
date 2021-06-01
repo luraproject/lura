@@ -11,9 +11,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/devopsfaith/krakend/config"
-	"github.com/devopsfaith/krakend/logging"
-	"github.com/devopsfaith/krakend/transport/http/client"
+	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/logging"
+	"github.com/luraproject/lura/transport/http/client"
 )
 
 func TestLoadWithLogger(t *testing.T) {

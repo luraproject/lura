@@ -39,15 +39,11 @@ type RegisterClientFunc func(
 )
 
 func Load(path, pattern string, rcf RegisterClientFunc) (int, error) {
-	plugins, err := luraplugin.Scan(path, pattern)
-	if err != nil {
-		return 0, err
-	}
-	return load(plugins, rcf, nil)
+	return LoadWithLogger(path, pattern, rcf, nil)
 }
 
 func LoadWithLogger(path, pattern string, rcf RegisterClientFunc, logger logging.Logger) (int, error) {
-	plugins, err := krakendplugin.Scan(path, pattern)
+	plugins, err := luraplugin.Scan(path, pattern)
 	if err != nil {
 		return 0, err
 	}

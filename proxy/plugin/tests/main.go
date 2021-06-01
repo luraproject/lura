@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/devopsfaith/krakend/logging"
+	"github.com/luraproject/lura/logging"
 )
 
 func main() {}
