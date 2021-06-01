@@ -123,7 +123,7 @@ Check out the [benchmark results](/docs/BENCHMARKS.md) of several Lura component
 We are always happy to receive contributions. If you have questions, suggestions, bugs please open an issue.
 If you want to submit the code, create the issue and send us a pull request for review.
 
-Read [CONTRIBUITING.md](/CONTRIBUTING.md) for more information.
+Read [CONTRIBUTING.md](/CONTRIBUTING.md) for more information.
 
 
 ## Want more?
