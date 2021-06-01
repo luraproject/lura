@@ -8,11 +8,11 @@ The easiest way to create or edit a configuration file is using the [KrakenDesig
 
 
     {
-	"version": 1,
+	"version": 2,
 	"name": "My lovely gateway",
 	"port": 8080,
-	"timeout": 10,
-	"cache_ttl": 3600,
+	"timeout": "10s",
+	"cache_ttl": "3600s",
 	"host": [
 		"http://127.0.0.1:8080",
 		"http://127.0.0.2:8000",
@@ -48,7 +48,7 @@ The easiest way to create or edit a configuration file is using the [KrakenDesig
 				}
 			],
 			"concurrent_calls": 2,
-			"timeout": 1000,
+			"timeout": "1000s",
 			"cache_ttl": 3600,
 			"querystring_params": [
 				"page",
@@ -65,7 +65,7 @@ The easiest way to create or edit a configuration file is using the [KrakenDesig
 				"url_pattern": "/__debug/tupu"
 			}],
 			"concurrent_calls": 1,
-			"timeout": 10000,
+			"timeout": "1000s",
 			"cache_ttl": 3600
 		},
 		{
@@ -82,7 +82,7 @@ The easiest way to create or edit a configuration file is using the [KrakenDesig
 				]
 			}],
 			"concurrent_calls": 2,
-			"timeout": 1000,
+			"timeout": "1000s",
 			"cache_ttl": 3600
 		},
 		{
@@ -109,7 +109,7 @@ The easiest way to create or edit a configuration file is using the [KrakenDesig
 				}
 			],
 			"concurrent_calls": 3,
-			"timeout": 4000,
+			"timeout": "1000s",
 			"querystring_params": [
 				"page",
 				"limit"
