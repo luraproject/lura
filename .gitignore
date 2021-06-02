@@ -8,5 +8,7 @@ server.rsa.key
 *.dot
 *.out
 bench_res
+.cover
+.idea
 
 *DS_Store
