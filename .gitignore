@@ -9,5 +9,7 @@ server.rsa.key
 *.out
 *.so
 bench_res
+.cover
+.idea
 
 *DS_Store
