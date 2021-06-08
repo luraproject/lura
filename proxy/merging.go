@@ -233,7 +233,7 @@ func requestPart(ctx context.Context, next Proxy, request *Request, sequential b
 	in, err := next(localCtx, request)
 
 	if sequential {
-		request = copyRequest
+		*request = *copyRequest
 	}
 
 	if err != nil {

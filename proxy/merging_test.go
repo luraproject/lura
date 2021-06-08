@@ -4,6 +4,8 @@ package proxy
 import (
 	"context"
 	"errors"
+	"io/ioutil"
+	"strings"
 	"testing"
 	"time"
 
@@ -60,6 +62,26 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 			},
 		},
 	}
+
+	expectedBody := "foo"
+	checkBody := func(t *testing.T, r *Request) {
+		if r.Body == nil {
+			t.Error("empty body")
+			return
+		}
+		b, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		r.Body.Close()
+
+		if string(b) != expectedBody {
+			t.Errorf("unexpected body '%s'", string(b))
+		}
+	}
+
 	mw := NewMergeDataMiddleware(&endpoint)
 	p := mw(
 		dummyProxy(&Response{Data: map[string]interface{}{
@@ -79,10 +101,12 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 			"array": []interface{}{"1", "2"},
 		}, IsComplete: true}),
 		func(ctx context.Context, r *Request) (*Response, error) {
+			checkBody(t, r)
 			checkRequestParam(t, r, "Resp0_array", "1,2")
 			return &Response{Data: map[string]interface{}{"tupu": "foo"}, IsComplete: true}, nil
 		},
 		func(ctx context.Context, r *Request) (*Response, error) {
+			checkBody(t, r)
 			checkRequestParam(t, r, "Resp0_int", "42")
 			checkRequestParam(t, r, "Resp0_string", "some")
 			checkRequestParam(t, r, "Resp0_float", "3.14E+00")
@@ -91,6 +115,7 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 			return &Response{Data: map[string]interface{}{"tupu": "foo"}, IsComplete: true}, nil
 		},
 		func(ctx context.Context, r *Request) (*Response, error) {
+			checkBody(t, r)
 			checkRequestParam(t, r, "Resp0_int", "42")
 			checkRequestParam(t, r, "Resp0_string", "some")
 			checkRequestParam(t, r, "Resp0_float", "3.14E+00")
@@ -100,6 +125,7 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 			return &Response{Data: map[string]interface{}{"aaaa": []int{1, 2, 3}}, IsComplete: true}, nil
 		},
 		func(ctx context.Context, r *Request) (*Response, error) {
+			checkBody(t, r)
 			checkRequestParam(t, r, "Resp0_struct.foo", "bar")
 			checkRequestParam(t, r, "Resp0_struct.struct.foo", "bar")
 			checkRequestParam(t, r, "Resp0_struct.struct.struct.foo", "bar")
@@ -107,7 +133,10 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 		},
 	)
 	mustEnd := time.After(time.Duration(2*timeout) * time.Millisecond)
-	out, err := p(context.Background(), &Request{Params: map[string]string{}})
+	out, err := p(context.Background(), &Request{
+		Params: map[string]string{},
+		Body:   ioutil.NopCloser(strings.NewReader(expectedBody)),
+	})
 	if err != nil {
 		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
 	}
