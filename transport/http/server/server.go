@@ -161,7 +161,7 @@ func parseTLSVersion(key string) uint16 {
 	if v, ok := versions[key]; ok {
 		return v
 	}
-	return tls.VersionTLS12
+	return tls.VersionTLS13
 }
 
 func parseCurveIDs(cfg *config.TLS) []tls.CurveID {
@@ -210,5 +210,6 @@ var (
 		"TLS10":  tls.VersionTLS10,
 		"TLS11":  tls.VersionTLS11,
 		"TLS12":  tls.VersionTLS12,
+		"TLS13":  tls.VersionTLS13,
 	}
 )
