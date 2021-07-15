@@ -276,9 +276,6 @@ func checkResponseIs404(t *testing.T, req *http.Request) {
 	if resp.Header.Get("Cache-Control") != "" {
 		t.Error(req.URL.String(), "Cache-Control error:", resp.Header.Get("Cache-Control"))
 	}
-	if resp.Header.Get(router.CompleteResponseHeaderName) != router.HeaderIncompleteResponseValue {
-		t.Error(req.URL.String(), router.CompleteResponseHeaderName, "error:", resp.Header.Get(router.CompleteResponseHeaderName))
-	}
 	if resp.Header.Get("Content-Type") != "text/plain" {
 		t.Error(req.URL.String(), "Content-Type error:", resp.Header.Get("Content-Type"))
 	}
