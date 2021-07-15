@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/textproto"
 	"regexp"
 	"sort"
 	"strings"
@@ -338,6 +339,10 @@ func (s *ServiceConfig) initEndpoints() error {
 
 		if err := e.validate(); err != nil {
 			return err
+		}
+
+		for i := range e.HeadersToPass {
+			e.HeadersToPass[i] = textproto.CanonicalMIMEHeaderKey(e.HeadersToPass[i])
 		}
 
 		inputParams := s.extractPlaceHoldersFromURLTemplate(e.Endpoint, s.paramExtractionPattern())
