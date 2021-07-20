@@ -25,6 +25,8 @@ func NewStaticMiddleware(endpointConfig *config.EndpointConfig) Middleware {
 
 			if result == nil {
 				result = &Response{Data: map[string]interface{}{}}
+			} else if result.Data == nil {
+				result.Data = map[string]interface{}{}
 			}
 
 			for k, v := range cfg.Data {
