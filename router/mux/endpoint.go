@@ -167,6 +167,10 @@ type responseError interface {
 	StatusCode() int
 }
 
+func ClientIP(r *http.Request) string {
+	return clientIP(r)
+}
+
 // clientIP implements a best effort algorithm to return the real client IP, it parses
 // X-Real-IP and X-Forwarded-For in order to work properly with reverse-proxies such us: nginx or haproxy.
 // Use X-Forwarded-For before X-Real-Ip as nginx uses X-Real-Ip with the proxy's IP.

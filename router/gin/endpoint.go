@@ -13,6 +13,7 @@ import (
 	"github.com/luraproject/lura/core"
 	"github.com/luraproject/lura/proxy"
 	"github.com/luraproject/lura/router"
+	"github.com/luraproject/lura/router/mux"
 )
 
 const requestParamsAsterisk string = "*"
@@ -111,7 +112,7 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 			}
 		}
 
-		headers["X-Forwarded-For"] = []string{c.ClientIP()}
+		headers["X-Forwarded-For"] = []string{mux.ClientIP(c.Request)}
 		headers["X-Forwarded-Host"] = []string{c.Request.Host}
 		// if User-Agent is not forwarded using headersToSend, we set
 		// the KrakenD router User Agent value
