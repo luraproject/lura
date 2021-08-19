@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -201,7 +202,7 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 	}
 	endpoints := make([]*EndpointConfig, 0, len(p.Endpoints))
 	for _, e := range p.Endpoints {
-		endpoints = append(endpoints, e.normalize())
+		endpoints = append(endpoints, e.normalize()...)
 	}
 	cfg.Endpoints = endpoints
 	return cfg
@@ -232,26 +233,31 @@ type parseableEndpointConfig struct {
 	OutputEncoding  string              `json:"output_encoding"`
 }
 
-func (p *parseableEndpointConfig) normalize() *EndpointConfig {
-	e := EndpointConfig{
-		Endpoint:        p.Endpoint,
-		Method:          p.Method,
-		ConcurrentCalls: p.ConcurrentCalls,
-		Timeout:         parseDuration(p.Timeout),
-		CacheTTL:        time.Duration(p.CacheTTL) * time.Second,
-		QueryString:     p.QueryString,
-		HeadersToPass:   p.HeadersToPass,
-		OutputEncoding:  p.OutputEncoding,
+func (p *parseableEndpointConfig) normalize() []*EndpointConfig {
+	var res []*EndpointConfig
+	for _, method := range strings.Split(p.Method, ",") {
+		e := EndpointConfig{
+			Endpoint:        p.Endpoint,
+			Method:          method,
+			ConcurrentCalls: p.ConcurrentCalls,
+			Timeout:         parseDuration(p.Timeout),
+			CacheTTL:        time.Duration(p.CacheTTL) * time.Second,
+			QueryString:     p.QueryString,
+			HeadersToPass:   p.HeadersToPass,
+			OutputEncoding:  p.OutputEncoding,
+		}
+		if p.ExtraConfig != nil {
+			e.ExtraConfig = *p.ExtraConfig
+		}
+		backends := make([]*Backend, 0, len(p.Backend))
+		for _, b := range p.Backend {
+			backends = append(backends, b.normalize())
+		}
+		e.Backend = backends
+
+		res = append(res, &e)
 	}
-	if p.ExtraConfig != nil {
-		e.ExtraConfig = *p.ExtraConfig
-	}
-	backends := make([]*Backend, 0, len(p.Backend))
-	for _, b := range p.Backend {
-		backends = append(backends, b.normalize())
-	}
-	e.Backend = backends
-	return &e
+	return res
 }
 
 type parseableBackend struct {
