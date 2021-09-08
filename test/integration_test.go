@@ -25,6 +25,7 @@ import (
 	"github.com/luraproject/lura/logging"
 	"github.com/luraproject/lura/proxy"
 	"github.com/luraproject/lura/router/chi"
+	"github.com/luraproject/lura/router/echo"
 	"github.com/luraproject/lura/router/gin"
 	"github.com/luraproject/lura/router/gorilla"
 	"github.com/luraproject/lura/router/httptreemux"
@@ -81,6 +82,15 @@ func TestKrakenD_chiRouter(t *testing.T) {
 		chi.DefaultFactory(proxy.DefaultFactory(logger), logger).NewWithContext(ctx).Run(*cfg)
 	})
 	config.RoutingPattern = config.ColonRouterPatternBuilder
+}
+
+func TestKrakenD_echoRouter(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	testKrakenD(t, func(logger logging.Logger, cfg *config.ServiceConfig) {
+		echo.DefaultFactory(proxy.DefaultFactory(logger), logger).NewWithContext(ctx).Run(*cfg)
+	})
 }
 
 func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceConfig)) {
