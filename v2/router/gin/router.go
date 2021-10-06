@@ -77,13 +77,23 @@ type ginRouter struct {
 	mu         *sync.Mutex
 }
 
-// Run implements the router interface
+// Run completes the router initialization and starts it
 func (r ginRouter) Run(cfg config.ServiceConfig) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
 	server.InitHTTPDefaultTransport(cfg)
 
+	r.registerEndpointsAndMiddlewares(cfg)
+
+	if err := r.runServerF(r.ctx, cfg, r.cfg.Engine); err != nil {
+		r.cfg.Logger.Error(err.Error())
+	}
+
+	r.cfg.Logger.Info("Router execution ended")
+}
+
+func (r ginRouter) registerEndpointsAndMiddlewares(cfg config.ServiceConfig) {
 	if cfg.Debug {
 		r.cfg.Engine.Any("/__debug/*param", DebugHandler(r.cfg.Logger))
 	}
@@ -96,12 +106,6 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 	endpointGroup.Use(r.cfg.Middlewares...)
 
 	r.registerKrakendEndpoints(endpointGroup, cfg.Endpoints)
-
-	if err := r.runServerF(r.ctx, cfg, r.cfg.Engine); err != nil {
-		r.cfg.Logger.Error(err.Error())
-	}
-
-	r.cfg.Logger.Info("Router execution ended")
 }
 
 func (r ginRouter) registerKrakendEndpoints(rg *gin.RouterGroup, endpoints []*config.EndpointConfig) {
