@@ -9,12 +9,14 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
 	"github.com/luraproject/lura/v2/proxy"
 	"github.com/luraproject/lura/v2/transport/http/server"
 )
@@ -227,6 +229,43 @@ func TestEndpointHandler_noop(t *testing.T) {
 		completed:          false,
 	}.test(t)
 	time.Sleep(5 * time.Millisecond)
+}
+
+func TestCustomErrorEndpointHandler(t *testing.T) {
+	buff := bytes.NewBuffer(make([]byte, 1024))
+	logger, err := logging.NewLogger("ERROR", buff, "pref")
+	if err != nil {
+		t.Error("building the logger:", err.Error())
+		return
+	}
+	hf := CustomErrorEndpointHandler(logger, server.DefaultToHTTPError)
+
+	endpoint := &config.EndpointConfig{
+		Method:      "GET",
+		Timeout:     time.Minute,
+		CacheTTL:    6 * time.Hour,
+		QueryString: []string{"b", "c[]", "d"},
+	}
+
+	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
+		return nil, errors.New("this is a dummy error")
+	}
+
+	s := startGinServer(hf(endpoint, p))
+
+	req, _ := http.NewRequest(
+		"GET",
+		"http://127.0.0.1:8080/_gin_endpoint/a?a=42&b=1&c[]=x&c[]=y&d=1&d=2",
+		ioutil.NopCloser(&bytes.Buffer{}),
+	)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	s.ServeHTTP(w, req)
+
+	if !strings.Contains(buff.String(), "pref ERROR: [this is a dummy error]") {
+		t.Error("unexpected log content")
+	}
 }
 
 type endpointHandlerTestCase struct {

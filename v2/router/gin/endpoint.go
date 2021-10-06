@@ -11,6 +11,7 @@ import (
 
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/core"
+	"github.com/luraproject/lura/v2/logging"
 	"github.com/luraproject/lura/v2/proxy"
 	"github.com/luraproject/lura/v2/transport/http/server"
 )
@@ -21,67 +22,67 @@ const requestParamsAsterisk string = "*"
 type HandlerFactory func(*config.EndpointConfig, proxy.Proxy) gin.HandlerFunc
 
 // EndpointHandler implements the HandleFactory interface using the default ToHTTPError function
-func EndpointHandler(configuration *config.EndpointConfig, proxy proxy.Proxy) gin.HandlerFunc {
-	return CustomErrorEndpointHandler(configuration, proxy, server.DefaultToHTTPError)
-}
+var EndpointHandler = CustomErrorEndpointHandler(logging.NoOp, server.DefaultToHTTPError)
 
-// CustomErrorEndpointHandler implements the HandleFactory interface
-func CustomErrorEndpointHandler(configuration *config.EndpointConfig, prxy proxy.Proxy, errF server.ToHTTPError) gin.HandlerFunc {
-	cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
-	isCacheEnabled := configuration.CacheTTL.Seconds() != 0
-	requestGenerator := NewRequest(configuration.HeadersToPass)
-	render := getRender(configuration)
+// CustomErrorEndpointHandler returns a HandleFactory using the injected ToHTTPError function
+func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) HandlerFactory {
+	return func(configuration *config.EndpointConfig, prxy proxy.Proxy) gin.HandlerFunc {
+		cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
+		isCacheEnabled := configuration.CacheTTL.Seconds() != 0
+		requestGenerator := NewRequest(configuration.HeadersToPass)
+		render := getRender(configuration)
 
-	return func(c *gin.Context) {
-		requestCtx, cancel := context.WithTimeout(c, configuration.Timeout)
+		return func(c *gin.Context) {
+			requestCtx, cancel := context.WithTimeout(c, configuration.Timeout)
 
-		c.Header(core.KrakendHeaderName, core.KrakendHeaderValue)
+			c.Header(core.KrakendHeaderName, core.KrakendHeaderValue)
 
-		response, err := prxy(requestCtx, requestGenerator(c, configuration.QueryString))
+			response, err := prxy(requestCtx, requestGenerator(c, configuration.QueryString))
 
-		select {
-		case <-requestCtx.Done():
-			if err == nil {
-				err = server.ErrInternalError
+			select {
+			case <-requestCtx.Done():
+				if err == nil {
+					err = server.ErrInternalError
+				}
+			default:
 			}
-		default:
-		}
 
-		complete := server.HeaderIncompleteResponseValue
+			complete := server.HeaderIncompleteResponseValue
 
-		if response != nil && len(response.Data) > 0 {
-			if response.IsComplete {
-				complete = server.HeaderCompleteResponseValue
-				if isCacheEnabled {
-					c.Header("Cache-Control", cacheControlHeaderValue)
+			if response != nil && len(response.Data) > 0 {
+				if response.IsComplete {
+					complete = server.HeaderCompleteResponseValue
+					if isCacheEnabled {
+						c.Header("Cache-Control", cacheControlHeaderValue)
+					}
+				}
+
+				for k, vs := range response.Metadata.Headers {
+					for _, v := range vs {
+						c.Writer.Header().Add(k, v)
+					}
 				}
 			}
 
-			for k, vs := range response.Metadata.Headers {
-				for _, v := range vs {
-					c.Writer.Header().Add(k, v)
+			c.Header(server.CompleteResponseHeaderName, complete)
+
+			if err != nil {
+				logger.Error(err)
+
+				if response == nil {
+					if t, ok := err.(responseError); ok {
+						c.Status(t.StatusCode())
+					} else {
+						c.Status(errF(err))
+					}
+					cancel()
+					return
 				}
 			}
+
+			render(c, response)
+			cancel()
 		}
-
-		c.Header(server.CompleteResponseHeaderName, complete)
-
-		if err != nil {
-			c.Error(err)
-
-			if response == nil {
-				if t, ok := err.(responseError); ok {
-					c.Status(t.StatusCode())
-				} else {
-					c.Status(errF(err))
-				}
-				cancel()
-				return
-			}
-		}
-
-		render(c, response)
-		cancel()
 	}
 }
 
