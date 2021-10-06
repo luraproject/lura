@@ -95,6 +95,24 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 	r.cfg.Engine.RedirectFixedPath = true
 	r.cfg.Engine.HandleMethodNotAllowed = true
 
+	if v, ok := cfg.ExtraConfig[Namespace]; ok {
+		b, err := json.Marshal(v)
+		if err != nil {
+			ginOptions := engineConfiguration{}
+			if err := json.Unmarshal(b, &ginOptions); err == nil {
+				r.cfg.Engine.RedirectTrailingSlash = !ginOptions.DisableRedirectTrailingSlash
+				r.cfg.Engine.RedirectFixedPath = !ginOptions.DisableRedirectFixedPath
+				r.cfg.Engine.HandleMethodNotAllowed = !ginOptions.DisableHandleMethodNotAllowed
+				r.cfg.Engine.ForwardedByClientIP = ginOptions.ForwardedByClientIP
+				r.cfg.Engine.RemoteIPHeaders = ginOptions.RemoteIPHeaders
+				r.cfg.Engine.TrustedProxies = ginOptions.TrustedProxies
+				r.cfg.Engine.AppEngine = ginOptions.AppEngine
+				r.cfg.Engine.MaxMultipartMemory = ginOptions.MaxMultipartMemory
+				r.cfg.Engine.RemoveExtraSlash = ginOptions.RemoveExtraSlash
+			}
+		}
+	}
+
 	if cfg.Debug {
 		r.cfg.Engine.Any("/__debug/*param", DebugHandler(r.cfg.Logger))
 	}
@@ -153,7 +171,7 @@ func (r ginRouter) registerKrakendEndpoint(rg *gin.RouterGroup, method string, e
 	}
 }
 
-const Namespace = "github.com/luraproject/lura/v2/router/gin"
+const Namespace = "github.com/luraproject/lura/router/gin"
 
 func initEngine(e *gin.Engine, cfg map[string]interface{}) {
 	raw, ok := cfg[Namespace]
@@ -177,12 +195,12 @@ func initEngine(e *gin.Engine, cfg map[string]interface{}) {
 }
 
 type engineConfiguration struct {
-	// Enables automatic redirection if the current route can't be matched but a
+	// Disables automatic redirection if the current route can't be matched but a
 	// handler for the path with (without) the trailing slash exists.
 	// For example if /foo/ is requested but a route only exists for /foo, the
 	// client is redirected to /foo with http status code 301 for GET requests
 	// and 307 for all other request methods.
-	RedirectTrailingSlash bool
+	DisableRedirectTrailingSlash bool `json:"disable_redirect_trailing_slash"`
 
 	// If enabled, the router tries to fix the current request path, if no
 	// handle is registered for it.
@@ -193,7 +211,7 @@ type engineConfiguration struct {
 	// all other request methods.
 	// For example /FOO and /..//Foo could be redirected to /foo.
 	// RedirectTrailingSlash is independent of this option.
-	RedirectFixedPath bool
+	DisableRedirectFixedPath bool `json:"disable_redirect_fixed_path"`
 
 	// If enabled, the router checks if another method is allowed for the
 	// current route, if the current request can not be routed.
@@ -201,43 +219,45 @@ type engineConfiguration struct {
 	// and HTTP status code 405.
 	// If no other Method is allowed, the request is delegated to the NotFound
 	// handler.
-	HandleMethodNotAllowed bool
+	DisableHandleMethodNotAllowed bool `json:"disable_handle_method_not_allowed"`
 
 	// If enabled, client IP will be parsed from the request's headers that
 	// match those stored at `(*gin.Engine).RemoteIPHeaders`. If no IP was
 	// fetched, it falls back to the IP obtained from
 	// `(*gin.Context).Request.RemoteAddr`.
-	ForwardedByClientIP bool
+	ForwardedByClientIP bool `json:"forwarded_by_client_ip"`
 
 	// List of headers used to obtain the client IP when
 	// `(*gin.Engine).ForwardedByClientIP` is `true` and
 	// `(*gin.Context).Request.RemoteAddr` is matched by at least one of the
 	// network origins of `(*gin.Engine).TrustedProxies`.
-	RemoteIPHeaders []string
+	RemoteIPHeaders []string `json:"remote_ip_headers"`
 
 	// List of network origins (IPv4 addresses, IPv4 CIDRs, IPv6 addresses or
 	// IPv6 CIDRs) from which to trust request's headers that contain
 	// alternative client IP when `(*gin.Engine).ForwardedByClientIP` is
 	// `true`.
-	TrustedProxies []string
+	TrustedProxies []string `json:"trusted_proxies"`
 
 	// #726 #755 If enabled, it will trust some headers starting with
 	// 'X-AppEngine...' for better integration with that PaaS.
-	AppEngine bool
+	AppEngine bool `json:"app_engine"`
 
-	// If enabled, the url.RawPath will be used to find parameters.
-	UseRawPath bool
+	/*
+		// If enabled, the url.RawPath will be used to find parameters.
+		UseRawPath bool `json:"use_raw_path"`
 
-	// If true, the path value will be unescaped.
-	// If UseRawPath is false (by default), the UnescapePathValues effectively is true,
-	// as url.Path gonna be used, which is already unescaped.
-	UnescapePathValues bool
+		// If true, the path value will be unescaped.
+		// If UseRawPath is false (by default), the UnescapePathValues effectively is true,
+		// as url.Path gonna be used, which is already unescaped.
+		UnescapePathValues bool `json:"unescape_path_values"`
+	*/
 
 	// Value of 'maxMemory' param that is given to http.Request's ParseMultipartForm
 	// method call.
-	MaxMultipartMemory int64
+	MaxMultipartMemory int64 `json:"max_multipart_memory"`
 
 	// RemoveExtraSlash a parameter can be parsed from the URL even with extra slashes.
 	// See the PR #1817 and issue #1644
-	RemoveExtraSlash bool
+	RemoveExtraSlash bool `json:"remove_extra_slash"`
 }
