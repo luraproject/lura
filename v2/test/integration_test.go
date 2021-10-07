@@ -339,6 +339,24 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 			url:        "/sequence-accept",
 			expHeaders: defaultHeaders,
 		},
+		{
+			method:        "GET",
+			name:          "error-status-code-1",
+			url:           "/error-status-code/1",
+			expStatusCode: 200,
+		},
+		{
+			method:        "GET",
+			name:          "error-status-code-2",
+			url:           "/error-status-code/2",
+			expStatusCode: 429,
+		},
+		{
+			method:        "GET",
+			name:          "error-status-code-3",
+			url:           "/error-status-code/3",
+			expStatusCode: 200,
+		},
 	} {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
@@ -367,6 +385,7 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 				t.Errorf("%s: nil response", resp.Request.URL.Path)
 				return
 			}
+
 			expectedStatusCode := http.StatusOK
 			if tc.expStatusCode != 0 {
 				expectedStatusCode = tc.expStatusCode
