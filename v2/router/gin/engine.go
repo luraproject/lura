@@ -4,6 +4,7 @@ package gin
 import (
 	"encoding/json"
 	"io"
+	"net/textproto"
 
 	"github.com/gin-gonic/gin"
 	"github.com/luraproject/lura/v2/config"
@@ -28,8 +29,7 @@ func NewEngine(cfg config.ServiceConfig, logger logging.Logger, w io.Writer) *gi
 	paths := []string{}
 
 	if v, ok := cfg.ExtraConfig[Namespace]; ok {
-		b, err := json.Marshal(v)
-		if err != nil {
+		if b, err := json.Marshal(v); err == nil {
 			ginOptions := engineConfiguration{}
 			if err := json.Unmarshal(b, &ginOptions); err == nil {
 				engine.RedirectTrailingSlash = !ginOptions.DisableRedirectTrailingSlash
@@ -37,6 +37,9 @@ func NewEngine(cfg config.ServiceConfig, logger logging.Logger, w io.Writer) *gi
 				engine.HandleMethodNotAllowed = !ginOptions.DisableHandleMethodNotAllowed
 				engine.ForwardedByClientIP = ginOptions.ForwardedByClientIP
 				engine.RemoteIPHeaders = ginOptions.RemoteIPHeaders
+				for k, h := range engine.RemoteIPHeaders {
+					engine.RemoteIPHeaders[k] = textproto.CanonicalMIMEHeaderKey(h)
+				}
 				engine.TrustedProxies = ginOptions.TrustedProxies
 				engine.AppEngine = ginOptions.AppEngine
 				engine.MaxMultipartMemory = ginOptions.MaxMultipartMemory

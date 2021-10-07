@@ -77,7 +77,7 @@ type ginRouter struct {
 	mu         *sync.Mutex
 }
 
-// Run completes the router initialization and starts it
+// Run completes the router initialization and executes it
 func (r ginRouter) Run(cfg config.ServiceConfig) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -85,6 +85,10 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 	server.InitHTTPDefaultTransport(cfg)
 
 	r.registerEndpointsAndMiddlewares(cfg)
+
+	// TODO: remove this ugly hack once the https://github.com/gin-gonic/gin/pull/2692 and
+	// https://github.com/gin-gonic/gin/issues/2862 are completely fixed
+	go r.cfg.Engine.Run("XXXX")
 
 	if err := r.runServerF(r.ctx, cfg, r.cfg.Engine); err != nil {
 		r.cfg.Logger.Error(err.Error())

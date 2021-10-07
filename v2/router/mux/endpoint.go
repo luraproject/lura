@@ -171,16 +171,16 @@ type responseError interface {
 // X-Real-IP and X-Forwarded-For in order to work properly with reverse-proxies such us: nginx or haproxy.
 // Use X-Forwarded-For before X-Real-Ip as nginx uses X-Real-Ip with the proxy's IP.
 func clientIP(r *http.Request) string {
-	clientIP := requestHeader(r, "X-Forwarded-For")
+	clientIP := r.Header.Get("X-Forwarded-For")
 	clientIP = strings.TrimSpace(strings.Split(clientIP, ",")[0])
 	if clientIP == "" {
-		clientIP = strings.TrimSpace(requestHeader(r, "X-Real-Ip"))
+		clientIP = strings.TrimSpace(r.Header.Get("X-Real-Ip"))
 	}
 	if clientIP != "" {
 		return clientIP
 	}
 
-	if addr := requestHeader(r, "X-Appengine-Remote-Addr"); addr != "" {
+	if addr := r.Header.Get("X-Appengine-Remote-Addr"); addr != "" {
 		return addr
 	}
 
@@ -188,12 +188,5 @@ func clientIP(r *http.Request) string {
 		return ip
 	}
 
-	return ""
-}
-
-func requestHeader(r *http.Request, key string) string {
-	if values, _ := r.Header[key]; len(values) > 0 {
-		return values[0]
-	}
 	return ""
 }
