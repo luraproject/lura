@@ -83,6 +83,11 @@ func TestDefaultFactory_ok(t *testing.T) {
 				},
 			},
 		},
+		ExtraConfig: map[string]interface{}{
+			Namespace: map[string]interface{}{
+				"auto_options": true,
+			},
+		},
 	}
 
 	go func() { r.Run(serviceCfg) }()
@@ -123,6 +128,18 @@ func TestDefaultFactory_ok(t *testing.T) {
 		if content != expectedBody {
 			t.Error("Unexpected body:", content, "expected:", expectedBody)
 		}
+	}
+
+	req, _ := http.NewRequest("OPTIONS", "http://127.0.0.1:8072/some", nil)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Error("Making the request:", err.Error())
+		return
+	}
+
+	if allow := resp.Header.Get("Allow"); allow != "DELETE, GET, PATCH, POST, PUT" {
+		t.Errorf("unexpected options response: '%s'", allow)
 	}
 }
 

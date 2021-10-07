@@ -5,13 +5,16 @@ package gin
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/core"
 	"github.com/luraproject/lura/v2/logging"
 	"github.com/luraproject/lura/v2/proxy"
 	"github.com/luraproject/lura/v2/router"
@@ -67,6 +70,7 @@ func (rf factory) NewWithContext(ctx context.Context) router.Router {
 		ctx:        ctx,
 		runServerF: rf.cfg.RunServer,
 		mu:         new(sync.Mutex),
+		urlCatalog: map[string][]string{},
 	}
 }
 
@@ -75,6 +79,7 @@ type ginRouter struct {
 	ctx        context.Context
 	runServerF RunServerFunc
 	mu         *sync.Mutex
+	urlCatalog map[string][]string
 }
 
 // Run completes the router initialization and executes it
@@ -110,6 +115,13 @@ func (r ginRouter) registerEndpointsAndMiddlewares(cfg config.ServiceConfig) {
 	endpointGroup.Use(r.cfg.Middlewares...)
 
 	r.registerKrakendEndpoints(endpointGroup, cfg.Endpoints)
+
+	if opts, ok := cfg.ExtraConfig[Namespace].(map[string]interface{}); ok {
+		if v, ok := opts["auto_options"].(bool); ok && v {
+			fmt.Println("enabling the auto options endpoints")
+			r.registerOptionEndpoints(endpointGroup)
+		}
+	}
 }
 
 func (r ginRouter) registerKrakendEndpoints(rg *gin.RouterGroup, endpoints []*config.EndpointConfig) {
@@ -147,5 +159,24 @@ func (r ginRouter) registerKrakendEndpoint(rg *gin.RouterGroup, method string, e
 		rg.DELETE(path, h)
 	default:
 		r.cfg.Logger.Error("Unsupported method", method)
+	}
+
+	methods, ok := r.urlCatalog[path]
+	if !ok {
+		r.urlCatalog[path] = []string{method}
+		return
+	}
+	r.urlCatalog[path] = append(methods, method)
+}
+
+func (r ginRouter) registerOptionEndpoints(rg *gin.RouterGroup) {
+	for path, methods := range r.urlCatalog {
+		sort.Strings(methods)
+		allowed := strings.Join(methods, ", ")
+
+		rg.OPTIONS(path, func(c *gin.Context) {
+			c.Header("Allow", allowed)
+			c.Header(core.KrakendHeaderName, core.KrakendHeaderValue)
+		})
 	}
 }
