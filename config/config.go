@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/luraproject/lura/encoding"
+	"github.com/luraproject/lura/v2/encoding"
 )
 
 const (
@@ -194,12 +194,6 @@ type Backend struct {
 	HostSanitizationDisabled bool `mapstructure:"disable_host_sanitize"`
 	// URLPattern is the URL pattern to use to locate the resource to be consumed
 	URLPattern string `mapstructure:"url_pattern"`
-	// Deprecated: use DenyList
-	// Blacklist is a set of response fields to remove. If empty, the filter id not used
-	Blacklist []string `mapstructure:"blacklist"`
-	// Deprecated: use AllowList
-	// Whitelist is a set of response fields to allow. If empty, the filter id not used
-	Whitelist []string `mapstructure:"whitelist"`
 	// AllowList is a set of response fields to allow. If empty, the filter id not used
 	AllowList []string `mapstructure:"allow"`
 	// DenyList is a set of response fields to remove. If empty, the filter id not used
@@ -262,18 +256,7 @@ func (e *ExtraConfig) sanitize() {
 	}
 }
 
-// ConfigGetter is a function for parsing ExtraConfig into a previously know type
-type ConfigGetter func(ExtraConfig) interface{}
-
-// DefaultConfigGetter is the Default implementation for ConfigGetter, it just returns the ExtraConfig map.
-func DefaultConfigGetter(extra ExtraConfig) interface{} { return extra }
-
 const defaultNamespace = "github.com/devopsfaith/krakend/config"
-
-// ConfigGetters map than match namespaces and ConfigGetter so the components knows which type to expect returned by the
-// ConfigGetter ie: if we look for the defaultNamespace in the map, we will get the DefaultConfigGetter implementation
-// which will return a ExtraConfig when called
-var ConfigGetters = map[string]ConfigGetter{defaultNamespace: DefaultConfigGetter}
 
 var (
 	simpleURLKeysPattern    = regexp.MustCompile(`\{([a-zA-Z\-_0-9\.]+)\}`)
@@ -362,15 +345,6 @@ func (s *ServiceConfig) initEndpoints() error {
 		e.ExtraConfig.sanitize()
 
 		for j, b := range e.Backend {
-			// TODO: remove when white/black lists are deprecated
-			if len(b.AllowList) != 0 && len(b.Whitelist) == 0 {
-				b.Whitelist = b.AllowList
-			}
-
-			if len(b.DenyList) != 0 && len(b.Blacklist) == 0 {
-				b.Blacklist = b.DenyList
-			}
-
 			s.initBackendDefaults(i, j)
 
 			if err := s.initBackendURLMappings(i, j, inputSet); err != nil {
@@ -435,7 +409,7 @@ func (s *ServiceConfig) initBackendDefaults(e, b int) {
 	}
 	backend.Timeout = endpoint.Timeout
 	backend.ConcurrentCalls = endpoint.ConcurrentCalls
-	backend.Decoder = encoding.Get(strings.ToLower(backend.Encoding))(backend.IsCollection)
+	backend.Decoder = encoding.GetRegister().Get(strings.ToLower(backend.Encoding))(backend.IsCollection)
 }
 
 func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]interface{}) error {

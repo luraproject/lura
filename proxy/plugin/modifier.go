@@ -8,9 +8,9 @@ import (
 	"plugin"
 	"strings"
 
-	"github.com/luraproject/lura/logging"
-	luraplugin "github.com/luraproject/lura/plugin"
-	"github.com/luraproject/lura/register"
+	"github.com/luraproject/lura/v2/logging"
+	luraplugin "github.com/luraproject/lura/v2/plugin"
+	"github.com/luraproject/lura/v2/register"
 )
 
 const (
@@ -94,11 +94,7 @@ type RegisterModifierFunc func(
 
 // LoadModifiers scans the given path using the pattern and registers all the found modifier plugins into the rmf
 func LoadModifiers(path, pattern string, rmf RegisterModifierFunc) (int, error) {
-	plugins, err := luraplugin.Scan(path, pattern)
-	if err != nil {
-		return 0, err
-	}
-	return load(plugins, rmf, nil)
+	return LoadModifiersWithLogger(path, pattern, rmf, nil)
 }
 
 // LoadModifiersWithLogger scans the given path using the pattern and registers all the found modifier plugins into the rmf

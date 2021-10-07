@@ -2,8 +2,8 @@
 package sd
 
 import (
-	"github.com/luraproject/lura/config"
-	"github.com/luraproject/lura/register"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/register"
 )
 
 // RegisterSubscriberFactory registers the received factory
@@ -23,9 +23,14 @@ func GetRegister() *Register {
 	return subscriberFactories
 }
 
+type untypedRegister interface {
+	Register(name string, v interface{})
+	Get(name string) (interface{}, bool)
+}
+
 // Register is a SD register
 type Register struct {
-	data register.Untyped
+	data untypedRegister
 }
 
 func initRegister() *Register {

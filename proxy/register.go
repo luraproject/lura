@@ -2,7 +2,7 @@
 package proxy
 
 import (
-	"github.com/luraproject/lura/register"
+	"github.com/luraproject/lura/v2/register"
 )
 
 func NewRegister() *Register {
@@ -16,7 +16,7 @@ type Register struct {
 }
 
 type combinerRegister struct {
-	data     register.Untyped
+	data     *register.Untyped
 	fallback ResponseCombiner
 }
 

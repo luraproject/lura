@@ -9,10 +9,11 @@ import (
 
 	gorilla "github.com/gorilla/mux"
 
-	"github.com/luraproject/lura/logging"
-	"github.com/luraproject/lura/proxy"
-	"github.com/luraproject/lura/router"
-	"github.com/luraproject/lura/router/mux"
+	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v2/proxy"
+	"github.com/luraproject/lura/v2/router"
+	"github.com/luraproject/lura/v2/router/mux"
+	"github.com/luraproject/lura/v2/transport/http/server"
 )
 
 // DefaultFactory returns a net/http mux router factory with the injected proxy factory and logger
@@ -29,7 +30,7 @@ func DefaultConfig(pf proxy.Factory, logger logging.Logger) mux.Config {
 		ProxyFactory:   pf,
 		Logger:         logger,
 		DebugPattern:   "/__debug/{params}",
-		RunServer:      router.RunServer,
+		RunServer:      server.RunServer,
 	}
 }
 

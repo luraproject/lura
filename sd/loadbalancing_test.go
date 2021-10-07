@@ -7,7 +7,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/v2/config"
 )
 
 func TestRoundRobinLB(t *testing.T) {
@@ -26,6 +26,10 @@ func TestRoundRobinLB(t *testing.T) {
 
 			subscriber := FixedSubscriber(endpoints)
 			balancer := NewRoundRobinLB(subscriber)
+
+			if b, ok := balancer.(*roundRobinLB); ok {
+				b.counter = 0
+			}
 
 			for i := 0; i < iterations; i++ {
 				endpoint, err := balancer.Host()

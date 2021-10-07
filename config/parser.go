@@ -88,6 +88,9 @@ func NewParseError(err error, configFile string, offset int) *ParseError {
 }
 
 func getErrorRowCol(source []byte, offset int) (row, col int) {
+	if len(source) < offset {
+		offset = len(source) - 1
+	}
 	for i := 0; i < offset; i++ {
 		v := source[i]
 		if v == '\r' {
@@ -260,8 +263,6 @@ type parseableBackend struct {
 	Host                     []string          `json:"host"`
 	HostSanitizationDisabled bool              `json:"disable_host_sanitize"`
 	URLPattern               string            `json:"url_pattern"`
-	Blacklist                []string          `json:"blacklist"`
-	Whitelist                []string          `json:"whitelist"`
 	AllowList                []string          `json:"allow"`
 	DenyList                 []string          `json:"deny"`
 	Mapping                  map[string]string `json:"mapping"`
@@ -279,8 +280,6 @@ func (p *parseableBackend) normalize() *Backend {
 		Host:                     p.Host,
 		HostSanitizationDisabled: p.HostSanitizationDisabled,
 		URLPattern:               p.URLPattern,
-		Blacklist:                p.Blacklist,
-		Whitelist:                p.Whitelist,
 		Mapping:                  p.Mapping,
 		Encoding:                 p.Encoding,
 		IsCollection:             p.IsCollection,

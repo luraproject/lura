@@ -19,10 +19,10 @@ jobs:
         go-version: 1.17
 
     - name: Build
-      run: go build -v ./v2/...
+      run: go build -v ./...
 
     - name: Test
-      run: go test -cover -race ./v2/...
+      run: go test -cover -race ./...
 
     - name: Integration Test
-      run: go test -tags integration ./v2/test
+      run: go test -tags integration ./test

@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/devopsfaith/flatmap/tree"
-	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/v2/config"
 )
 
 // EntityFormatter formats the response data
@@ -36,10 +36,10 @@ func NewEntityFormatter(remote *config.Backend) EntityFormatter {
 	}
 
 	var propertyFilter propertyFilter
-	if len(remote.Whitelist) > 0 {
-		propertyFilter = newWhitelistingFilter(remote.Whitelist)
+	if len(remote.AllowList) > 0 {
+		propertyFilter = newAllowlistingFilter(remote.AllowList)
 	} else {
-		propertyFilter = newBlacklistingFilter(remote.Blacklist)
+		propertyFilter = newDenylistingFilter(remote.DenyList)
 	}
 	sanitizedMappings := make(map[string]string, len(remote.Mapping))
 	for i, m := range remote.Mapping {
@@ -91,18 +91,18 @@ func extractTarget(target string, entity *Response) {
 	}
 }
 
-func whitelistPrune(wlDict map[string]interface{}, inDict map[string]interface{}) bool {
+func AllowlistPrune(wlDict map[string]interface{}, inDict map[string]interface{}) bool {
 	canDelete := true
 	var deleteSibling bool
 	for k, v := range inDict {
 		deleteSibling = true
 		if subWl, ok := wlDict[k]; ok {
 			if subWlDict, okk := subWl.(map[string]interface{}); okk {
-				if subInDict, isDict := v.(map[string]interface{}); isDict && !whitelistPrune(subWlDict, subInDict) {
+				if subInDict, isDict := v.(map[string]interface{}); isDict && !AllowlistPrune(subWlDict, subInDict) {
 					deleteSibling = false
 				}
 			} else {
-				// whitelist leaf, maintain this branch
+				// Allowlist leaf, maintain this branch
 				deleteSibling = false
 			}
 		}
@@ -115,16 +115,16 @@ func whitelistPrune(wlDict map[string]interface{}, inDict map[string]interface{}
 	return canDelete
 }
 
-func newWhitelistingFilter(whitelist []string) propertyFilter {
+func newAllowlistingFilter(Allowlist []string) propertyFilter {
 	wlDict := make(map[string]interface{})
-	for _, k := range whitelist {
+	for _, k := range Allowlist {
 		wlFields := strings.Split(k, ".")
 		d := buildDictPath(wlDict, wlFields[:len(wlFields)-1])
 		d[wlFields[len(wlFields)-1]] = true
 	}
 
 	return func(entity *Response) {
-		if whitelistPrune(wlDict, entity.Data) {
+		if AllowlistPrune(wlDict, entity.Data) {
 			for k := range entity.Data {
 				delete(entity.Data, k)
 			}
@@ -152,7 +152,7 @@ func buildDictPath(accumulator map[string]interface{}, fields []string) map[stri
 	return p
 }
 
-func newBlacklistingFilter(blacklist []string) propertyFilter {
+func newDenylistingFilter(blacklist []string) propertyFilter {
 	bl := make(map[string][]string, len(blacklist))
 	for _, key := range blacklist {
 		keys := strings.Split(key, ".")

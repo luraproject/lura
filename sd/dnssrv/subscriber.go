@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luraproject/lura/config"
-	"github.com/luraproject/lura/sd"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/sd"
 )
 
 // Namespace is the key for the dns sd module
@@ -40,7 +40,13 @@ func New(name string) sd.Subscriber {
 
 // NewDetailed creates a DNS subscriber with the received values
 func NewDetailed(name string, lookup lookup, ttl time.Duration) sd.Subscriber {
-	s := subscriber{name, &sd.FixedSubscriber{}, &sync.Mutex{}, ttl, lookup}
+	s := subscriber{
+		name:   name,
+		cache:  &sd.FixedSubscriber{},
+		mutex:  &sync.Mutex{},
+		ttl:    ttl,
+		lookup: lookup,
+	}
 	s.update()
 	go s.loop()
 	return s

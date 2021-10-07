@@ -9,7 +9,7 @@ import (
 	"html"
 	"net/http"
 
-	"github.com/luraproject/lura/logging"
+	"github.com/luraproject/lura/v2/logging"
 )
 
 // ClientRegisterer is the symbol the plugin loader will try to load. It must implement the RegisterClient interface

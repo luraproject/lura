@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-chi/chi"
-	"github.com/luraproject/lura/config"
-	"github.com/luraproject/lura/proxy"
+	"github.com/go-chi/chi/v5"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/proxy"
 )
 
 func BenchmarkEndpointHandler_ko(b *testing.B) {

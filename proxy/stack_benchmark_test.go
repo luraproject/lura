@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/v2/config"
 )
 
 var result interface{}
@@ -19,7 +19,7 @@ func BenchmarkProxyStack_single(b *testing.B) {
 		Host:            []string{"supu:8080"},
 		Method:          "GET",
 		URLPattern:      "/a/{{.Tupu}}",
-		Blacklist:       []string{"map.aaaa"},
+		DenyList:        []string{"map.aaaa"},
 		Mapping:         map[string]string{"supu": "SUPUUUUU"},
 	}
 	cfg := &config.EndpointConfig{
@@ -83,7 +83,7 @@ func BenchmarkProxyStack_multi(b *testing.B) {
 		Host:            []string{"supu:8080"},
 		Method:          "GET",
 		URLPattern:      "/a/{{.Tupu}}",
-		Blacklist:       []string{"map.aaaa"},
+		DenyList:        []string{"map.aaaa"},
 		Mapping:         map[string]string{"supu": "SUPUUUUU"},
 	}
 

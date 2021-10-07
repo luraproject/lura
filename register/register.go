@@ -3,24 +3,22 @@
 // SPDX-License-Identifier: Apache-2.0
 package register
 
-import (
-	"github.com/luraproject/lura/register/internal"
-)
+import "sync"
 
 func New() *Namespaced {
-	return &Namespaced{NewUntyped()}
+	return &Namespaced{data: NewUntyped()}
 }
 
 type Namespaced struct {
-	data Untyped
+	data *Untyped
 }
 
-func (n *Namespaced) Get(namespace string) (Untyped, bool) {
+func (n *Namespaced) Get(namespace string) (*Untyped, bool) {
 	v, ok := n.data.Get(namespace)
 	if !ok {
 		return nil, ok
 	}
-	register, ok := v.(Untyped)
+	register, ok := v.(*Untyped)
 	return register, ok
 }
 
@@ -42,12 +40,37 @@ func (n *Namespaced) AddNamespace(namespace string) {
 	n.data.Register(namespace, NewUntyped())
 }
 
-type Untyped interface {
-	Register(name string, v interface{})
-	Get(name string) (interface{}, bool)
-	Clone() map[string]interface{}
+func NewUntyped() *Untyped {
+	return &Untyped{
+		data:  map[string]interface{}{},
+		mutex: &sync.RWMutex{},
+	}
 }
 
-func NewUntyped() Untyped {
-	return internal.NewUntyped()
+type Untyped struct {
+	data  map[string]interface{}
+	mutex *sync.RWMutex
+}
+
+func (u *Untyped) Register(name string, v interface{}) {
+	u.mutex.Lock()
+	u.data[name] = v
+	u.mutex.Unlock()
+}
+
+func (u *Untyped) Get(name string) (interface{}, bool) {
+	u.mutex.RLock()
+	v, ok := u.data[name]
+	u.mutex.RUnlock()
+	return v, ok
+}
+
+func (u *Untyped) Clone() map[string]interface{} {
+	u.mutex.RLock()
+	res := make(map[string]interface{}, len(u.data))
+	for k, v := range u.data {
+		res[k] = v
+	}
+	u.mutex.RUnlock()
+	return res
 }

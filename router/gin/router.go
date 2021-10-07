@@ -11,10 +11,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/luraproject/lura/config"
-	"github.com/luraproject/lura/logging"
-	"github.com/luraproject/lura/proxy"
-	"github.com/luraproject/lura/router"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v2/proxy"
+	"github.com/luraproject/lura/v2/router"
+	"github.com/luraproject/lura/v2/transport/http/server"
 )
 
 // RunServerFunc is a func that will run the http Server with the given params.
@@ -40,7 +41,7 @@ func DefaultFactory(proxyFactory proxy.Factory, logger logging.Logger) router.Fa
 			HandlerFactory: EndpointHandler,
 			ProxyFactory:   proxyFactory,
 			Logger:         logger,
-			RunServer:      router.RunServer,
+			RunServer:      server.RunServer,
 		},
 	)
 }
@@ -76,23 +77,27 @@ type ginRouter struct {
 	mu         *sync.Mutex
 }
 
-// Run implements the router interface
+// Run completes the router initialization and executes it
 func (r ginRouter) Run(cfg config.ServiceConfig) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if !cfg.Debug {
-		gin.SetMode(gin.ReleaseMode)
-	} else {
-		r.cfg.Logger.Debug("Debug enabled")
+	server.InitHTTPDefaultTransport(cfg)
+
+	r.registerEndpointsAndMiddlewares(cfg)
+
+	// TODO: remove this ugly hack once the https://github.com/gin-gonic/gin/pull/2692 and
+	// https://github.com/gin-gonic/gin/issues/2862 are completely fixed
+	go r.cfg.Engine.Run("XXXX")
+
+	if err := r.runServerF(r.ctx, cfg, r.cfg.Engine); err != nil {
+		r.cfg.Logger.Error(err.Error())
 	}
 
-	router.InitHTTPDefaultTransport(cfg)
+	r.cfg.Logger.Info("Router execution ended")
+}
 
-	r.cfg.Engine.RedirectTrailingSlash = true
-	r.cfg.Engine.RedirectFixedPath = true
-	r.cfg.Engine.HandleMethodNotAllowed = true
-
+func (r ginRouter) registerEndpointsAndMiddlewares(cfg config.ServiceConfig) {
 	if cfg.Debug {
 		r.cfg.Engine.Any("/__debug/*param", DebugHandler(r.cfg.Logger))
 	}
@@ -105,12 +110,6 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 	endpointGroup.Use(r.cfg.Middlewares...)
 
 	r.registerKrakendEndpoints(endpointGroup, cfg.Endpoints)
-
-	if err := r.runServerF(r.ctx, cfg, r.cfg.Engine); err != nil {
-		r.cfg.Logger.Error(err.Error())
-	}
-
-	r.cfg.Logger.Info("Router execution ended")
 }
 
 func (r ginRouter) registerKrakendEndpoints(rg *gin.RouterGroup, endpoints []*config.EndpointConfig) {

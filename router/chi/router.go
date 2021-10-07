@@ -8,13 +8,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
-	"github.com/luraproject/lura/config"
-	"github.com/luraproject/lura/logging"
-	"github.com/luraproject/lura/proxy"
-	"github.com/luraproject/lura/router"
-	"github.com/luraproject/lura/router/mux"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v2/proxy"
+	"github.com/luraproject/lura/v2/router"
+	"github.com/luraproject/lura/v2/router/mux"
+	"github.com/luraproject/lura/v2/transport/http/server"
 )
 
 // ChiDefaultDebugPattern is the default pattern used to define the debug endpoint
@@ -45,7 +46,7 @@ func DefaultFactory(proxyFactory proxy.Factory, logger logging.Logger) router.Fa
 			ProxyFactory:   proxyFactory,
 			Logger:         logger,
 			DebugPattern:   ChiDefaultDebugPattern,
-			RunServer:      router.RunServer,
+			RunServer:      server.RunServer,
 		},
 	)
 }
@@ -88,12 +89,12 @@ func (r chiRouter) Run(cfg config.ServiceConfig) {
 
 	r.cfg.Engine.Get("/__health", mux.HealthHandler)
 
-	router.InitHTTPDefaultTransport(cfg)
+	server.InitHTTPDefaultTransport(cfg)
 
 	r.registerKrakendEndpoints(cfg.Endpoints)
 
 	r.cfg.Engine.NotFound(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
+		w.Header().Set(server.CompleteResponseHeaderName, server.HeaderIncompleteResponseValue)
 		http.NotFound(w, r)
 	})
 

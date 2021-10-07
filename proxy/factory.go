@@ -2,9 +2,9 @@
 package proxy
 
 import (
-	"github.com/luraproject/lura/config"
-	"github.com/luraproject/lura/logging"
-	"github.com/luraproject/lura/sd"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v2/sd"
 )
 
 // Factory creates proxies based on the received endpoint configuration.
@@ -86,6 +86,7 @@ func (pf defaultFactory) newSingle(cfg *config.EndpointConfig) (Proxy, error) {
 func (pf defaultFactory) newStack(backend *config.Backend) (p Proxy) {
 	p = pf.backendFactory(backend)
 	p = NewBackendPluginMiddleware(backend)(p)
+	p = NewGraphQLMiddleware(backend)(p)
 	p = NewLoadBalancedMiddlewareWithSubscriber(pf.subscriberFactory(backend))(p)
 	if backend.ConcurrentCalls > 1 {
 		p = NewConcurrentMiddleware(backend)(p)

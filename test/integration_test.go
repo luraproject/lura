@@ -19,24 +19,45 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/urfave/negroni"
+	ginlib "github.com/gin-gonic/gin"
+	"github.com/urfave/negroni/v2"
 
-	"github.com/luraproject/lura/config"
-	"github.com/luraproject/lura/logging"
-	"github.com/luraproject/lura/proxy"
-	"github.com/luraproject/lura/router/chi"
-	"github.com/luraproject/lura/router/gin"
-	"github.com/luraproject/lura/router/gorilla"
-	"github.com/luraproject/lura/router/httptreemux"
-	luranegroni "github.com/luraproject/lura/router/negroni"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v2/proxy"
+	"github.com/luraproject/lura/v2/router/chi"
+	"github.com/luraproject/lura/v2/router/gin"
+	"github.com/luraproject/lura/v2/router/gorilla"
+	"github.com/luraproject/lura/v2/router/httptreemux"
+	luranegroni "github.com/luraproject/lura/v2/router/negroni"
+	"github.com/luraproject/lura/v2/transport/http/server"
 )
 
 func TestKrakenD_ginRouter(t *testing.T) {
+	ginlib.SetMode(ginlib.TestMode)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	testKrakenD(t, func(logger logging.Logger, cfg *config.ServiceConfig) {
-		gin.DefaultFactory(proxy.DefaultFactory(logger), logger).NewWithContext(ctx).Run(*cfg)
+		if cfg.ExtraConfig == nil {
+			cfg.ExtraConfig = map[string]interface{}{}
+		}
+		cfg.ExtraConfig[gin.Namespace] = map[string]interface{}{
+			"trusted_proxies":        []interface{}{"127.0.0.1/32", "::1"},
+			"remote_ip_headers":      []interface{}{"x-forwarded-for"},
+			"forwarded_by_client_ip": true,
+		}
+
+		gin.NewFactory(
+			gin.Config{
+				Engine:         gin.NewEngine(*cfg, logger, ioutil.Discard),
+				Middlewares:    []ginlib.HandlerFunc{},
+				HandlerFactory: gin.EndpointHandler,
+				ProxyFactory:   proxy.DefaultFactory(logger),
+				Logger:         logger,
+				RunServer:      server.RunServer,
+			},
+		).NewWithContext(ctx).Run(*cfg)
 	})
 }
 
@@ -318,6 +339,24 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 			url:        "/sequence-accept",
 			expHeaders: defaultHeaders,
 		},
+		{
+			method:        "GET",
+			name:          "error-status-code-1",
+			url:           "/error-status-code/1",
+			expStatusCode: 200,
+		},
+		{
+			method:        "GET",
+			name:          "error-status-code-2",
+			url:           "/error-status-code/2",
+			expStatusCode: 429,
+		},
+		{
+			method:        "GET",
+			name:          "error-status-code-3",
+			url:           "/error-status-code/3",
+			expStatusCode: 200,
+		},
 	} {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
@@ -346,6 +385,7 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 				t.Errorf("%s: nil response", resp.Request.URL.Path)
 				return
 			}
+
 			expectedStatusCode := http.StatusOK
 			if tc.expStatusCode != 0 {
 				expectedStatusCode = tc.expStatusCode
@@ -366,8 +406,13 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 			b, _ := ioutil.ReadAll(resp.Body)
 			resp.Body.Close()
 			if tc.expBody != string(b) {
-				t.Errorf("%s: unexpected body: %s", resp.Request.URL.Path, string(b))
-				fmt.Println(resp.Request.URL.Path, "was expecting:", tc.expBody)
+				t.Errorf(
+					"%s: unexpected body: %s\n\t%s was expecting: %s",
+					resp.Request.URL.Path,
+					string(b),
+					resp.Request.URL.Path,
+					tc.expBody,
+				)
 			}
 		})
 	}

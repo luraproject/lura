@@ -257,12 +257,12 @@
             {
               "url_pattern": "/provider/{param}",
               "host": [ "{{.b4}}" ],
-              "whitelist": [ "random" ]
+              "allow": [ "random" ]
             },
             {
               "url_pattern": "/recipient/{resp0_random}",
               "host": [ "{{.b7}}" ],
-              "whitelist": [ "path" ]
+              "allow": [ "path" ]
             }
           ]
         },
@@ -277,12 +277,12 @@
             {
               "url_pattern": "/provider/{param}",
               "host": [ "{{.b7}}" ],
-              "whitelist": [ "random" ]
+              "allow": [ "random" ]
             },
             {
               "url_pattern": "/recipient/{resp0_random}",
               "host": [ "{{.b4}}" ],
-              "whitelist": [ "path" ]
+              "allow": [ "path" ]
             }
           ]
         },
@@ -379,6 +379,57 @@
                         "{{.b3}}"
                     ],
                     "url_pattern": "/"
+                }
+            ]
+        },
+        {
+            "endpoint": "/error-status-code/1",
+            "backend": [
+                {
+                    "host": [ "{{.b3}}" ],
+                    "url_pattern": "/",
+                    "extra_config":{
+                        "github.com/devopsfaith/krakend/http":{
+                            "return_error_code":true
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "endpoint": "/error-status-code/2",
+            "backend": [
+                {
+                    "host": [ "{{.b4}}" ],
+                    "url_pattern": "/",
+                    "extra_config":{
+                        "github.com/devopsfaith/krakend/http":{
+                            "return_error_code":true
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "endpoint": "/error-status-code/3",
+            "backend": [
+                {
+                    "host": [ "{{.b3}}" ],
+                    "url_pattern": "/",
+                    "extra_config":{
+                        "github.com/devopsfaith/krakend/http":{
+                            "return_error_code":true
+                        }
+                    }
+                },
+                {
+                    "host": [ "{{.b4}}" ],
+                    "url_pattern": "/",
+                    "extra_config":{
+                        "github.com/devopsfaith/krakend/http":{
+                            "return_error_code":true
+                        }
+                    }
                 }
             ]
         }
