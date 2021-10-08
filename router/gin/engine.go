@@ -18,7 +18,7 @@ func NewEngine(cfg config.ServiceConfig, logger logging.Logger, w io.Writer) *gi
 	if !cfg.Debug {
 		gin.SetMode(gin.ReleaseMode)
 	} else {
-		logger.Debug("[SERVICE: GIN] Debug enabled")
+		logger.Debug(logPrefix, "Debug enabled")
 	}
 	engine := gin.New()
 
