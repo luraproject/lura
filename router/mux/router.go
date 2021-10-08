@@ -111,17 +111,17 @@ func (r httpRouter) Run(cfg config.ServiceConfig) {
 	r.registerKrakendEndpoints(cfg.Endpoints)
 
 	if err := r.RunServer(r.ctx, cfg, r.handler()); err != nil {
-		r.cfg.Logger.Error(err.Error())
+		r.cfg.Logger.Error("[SERVICE: Mux]", err.Error())
 	}
 
-	r.cfg.Logger.Info("Router execution ended")
+	r.cfg.Logger.Info("[SERVICE: Mux]", "Router execution ended")
 }
 
 func (r httpRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) {
 	for _, c := range endpoints {
 		proxyStack, err := r.cfg.ProxyFactory.New(c)
 		if err != nil {
-			r.cfg.Logger.Error("calling the ProxyFactory", err.Error())
+			r.cfg.Logger.Error("[SERVICE: Mux]", "Calling the ProxyFactory", err.Error())
 			continue
 		}
 
@@ -134,7 +134,7 @@ func (r httpRouter) registerKrakendEndpoint(method string, endpoint *config.Endp
 	path := endpoint.Endpoint
 	if method != http.MethodGet && totBackends > 1 {
 		if !router.IsValidSequentialEndpoint(endpoint) {
-			r.cfg.Logger.Error(method, " endpoints with sequential enabled is only the last one is allowed to be non GET! Ignoring", path)
+			r.cfg.Logger.Error("[SERVICE: Mux]", method, " endpoints with sequential proxy enabled only allow a non-GET in the last backend! Ignoring", path)
 			return
 		}
 	}
@@ -146,17 +146,17 @@ func (r httpRouter) registerKrakendEndpoint(method string, endpoint *config.Endp
 	case http.MethodPatch:
 	case http.MethodDelete:
 	default:
-		r.cfg.Logger.Error("Unsupported method", method)
+		r.cfg.Logger.Error("[SERVICE: Mux]", "Unsupported method", method)
 		return
 	}
-	r.cfg.Logger.Debug("registering the endpoint", method, path)
+	r.cfg.Logger.Debug("[SERVICE: Mux]", "Registering the endpoint", method, path)
 	r.cfg.Engine.Handle(path, method, handler)
 }
 
 func (r httpRouter) handler() http.Handler {
 	var handler http.Handler = r.cfg.Engine
 	for _, middleware := range r.cfg.Middlewares {
-		r.cfg.Logger.Debug("Adding the middleware", middleware)
+		r.cfg.Logger.Debug("[SERVICE: Mux]", "Adding the middleware", middleware)
 		handler = middleware.Handler(handler)
 	}
 	return handler
