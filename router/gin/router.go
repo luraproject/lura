@@ -21,6 +21,8 @@ import (
 	"github.com/luraproject/lura/v2/transport/http/server"
 )
 
+const logPrefix =  "[SERVICE: Gin]"
+
 // RunServerFunc is a func that will run the http Server with the given params.
 type RunServerFunc func(context.Context, config.ServiceConfig, http.Handler) error
 
@@ -96,10 +98,10 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 	go r.cfg.Engine.Run("XXXX")
 
 	if err := r.runServerF(r.ctx, cfg, r.cfg.Engine); err != nil {
-		r.cfg.Logger.Error(err.Error())
+		r.cfg.Logger.Error(logPrefix, err.Error())
 	}
 
-	r.cfg.Logger.Info("Router execution ended")
+	r.cfg.Logger.Info(logPrefix, "Router execution ended")
 }
 
 func (r ginRouter) registerEndpointsAndMiddlewares(cfg config.ServiceConfig) {
@@ -118,7 +120,7 @@ func (r ginRouter) registerEndpointsAndMiddlewares(cfg config.ServiceConfig) {
 
 	if opts, ok := cfg.ExtraConfig[Namespace].(map[string]interface{}); ok {
 		if v, ok := opts["auto_options"].(bool); ok && v {
-			fmt.Println("enabling the auto options endpoints")
+			r.cfg.Logger.Debug(,logPrefix "Enabling the auto options endpoints")
 			r.registerOptionEndpoints(endpointGroup)
 		}
 	}
@@ -128,7 +130,7 @@ func (r ginRouter) registerKrakendEndpoints(rg *gin.RouterGroup, endpoints []*co
 	for _, c := range endpoints {
 		proxyStack, err := r.cfg.ProxyFactory.New(c)
 		if err != nil {
-			r.cfg.Logger.Error("calling the ProxyFactory", err.Error())
+			r.cfg.Logger.Error(logPrefix,"Calling the ProxyFactory", err.Error())
 			continue
 		}
 
@@ -141,7 +143,7 @@ func (r ginRouter) registerKrakendEndpoint(rg *gin.RouterGroup, method string, e
 	path := e.Endpoint
 	if method != http.MethodGet && total > 1 {
 		if !router.IsValidSequentialEndpoint(e) {
-			r.cfg.Logger.Error(method, " endpoints with sequential enabled is only the last one is allowed to be non GET! Ignoring", path)
+			r.cfg.Logger.Error(logPrefix, method, "endpoints with sequential proxy enabled only allow a non-GET in the last backend! Ignoring", path)
 			return
 		}
 	}
@@ -158,7 +160,7 @@ func (r ginRouter) registerKrakendEndpoint(rg *gin.RouterGroup, method string, e
 	case http.MethodDelete:
 		rg.DELETE(path, h)
 	default:
-		r.cfg.Logger.Error("Unsupported method", method)
+		r.cfg.Logger.Error(logPrefix, "Unsupported method", method)
 	}
 
 	methods, ok := r.urlCatalog[path]

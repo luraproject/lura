@@ -12,7 +12,7 @@ import (
 
 // NewLoggingMiddleware creates proxy middleware for logging requests and responses
 func NewLoggingMiddleware(logger logging.Logger, name string) Middleware {
-	logPrefix := fmt.Sprintf("[%s]", strings.ToUpper(name))
+	logPrefix := "[" + strings.ToUpper(name) + "]"
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {
 			panic(ErrTooManyProxies)

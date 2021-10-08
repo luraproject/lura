@@ -21,6 +21,8 @@ import (
 // ChiDefaultDebugPattern is the default pattern used to define the debug endpoint
 const ChiDefaultDebugPattern = "/__debug/"
 
+const logPrefix = "[SERVICE: Chi]"
+
 // RunServerFunc is a func that will run the http Server with the given params.
 type RunServerFunc func(context.Context, config.ServiceConfig, http.Handler) error
 
@@ -82,7 +84,6 @@ type chiRouter struct {
 // Run implements the router interface
 func (r chiRouter) Run(cfg config.ServiceConfig) {
 	r.cfg.Engine.Use(r.cfg.Middlewares...)
-	logPrefix := "[SERVICE: Chi]"
 	if cfg.Debug {
 		r.registerDebugEndpoints()
 	}
@@ -115,7 +116,6 @@ func (r chiRouter) registerDebugEndpoints() {
 }
 
 func (r chiRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) {
-	logPrefix := "[SERVICE: Chi]"
 	for _, c := range endpoints {
 		proxyStack, err := r.cfg.ProxyFactory.New(c)
 		if err != nil {
@@ -130,10 +130,10 @@ func (r chiRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) 
 func (r chiRouter) registerKrakendEndpoint(method string, endpoint *config.EndpointConfig, handler http.HandlerFunc, totBackends int) {
 	method = strings.ToTitle(method)
 	path := endpoint.Endpoint
-	logPrefix := "[SERVICE: Chi]"
+
 	if method != http.MethodGet && totBackends > 1 {
 		if !router.IsValidSequentialEndpoint(endpoint) {
-			r.cfg.Logger.Error(logPrefix, method, " endpoints with sequential proxy enabled only allow a non-GET in the last backend! Ignoring", path)
+			r.cfg.Logger.Error(logPrefix, method, "endpoints with sequential proxy enabled only allow a non-GET in the last backend! Ignoring", path)
 			return
 		}
 	}

@@ -9,10 +9,12 @@ import (
 	"github.com/luraproject/lura/v2/logging"
 )
 
+const logPrefix = "[ENDPOINT: /__debug/*]"
+
+
 // DebugHandler creates a dummy handler function, useful for quick integration tests
 func DebugHandler(logger logging.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		logPrefix := "[ENDPOINT /__debug/*]"
 		logger.Debug(logPrefix, "Method:", c.Request.Method)
 		logger.Debug(logPrefix, "URL:", c.Request.RequestURI)
 		logger.Debug(logPrefix, "Query:", c.Request.URL.Query())
