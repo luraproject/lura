@@ -9,20 +9,18 @@ import (
 	"github.com/luraproject/lura/v2/logging"
 )
 
-const logPrefix = "[ENDPOINT: /__debug/*]"
-
-
 // DebugHandler creates a dummy handler function, useful for quick integration tests
 func DebugHandler(logger logging.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		logger.Debug(logPrefix, "Method:", c.Request.Method)
-		logger.Debug(logPrefix, "URL:", c.Request.RequestURI)
-		logger.Debug(logPrefix, "Query:", c.Request.URL.Query())
-		logger.Debug(logPrefix, "Params:", c.Params)
-		logger.Debug(logPrefix, "Headers:", c.Request.Header)
+		logPrefixSecondary := "[ENDPOINT: /__debug/*]"
+		logger.Debug(logPrefixSecondary, "Method:", c.Request.Method)
+		logger.Debug(logPrefixSecondary, "URL:", c.Request.RequestURI)
+		logger.Debug(logPrefixSecondary, "Query:", c.Request.URL.Query())
+		logger.Debug(logPrefixSecondary, "Params:", c.Params)
+		logger.Debug(logPrefixSecondary, "Headers:", c.Request.Header)
 		body, _ := ioutil.ReadAll(c.Request.Body)
 		c.Request.Body.Close()
-		logger.Debug(logPrefix, "Body:", string(body))
+		logger.Debug(logPrefixSecondary, "Body:", string(body))
 		c.JSON(200, gin.H{
 			"message": "pong",
 		})

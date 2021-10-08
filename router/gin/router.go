@@ -5,7 +5,6 @@ package gin
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"sort"
 	"strings"
@@ -21,7 +20,7 @@ import (
 	"github.com/luraproject/lura/v2/transport/http/server"
 )
 
-const logPrefix =  "[SERVICE: Gin]"
+const logPrefix = "[SERVICE: Gin]"
 
 // RunServerFunc is a func that will run the http Server with the given params.
 type RunServerFunc func(context.Context, config.ServiceConfig, http.Handler) error
@@ -120,7 +119,7 @@ func (r ginRouter) registerEndpointsAndMiddlewares(cfg config.ServiceConfig) {
 
 	if opts, ok := cfg.ExtraConfig[Namespace].(map[string]interface{}); ok {
 		if v, ok := opts["auto_options"].(bool); ok && v {
-			r.cfg.Logger.Debug(,logPrefix "Enabling the auto options endpoints")
+			r.cfg.Logger.Debug(logPrefix, "Enabling the auto options endpoints")
 			r.registerOptionEndpoints(endpointGroup)
 		}
 	}
@@ -130,7 +129,7 @@ func (r ginRouter) registerKrakendEndpoints(rg *gin.RouterGroup, endpoints []*co
 	for _, c := range endpoints {
 		proxyStack, err := r.cfg.ProxyFactory.New(c)
 		if err != nil {
-			r.cfg.Logger.Error(logPrefix,"Calling the ProxyFactory", err.Error())
+			r.cfg.Logger.Error(logPrefix, "Calling the ProxyFactory", err.Error())
 			continue
 		}
 

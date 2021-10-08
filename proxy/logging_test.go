@@ -48,10 +48,10 @@ func TestNewLoggingMiddleware_ok(t *testing.T) {
 	if strings.Count(logMsg, "DEBU") != 1 {
 		t.Error("The logs don't have the expected DEBUG messages")
 	}
-	if !strings.Contains(logMsg, "supu Calling backend") {
+	if !strings.Contains(logMsg, "[SUPU] Calling backend") {
 		t.Error("The logs didn't mark the start of the execution")
 	}
-	if !strings.Contains(logMsg, "supu Call to backend took") {
+	if !strings.Contains(logMsg, "[SUPU] Call to backend took") {
 		t.Error("The logs didn't mark the end of the execution")
 	}
 }
@@ -87,13 +87,13 @@ func TestNewLoggingMiddleware_erroredResponse(t *testing.T) {
 	if strings.Count(logMsg, "WARN") != 1 {
 		t.Error("The logs don't have the expected DEBUG messages")
 	}
-	if !strings.Contains(logMsg, "supu Call to backend failed: NO-body expects the Spanish Inquisition!") {
+	if !strings.Contains(logMsg, "[SUPU] Call to backend failed: NO-body expects the Spanish Inquisition!") {
 		t.Error("The logs didn't mark the fail of the execution")
 	}
-	if !strings.Contains(logMsg, "supu Calling backend") {
+	if !strings.Contains(logMsg, "[SUPU] Calling backend") {
 		t.Error("The logs didn't mark the start of the execution")
 	}
-	if !strings.Contains(logMsg, "supu Call to backend took") {
+	if !strings.Contains(logMsg, "[SUPU] Call to backend took") {
 		t.Error("The logs didn't mark the end of the execution")
 	}
 }
@@ -125,13 +125,13 @@ func TestNewLoggingMiddleware_nullResponse(t *testing.T) {
 	if strings.Count(logMsg, "WARN") != 1 {
 		t.Error("The logs don't have the expected DEBUG messages")
 	}
-	if !strings.Contains(logMsg, "supu Call to backend returned a null response") {
+	if !strings.Contains(logMsg, "[SUPU] Call to backend returned a null response") {
 		t.Error("The logs didn't mark the fail of the execution")
 	}
-	if !strings.Contains(logMsg, "supu Calling backend") {
+	if !strings.Contains(logMsg, "[SUPU] Calling backend") {
 		t.Error("The logs didn't mark the start of the execution")
 	}
-	if !strings.Contains(logMsg, "supu Call to backend took") {
+	if !strings.Contains(logMsg, "[SUPU] Call to backend took") {
 		t.Error("The logs didn't mark the end of the execution")
 	}
 }

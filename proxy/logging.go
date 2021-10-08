@@ -3,7 +3,6 @@ package proxy
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
