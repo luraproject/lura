@@ -42,8 +42,9 @@ type GraphQLRequest struct {
 // Options defines a GraphQLRequest with a type, so the middlewares know what to do
 type Options struct {
 	GraphQLRequest
-	Type   OperationType   `json:"type"`
-	Method OperationMethod `json:"method"`
+	QueryPath string          `json:"query_path,omitempty"`
+	Type      OperationType   `json:"type"`
+	Method    OperationMethod `json:"method"`
 }
 
 var errNoConfigFound = errors.New("grapghql: no configuration found")
@@ -70,6 +71,14 @@ func GetOptions(cfg config.ExtraConfig) (*Options, error) {
 
 	if opt.Method != MethodGet && opt.Method != MethodPost {
 		opt.Method = MethodPost
+	}
+
+	if opt.QueryPath != "" {
+		q, err := ioutil.ReadFile(opt.QueryPath)
+		if err != nil {
+			return nil, err
+		}
+		opt.Query = string(q)
 	}
 
 	return &opt, nil
@@ -116,6 +125,7 @@ func New(opt Options) Extractor {
 		}
 		return &val, nil
 	}
+
 	return Extractor{
 		cfg:            opt,
 		paramExtractor: paramExtractor,

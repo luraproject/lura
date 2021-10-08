@@ -24,7 +24,7 @@ type HandlerFactory func(*config.EndpointConfig, proxy.Proxy) gin.HandlerFunc
 // EndpointHandler implements the HandleFactory interface using the default ToHTTPError function
 var EndpointHandler = CustomErrorEndpointHandler(logging.NoOp, server.DefaultToHTTPError)
 
-// CustomErrorEndpointHandler returns a HandleFactory using the injected ToHTTPError function
+// CustomErrorEndpointHandler returns a HandleFactory using the injected ToHTTPError function and logger
 func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) HandlerFactory {
 	return func(configuration *config.EndpointConfig, prxy proxy.Proxy) gin.HandlerFunc {
 		cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
