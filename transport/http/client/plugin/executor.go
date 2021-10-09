@@ -25,7 +25,7 @@ func HTTPRequestExecutor(
 		}
 		extra, ok := v.(map[string]interface{})
 		if !ok {
-			logger.Debug(logPrefix, "Wrong extra config type for backend", cfg.URLPattern)
+			logger.Debug(logPrefix, "["+Namespace+"]", "Wrong extra config type for backend")
 			return next(cfg)
 		}
 

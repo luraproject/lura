@@ -11,8 +11,8 @@ import (
 
 // DebugHandler creates a dummy handler function, useful for quick integration tests
 func DebugHandler(logger logging.Logger) gin.HandlerFunc {
+	logPrefixSecondary := "[ENDPOINT: /__debug/*]"
 	return func(c *gin.Context) {
-		logPrefixSecondary := "[ENDPOINT: /__debug/*]"
 		logger.Debug(logPrefixSecondary, "Method:", c.Request.Method)
 		logger.Debug(logPrefixSecondary, "URL:", c.Request.RequestURI)
 		logger.Debug(logPrefixSecondary, "Query:", c.Request.URL.Query())

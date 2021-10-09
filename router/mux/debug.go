@@ -11,8 +11,8 @@ import (
 
 // DebugHandler creates a dummy handler function, useful for quick integration tests
 func DebugHandler(logger logging.Logger) http.HandlerFunc {
+	logPrefixSecondary := "[ENDPOINT /__debug/*]"
 	return func(w http.ResponseWriter, r *http.Request) {
-		logPrefixSecondary := "[ENDPOINT /__debug/*]"
 		logger.Debug(logPrefixSecondary, "Method:", r.Method)
 		logger.Debug(logPrefixSecondary, "URL:", r.RequestURI)
 		logger.Debug(logPrefixSecondary, "Query:", r.URL.Query())
