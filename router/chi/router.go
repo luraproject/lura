@@ -21,6 +21,8 @@ import (
 // ChiDefaultDebugPattern is the default pattern used to define the debug endpoint
 const ChiDefaultDebugPattern = "/__debug/"
 
+const logPrefix = "[SERVICE: Chi]"
+
 // RunServerFunc is a func that will run the http Server with the given params.
 type RunServerFunc func(context.Context, config.ServiceConfig, http.Handler) error
 
@@ -82,7 +84,6 @@ type chiRouter struct {
 // Run implements the router interface
 func (r chiRouter) Run(cfg config.ServiceConfig) {
 	r.cfg.Engine.Use(r.cfg.Middlewares...)
-
 	if cfg.Debug {
 		r.registerDebugEndpoints()
 	}
@@ -99,10 +100,10 @@ func (r chiRouter) Run(cfg config.ServiceConfig) {
 	})
 
 	if err := r.RunServer(r.ctx, cfg, r.cfg.Engine); err != nil {
-		r.cfg.Logger.Error(err.Error())
+		r.cfg.Logger.Error(logPrefix, err.Error())
 	}
 
-	r.cfg.Logger.Info("Router execution ended")
+	r.cfg.Logger.Info(logPrefix, "Router execution ended")
 }
 
 func (r chiRouter) registerDebugEndpoints() {
@@ -118,7 +119,7 @@ func (r chiRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) 
 	for _, c := range endpoints {
 		proxyStack, err := r.cfg.ProxyFactory.New(c)
 		if err != nil {
-			r.cfg.Logger.Error("calling the ProxyFactory", err.Error())
+			r.cfg.Logger.Error(logPrefix, "calling the ProxyFactory", err.Error())
 			continue
 		}
 
@@ -129,9 +130,10 @@ func (r chiRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) 
 func (r chiRouter) registerKrakendEndpoint(method string, endpoint *config.EndpointConfig, handler http.HandlerFunc, totBackends int) {
 	method = strings.ToTitle(method)
 	path := endpoint.Endpoint
+
 	if method != http.MethodGet && totBackends > 1 {
 		if !router.IsValidSequentialEndpoint(endpoint) {
-			r.cfg.Logger.Error(method, " endpoints with sequential enabled is only the last one is allowed to be non GET! Ignoring", path)
+			r.cfg.Logger.Error(logPrefix, method, "endpoints with sequential proxy enabled only allow a non-GET in the last backend! Ignoring", path)
 			return
 		}
 	}
@@ -148,8 +150,8 @@ func (r chiRouter) registerKrakendEndpoint(method string, endpoint *config.Endpo
 	case http.MethodDelete:
 		r.cfg.Engine.Delete(path, handler)
 	default:
-		r.cfg.Logger.Error("Unsupported method", method)
+		r.cfg.Logger.Error(logPrefix, "Unsupported method", method)
 		return
 	}
-	r.cfg.Logger.Debug("registering the endpoint", method, path)
+	r.cfg.Logger.Debug(logPrefix, "registering the endpoint", method, path)
 }

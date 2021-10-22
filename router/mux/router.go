@@ -17,6 +17,7 @@ import (
 
 // DefaultDebugPattern is the default pattern used to define the debug endpoint
 const DefaultDebugPattern = "/__debug/"
+const logPrefix = "[SERVICE: Mux]"
 
 // RunServerFunc is a func that will run the http Server with the given params.
 type RunServerFunc func(context.Context, config.ServiceConfig, http.Handler) error
@@ -111,17 +112,17 @@ func (r httpRouter) Run(cfg config.ServiceConfig) {
 	r.registerKrakendEndpoints(cfg.Endpoints)
 
 	if err := r.RunServer(r.ctx, cfg, r.handler()); err != nil {
-		r.cfg.Logger.Error(err.Error())
+		r.cfg.Logger.Error(logPrefix, err.Error())
 	}
 
-	r.cfg.Logger.Info("Router execution ended")
+	r.cfg.Logger.Info(logPrefix, "Router execution ended")
 }
 
 func (r httpRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) {
 	for _, c := range endpoints {
 		proxyStack, err := r.cfg.ProxyFactory.New(c)
 		if err != nil {
-			r.cfg.Logger.Error("calling the ProxyFactory", err.Error())
+			r.cfg.Logger.Error(logPrefix, "Calling the ProxyFactory", err.Error())
 			continue
 		}
 
@@ -134,7 +135,7 @@ func (r httpRouter) registerKrakendEndpoint(method string, endpoint *config.Endp
 	path := endpoint.Endpoint
 	if method != http.MethodGet && totBackends > 1 {
 		if !router.IsValidSequentialEndpoint(endpoint) {
-			r.cfg.Logger.Error(method, " endpoints with sequential enabled is only the last one is allowed to be non GET! Ignoring", path)
+			r.cfg.Logger.Error(logPrefix, method, " endpoints with sequential proxy enabled only allow a non-GET in the last backend! Ignoring", path)
 			return
 		}
 	}
@@ -146,17 +147,17 @@ func (r httpRouter) registerKrakendEndpoint(method string, endpoint *config.Endp
 	case http.MethodPatch:
 	case http.MethodDelete:
 	default:
-		r.cfg.Logger.Error("Unsupported method", method)
+		r.cfg.Logger.Error(logPrefix, "Unsupported method", method)
 		return
 	}
-	r.cfg.Logger.Debug("registering the endpoint", method, path)
+	r.cfg.Logger.Debug(logPrefix, "Registering the endpoint", method, path)
 	r.cfg.Engine.Handle(path, method, handler)
 }
 
 func (r httpRouter) handler() http.Handler {
 	var handler http.Handler = r.cfg.Engine
 	for _, middleware := range r.cfg.Middlewares {
-		r.cfg.Logger.Debug("Adding the middleware", middleware)
+		r.cfg.Logger.Debug(logPrefix, "Adding the middleware", middleware)
 		handler = middleware.Handler(handler)
 	}
 	return handler

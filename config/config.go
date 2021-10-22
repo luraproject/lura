@@ -510,7 +510,7 @@ type EndpointMatchError struct {
 
 // Error returns a string representation of the EndpointMatchError
 func (e *EndpointMatchError) Error() string {
-	return fmt.Sprintf("ERROR: parsing the endpoint url '%s %s': %s. Ignoring", e.Method, e.Path, e.Err.Error())
+	return fmt.Sprintf("ignoring the '%s %s' endpoint due to a parsing error: %s", e.Method, e.Path, e.Err.Error())
 }
 
 // NoBackendsError is the error returned by the configuration init process when an endpoint
@@ -522,7 +522,7 @@ type NoBackendsError struct {
 
 // Error returns a string representation of the NoBackendsError
 func (n *NoBackendsError) Error() string {
-	return "WARNING: the '" + n.Method + " " + n.Path + "' endpoint has 0 backends defined! Ignoring"
+	return "ignoring the '" + n.Method + " " + n.Path + "' endpoint, since it has 0 backends defined!"
 }
 
 // UnsupportedVersionError is the error returned by the configuration init process when the configuration
@@ -534,7 +534,7 @@ type UnsupportedVersionError struct {
 
 // Error returns a string representation of the UnsupportedVersionError
 func (u *UnsupportedVersionError) Error() string {
-	return fmt.Sprintf("Unsupported version: %d (want: %d)", u.Have, u.Want)
+	return fmt.Sprintf("unsupported version: %d (want: %d)", u.Have, u.Want)
 }
 
 // EndpointPathError is the error returned by the configuration init process when an endpoint
@@ -546,7 +546,7 @@ type EndpointPathError struct {
 
 // Error returns a string representation of the EndpointPathError
 func (e *EndpointPathError) Error() string {
-	return "ERROR: the endpoint url path '" + e.Method + " " + e.Path + "' is not a valid one!!! Ignoring"
+	return "ignoring the '" + e.Method + " " + e.Path + "' endpoint, since it is invalid!!!"
 }
 
 // UndefinedOutputParamError is the error returned by the configuration init process when an output
@@ -563,7 +563,7 @@ type UndefinedOutputParamError struct {
 // Error returns a string representation of the UndefinedOutputParamError
 func (u *UndefinedOutputParamError) Error() string {
 	return fmt.Sprintf(
-		"Undefined output param '%s'! endpoint: %s %s, backend: %d. input: %v, output: %v",
+		"undefined output param '%s'! endpoint: %s %s, backend: %d. input: %v, output: %v",
 		u.Param,
 		u.Method,
 		u.Endpoint,
