@@ -15,9 +15,8 @@ const Namespace = "github_com/luraproject/lura/router/gin"
 
 // NewEngine returns an initialized gin engine
 func NewEngine(cfg config.ServiceConfig, logger logging.Logger, w io.Writer) *gin.Engine {
-	if !cfg.Debug {
-		gin.SetMode(gin.ReleaseMode)
-	} else {
+	gin.SetMode(gin.ReleaseMode)
+	if cfg.Debug {
 		logger.Debug(logPrefix, "Debug enabled")
 	}
 	engine := gin.New()
