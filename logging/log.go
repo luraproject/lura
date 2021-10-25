@@ -70,7 +70,7 @@ func (l BasicLogger) Debug(v ...interface{}) {
 	if l.Level > LEVEL_DEBUG {
 		return
 	}
-	l.prependLog("DEBUG:", v)
+	l.prependLog("DEBUG:", v...)
 }
 
 // Info logs a message using INFO as log level.
@@ -78,7 +78,7 @@ func (l BasicLogger) Info(v ...interface{}) {
 	if l.Level > LEVEL_INFO {
 		return
 	}
-	l.prependLog("INFO:", v)
+	l.prependLog("INFO:", v...)
 }
 
 // Warning logs a message using WARNING as log level.
@@ -86,7 +86,7 @@ func (l BasicLogger) Warning(v ...interface{}) {
 	if l.Level > LEVEL_WARNING {
 		return
 	}
-	l.prependLog("WARNING:", v)
+	l.prependLog("WARNING:", v...)
 }
 
 // Error logs a message using ERROR as log level.
@@ -94,20 +94,24 @@ func (l BasicLogger) Error(v ...interface{}) {
 	if l.Level > LEVEL_ERROR {
 		return
 	}
-	l.prependLog("ERROR:", v)
+	l.prependLog("ERROR:", v...)
 }
 
 // Critical logs a message using CRITICAL as log level.
 func (l BasicLogger) Critical(v ...interface{}) {
-	l.prependLog("CRITICAL:", v)
+	l.prependLog("CRITICAL:", v...)
 }
 
 // Fatal is equivalent to l.Critical(fmt.Sprint()) followed by a call to os.Exit(1).
 func (l BasicLogger) Fatal(v ...interface{}) {
-	l.prependLog("FATAL:", v)
+	l.prependLog("FATAL:", v...)
 	os.Exit(1)
 }
 
-func (l BasicLogger) prependLog(level string, v []interface{}) {
-	l.Logger.Println(l.Prefix, level, v...)
+func (l BasicLogger) prependLog(level string, v ...interface{}) {
+	msg := make([]interface{}, len(v)+2)
+	msg[0] = l.Prefix
+	msg[1] = level
+	copy(msg[2:], v[:])
+	l.Logger.Println(msg...)
 }
