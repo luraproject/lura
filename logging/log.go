@@ -109,5 +109,5 @@ func (l BasicLogger) Fatal(v ...interface{}) {
 }
 
 func (l BasicLogger) prependLog(level string, v []interface{}) {
-	l.Logger.Println(l.Prefix, level, v)
+	l.Logger.Println(l.Prefix, level, v...)
 }
