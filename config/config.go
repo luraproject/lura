@@ -253,8 +253,16 @@ func (e *ExtraConfig) sanitize() {
 			}
 			(*e)[module] = sanitized
 		}
+
+		if alias, ok := ExtraConfigAlias[module]; ok {
+			(*e)[alias] = (*e)[module]
+			delete(*e, module)
+		}
 	}
 }
+
+// ExtraConfigAlias is the set of alias to accept as namespace
+var ExtraConfigAlias = map[string]string{}
 
 const defaultNamespace = "github.com/devopsfaith/krakend/config"
 
