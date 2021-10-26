@@ -261,7 +261,7 @@ func TestNewParser_initError(t *testing.T) {
 	}
 
 	_, err := NewParser().Parse(wrongConfigPath)
-	if err == nil || err.Error() != "'/tmp/unmarshall.json': Unsupported version: 0 (want: 2)" {
+	if err == nil || err.Error() != "'/tmp/unmarshall.json': unsupported version: 0 (want: 2)" {
 		t.Error("Error expected. Got", err)
 	}
 	if err = os.Remove(wrongConfigPath); err != nil {

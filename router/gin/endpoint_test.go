@@ -242,6 +242,7 @@ func TestCustomErrorEndpointHandler(t *testing.T) {
 
 	endpoint := &config.EndpointConfig{
 		Method:      "GET",
+		Endpoint:    "/",
 		Timeout:     time.Minute,
 		CacheTTL:    6 * time.Hour,
 		QueryString: []string{"b", "c[]", "d"},
@@ -263,8 +264,8 @@ func TestCustomErrorEndpointHandler(t *testing.T) {
 	w := httptest.NewRecorder()
 	s.ServeHTTP(w, req)
 
-	if !strings.Contains(buff.String(), "pref ERROR: [this is a dummy error]") {
-		t.Error("unexpected log content")
+	if content := buff.String(); !strings.Contains(content, "pref ERROR: [ENDPOINT: /] this is a dummy error") {
+		t.Error("unexpected log content", content)
 	}
 }
 

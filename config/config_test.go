@@ -11,7 +11,7 @@ import (
 func TestConfig_rejectInvalidVersion(t *testing.T) {
 	subject := ServiceConfig{}
 	err := subject.Init()
-	if err == nil || strings.Index(err.Error(), "Unsupported version: 0 (want: 2)") != 0 {
+	if err == nil || strings.Index(err.Error(), "unsupported version: 0 (want: 2)") != 0 {
 		t.Error("Error expected. Got", err.Error())
 	}
 }
@@ -27,7 +27,7 @@ func TestConfig_rejectInvalidEndpoints(t *testing.T) {
 	for _, e := range samples {
 		subject := ServiceConfig{Version: ConfigVersion, Endpoints: []*EndpointConfig{{Endpoint: e, Method: "GET"}}}
 		err := subject.Init()
-		if err == nil || err.Error() != fmt.Sprintf("ERROR: the endpoint url path 'GET %s' is not a valid one!!! Ignoring", e) {
+		if err == nil || err.Error() != fmt.Sprintf("ignoring the 'GET %s' endpoint, since it is invalid!!!", e) {
 			t.Errorf("Unexpected error processing '%s': %v", e, err)
 		}
 	}
@@ -111,7 +111,7 @@ func TestConfig_initBackendURLMappings_undefinedOutput(t *testing.T) {
 		"foo":  nil,
 	}
 
-	expectedErrMsg := "Undefined output param 'supu-5t6'! endpoint: GET /, backend: 0. input: [foo supu tupu], output: [foo supu-5t6 tupu_56]"
+	expectedErrMsg := "undefined output param 'supu-5t6'! endpoint: GET /, backend: 0. input: [foo supu tupu], output: [foo supu-5t6 tupu_56]"
 	err := subject.initBackendURLMappings(0, 0, inputSet)
 	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("error expected. have: %v", err)
@@ -226,7 +226,7 @@ func TestConfig_initKONoBackends(t *testing.T) {
 	}
 
 	if err := subject.Init(); err == nil ||
-		err.Error() != "WARNING: the 'POST /supu' endpoint has 0 backends defined! Ignoring" {
+		err.Error() != "ignoring the 'POST /supu' endpoint, since it has 0 backends defined!" {
 		t.Error("Unexpected error at the configuration init!", err)
 	}
 }
@@ -295,7 +295,7 @@ func TestConfig_initKOInvalidDebugPattern(t *testing.T) {
 	}
 
 	if err := subject.Init(); err == nil ||
-		err.Error() != "ERROR: parsing the endpoint url 'GET /__debug/supu': error parsing regexp: missing closing ): `a(b`. Ignoring" {
+		err.Error() != "ignoring the 'GET /__debug/supu' endpoint due to a parsing error: error parsing regexp: missing closing ): `a(b`" {
 		t.Error("Expecting an error at the configuration init!", err)
 	}
 
