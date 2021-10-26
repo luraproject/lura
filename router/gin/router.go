@@ -96,7 +96,7 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 	// https://github.com/gin-gonic/gin/issues/2862 are completely fixed
 	go r.cfg.Engine.Run("XXXX")
 
-	if err := r.runServerF(r.ctx, cfg, r.cfg.Engine); err != nil {
+	if err := r.runServerF(r.ctx, cfg, r.cfg.Engine); err != nil && err != http.ErrServerClosed {
 		r.cfg.Logger.Error(logPrefix, err.Error())
 	}
 
