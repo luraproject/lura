@@ -273,6 +273,10 @@ func (m mergeError) Error() string {
 	return strings.Join(msg, "\n")
 }
 
+func (m mergeError) Errors() []error {
+	return m.errs
+}
+
 // ResponseCombiner func to merge the collected responses into a single one
 type ResponseCombiner func(int, []*Response) *Response
 

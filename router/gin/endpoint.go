@@ -67,7 +67,14 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 			c.Header(server.CompleteResponseHeaderName, complete)
 
 			if err != nil {
-				logger.Error(logPrefix, err)
+				switch errT := err.(type) {
+				case multiError:
+					for i, errN := range errT.Errors() {
+						logger.Error(fmt.Sprintf("%s Error #%d: %s", logPrefix, i, errN.Error()))
+					}
+				default:
+					logger.Error(logPrefix, err.Error())
+				}
 
 				if response == nil {
 					if t, ok := err.(responseError); ok {
@@ -149,4 +156,9 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 type responseError interface {
 	error
 	StatusCode() int
+}
+
+type multiError interface {
+	error
+	Errors() []error
 }
