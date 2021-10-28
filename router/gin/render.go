@@ -142,12 +142,12 @@ func noopRender(c *gin.Context, response *proxy.Response) {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
-	c.Status(response.Metadata.StatusCode)
 	for k, vs := range response.Metadata.Headers {
 		for _, v := range vs {
 			c.Writer.Header().Add(k, v)
 		}
 	}
+	c.Status(response.Metadata.StatusCode)
 	if response.Io == nil {
 		return
 	}

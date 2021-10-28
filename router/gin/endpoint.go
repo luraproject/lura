@@ -32,6 +32,7 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 		requestGenerator := NewRequest(configuration.HeadersToPass)
 		render := getRender(configuration)
 		logPrefix := "[ENDPOINT: " + configuration.Endpoint + "]"
+
 		return func(c *gin.Context) {
 			requestCtx, cancel := context.WithTimeout(c, configuration.Timeout)
 
@@ -67,12 +68,11 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 			c.Header(server.CompleteResponseHeaderName, complete)
 
 			if err != nil {
-				switch errT := err.(type) {
-				case multiError:
-					for i, errN := range errT.Errors() {
+				if t, ok := err.(multiError); ok {
+					for i, errN := range t.Errors() {
 						logger.Error(fmt.Sprintf("%s Error #%d: %s", logPrefix, i, errN.Error()))
 					}
-				default:
+				} else {
 					logger.Error(logPrefix, err.Error())
 				}
 
@@ -81,6 +81,9 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 						c.Status(t.StatusCode())
 					} else {
 						c.Status(errF(err))
+					}
+					if returnErrorMsg {
+						c.Writer.WriteString(err.Error())
 					}
 					cancel()
 					return
