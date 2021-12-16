@@ -30,6 +30,7 @@ func TestLoadWithLogger(t *testing.T) {
 
 	hre := HTTPRequestExecutor(l, func(_ *config.Backend) client.HTTPRequestExecutor {
 		t.Error("this factory should not been called")
+		t.Fail()
 		return nil
 	})
 

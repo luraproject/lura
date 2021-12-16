@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"html"
 	"net/http"
-
-	"github.com/luraproject/lura/v2/logging"
 )
 
 // HandlerRegisterer is the symbol the plugin loader will try to load. It must implement the Registerer interface
@@ -16,10 +14,10 @@ var HandlerRegisterer = registerer("krakend-server-example")
 
 type registerer string
 
-var logger logging.Logger = nil
+var logger Logger = nil
 
 func (r registerer) RegisterLogger(v interface{}) {
-	l, ok := v.(logging.Logger)
+	l, ok := v.(Logger)
 	if !ok {
 		return
 	}
@@ -63,3 +61,12 @@ func init() {
 }
 
 func main() {}
+
+type Logger interface {
+	Debug(v ...interface{})
+	Info(v ...interface{})
+	Warning(v ...interface{})
+	Error(v ...interface{})
+	Critical(v ...interface{})
+	Fatal(v ...interface{})
+}

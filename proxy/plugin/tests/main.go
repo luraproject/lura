@@ -7,8 +7,6 @@ import (
 	"io"
 	"net/url"
 	"path"
-
-	"github.com/luraproject/lura/v2/logging"
 )
 
 func main() {}
@@ -19,7 +17,7 @@ func init() {
 
 var ModifierRegisterer = registerer("lura-request-modifier-example")
 
-var logger logging.Logger = nil
+var logger Logger = nil
 
 type registerer string
 
@@ -34,7 +32,7 @@ func (r registerer) RegisterModifiers(f func(
 }
 
 func (r registerer) RegisterLogger(in interface{}) {
-	l, ok := in.(logging.Logger)
+	l, ok := in.(Logger)
 	if !ok {
 		return
 	}
@@ -121,3 +119,12 @@ func (r requestWrapper) Path() string                 { return r.path }
 func (r requestWrapper) Body() io.ReadCloser          { return r.body }
 func (r requestWrapper) Params() map[string]string    { return r.params }
 func (r requestWrapper) Headers() map[string][]string { return r.headers }
+
+type Logger interface {
+	Debug(v ...interface{})
+	Info(v ...interface{})
+	Warning(v ...interface{})
+	Error(v ...interface{})
+	Critical(v ...interface{})
+	Fatal(v ...interface{})
+}
