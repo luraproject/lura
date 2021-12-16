@@ -213,7 +213,7 @@ func (i *incrementalMergeAccumulator) Merge(res *Response, err error) {
 
 func (i *incrementalMergeAccumulator) Result() (*Response, error) {
 	if i.data == nil {
-		return &Response{Data: make(map[string]interface{}, 0), IsComplete: false}, newMergeError(i.errs)
+		return nil, newMergeError(i.errs)
 	}
 
 	if i.pending != 0 || len(i.errs) != 0 {

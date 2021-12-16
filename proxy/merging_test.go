@@ -12,6 +12,50 @@ import (
 	"github.com/luraproject/lura/v2/config"
 )
 
+func TestNewMergeDataMiddleware_empty(t *testing.T) {
+	timeout := 500 * time.Millisecond
+	backend := config.Backend{}
+	endpoint := config.EndpointConfig{
+		Backend: []*config.Backend{&backend, &backend},
+		Timeout: timeout,
+	}
+
+	expectedErr := errors.New("wait for me")
+
+	erroredProxy := func(_ context.Context, _ *Request) (*Response, error) {
+		return nil, expectedErr
+	}
+
+	mw := NewMergeDataMiddleware(&endpoint)
+	p := mw(erroredProxy, erroredProxy)
+
+	mustEnd := time.After(2 * timeout)
+	out, err := p(context.Background(), &Request{})
+	mErr, ok := err.(mergeError)
+	if !ok {
+		t.Errorf("The middleware propagated an unexpected error: %s\n", err)
+		return
+	}
+	if len(mErr.errs) != 2 {
+		t.Errorf("The middleware propagated an unexpected error: %s\n", err)
+		return
+	}
+	if mErr.errs[0] != mErr.errs[1] || mErr.errs[0] != expectedErr {
+		t.Errorf("The middleware propagated an unexpected error: %s\n", err)
+		return
+	}
+	if out != nil {
+		t.Errorf("The proxy returned a result\n")
+		return
+	}
+	select {
+	case <-mustEnd:
+		t.Errorf("We were expecting a response but we got none\n")
+	default:
+	}
+
+}
+
 func TestNewMergeDataMiddleware_ok(t *testing.T) {
 	timeout := 500
 	backend := config.Backend{}
@@ -480,7 +524,7 @@ func TestNewMergeDataMiddleware_nullResponse(t *testing.T) {
 	default:
 		t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
 	}
-	if out == nil {
+	if out != nil {
 		t.Errorf("The proxy returned a null result\n")
 		return
 	}
@@ -488,12 +532,6 @@ func TestNewMergeDataMiddleware_nullResponse(t *testing.T) {
 	case <-mustEnd:
 		t.Errorf("We were expecting a response but we got none\n")
 	default:
-		if len(out.Data) != 0 {
-			t.Errorf("We were expecting a partial response but we got %v!\n", out.Data)
-		}
-		if out.IsComplete {
-			t.Errorf("We were expecting an incompleted response but we got a completed one!\n")
-		}
 	}
 }
 
@@ -527,7 +565,7 @@ func TestNewMergeDataMiddleware_timeout(t *testing.T) {
 	default:
 		t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
 	}
-	if out == nil {
+	if out != nil {
 		t.Errorf("The proxy returned a null result\n")
 		return
 	}
@@ -535,12 +573,6 @@ func TestNewMergeDataMiddleware_timeout(t *testing.T) {
 	case <-mustEnd:
 		t.Errorf("We were expecting a response but we got none\n")
 	default:
-		if len(out.Data) > 0 {
-			t.Errorf("We weren't expecting a response but we got one!\n")
-		}
-		if out.IsComplete {
-			t.Errorf("We were expecting an incompleted response but we got a completed one!\n")
-		}
 	}
 }
 
@@ -635,8 +667,8 @@ func Test_incrementalMergeAccumulator_invalidResponse(t *testing.T) {
 	acc.Merge(nil, nil)
 	acc.Merge(nil, nil)
 	res, err := acc.Result()
-	if res == nil {
-		t.Error("response should not be nil")
+	if res != nil {
+		t.Error("response should be nil")
 		return
 	}
 	if err == nil {
