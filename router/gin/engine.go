@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v2/transport/http/server"
 )
 
 const Namespace = "github_com/luraproject/lura/router/gin"
@@ -27,9 +28,9 @@ func NewEngine(cfg config.ServiceConfig, logger logging.Logger, w io.Writer) *gi
 
 	paths := []string{}
 
+	ginOptions := engineConfiguration{}
 	if v, ok := cfg.ExtraConfig[Namespace]; ok {
 		if b, err := json.Marshal(v); err == nil {
-			ginOptions := engineConfiguration{}
 			if err := json.Unmarshal(b, &ginOptions); err == nil {
 				engine.RedirectTrailingSlash = !ginOptions.DisableRedirectTrailingSlash
 				engine.RedirectFixedPath = !ginOptions.DisableRedirectFixedPath
@@ -39,7 +40,7 @@ func NewEngine(cfg config.ServiceConfig, logger logging.Logger, w io.Writer) *gi
 				for k, h := range engine.RemoteIPHeaders {
 					engine.RemoteIPHeaders[k] = textproto.CanonicalMIMEHeaderKey(h)
 				}
-				engine.TrustedProxies = ginOptions.TrustedProxies
+				engine.SetTrustedProxies(ginOptions.TrustedProxies)
 				engine.AppEngine = ginOptions.AppEngine
 				engine.MaxMultipartMemory = ginOptions.MaxMultipartMemory
 				engine.RemoveExtraSlash = ginOptions.RemoveExtraSlash
@@ -50,10 +51,24 @@ func NewEngine(cfg config.ServiceConfig, logger logging.Logger, w io.Writer) *gi
 		}
 	}
 
+	engine.NoRoute(func(c *gin.Context) {
+		c.Header(server.CompleteResponseHeaderName, server.HeaderIncompleteResponseValue)
+	})
+
 	engine.Use(
 		gin.LoggerWithConfig(gin.LoggerConfig{Output: w, SkipPaths: paths}),
 		gin.Recovery(),
 	)
+
+	if !ginOptions.DisableHealthEndpoint {
+		path := "/__health"
+		if ginOptions.HealthPath != "" {
+			path = ginOptions.HealthPath
+		}
+		engine.GET(path, func(c *gin.Context) {
+			c.JSON(200, gin.H{"status": "ok"})
+		})
+	}
 
 	return engine
 }
@@ -123,6 +138,12 @@ type engineConfiguration struct {
 
 	// ReturnErrorMsg flags if the error msg should be returned to the client as response body
 	ReturnErrorMsg bool `json:"return_error_msg"`
+
+	// DisableHealthEndpoint marks if the health check endpoint should be exposed
+	DisableHealthEndpoint bool `json:"disable_health"`
+
+	// HealthPath allows users to define a custom path for the health check endpoint
+	HealthPath string `json:"health_path"`
 }
 
 var returnErrorMsg bool

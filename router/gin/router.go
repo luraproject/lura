@@ -108,10 +108,6 @@ func (r ginRouter) registerEndpointsAndMiddlewares(cfg config.ServiceConfig) {
 		r.cfg.Engine.Any("/__debug/*param", DebugHandler(r.cfg.Logger))
 	}
 
-	r.cfg.Engine.GET("/__health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "ok"})
-	})
-
 	endpointGroup := r.cfg.Engine.Group("/")
 	endpointGroup.Use(r.cfg.Middlewares...)
 
