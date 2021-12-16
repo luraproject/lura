@@ -6,7 +6,7 @@ require (
 	github.com/devopsfaith/flatmap v0.0.0-20200601181759-8521186182fc
 	github.com/dimfeld/httptreemux/v5 v5.3.0
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/gin-gonic/gin v1.7.4
+	github.com/gin-gonic/gin v1.7.7
 	github.com/go-chi/chi/v5 v5.0.4
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/gorilla/mux v1.8.0
