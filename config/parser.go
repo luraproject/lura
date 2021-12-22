@@ -12,6 +12,7 @@ import (
 // Parser reads a configuration file, parses it and returns the content as an init ServiceConfig struct
 type Parser interface {
 	Parse(configFile string) (ServiceConfig, error)
+	ParseFromBytes(b []byte) (ServiceConfig, error)
 }
 
 // ParserFunc type is an adapter to allow the use of ordinary functions as subscribers.
@@ -35,21 +36,36 @@ type parser struct {
 	fileReader FileReaderFunc
 }
 
+func (p parser) ParseFromBytes(b []byte) (ServiceConfig, error) {
+	return p.parse(b)
+}
+
 // Parser implements the Parse interface
 func (p parser) Parse(configFile string) (ServiceConfig, error) {
-	var result ServiceConfig
-	var cfg parseableServiceConfig
 	data, err := p.fileReader(configFile)
 	if err != nil {
-		return result, CheckErr(err, configFile)
+		return ServiceConfig{}, CheckErr(err, configFile)
 	}
-	if err = json.Unmarshal(data, &cfg); err != nil {
-		return result, CheckErr(err, configFile)
+
+	config, err := p.parse(data)
+	if err != nil {
+		return ServiceConfig{}, CheckErr(err, configFile)
+	}
+
+	return config, nil
+}
+
+func (p parser) parse(b []byte) (ServiceConfig, error) {
+	var result ServiceConfig
+	var cfg parseableServiceConfig
+
+	if err := json.Unmarshal(b, &cfg); err != nil {
+		return result, fmt.Errorf("error parsing config: %v", err)
 	}
 	result = cfg.normalize()
 
-	if err = result.Init(); err != nil {
-		return result, CheckErr(err, configFile)
+	if err := result.Init(); err != nil {
+		return result, fmt.Errorf("error parsing config: %v", err)
 	}
 
 	return result, nil
