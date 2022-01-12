@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
 )
 
 var result interface{}
@@ -58,7 +59,7 @@ func BenchmarkProxyStack_single(b *testing.B) {
 	p = NewRoundRobinLoadBalancedMiddleware(backend)(p)
 	p = NewConcurrentMiddleware(backend)(p)
 	p = NewRequestBuilderMiddleware(backend)(p)
-	p = NewStaticMiddleware(cfg)(p)
+	p = NewStaticMiddleware(logging.NoOp, cfg)(p)
 
 	request := &Request{
 		Method:  "GET",
@@ -133,8 +134,8 @@ func BenchmarkProxyStack_multi(b *testing.B) {
 				backendProxy[i] = NewConcurrentMiddleware(backend)(backendProxy[i])
 				backendProxy[i] = NewRequestBuilderMiddleware(backend)(backendProxy[i])
 			}
-			p := NewMergeDataMiddleware(cfg)(backendProxy...)
-			p = NewStaticMiddleware(cfg)(p)
+			p := NewMergeDataMiddleware(logging.NoOp, cfg)(backendProxy...)
+			p = NewStaticMiddleware(logging.NoOp, cfg)(p)
 
 			var r *Response
 			b.ResetTimer()
@@ -205,7 +206,7 @@ func BenchmarkProxyStack_single_flatmap(b *testing.B) {
 	p = NewRoundRobinLoadBalancedMiddleware(backend)(p)
 	p = NewConcurrentMiddleware(backend)(p)
 	p = NewRequestBuilderMiddleware(backend)(p)
-	p = NewStaticMiddleware(cfg)(p)
+	p = NewStaticMiddleware(logging.NoOp, cfg)(p)
 
 	request := &Request{
 		Method:  "GET",
@@ -292,8 +293,8 @@ func BenchmarkProxyStack_multi_flatmap(b *testing.B) {
 				backendProxy[i] = NewConcurrentMiddleware(backend)(backendProxy[i])
 				backendProxy[i] = NewRequestBuilderMiddleware(backend)(backendProxy[i])
 			}
-			p := NewMergeDataMiddleware(cfg)(backendProxy...)
-			p = NewStaticMiddleware(cfg)(p)
+			p := NewMergeDataMiddleware(logging.NoOp, cfg)(backendProxy...)
+			p = NewStaticMiddleware(logging.NoOp, cfg)(p)
 
 			var r *Response
 			b.ResetTimer()

@@ -3,10 +3,12 @@ package proxy
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/url"
 
 	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
 	"github.com/luraproject/lura/v2/proxy/plugin"
 )
 
@@ -14,31 +16,31 @@ import (
 // The plugin middleware will try to load all the required plugins from the register and execute them in order.
 // RequestModifiers are executed before passing the request to the next middlware. ResponseModifiers are executed
 // once the response is returned from the next middleware.
-func NewPluginMiddleware(endpoint *config.EndpointConfig) Middleware {
+func NewPluginMiddleware(logger logging.Logger, endpoint *config.EndpointConfig) Middleware {
 	cfg, ok := endpoint.ExtraConfig[plugin.Namespace].(map[string]interface{})
 
 	if !ok {
 		return EmptyMiddleware
 	}
 
-	return newPluginMiddleware(cfg)
+	return newPluginMiddleware(logger, "ENDPOINT", endpoint.Endpoint, cfg)
 }
 
 // NewBackendPluginMiddleware returns a backend middleware wrapped (if required) with the plugin middleware.
 // The plugin middleware will try to load all the required plugins from the register and execute them in order.
 // RequestModifiers are executed before passing the request to the next middlware. ResponseModifiers are executed
 // once the response is returned from the next middleware.
-func NewBackendPluginMiddleware(remote *config.Backend) Middleware {
+func NewBackendPluginMiddleware(logger logging.Logger, remote *config.Backend) Middleware {
 	cfg, ok := remote.ExtraConfig[plugin.Namespace].(map[string]interface{})
 
 	if !ok {
 		return EmptyMiddleware
 	}
 
-	return newPluginMiddleware(cfg)
+	return newPluginMiddleware(logger, "BACKEND", remote.URLPattern, cfg)
 }
 
-func newPluginMiddleware(cfg map[string]interface{}) Middleware {
+func newPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[string]interface{}) Middleware {
 	plugins, ok := cfg["name"].([]interface{})
 	if !ok {
 		return EmptyMiddleware
@@ -67,6 +69,16 @@ func newPluginMiddleware(cfg map[string]interface{}) Middleware {
 	if totReqModifiers == totRespModifiers && totRespModifiers == 0 {
 		return EmptyMiddleware
 	}
+
+	logger.Debug(
+		fmt.Sprintf(
+			"[%s: %s][Modifier Plugins] Adding %d request and %d response modifiers",
+			tag,
+			pattern,
+			totReqModifiers,
+			totRespModifiers,
+		),
+	)
 
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {

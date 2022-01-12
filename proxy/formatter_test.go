@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
 )
 
 func TestEntityFormatterFunc(t *testing.T) {
@@ -538,46 +539,49 @@ func TestNewFlatmapMiddleware(t *testing.T) {
 		},
 		IsComplete: true,
 	}
-	p := NewFlatmapMiddleware(&config.EndpointConfig{
-		ExtraConfig: config.ExtraConfig{
-			Namespace: map[string]interface{}{
-				flatmapKey: []interface{}{
-					map[string]interface{}{
-						"type": "del",
-						"args": []interface{}{"c"},
-					},
-					map[string]interface{}{
-						"type": "append",
-						"args": []interface{}{"y", "z"},
-					},
-					map[string]interface{}{
-						"type": "move",
-						"args": []interface{}{"supu", "SUPUUUUU"},
-					},
-					map[string]interface{}{
-						"type": "move",
-						"args": []interface{}{"a.b", "a.BOOOOO"},
-					},
-					map[string]interface{}{
-						"type": "del",
-						"args": []interface{}{"collection.*.b"},
-					},
-					map[string]interface{}{
-						"type": "del",
-						"args": []interface{}{"collection.*.d"},
-					},
-					map[string]interface{}{
-						"type": "del",
-						"args": []interface{}{"collection.*.e"},
-					},
-					map[string]interface{}{
-						"type": "move",
-						"args": []interface{}{"collection.*.c", "collection.*.x"},
+	p := NewFlatmapMiddleware(
+		logging.NoOp,
+		&config.EndpointConfig{
+			ExtraConfig: config.ExtraConfig{
+				Namespace: map[string]interface{}{
+					flatmapKey: []interface{}{
+						map[string]interface{}{
+							"type": "del",
+							"args": []interface{}{"c"},
+						},
+						map[string]interface{}{
+							"type": "append",
+							"args": []interface{}{"y", "z"},
+						},
+						map[string]interface{}{
+							"type": "move",
+							"args": []interface{}{"supu", "SUPUUUUU"},
+						},
+						map[string]interface{}{
+							"type": "move",
+							"args": []interface{}{"a.b", "a.BOOOOO"},
+						},
+						map[string]interface{}{
+							"type": "del",
+							"args": []interface{}{"collection.*.b"},
+						},
+						map[string]interface{}{
+							"type": "del",
+							"args": []interface{}{"collection.*.d"},
+						},
+						map[string]interface{}{
+							"type": "del",
+							"args": []interface{}{"collection.*.e"},
+						},
+						map[string]interface{}{
+							"type": "move",
+							"args": []interface{}{"collection.*.c", "collection.*.x"},
+						},
 					},
 				},
 			},
 		},
-	})(func(_ context.Context, _ *Request) (*Response, error) {
+	)(func(_ context.Context, _ *Request) (*Response, error) {
 		return &sample, nil
 	})
 

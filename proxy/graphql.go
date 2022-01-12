@@ -4,12 +4,14 @@ package proxy
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/url"
 	"strconv"
 	"strings"
 
 	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
 	"github.com/luraproject/lura/v2/transport/http/client/graphql"
 )
 
@@ -20,7 +22,7 @@ import (
 // For mutations, it overides the defined variables with the request body.
 // The resulting request will have a proper graphql body with the query and the
 // variables
-func NewGraphQLMiddleware(remote *config.Backend) Middleware {
+func NewGraphQLMiddleware(logger logging.Logger, remote *config.Backend) Middleware {
 	opt, err := graphql.GetOptions(remote.ExtraConfig)
 	if err != nil {
 		return EmptyMiddleware
@@ -63,6 +65,15 @@ func NewGraphQLMiddleware(remote *config.Backend) Middleware {
 		if len(next) > 1 {
 			panic(ErrTooManyProxies)
 		}
+
+		logger.Debug(
+			fmt.Sprintf(
+				"[BACKEND: %s][GraphQL] Operation: %s, Method: %s",
+				remote.URLPattern,
+				opt.Type,
+				opt.Method,
+			),
+		)
 
 		if opt.Method == graphql.MethodGet {
 			return func(ctx context.Context, req *Request) (*Response, error) {

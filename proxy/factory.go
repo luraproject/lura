@@ -64,8 +64,9 @@ func (pf defaultFactory) New(cfg *config.EndpointConfig) (p Proxy, err error) {
 		return
 	}
 
-	p = NewPluginMiddleware(cfg)(p)
-	p = NewStaticMiddleware(cfg)(p)
+	p = NewFlatmapMiddleware(pf.logger, cfg)(p)
+	p = NewPluginMiddleware(pf.logger, cfg)(p)
+	p = NewStaticMiddleware(pf.logger, cfg)(p)
 	return
 }
 
@@ -74,8 +75,7 @@ func (pf defaultFactory) newMulti(cfg *config.EndpointConfig) (p Proxy, err erro
 	for i, backend := range cfg.Backend {
 		backendProxy[i] = pf.newStack(backend)
 	}
-	p = NewMergeDataMiddleware(cfg)(backendProxy...)
-	p = NewFlatmapMiddleware(cfg)(p)
+	p = NewMergeDataMiddleware(pf.logger, cfg)(backendProxy...)
 	return
 }
 
@@ -85,8 +85,8 @@ func (pf defaultFactory) newSingle(cfg *config.EndpointConfig) (Proxy, error) {
 
 func (pf defaultFactory) newStack(backend *config.Backend) (p Proxy) {
 	p = pf.backendFactory(backend)
-	p = NewBackendPluginMiddleware(backend)(p)
-	p = NewGraphQLMiddleware(backend)(p)
+	p = NewBackendPluginMiddleware(pf.logger, backend)(p)
+	p = NewGraphQLMiddleware(pf.logger, backend)(p)
 	p = NewLoadBalancedMiddlewareWithSubscriber(pf.subscriberFactory(backend))(p)
 	if backend.ConcurrentCalls > 1 {
 		p = NewConcurrentMiddleware(backend)(p)

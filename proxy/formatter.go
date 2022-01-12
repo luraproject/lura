@@ -3,10 +3,12 @@ package proxy
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/devopsfaith/flatmap/tree"
 	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
 )
 
 // EntityFormatter formats the response data
@@ -240,7 +242,7 @@ func (e flatmapFormatter) processOps(entity *Response) {
 	entity.Data, _ = flatten.Get([]string{}).(map[string]interface{})
 }
 
-func newFlatmapFormatter(cfg config.ExtraConfig, target, group string) EntityFormatter {
+func newFlatmapFormatter(cfg config.ExtraConfig, target, group string) *flatmapFormatter {
 	if v, ok := cfg[Namespace]; ok {
 		if e, ok := v.(map[string]interface{}); ok {
 			if vs, ok := e[flatmapKey].([]interface{}); ok {
@@ -284,7 +286,7 @@ func newFlatmapFormatter(cfg config.ExtraConfig, target, group string) EntityFor
 }
 
 // NewFlatmapMiddleware creates a proxy middleware that enables applying flatmap operations to the proxy response
-func NewFlatmapMiddleware(cfg *config.EndpointConfig) Middleware {
+func NewFlatmapMiddleware(logger logging.Logger, cfg *config.EndpointConfig) Middleware {
 	formatter := newFlatmapFormatter(cfg.ExtraConfig, "", "")
 	return func(next ...Proxy) Proxy {
 		if len(next) != 1 {
@@ -294,6 +296,14 @@ func NewFlatmapMiddleware(cfg *config.EndpointConfig) Middleware {
 		if formatter == nil {
 			return next[0]
 		}
+
+		logger.Debug(
+			fmt.Sprintf(
+				"[ENDPOINT: %s][Flatmap] Adding flatmap manipulator with %d operations",
+				cfg.Endpoint,
+				len(formatter.Ops),
+			),
+		)
 
 		return func(ctx context.Context, request *Request) (*Response, error) {
 			resp, err := next[0](ctx, request)

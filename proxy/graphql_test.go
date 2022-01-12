@@ -10,26 +10,30 @@ import (
 	"testing"
 
 	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
 	"github.com/luraproject/lura/v2/transport/http/client/graphql"
 )
 
 func TestNewGraphQLMiddleware_mutation(t *testing.T) {
 	query := "mutation addAuthor($author: [AddAuthorInput!]!) {\n  addAuthor(input: $author) {\n    author {\n      id\n      name\n    }\n  }\n}\n"
-	mw := NewGraphQLMiddleware(&config.Backend{
-		ExtraConfig: config.ExtraConfig{
-			graphql.Namespace: map[string]interface{}{
-				"type":  "mutation",
-				"query": query,
-				"variables": map[string]interface{}{
-					"author": map[string]interface{}{
-						"name":  "A.N. Author",
-						"dob":   "2000-01-01",
-						"posts": []interface{}{},
+	mw := NewGraphQLMiddleware(
+		logging.NoOp,
+		&config.Backend{
+			ExtraConfig: config.ExtraConfig{
+				graphql.Namespace: map[string]interface{}{
+					"type":  "mutation",
+					"query": query,
+					"variables": map[string]interface{}{
+						"author": map[string]interface{}{
+							"name":  "A.N. Author",
+							"dob":   "2000-01-01",
+							"posts": []interface{}{},
+						},
 					},
 				},
 			},
 		},
-	})
+	)
 
 	expectedResponse := &Response{
 		Data: map[string]interface{}{"foo": "bar"},
@@ -68,20 +72,23 @@ func TestNewGraphQLMiddleware_mutation(t *testing.T) {
 
 func TestNewGraphQLMiddleware_query(t *testing.T) {
 	query := "{ q(func: uid(1)) { uid } }"
-	mw := NewGraphQLMiddleware(&config.Backend{
-		ExtraConfig: config.ExtraConfig{
-			graphql.Namespace: map[string]interface{}{
-				"method": "get",
-				"type":   "query",
-				"query":  query,
-				"variables": map[string]interface{}{
-					"name":  "{foo}",
-					"dob":   "{bar}",
-					"posts": []interface{}{},
+	mw := NewGraphQLMiddleware(
+		logging.NoOp,
+		&config.Backend{
+			ExtraConfig: config.ExtraConfig{
+				graphql.Namespace: map[string]interface{}{
+					"method": "get",
+					"type":   "query",
+					"query":  query,
+					"variables": map[string]interface{}{
+						"name":  "{foo}",
+						"dob":   "{bar}",
+						"posts": []interface{}{},
+					},
 				},
 			},
 		},
-	})
+	)
 
 	expectedResponse := &Response{Data: map[string]interface{}{"foo": "bar"}}
 

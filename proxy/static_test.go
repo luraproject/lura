@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
 )
 
 func TestNewStaticMiddleware_multipleNext(t *testing.T) {
@@ -30,7 +31,7 @@ func TestNewStaticMiddleware_multipleNext(t *testing.T) {
 			},
 		},
 	}
-	mw := NewStaticMiddleware(&endpoint)
+	mw := NewStaticMiddleware(logging.NoOp, &endpoint)
 	mw(explosiveProxy(t), explosiveProxy(t))
 }
 
@@ -49,7 +50,7 @@ func TestNewStaticMiddleware_ok(t *testing.T) {
 			},
 		},
 	}
-	mw := NewStaticMiddleware(&endpoint)
+	mw := NewStaticMiddleware(logging.NoOp, &endpoint)
 
 	p := mw(dummyProxy(&Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}))
 	out1, err := p(context.Background(), &Request{})
@@ -119,7 +120,7 @@ func TestNewStaticMiddleware(t *testing.T) {
 		},
 	}
 
-	mw := NewStaticMiddleware(&config.EndpointConfig{ExtraConfig: extra})
+	mw := NewStaticMiddleware(logging.NoOp, &config.EndpointConfig{ExtraConfig: extra})
 
 	p := mw(func(_ context.Context, r *Request) (*Response, error) {
 		return &Response{IsComplete: true}, nil

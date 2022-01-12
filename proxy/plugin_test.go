@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
 	"github.com/luraproject/lura/v2/proxy/plugin"
 )
 
@@ -23,6 +24,7 @@ func TestNewPluginMiddleware(t *testing.T) {
 	}
 
 	bknd := NewBackendPluginMiddleware(
+		logging.NoOp,
 		&config.Backend{
 			ExtraConfig: map[string]interface{}{
 				plugin.Namespace: map[string]interface{}{
@@ -33,6 +35,7 @@ func TestNewPluginMiddleware(t *testing.T) {
 	)(validator)
 
 	p := NewPluginMiddleware(
+		logging.NoOp,
 		&config.EndpointConfig{
 			ExtraConfig: map[string]interface{}{
 				plugin.Namespace: map[string]interface{}{
