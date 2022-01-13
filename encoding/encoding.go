@@ -1,5 +1,7 @@
+// SPDX-License-Identifier: Apache-2.0
+
 /*
-Package encoding provides Decoding implementations.
+Package encoding provides basic decoding implementations.
 
 Decode decodes HTTP responses:
 
@@ -9,7 +11,6 @@ Decode decodes HTTP responses:
 	err := JSONDecoder(resp.Body, &data)
 
 */
-// SPDX-License-Identifier: Apache-2.0
 package encoding
 
 import (
@@ -67,7 +68,7 @@ func JSONCollectionDecoder(r io.Reader, v *map[string]interface{}) error {
 const SAFE_JSON = "safejson"
 
 // NewSafeJSONDecoder returns the universal json decoder
-func NewSafeJSONDecoder(isCollection bool) func(io.Reader, *map[string]interface{}) error {
+func NewSafeJSONDecoder(_ bool) func(io.Reader, *map[string]interface{}) error {
 	return SafeJSONDecoder
 }
 

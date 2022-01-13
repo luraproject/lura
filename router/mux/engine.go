@@ -1,5 +1,5 @@
-// Package mux provides some basic implementations for building routers based on net/http mux
 // SPDX-License-Identifier: Apache-2.0
+
 package mux
 
 import (

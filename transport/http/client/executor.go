@@ -1,6 +1,8 @@
-/* Package client provides some http helpers to create http clients and executors
- */
 // SPDX-License-Identifier: Apache-2.0
+
+/*
+	Package client provides some http helpers to create http clients and executors
+*/
 package client
 
 import (

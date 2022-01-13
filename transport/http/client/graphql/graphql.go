@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
+
+/*
+	Package graphql offers a param extractor and basic types for building GraphQL requests
+*/
 package graphql
 
 import (

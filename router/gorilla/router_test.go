@@ -1,6 +1,7 @@
 // +build !race
 
 // SPDX-License-Identifier: Apache-2.0
+
 package gorilla
 
 import (

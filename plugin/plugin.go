@@ -1,6 +1,8 @@
-/* Package plugin provides tools for loading and registering plugins
- */
 // SPDX-License-Identifier: Apache-2.0
+
+/*
+	Package plugin provides tools for loading and registering plugins
+*/
 package plugin
 
 import (

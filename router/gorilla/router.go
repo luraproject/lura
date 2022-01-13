@@ -1,6 +1,8 @@
-/* Package gorilla provides some basic implementations for building routers based on gorilla/mux
- */
 // SPDX-License-Identifier: Apache-2.0
+
+/*
+	Package gorilla provides some basic implementations for building routers based on gorilla/mux
+*/
 package gorilla
 
 import (
