@@ -171,7 +171,7 @@ func ExampleWeights_compact_basic() {
 		[]uint16{},
 		[]uint16{0, 0, 0, 0},
 	} {
-		fmt.Println(tc, compact(weights(tc)))
+		fmt.Println(tc, compact(tc))
 	}
 
 	// output:
@@ -187,12 +187,12 @@ func ExampleWeights_compact_custom() {
 	for i := range tc {
 		tc[i] = uint16(3*5*7*11*13 + i)
 	}
-	fmt.Println(tc[:5], compact(weights(tc)[:5]))
+	fmt.Println(tc[:5], compact(tc[:5]))
 
 	for i := range tc {
 		tc[i] = uint16(i * 3 * 5 * 7)
 	}
-	fmt.Println(tc[:5], compact(weights(tc)[:5]))
+	fmt.Println(tc[:5], compact(tc[:5]))
 
 	// output:
 	// [15015 15016 15017 15018 15019] [19 19 20 20 20]

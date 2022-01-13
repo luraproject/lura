@@ -19,17 +19,16 @@ import (
 // Namespace is the key for the dns sd module
 const Namespace = "dns"
 
-// Register registers the dns sd subscriber factory
+// Register registers the dns sd subscriber factory under the name defined by Namespace
 func Register() error {
 	return sd.GetRegister().Register(Namespace, SubscriberFactory)
 }
 
-var (
-	// TTL is the duration of the cached data
-	TTL = 30 * time.Second
-	// DefaultLookup id the function for the DNS resolution
-	DefaultLookup = net.LookupSRV
-)
+// TTL is the duration of the cached data
+var TTL = 30 * time.Second
+
+// DefaultLookup is the function used for the DNS resolution
+var DefaultLookup = net.LookupSRV
 
 // SubscriberFactory builds a DNS_SRV Subscriber with the received config
 func SubscriberFactory(cfg *config.Backend) sd.Subscriber {
@@ -73,7 +72,7 @@ type subscriber struct {
 	lookup lookup
 }
 
-// Hosts implements the subscriber interface
+// Hosts returns a copy of the cached set of hosts. It is safe to call it concurrently
 func (s subscriber) Hosts() ([]string, error) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
@@ -110,18 +109,21 @@ func (s subscriber) resolve() ([]string, error) {
 		return []string{}, err
 	}
 
-	sort.Slice(srvs, func(i, j int) bool {
-		if srvs[i].Priority == srvs[j].Priority {
-			if srvs[i].Weight == srvs[j].Weight {
-				if srvs[i].Target == srvs[j].Target {
-					return srvs[i].Port < srvs[j].Port
+	sort.Slice(
+		srvs,
+		func(i, j int) bool {
+			if srvs[i].Priority == srvs[j].Priority {
+				if srvs[i].Weight == srvs[j].Weight {
+					if srvs[i].Target == srvs[j].Target {
+						return srvs[i].Port < srvs[j].Port
+					}
+					return srvs[i].Target < srvs[j].Target
 				}
-				return srvs[i].Target < srvs[j].Target
+				return srvs[i].Weight > srvs[j].Weight
 			}
-			return srvs[i].Weight > srvs[j].Weight
-		}
-		return srvs[i].Priority < srvs[j].Priority
-	})
+			return srvs[i].Priority < srvs[j].Priority
+		},
+	)
 
 	ws := []uint16{}
 	host := []string{}
@@ -135,7 +137,7 @@ func (s subscriber) resolve() ([]string, error) {
 	}
 
 	instances := []string{}
-	for i, times := range compact(weights(ws)) {
+	for i, times := range compact(ws) {
 		for j := uint16(0); j < times; j++ {
 			instances = append(instances, host[i])
 		}
@@ -143,12 +145,10 @@ func (s subscriber) resolve() ([]string, error) {
 	return instances, nil
 }
 
-type weights []uint16
-
-func compact(ws weights) []uint16 {
-	tmp := ws.normalize()
+func compact(ws []uint16) []uint16 {
+	tmp := normalize(ws)
 	div := gcd(tmp)
-	if div == 0 {
+	if div < 2 {
 		return tmp
 	}
 
@@ -160,7 +160,7 @@ func compact(ws weights) []uint16 {
 	return res
 }
 
-func (ws weights) normalize() []uint16 {
+func normalize(ws []uint16) []uint16 {
 	scale := 100
 	if l := len(ws); l > scale {
 		scale = l
