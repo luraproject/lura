@@ -35,7 +35,10 @@ func DefaultFactoryWithSubscriber(logger logging.Logger, sF sd.SubscriberFactory
 
 // NewDefaultFactory returns a default proxy factory with the injected proxy builder and logger
 func NewDefaultFactory(backendFactory BackendFactory, logger logging.Logger) Factory {
-	return NewDefaultFactoryWithSubscriber(backendFactory, logger, sd.GetSubscriber)
+	sf := func(remote *config.Backend) sd.Subscriber {
+		return sd.GetRegister().Get(remote.SD)(remote)
+	}
+	return NewDefaultFactoryWithSubscriber(backendFactory, logger, sf)
 }
 
 // NewDefaultFactoryWithSubscriber returns a default proxy factory with the injected proxy builder,

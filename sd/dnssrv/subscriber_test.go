@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package dnssrv
 
 import (
@@ -53,7 +54,7 @@ func ExampleRegister() {
 		return "cname", srvSet, nil
 	}
 
-	s := sd.GetSubscriber(&config.Backend{Host: []string{"some.example.tld"}, SD: Namespace})
+	s := sd.GetRegister().Get(Namespace)(&config.Backend{Host: []string{"some.example.tld"}, SD: Namespace})
 	hosts, err := s.Hosts()
 	if err != nil {
 		fmt.Println("Getting the hosts:", err.Error())
@@ -104,7 +105,7 @@ func ExampleNewDetailed() {
 			Target: "127.0.0.1",
 		},
 	}
-	lookupFunc = func(service, proto, name string) (cname string, addrs []*net.SRV, err error) {
+	lookupFunc := func(service, proto, name string) (cname string, addrs []*net.SRV, err error) {
 		return "cname", srvSet, nil
 	}
 

@@ -1,6 +1,8 @@
-/* Package dnssrv defines some implementations for a dns based service discovery
- */
 // SPDX-License-Identifier: Apache-2.0
+
+/*
+	Package dnssrv defines some implementations for a dns based service discovery
+*/
 package dnssrv
 
 import (
@@ -19,7 +21,7 @@ const Namespace = "dns"
 
 // Register registers the dns sd subscriber factory
 func Register() error {
-	return sd.RegisterSubscriberFactory(Namespace, SubscriberFactory)
+	return sd.GetRegister().Register(Namespace, SubscriberFactory)
 }
 
 var (
