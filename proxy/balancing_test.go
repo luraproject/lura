@@ -121,6 +121,7 @@ func TestNewRoundRobinLoadBalancedMiddleware_DNSSRV(t *testing.T) {
 			{
 				Port:   8080,
 				Target: "127.0.0.1",
+				Weight: 1,
 			},
 		}, nil
 	}
