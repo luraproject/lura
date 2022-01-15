@@ -12,7 +12,7 @@ import (
 func TestConfig_rejectInvalidVersion(t *testing.T) {
 	subject := ServiceConfig{}
 	err := subject.Init()
-	if err == nil || strings.Index(err.Error(), "unsupported version: 0 (want: 2)") != 0 {
+	if err == nil || strings.Index(err.Error(), "unsupported version: 0 (want: 3)") != 0 {
 		t.Error("Error expected. Got", err.Error())
 	}
 }
@@ -208,7 +208,7 @@ func TestConfig_init(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	if hash != "58ODaw7uftXrktTDdrQzdp3VTikLk0ieWoUFqnLgB/I=" {
+	if hash != "beHccOVWRin9xHo2oaeb30cyUQjJ15ovu4nwcuSYs2M=" {
 		t.Errorf("unexpected hash: %s", hash)
 	}
 }

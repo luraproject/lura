@@ -11,7 +11,7 @@ import (
 func TestNewParser_ok(t *testing.T) {
 	configPath := "/tmp/ok.json"
 	configContent := []byte(`{
-    "version": 2,
+    "version": 3,
     "name": "My lovely gateway",
     "port": 8080,
     "cache_ttl": "3600s",
@@ -182,7 +182,7 @@ func TestNewParser_errorMessages(t *testing.T) {
 			name: "case7",
 			path: "/tmp/ok.json",
 			content: []byte(`{
-	"version": 2,
+	"version": 3,
 	"name": "My lovely gateway",
 	"port": 8080,
 	"cache_ttl": 3600
@@ -262,7 +262,7 @@ func TestNewParser_initError(t *testing.T) {
 	}
 
 	_, err := NewParser().Parse(wrongConfigPath)
-	if err == nil || err.Error() != "'/tmp/unmarshall.json': unsupported version: 0 (want: 2)" {
+	if err == nil || err.Error() != "'/tmp/unmarshall.json': unsupported version: 0 (want: 3)" {
 		t.Error("Error expected. Got", err)
 	}
 	if err = os.Remove(wrongConfigPath); err != nil {

@@ -31,7 +31,7 @@ const (
 	DefaultTimeout = 2 * time.Second
 
 	// ConfigVersion is the current version of the config struct
-	ConfigVersion = 2
+	ConfigVersion = 3
 )
 
 // RoutingPattern to use during route conversion. By default, use the colon router pattern
