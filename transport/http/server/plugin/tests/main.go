@@ -23,7 +23,7 @@ func (r registerer) RegisterLogger(v interface{}) {
 		return
 	}
 	logger = l
-	logger.Debug(HandlerRegisterer, "server plugin loaded!!!")
+	logger.Debug(fmt.Sprintf("[PLUGIN: %s] Logger loaded", HandlerRegisterer))
 }
 
 func (r registerer) RegisterHandlers(f func(
@@ -55,10 +55,6 @@ func (r registerer) registerHandlers(ctx context.Context, extra map[string]inter
 		fmt.Fprintf(w, "Hello, %q", html.EscapeString(req.URL.Path))
 		logger.Debug("request:", html.EscapeString(req.URL.Path))
 	}), nil
-}
-
-func init() {
-	fmt.Println("krakend-example handler plugin loaded!!!")
 }
 
 func main() {}

@@ -10,8 +10,8 @@ import (
 	"testing"
 )
 
-func TestLoadModifiers(t *testing.T) {
-	total, err := LoadModifiers("./tests", ".so", RegisterModifier)
+func TestLoad(t *testing.T) {
+	total, err := Load("./tests", ".so", RegisterModifier)
 	if err != nil {
 		t.Error(err.Error())
 		t.Fail()

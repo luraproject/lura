@@ -12,10 +12,6 @@ import (
 
 func main() {}
 
-func init() {
-	fmt.Println(string(ModifierRegisterer), "loaded!!!")
-}
-
 var ModifierRegisterer = registerer("lura-request-modifier-example")
 
 var logger Logger = nil
@@ -29,7 +25,6 @@ func (r registerer) RegisterModifiers(f func(
 	appliesToResponse bool,
 )) {
 	f(string(r), r.modifierFactory, true, false)
-	fmt.Println(string(ModifierRegisterer), "registered!!!")
 }
 
 func (r registerer) RegisterLogger(in interface{}) {
@@ -38,7 +33,7 @@ func (r registerer) RegisterLogger(in interface{}) {
 		return
 	}
 	logger = l
-	logger.Debug(string(ModifierRegisterer), "logger registered!!!")
+	logger.Debug(fmt.Sprintf("[PLUGIN: %s] Logger loaded", ModifierRegisterer))
 
 }
 
@@ -47,7 +42,6 @@ func (r registerer) modifierFactory(
 ) func(interface{}) (interface{}, error) {
 	// check the config
 	// return the modifier
-	fmt.Println(string(ModifierRegisterer), "injected!!!")
 
 	if logger == nil {
 		return func(input interface{}) (interface{}, error) {

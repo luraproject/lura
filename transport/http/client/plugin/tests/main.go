@@ -23,7 +23,7 @@ func (r registerer) RegisterLogger(v interface{}) {
 		return
 	}
 	logger = l
-	logger.Debug(ClientRegisterer, "client plugin loaded!!!")
+	logger.Debug(fmt.Sprintf("[PLUGIN: %s] Logger loaded", ClientRegisterer))
 }
 
 func (r registerer) RegisterClients(f func(
@@ -55,10 +55,6 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 		fmt.Fprintf(w, "Hello, %q", html.EscapeString(req.URL.Path))
 		logger.Debug("request:", html.EscapeString(req.URL.Path))
 	}), nil
-}
-
-func init() {
-	fmt.Println(ClientRegisterer, "client plugin loaded!!!")
 }
 
 func main() {}

@@ -15,7 +15,7 @@ import (
 )
 
 func TestNewPluginMiddleware(t *testing.T) {
-	plugin.LoadModifiers("./plugin/tests", ".so", plugin.RegisterModifier)
+	plugin.Load("./plugin/tests", ".so", plugin.RegisterModifier)
 
 	validator := func(ctx context.Context, r *Request) (*Response, error) {
 		if r.Path != "/bar/fooo/fooo" {
