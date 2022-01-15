@@ -51,7 +51,7 @@ func TestKrakenD_ginRouter(t *testing.T) {
 
 		gin.NewFactory(
 			gin.Config{
-				Engine:         gin.NewEngine(*cfg, logger, ioutil.Discard),
+				Engine:         gin.NewEngine(*cfg, logger, ioutil.Discard, nil),
 				Middlewares:    []ginlib.HandlerFunc{},
 				HandlerFactory: gin.EndpointHandler,
 				ProxyFactory:   proxy.DefaultFactory(logger),

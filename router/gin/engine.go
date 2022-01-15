@@ -16,7 +16,7 @@ import (
 const Namespace = "github_com/luraproject/lura/router/gin"
 
 // NewEngine returns an initialized gin engine
-func NewEngine(cfg config.ServiceConfig, logger logging.Logger, w io.Writer) *gin.Engine {
+func NewEngine(cfg config.ServiceConfig, logger logging.Logger, w io.Writer, formatter gin.LogFormatter) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	if cfg.Debug {
 		logger.Debug(logPrefix, "Debug enabled")
@@ -57,7 +57,7 @@ func NewEngine(cfg config.ServiceConfig, logger logging.Logger, w io.Writer) *gi
 	})
 
 	engine.Use(
-		gin.LoggerWithConfig(gin.LoggerConfig{Output: w, SkipPaths: paths}),
+		gin.LoggerWithConfig(gin.LoggerConfig{Output: w, SkipPaths: paths, Formatter: formatter}),
 		gin.Recovery(),
 	)
 
