@@ -13,6 +13,9 @@ const KrakendHeaderName = "X-KRAKEND"
 // KrakendVersion is the version of the build
 var KrakendVersion = "undefined"
 
+// GoVersion is the version of the go compiler used at build time
+var GoVersion = "undefined"
+
 // KrakendHeaderValue is the value of the custom KrakenD header
 var KrakendHeaderValue = fmt.Sprintf("Version %s", KrakendVersion)
 
