@@ -15,6 +15,8 @@ require (
 	github.com/valyala/fastrand v1.1.0
 )
 
+require golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
+
 require (
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect

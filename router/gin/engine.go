@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"io"
 	"net/textproto"
+	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/luraproject/lura/v2/config"
@@ -15,11 +17,18 @@ import (
 
 const Namespace = "github_com/luraproject/lura/router/gin"
 
+type EngineOptions struct {
+	Logger    logging.Logger
+	Writer    io.Writer
+	Formatter gin.LogFormatter
+	Health    <-chan string
+}
+
 // NewEngine returns an initialized gin engine
-func NewEngine(cfg config.ServiceConfig, logger logging.Logger, w io.Writer, formatter gin.LogFormatter) *gin.Engine {
+func NewEngine(cfg config.ServiceConfig, opt EngineOptions) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	if cfg.Debug {
-		logger.Debug(logPrefix, "Debug enabled")
+		opt.Logger.Debug(logPrefix, "Debug enabled")
 	}
 	engine := gin.New()
 
@@ -57,7 +66,11 @@ func NewEngine(cfg config.ServiceConfig, logger logging.Logger, w io.Writer, for
 	})
 
 	engine.Use(
-		gin.LoggerWithConfig(gin.LoggerConfig{Output: w, SkipPaths: paths, Formatter: formatter}),
+		gin.LoggerWithConfig(gin.LoggerConfig{
+			Output:    opt.Writer,
+			SkipPaths: paths,
+			Formatter: opt.Formatter,
+		}),
 		gin.Recovery(),
 	)
 
@@ -66,12 +79,31 @@ func NewEngine(cfg config.ServiceConfig, logger logging.Logger, w io.Writer, for
 		if ginOptions.HealthPath != "" {
 			path = ginOptions.HealthPath
 		}
-		engine.GET(path, func(c *gin.Context) {
-			c.JSON(200, gin.H{"status": "ok"})
-		})
+
+		engine.GET(path, healthEndpoint(opt.Health))
 	}
 
 	return engine
+}
+
+func healthEndpoint(health <-chan string) func(*gin.Context) {
+	mu := new(sync.RWMutex)
+	reports := map[string]string{}
+
+	go func() {
+		for name := range health {
+			mu.Lock()
+			reports[name] = time.Now().String()
+			mu.Unlock()
+		}
+	}()
+
+	return func(c *gin.Context) {
+		mu.RLock()
+		defer mu.RUnlock()
+
+		c.JSON(200, gin.H{"status": "ok", "agents": reports, "now": time.Now().String()})
+	}
 }
 
 type engineConfiguration struct {

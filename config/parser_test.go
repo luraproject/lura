@@ -20,6 +20,26 @@ func TestNewParser_ok(t *testing.T) {
 		"public_key":  "cert.pem",
 		"private_key": "key.pem"
 	},
+	"async_agent": [
+		{
+			"name": "agent",
+			"connection": {
+				"max_retries": 2
+			},
+			"consumer": {
+				"topic": "foo.*"
+			},
+            "backend": [
+                {
+                    "host": [
+                        "https://api.github.com"
+                    ],
+                    "url_pattern": "/",
+                    "extra_config" : {"user":"test","hits":6,"parents":["gomez","morticia"]}
+                }
+            ]
+		}
+	],
     "endpoints": [
         {
             "endpoint": "/github",
@@ -31,7 +51,7 @@ func TestNewParser_ok(t *testing.T) {
                         "https://api.github.com"
                     ],
                     "url_pattern": "/",
-                    "whitelist": [
+                    "allow": [
                         "authorizations_url",
                         "code_search_url"
                     ],
@@ -62,7 +82,7 @@ func TestNewParser_ok(t *testing.T) {
                         "https://jsonplaceholder.typicode.com"
                     ],
                     "url_pattern": "/posts/{id}",
-                    "blacklist": [
+                    "deny": [
                         "userId"
                     ]
                 },
@@ -126,6 +146,10 @@ func TestNewParser_ok(t *testing.T) {
 
 	if err := os.Remove(configPath); err != nil {
 		t.FailNow()
+	}
+
+	if l := len(serviceConfig.AsyncAgents); l != 1 {
+		t.Errorf("Unexpected number of agents. Have %d, want 1", l)
 	}
 }
 

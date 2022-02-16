@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
+/*
+   Package backoff contains some basic implementations and a selector by strategy name
+*/
 package backoff
 
 import (

@@ -1,3 +1,4 @@
+//go:build integration || !race
 // +build integration !race
 
 // SPDX-License-Identifier: Apache-2.0
@@ -49,9 +50,16 @@ func TestKrakenD_ginRouter(t *testing.T) {
 			"forwarded_by_client_ip": true,
 		}
 
+		ignoredChan := make(chan string)
+		opts := gin.EngineOptions{
+			Logger: logger,
+			Writer: ioutil.Discard,
+			Health: (<-chan string)(ignoredChan),
+		}
+
 		gin.NewFactory(
 			gin.Config{
-				Engine:         gin.NewEngine(*cfg, logger, ioutil.Discard, nil),
+				Engine:         gin.NewEngine(*cfg, opts),
 				Middlewares:    []ginlib.HandlerFunc{},
 				HandlerFactory: gin.EndpointHandler,
 				ProxyFactory:   proxy.DefaultFactory(logger),

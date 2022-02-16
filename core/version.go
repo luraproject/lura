@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-   Package core contains come basic constants and variables
+   Package core contains some basic constants and variables
 */
 package core
 

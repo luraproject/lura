@@ -63,11 +63,9 @@ func RegisterModifier(
 	appliesToResponse bool,
 ) {
 	if appliesToRequest {
-		fmt.Println("registering request modifier:", name)
 		modifierRegister.Register(requestNamespace, name, modifierFactory)
 	}
 	if appliesToResponse {
-		fmt.Println("registering response modifier:", name)
 		modifierRegister.Register(responseNamespace, name, modifierFactory)
 	}
 }

@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/textproto"
 	"regexp"
 	"sort"
@@ -43,6 +44,8 @@ type ServiceConfig struct {
 	Name string `mapstructure:"name"`
 	// set of endpoint definitions
 	Endpoints []*EndpointConfig `mapstructure:"endpoints"`
+	// set of async agent definitions
+	AsyncAgents []*AsyncAgent `mapstructure:"async_agent"`
 	// defafult timeout
 	Timeout time.Duration `mapstructure:"timeout"`
 	// default TTL for GET
@@ -155,6 +158,39 @@ type ServiceConfig struct {
 	// run lura in debug mode
 	Debug     bool
 	uriParser URIParser
+
+	// SequentialStart flags if the agents should be started sequentially
+	// before starting the router
+	SequentialStart bool `mapstructure:"sequential_start"`
+}
+
+// AsyncAgent defines the configuration of a single subscriber/consumer to be initialized
+// and maintained by the lura service
+type AsyncAgent struct {
+	Name       string     `mapstructure:"name"`
+	Connection Connection `mapstructure:"connection"`
+	Consumer   Consumer   `mapstructure:"consumer"`
+	// the encoding format
+	Encoding string `mapstructure:"encoding"`
+	// set of definitions of the backends to be linked to this endpoint
+	Backend []*Backend `mapstructure:"backend"`
+
+	// Endpoint Extra configuration for customized behaviour
+	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
+}
+
+type Consumer struct {
+	// timeout of the pipe defined by this subscriber
+	Timeout time.Duration `mapstructure:"timeout"`
+	Workers int           `mapstructure:"workers"`
+	Topic   string        `mapstructure:"topic"`
+	MaxRate float64       `mapstructure:"max_rate"`
+}
+
+type Connection struct {
+	MaxRetries      int           `mapstructure:"max_retries"`
+	BackoffStrategy string        `mapstructure:"backoff_strategy"`
+	HealthInterval  time.Duration `mapstructure:"health_interval"`
 }
 
 // EndpointConfig defines the configuration of a single endpoint to be exposed
@@ -307,6 +343,8 @@ func (s *ServiceConfig) Init() error {
 
 	s.initGlobalParams()
 
+	s.initAsyncAgents()
+
 	return s.initEndpoints()
 }
 
@@ -324,6 +362,30 @@ func (s *ServiceConfig) initGlobalParams() {
 	s.Host = s.uriParser.CleanHosts(s.Host)
 
 	s.ExtraConfig.sanitize()
+}
+
+func (s *ServiceConfig) initAsyncAgents() error {
+	for i, e := range s.AsyncAgents {
+		s.initAsyncAgentDefaults(i)
+
+		e.ExtraConfig.sanitize()
+
+		for _, b := range e.Backend {
+			if len(b.Host) == 0 {
+				b.Host = s.Host
+			} else if !b.HostSanitizationDisabled {
+				b.Host = s.uriParser.CleanHosts(b.Host)
+			}
+			if b.Method == "" {
+				b.Method = http.MethodGet
+			}
+			b.Timeout = e.Consumer.Timeout
+			b.Decoder = encoding.GetRegister().Get(strings.ToLower(b.Encoding))(b.IsCollection)
+
+			b.ExtraConfig.sanitize()
+		}
+	}
+	return nil
 }
 
 func (s *ServiceConfig) initEndpoints() error {
@@ -403,6 +465,19 @@ func (s *ServiceConfig) initEndpointDefaults(e int) {
 		} else {
 			endpoint.OutputEncoding = encoding.JSON
 		}
+	}
+}
+
+func (s *ServiceConfig) initAsyncAgentDefaults(e int) {
+	agent := s.AsyncAgents[e]
+	if s.Timeout != 0 && agent.Consumer.Timeout == 0 {
+		agent.Consumer.Timeout = s.Timeout
+	}
+	if agent.Consumer.Workers < 1 {
+		agent.Consumer.Workers = 1
+	}
+	if agent.Connection.HealthInterval < time.Second {
+		agent.Connection.HealthInterval = time.Second
 	}
 }
 

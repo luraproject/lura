@@ -135,6 +135,7 @@ type FileReaderFunc func(string) ([]byte, error)
 type parseableServiceConfig struct {
 	Name                  string                     `json:"name"`
 	Endpoints             []*parseableEndpointConfig `json:"endpoints"`
+	AsyncAgents           []*parseableAsyncAgent     `json:"async_agent"`
 	Timeout               string                     `json:"timeout"`
 	CacheTTL              string                     `json:"cache_ttl"`
 	Host                  []string                   `json:"host"`
@@ -208,6 +209,11 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 		endpoints = append(endpoints, e.normalize())
 	}
 	cfg.Endpoints = endpoints
+	agents := make([]*AsyncAgent, 0, len(p.AsyncAgents))
+	for _, a := range p.AsyncAgents {
+		agents = append(agents, a.normalize())
+	}
+	cfg.AsyncAgents = agents
 	return cfg
 }
 
@@ -249,6 +255,51 @@ func (p *parseableEndpointConfig) normalize() *EndpointConfig {
 	}
 	if p.ExtraConfig != nil {
 		e.ExtraConfig = *p.ExtraConfig
+	}
+	backends := make([]*Backend, 0, len(p.Backend))
+	for _, b := range p.Backend {
+		backends = append(backends, b.normalize())
+	}
+	e.Backend = backends
+	return &e
+}
+
+type parseableAsyncAgent struct {
+	Name       string `json:"name"`
+	Connection struct {
+		MaxRetries      int    `json:"max_retries"`
+		BackoffStrategy string `json:"backoff_strategy"`
+		HealthInterval  string `json:"health_interval"`
+	} `json:"connection"`
+	Consumer struct {
+		Timeout string  `json:"timeout"`
+		Workers int     `json:"workers"`
+		Topic   string  `json:"topic"`
+		MaxRate float64 `json:"max_rate"`
+	} `json:"consumer"`
+	Encoding    string              `json:"encoding"`
+	Backend     []*parseableBackend `json:"backend"`
+	ExtraConfig ExtraConfig         `json:"extra_config"`
+}
+
+func (p *parseableAsyncAgent) normalize() *AsyncAgent {
+	e := AsyncAgent{
+		Name:     p.Name,
+		Encoding: p.Encoding,
+		Connection: Connection{
+			MaxRetries:      p.Connection.MaxRetries,
+			BackoffStrategy: p.Connection.BackoffStrategy,
+			HealthInterval:  parseDuration(p.Connection.HealthInterval),
+		},
+		Consumer: Consumer{
+			Timeout: parseDuration(p.Consumer.Timeout),
+			Workers: p.Consumer.Workers,
+			Topic:   p.Consumer.Topic,
+			MaxRate: p.Consumer.MaxRate,
+		},
+	}
+	if p.ExtraConfig != nil {
+		e.ExtraConfig = p.ExtraConfig
 	}
 	backends := make([]*Backend, 0, len(p.Backend))
 	for _, b := range p.Backend {

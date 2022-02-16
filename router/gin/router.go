@@ -13,6 +13,7 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/core"
@@ -98,6 +99,7 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 	// https://github.com/gin-gonic/gin/issues/2862 are completely fixed
 	go r.cfg.Engine.Run("XXXX")
 
+	r.cfg.Logger.Info("[SERVICE: Gin] Listening on port:", cfg.Port)
 	if err := r.runServerF(r.ctx, cfg, r.cfg.Engine); err != nil && err != http.ErrServerClosed {
 		r.cfg.Logger.Error(logPrefix, err.Error())
 	}
@@ -113,7 +115,7 @@ func (r ginRouter) registerEndpointsAndMiddlewares(cfg config.ServiceConfig) {
 	endpointGroup := r.cfg.Engine.Group("/")
 	endpointGroup.Use(r.cfg.Middlewares...)
 
-	r.registerKrakendEndpoints(endpointGroup, cfg.Endpoints)
+	r.registerKrakendEndpoints(endpointGroup, cfg)
 
 	if opts, ok := cfg.ExtraConfig[Namespace].(map[string]interface{}); ok {
 		if v, ok := opts["auto_options"].(bool); ok && v {
@@ -121,18 +123,43 @@ func (r ginRouter) registerEndpointsAndMiddlewares(cfg config.ServiceConfig) {
 			r.registerOptionEndpoints(endpointGroup)
 		}
 	}
+
 }
 
-func (r ginRouter) registerKrakendEndpoints(rg *gin.RouterGroup, endpoints []*config.EndpointConfig) {
-	for _, c := range endpoints {
-		proxyStack, err := r.cfg.ProxyFactory.New(c)
-		if err != nil {
-			r.cfg.Logger.Error(logPrefix, "Calling the ProxyFactory", err.Error())
-			continue
+func (r ginRouter) registerKrakendEndpoints(rg *gin.RouterGroup, cfg config.ServiceConfig) {
+	if cfg.SequentialStart {
+		// build and register the pipes and endpoints sequentially
+		for _, c := range cfg.Endpoints {
+			proxyStack, err := r.cfg.ProxyFactory.New(c)
+			if err != nil {
+				r.cfg.Logger.Error(logPrefix, "Calling the ProxyFactory", err.Error())
+				continue
+			}
+			r.registerKrakendEndpoint(rg, c.Method, c, r.cfg.HandlerFactory(c, proxyStack), len(c.Backend))
 		}
-
-		r.registerKrakendEndpoint(rg, c.Method, c, r.cfg.HandlerFactory(c, proxyStack), len(c.Backend))
+		return
 	}
+
+	// create an errgroup so every endpoint is registered concurrently, and the pipe build process too.
+	// concurrent builds generate less readable logs but improves the start-up times (depending on the
+	// number of endpoints and the complexity of the associated pipes)
+	g, gctx := errgroup.WithContext(r.ctx)
+	r.ctx = gctx
+
+	for _, c := range cfg.Endpoints {
+		c := c
+		g.Go(func() error {
+			proxyStack, err := r.cfg.ProxyFactory.New(c)
+			if err != nil {
+				r.cfg.Logger.Error(logPrefix, "Calling the ProxyFactory", err.Error())
+				return err
+			}
+			r.registerKrakendEndpoint(rg, c.Method, c, r.cfg.HandlerFactory(c, proxyStack), len(c.Backend))
+			return nil
+		})
+	}
+
+	g.Wait()
 }
 
 func (r ginRouter) registerKrakendEndpoint(rg *gin.RouterGroup, method string, e *config.EndpointConfig, h gin.HandlerFunc, total int) {
@@ -158,6 +185,7 @@ func (r ginRouter) registerKrakendEndpoint(rg *gin.RouterGroup, method string, e
 		rg.DELETE(path, h)
 	default:
 		r.cfg.Logger.Error(logPrefix, "Unsupported method", method)
+		return
 	}
 
 	methods, ok := r.urlCatalog[path]
