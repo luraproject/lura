@@ -291,7 +291,11 @@ func (e *ExtraConfig) sanitize() {
 			}
 			(*e)[module] = sanitized
 		}
+	}
+}
 
+func (e *ExtraConfig) Normalize() {
+	for module := range *e {
 		if alias, ok := ExtraConfigAlias[module]; ok {
 			(*e)[alias] = (*e)[module]
 			delete(*e, module)
@@ -346,6 +350,22 @@ func (s *ServiceConfig) Init() error {
 	s.initAsyncAgents()
 
 	return s.initEndpoints()
+}
+
+func (s *ServiceConfig) Normalize() {
+	s.ExtraConfig.Normalize()
+	for _, e := range s.Endpoints {
+		e.ExtraConfig.Normalize()
+		for _, b := range e.Backend {
+			b.ExtraConfig.Normalize()
+		}
+	}
+	for _, a := range s.AsyncAgents {
+		a.ExtraConfig.Normalize()
+		for _, b := range a.Backend {
+			b.ExtraConfig.Normalize()
+		}
+	}
 }
 
 func (s *ServiceConfig) initGlobalParams() {
