@@ -74,7 +74,10 @@ func (rf factory) NewWithContext(ctx context.Context) router.Router {
 		ctx:        ctx,
 		runServerF: rf.cfg.RunServer,
 		mu:         new(sync.Mutex),
-		urlCatalog: map[string][]string{},
+		urlCatalog: urlCatalog{
+			mu:      new(sync.Mutex),
+			catalog: map[string][]string{},
+		},
 	}
 }
 
@@ -83,7 +86,12 @@ type ginRouter struct {
 	ctx        context.Context
 	runServerF RunServerFunc
 	mu         *sync.Mutex
-	urlCatalog map[string][]string
+	urlCatalog urlCatalog
+}
+
+type urlCatalog struct {
+	mu      *sync.Mutex
+	catalog map[string][]string
 }
 
 // Run completes the router initialization and executes it
@@ -95,7 +103,7 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 
 	r.registerEndpointsAndMiddlewares(cfg)
 
-	// TODO: remove this ugly hack once the https://github.com/gin-gonic/gin/pull/2692 and
+	// TODO: remove this ugly hack once https://github.com/gin-gonic/gin/pull/2692 and
 	// https://github.com/gin-gonic/gin/issues/2862 are completely fixed
 	go r.cfg.Engine.Run("XXXX")
 
@@ -188,16 +196,22 @@ func (r ginRouter) registerKrakendEndpoint(rg *gin.RouterGroup, method string, e
 		return
 	}
 
-	methods, ok := r.urlCatalog[path]
+	r.urlCatalog.mu.Lock()
+	defer r.urlCatalog.mu.Unlock()
+
+	methods, ok := r.urlCatalog.catalog[path]
 	if !ok {
-		r.urlCatalog[path] = []string{method}
+		r.urlCatalog.catalog[path] = []string{method}
 		return
 	}
-	r.urlCatalog[path] = append(methods, method)
+	r.urlCatalog.catalog[path] = append(methods, method)
 }
 
 func (r ginRouter) registerOptionEndpoints(rg *gin.RouterGroup) {
-	for path, methods := range r.urlCatalog {
+	r.urlCatalog.mu.Lock()
+	defer r.urlCatalog.mu.Unlock()
+
+	for path, methods := range r.urlCatalog.catalog {
 		sort.Strings(methods)
 		allowed := strings.Join(methods, ", ")
 
