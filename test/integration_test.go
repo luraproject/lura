@@ -156,12 +156,6 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 		expStatusCode int
 	}{
 		{
-			name:    "health_check",
-			url:     "/__health",
-			headers: map[string]string{},
-			expBody: `{"status":"ok"}`,
-		},
-		{
 			name:       "static",
 			url:        "/static",
 			headers:    map[string]string{},
