@@ -44,6 +44,7 @@ func TestConfig_initBackendURLMappings_ok(t *testing.T) {
 		"supu/tupu{supu-5t6}?a={foo}&b={foo}",
 		"{resp0_x}/{tupu1}/{tupu_56}{supu-5t6}?a={tupu}&b={foo}",
 		"{resp0_x}/{tupu1}/{JWT.foo}",
+		"{resp0_x}/{tupu1}/{JWT.http://example.com/foo_bar}",
 	}
 
 	expected := []string{
@@ -55,6 +56,7 @@ func TestConfig_initBackendURLMappings_ok(t *testing.T) {
 		"/supu/tupu{{.Supu-5t6}}?a={{.Foo}}&b={{.Foo}}",
 		"/{{.Resp0_x}}/{{.Tupu1}}/{{.Tupu_56}}{{.Supu-5t6}}?a={{.Tupu}}&b={{.Foo}}",
 		"/{{.Resp0_x}}/{{.Tupu1}}/{{.JWT.foo}}",
+		"/{{.Resp0_x}}/{{.Tupu1}}/{{.JWT.http://example.com/foo_bar}}",
 	}
 
 	backend := Backend{}

@@ -309,8 +309,8 @@ var ExtraConfigAlias = map[string]string{}
 const defaultNamespace = "github.com/devopsfaith/krakend/config"
 
 var (
-	simpleURLKeysPattern    = regexp.MustCompile(`\{([a-zA-Z\-_0-9\.]+)\}`)
-	sequentialParamsPattern = regexp.MustCompile(`^(resp[\d]+_.*)?(JWT\.([\w\-\.]*))?$`)
+	simpleURLKeysPattern    = regexp.MustCompile(`\{([\w\-\.:/]+)\}`)
+	sequentialParamsPattern = regexp.MustCompile(`^(resp[\d]+_.+)?(JWT\.([\w\-\.:/]+))?$`)
 	debugPattern            = "^[^/]|/__debug(/.*)?$"
 	errInvalidHost          = errors.New("invalid host")
 	errInvalidNoOpEncoding  = errors.New("can not use NoOp encoding with more than one backends connected to the same endpoint")
