@@ -236,7 +236,7 @@ type parseableEndpointConfig struct {
 	ConcurrentCalls int                 `json:"concurrent_calls"`
 	Timeout         string              `json:"timeout"`
 	CacheTTL        int                 `json:"cache_ttl"`
-	QueryString     []string            `json:"input_query_string"`
+	QueryString     []string            `json:"input_query_strings"`
 	ExtraConfig     *ExtraConfig        `json:"extra_config,omitempty"`
 	HeadersToPass   []string            `json:"input_headers"`
 	OutputEncoding  string              `json:"output_encoding"`

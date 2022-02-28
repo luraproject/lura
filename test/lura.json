@@ -170,7 +170,7 @@
         },
         {
             "endpoint": "/querystring-params-test/query-params",
-            "input_query_string": [ "a", "b" ],
+            "input_query_strings": [ "a", "b" ],
             "backend": [
                 {
                     "host": [ "{{.b6}}" ],
@@ -189,7 +189,7 @@
         },
         {
             "endpoint": "/querystring-params-test/all-params",
-            "input_query_string": [ "*" ],
+            "input_query_strings": [ "*" ],
             "backend": [
                 {
                     "host": [ "{{.b6}}" ],
