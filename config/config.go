@@ -209,11 +209,11 @@ type EndpointConfig struct {
 	// duration of the cache header
 	CacheTTL time.Duration `mapstructure:"cache_ttl"`
 	// list of query string params to be extracted from the URI
-	QueryString []string `mapstructure:"querystring_params"`
+	QueryString []string `mapstructure:"input_query_string"`
 	// Endpoint Extra configuration for customized behaviour
 	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
 	// HeadersToPass defines the list of headers to pass to the backends
-	HeadersToPass []string `mapstructure:"headers_to_pass"`
+	HeadersToPass []string `mapstructure:"input_headers"`
 	// OutputEncoding defines the encoding strategy to use for the endpoint responses
 	OutputEncoding string `mapstructure:"output_encoding"`
 }
