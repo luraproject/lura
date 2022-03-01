@@ -2,13 +2,11 @@
 
 The configuration file needs to be a `json` file. The viper parser supports other formats but they haven't been as tested as the recommended one.
 
-The easiest way to create or edit a configuration file is using the [KrakenDesigner](http://www.krakend.io/designer/)
-
 ## Json example
 
 
     {
-	"version": 2,
+	"version": 3,
 	"name": "My lovely gateway",
 	"port": 8080,
 	"timeout": "10s",
@@ -28,7 +26,7 @@ The easiest way to create or edit a configuration file is using the [KrakenDesig
 						"http://127.0.0.4"
 					],
 					"url_pattern": "/registered/{user}",
-					"whitelist": [
+					"allow": [
 						"some",
 						"what"
 					],
@@ -41,7 +39,7 @@ The easiest way to create or edit a configuration file is using the [KrakenDesig
 						"http://127.0.0.1:8080"
 					],
 					"url_pattern": "/users/{user}/permissions",
-					"blacklist": [
+					"deny": [
 						"spam2",
 						"notwanted2"
 					]
@@ -50,7 +48,7 @@ The easiest way to create or edit a configuration file is using the [KrakenDesig
 			"concurrent_calls": 2,
 			"timeout": "1000s",
 			"cache_ttl": 3600,
-			"querystring_params": [
+			"input_query_strings": [
 				"page",
 				"limit"
 			]
@@ -76,7 +74,7 @@ The easiest way to create or edit a configuration file is using the [KrakenDesig
 					"https://api.github.com"
 				],
 				"url_pattern": "/",
-				"whitelist": [
+				"allow": [
 					"authorizations_url",
 					"code_search_url"
 				]
@@ -94,7 +92,7 @@ The easiest way to create or edit a configuration file is using the [KrakenDesig
 						"https://jsonplaceholder.typicode.com"
 					],
 					"url_pattern": "/posts/{id}?supu={supu}",
-					"blacklist": [
+					"deny": [
 						"userId"
 					]
 				},
@@ -110,7 +108,7 @@ The easiest way to create or edit a configuration file is using the [KrakenDesig
 			],
 			"concurrent_calls": 3,
 			"timeout": "1000s",
-			"querystring_params": [
+			"input_query_strings": [
 				"page",
 				"limit"
 			]
