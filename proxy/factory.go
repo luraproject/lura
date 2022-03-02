@@ -68,7 +68,6 @@ func (pf defaultFactory) New(cfg *config.EndpointConfig) (p Proxy, err error) {
 		return
 	}
 
-	p = NewFlatmapMiddleware(pf.logger, cfg)(p)
 	p = NewPluginMiddleware(pf.logger, cfg)(p)
 	p = NewStaticMiddleware(pf.logger, cfg)(p)
 	return
@@ -80,6 +79,7 @@ func (pf defaultFactory) newMulti(cfg *config.EndpointConfig) (p Proxy, err erro
 		backendProxy[i] = pf.newStack(backend)
 	}
 	p = NewMergeDataMiddleware(pf.logger, cfg)(backendProxy...)
+	p = NewFlatmapMiddleware(pf.logger, cfg)(p)
 	return
 }
 
