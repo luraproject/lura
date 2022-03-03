@@ -1,9 +1,15 @@
-/* Package sd defines some interfaces and implementations for service discovery
- */
 // SPDX-License-Identifier: Apache-2.0
+
+/*
+	Package sd defines some interfaces and implementations for service discovery
+*/
 package sd
 
-import "github.com/luraproject/lura/config"
+import (
+	"math/rand"
+
+	"github.com/luraproject/lura/v2/config"
+)
 
 // Subscriber keeps the set of backend hosts up to date
 type Subscriber interface {
@@ -29,4 +35,15 @@ type SubscriberFactory func(*config.Backend) Subscriber
 // FixedSubscriberFactory builds a FixedSubscriber with the received config
 func FixedSubscriberFactory(cfg *config.Backend) Subscriber {
 	return FixedSubscriber(cfg.Host)
+}
+
+// NewRandomFixedSubscriber randomizes a list of hosts and builds a FixedSubscriber with it
+func NewRandomFixedSubscriber(hosts []string) FixedSubscriber {
+	res := make([]string, len(hosts))
+	j := 0
+	for _, i := range rand.Perm(len(hosts)) {
+		res[j] = hosts[i]
+		j++
+	}
+	return FixedSubscriber(res)
 }

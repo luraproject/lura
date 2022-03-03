@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package proxy
 
 import (
@@ -8,8 +9,8 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/luraproject/lura/config"
-	"github.com/luraproject/lura/sd/dnssrv"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/sd/dnssrv"
 )
 
 func TestNewLoadBalancedMiddleware_ok(t *testing.T) {
@@ -121,6 +122,7 @@ func TestNewRoundRobinLoadBalancedMiddleware_DNSSRV(t *testing.T) {
 			{
 				Port:   8080,
 				Target: "127.0.0.1",
+				Weight: 1,
 			},
 		}, nil
 	}

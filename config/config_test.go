@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package config
 
 import (
@@ -11,7 +12,7 @@ import (
 func TestConfig_rejectInvalidVersion(t *testing.T) {
 	subject := ServiceConfig{}
 	err := subject.Init()
-	if err == nil || strings.Index(err.Error(), "Unsupported version: 0 (want: 2)") != 0 {
+	if err == nil || strings.Index(err.Error(), "unsupported version: 0 (want: 3)") != 0 {
 		t.Error("Error expected. Got", err.Error())
 	}
 }
@@ -27,7 +28,7 @@ func TestConfig_rejectInvalidEndpoints(t *testing.T) {
 	for _, e := range samples {
 		subject := ServiceConfig{Version: ConfigVersion, Endpoints: []*EndpointConfig{{Endpoint: e, Method: "GET"}}}
 		err := subject.Init()
-		if err == nil || err.Error() != fmt.Sprintf("ERROR: the endpoint url path 'GET %s' is not a valid one!!! Ignoring", e) {
+		if err == nil || err.Error() != fmt.Sprintf("ignoring the 'GET %s' endpoint, since it is invalid!!!", e) {
 			t.Errorf("Unexpected error processing '%s': %v", e, err)
 		}
 	}
@@ -43,6 +44,7 @@ func TestConfig_initBackendURLMappings_ok(t *testing.T) {
 		"supu/tupu{supu-5t6}?a={foo}&b={foo}",
 		"{resp0_x}/{tupu1}/{tupu_56}{supu-5t6}?a={tupu}&b={foo}",
 		"{resp0_x}/{tupu1}/{JWT.foo}",
+		"{resp0_x}/{tupu1}/{JWT.http://example.com/foo_bar}",
 	}
 
 	expected := []string{
@@ -54,6 +56,7 @@ func TestConfig_initBackendURLMappings_ok(t *testing.T) {
 		"/supu/tupu{{.Supu-5t6}}?a={{.Foo}}&b={{.Foo}}",
 		"/{{.Resp0_x}}/{{.Tupu1}}/{{.Tupu_56}}{{.Supu-5t6}}?a={{.Tupu}}&b={{.Foo}}",
 		"/{{.Resp0_x}}/{{.Tupu1}}/{{.JWT.foo}}",
+		"/{{.Resp0_x}}/{{.Tupu1}}/{{.JWT.http://example.com/foo_bar}}",
 	}
 
 	backend := Backend{}
@@ -111,7 +114,7 @@ func TestConfig_initBackendURLMappings_undefinedOutput(t *testing.T) {
 		"foo":  nil,
 	}
 
-	expectedErrMsg := "Undefined output param 'supu-5t6'! endpoint: GET /, backend: 0. input: [foo supu tupu], output: [foo supu-5t6 tupu_56]"
+	expectedErrMsg := "undefined output param 'supu-5t6'! endpoint: GET /, backend: 0. input: [foo supu tupu], output: [foo supu-5t6 tupu_56]"
 	err := subject.initBackendURLMappings(0, 0, inputSet)
 	if err == nil || err.Error() != expectedErrMsg {
 		t.Errorf("error expected. have: %v", err)
@@ -134,7 +137,7 @@ func TestConfig_init(t *testing.T) {
 	githubBackend := Backend{
 		URLPattern: "/",
 		Host:       []string{"https://api.github.com"},
-		Whitelist:  []string{"authorizations_url", "code_search_url"},
+		AllowList:  []string{"authorizations_url", "code_search_url"},
 	}
 	githubEndpoint := EndpointConfig{
 		Endpoint: "/github",
@@ -207,7 +210,7 @@ func TestConfig_init(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	if hash != "epN+iT6kaZ2pyNN5KYeVl+nPHUWHk14pfDUcg+5xMXw=" {
+	if hash != "3YYe7crlYj5Qpm/oUoBqO2mQrKcalJmAoNfkRYM7aDI=" {
 		t.Errorf("unexpected hash: %s", hash)
 	}
 }
@@ -226,7 +229,7 @@ func TestConfig_initKONoBackends(t *testing.T) {
 	}
 
 	if err := subject.Init(); err == nil ||
-		err.Error() != "WARNING: the 'POST /supu' endpoint has 0 backends defined! Ignoring" {
+		err.Error() != "ignoring the 'POST /supu' endpoint, since it has 0 backends defined!" {
 		t.Error("Unexpected error at the configuration init!", err)
 	}
 }
@@ -295,97 +298,9 @@ func TestConfig_initKOInvalidDebugPattern(t *testing.T) {
 	}
 
 	if err := subject.Init(); err == nil ||
-		err.Error() != "ERROR: parsing the endpoint url 'GET /__debug/supu': error parsing regexp: missing closing ): `a(b`. Ignoring" {
+		err.Error() != "ignoring the 'GET /__debug/supu' endpoint due to a parsing error: error parsing regexp: missing closing ): `a(b`" {
 		t.Error("Expecting an error at the configuration init!", err)
 	}
 
 	debugPattern = dp
-}
-
-func TestDefaultConfigGetter(t *testing.T) {
-	getter, ok := ConfigGetters[defaultNamespace]
-	if !ok {
-		t.Error("Nothing stored at the default namespace")
-		return
-	}
-	extra := ExtraConfig{
-		"a": 1,
-		"b": true,
-		"c": []int{1, 1, 2, 3, 5, 8},
-	}
-	result := getter(extra)
-	res, ok := result.(ExtraConfig)
-	if !ok {
-		t.Error("error casting the returned value")
-		return
-	}
-	if v, ok := res["a"]; !ok || 1 != v.(int) {
-		t.Errorf("unexpected value for key `a`: %v", v)
-		return
-	}
-	if v, ok := res["b"]; !ok || !v.(bool) {
-		t.Errorf("unexpected value for key `b`: %v", v)
-		return
-	}
-	if v, ok := res["c"]; !ok || 6 != len(v.([]int)) {
-		t.Errorf("unexpected value for key `c`: %v", v)
-		return
-	}
-}
-
-func TestConfigGetter(t *testing.T) {
-	ConfigGetters = map[string]ConfigGetter{
-		"ns1": func(e ExtraConfig) interface{} {
-			return len(e)
-		},
-		"ns2": func(e ExtraConfig) interface{} {
-			v, ok := e["publishedAt"]
-			if !ok {
-				return e
-			}
-			start, ok := v.(time.Time)
-			if !ok {
-				return e
-			}
-			if start.After(time.Now()) {
-				return nil
-			}
-			return e
-		},
-	}
-	extra := ExtraConfig{
-		"a": 1,
-		"b": true,
-		"c": []int{1, 1, 2, 3, 5, 8},
-	}
-
-	tmp1 := ConfigGetters["ns1"](extra)
-	v, ok := tmp1.(int)
-	if !ok {
-		t.Error("error casting the returned value")
-		return
-	}
-	if 3 != v {
-		t.Errorf("unexpected value for getter `ns1`: %v", v)
-		return
-	}
-
-	tmp2 := ConfigGetters["ns2"](extra)
-	res, ok := tmp2.(ExtraConfig)
-	if !ok {
-		t.Error("error casting the returned value")
-		return
-	}
-	if v, ok := res["a"]; !ok || 1 != v.(int) {
-		t.Errorf("unexpected value for key `a`: %v", v)
-		return
-	}
-	if v, ok := res["b"]; !ok || !v.(bool) {
-		t.Errorf("unexpected value for key `b`: %v", v)
-		return
-	}
-	if v, ok := res["c"]; !ok || 6 != len(v.([]int)) {
-		t.Errorf("unexpected value for key `c`: %v", v)
-		return
-	}
 }

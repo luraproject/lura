@@ -1,21 +1,29 @@
-/* Package gin provides some basic implementations for building routers based on gin-gonic/gin
- */
 // SPDX-License-Identifier: Apache-2.0
+
+/*
+	Package gin provides some basic implementations for building routers based on gin-gonic/gin
+*/
 package gin
 
 import (
 	"context"
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/sync/errgroup"
 
-	"github.com/luraproject/lura/config"
-	"github.com/luraproject/lura/logging"
-	"github.com/luraproject/lura/proxy"
-	"github.com/luraproject/lura/router"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/core"
+	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v2/proxy"
+	"github.com/luraproject/lura/v2/router"
+	"github.com/luraproject/lura/v2/transport/http/server"
 )
+
+const logPrefix = "[SERVICE: Gin]"
 
 // RunServerFunc is a func that will run the http Server with the given params.
 type RunServerFunc func(context.Context, config.ServiceConfig, http.Handler) error
@@ -40,7 +48,7 @@ func DefaultFactory(proxyFactory proxy.Factory, logger logging.Logger) router.Fa
 			HandlerFactory: EndpointHandler,
 			ProxyFactory:   proxyFactory,
 			Logger:         logger,
-			RunServer:      router.RunServer,
+			RunServer:      server.RunServer,
 		},
 	)
 }
@@ -66,6 +74,10 @@ func (rf factory) NewWithContext(ctx context.Context) router.Router {
 		ctx:        ctx,
 		runServerF: rf.cfg.RunServer,
 		mu:         new(sync.Mutex),
+		urlCatalog: urlCatalog{
+			mu:      new(sync.Mutex),
+			catalog: map[string][]string{},
+		},
 	}
 }
 
@@ -74,55 +86,88 @@ type ginRouter struct {
 	ctx        context.Context
 	runServerF RunServerFunc
 	mu         *sync.Mutex
+	urlCatalog urlCatalog
 }
 
-// Run implements the router interface
+type urlCatalog struct {
+	mu      *sync.Mutex
+	catalog map[string][]string
+}
+
+// Run completes the router initialization and executes it
 func (r ginRouter) Run(cfg config.ServiceConfig) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if !cfg.Debug {
-		gin.SetMode(gin.ReleaseMode)
-	} else {
-		r.cfg.Logger.Debug("Debug enabled")
+	server.InitHTTPDefaultTransport(cfg)
+
+	r.registerEndpointsAndMiddlewares(cfg)
+
+	// TODO: remove this ugly hack once https://github.com/gin-gonic/gin/pull/2692 and
+	// https://github.com/gin-gonic/gin/issues/2862 are completely fixed
+	go r.cfg.Engine.Run("XXXX")
+
+	r.cfg.Logger.Info("[SERVICE: Gin] Listening on port:", cfg.Port)
+	if err := r.runServerF(r.ctx, cfg, r.cfg.Engine); err != nil && err != http.ErrServerClosed {
+		r.cfg.Logger.Error(logPrefix, err.Error())
 	}
 
-	router.InitHTTPDefaultTransport(cfg)
+	r.cfg.Logger.Info(logPrefix, "Router execution ended")
+}
 
-	r.cfg.Engine.RedirectTrailingSlash = true
-	r.cfg.Engine.RedirectFixedPath = true
-	r.cfg.Engine.HandleMethodNotAllowed = true
-
+func (r ginRouter) registerEndpointsAndMiddlewares(cfg config.ServiceConfig) {
 	if cfg.Debug {
 		r.cfg.Engine.Any("/__debug/*param", DebugHandler(r.cfg.Logger))
 	}
 
-	r.cfg.Engine.GET("/__health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "ok"})
-	})
-
 	endpointGroup := r.cfg.Engine.Group("/")
 	endpointGroup.Use(r.cfg.Middlewares...)
 
-	r.registerKrakendEndpoints(endpointGroup, cfg.Endpoints)
+	r.registerKrakendEndpoints(endpointGroup, cfg)
 
-	if err := r.runServerF(r.ctx, cfg, r.cfg.Engine); err != nil {
-		r.cfg.Logger.Error(err.Error())
+	if opts, ok := cfg.ExtraConfig[Namespace].(map[string]interface{}); ok {
+		if v, ok := opts["auto_options"].(bool); ok && v {
+			r.cfg.Logger.Debug(logPrefix, "Enabling the auto options endpoints")
+			r.registerOptionEndpoints(endpointGroup)
+		}
 	}
 
-	r.cfg.Logger.Info("Router execution ended")
 }
 
-func (r ginRouter) registerKrakendEndpoints(rg *gin.RouterGroup, endpoints []*config.EndpointConfig) {
-	for _, c := range endpoints {
-		proxyStack, err := r.cfg.ProxyFactory.New(c)
-		if err != nil {
-			r.cfg.Logger.Error("calling the ProxyFactory", err.Error())
-			continue
+func (r ginRouter) registerKrakendEndpoints(rg *gin.RouterGroup, cfg config.ServiceConfig) {
+	if cfg.SequentialStart {
+		// build and register the pipes and endpoints sequentially
+		for _, c := range cfg.Endpoints {
+			proxyStack, err := r.cfg.ProxyFactory.New(c)
+			if err != nil {
+				r.cfg.Logger.Error(logPrefix, "Calling the ProxyFactory", err.Error())
+				continue
+			}
+			r.registerKrakendEndpoint(rg, c.Method, c, r.cfg.HandlerFactory(c, proxyStack), len(c.Backend))
 		}
-
-		r.registerKrakendEndpoint(rg, c.Method, c, r.cfg.HandlerFactory(c, proxyStack), len(c.Backend))
+		return
 	}
+
+	// create an errgroup so every endpoint is registered concurrently, and the pipe build process too.
+	// concurrent builds generate less readable logs but improves the start-up times (depending on the
+	// number of endpoints and the complexity of the associated pipes)
+	g, gctx := errgroup.WithContext(r.ctx)
+	r.ctx = gctx
+
+	for _, c := range cfg.Endpoints {
+		c := c
+		g.Go(func() error {
+			proxyStack, err := r.cfg.ProxyFactory.New(c)
+			if err != nil {
+				r.cfg.Logger.Error(logPrefix, "Calling the ProxyFactory", err.Error())
+				return err
+			}
+			r.registerKrakendEndpoint(rg, c.Method, c, r.cfg.HandlerFactory(c, proxyStack), len(c.Backend))
+			return nil
+		})
+	}
+
+	g.Wait()
 }
 
 func (r ginRouter) registerKrakendEndpoint(rg *gin.RouterGroup, method string, e *config.EndpointConfig, h gin.HandlerFunc, total int) {
@@ -130,7 +175,7 @@ func (r ginRouter) registerKrakendEndpoint(rg *gin.RouterGroup, method string, e
 	path := e.Endpoint
 	if method != http.MethodGet && total > 1 {
 		if !router.IsValidSequentialEndpoint(e) {
-			r.cfg.Logger.Error(method, " endpoints with sequential enabled is only the last one is allowed to be non GET! Ignoring", path)
+			r.cfg.Logger.Error(logPrefix, method, "endpoints with sequential proxy enabled only allow a non-GET in the last backend! Ignoring", path)
 			return
 		}
 	}
@@ -147,6 +192,32 @@ func (r ginRouter) registerKrakendEndpoint(rg *gin.RouterGroup, method string, e
 	case http.MethodDelete:
 		rg.DELETE(path, h)
 	default:
-		r.cfg.Logger.Error("Unsupported method", method)
+		r.cfg.Logger.Error(logPrefix, "Unsupported method", method)
+		return
+	}
+
+	r.urlCatalog.mu.Lock()
+	defer r.urlCatalog.mu.Unlock()
+
+	methods, ok := r.urlCatalog.catalog[path]
+	if !ok {
+		r.urlCatalog.catalog[path] = []string{method}
+		return
+	}
+	r.urlCatalog.catalog[path] = append(methods, method)
+}
+
+func (r ginRouter) registerOptionEndpoints(rg *gin.RouterGroup) {
+	r.urlCatalog.mu.Lock()
+	defer r.urlCatalog.mu.Unlock()
+
+	for path, methods := range r.urlCatalog.catalog {
+		sort.Strings(methods)
+		allowed := strings.Join(methods, ", ")
+
+		rg.OPTIONS(path, func(c *gin.Context) {
+			c.Header("Allow", allowed)
+			c.Header(core.KrakendHeaderName, core.KrakendHeaderValue)
+		})
 	}
 }

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package proxy
 
 import (
@@ -7,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/v2/config"
 )
 
 func TestNewConcurrentMiddleware_ok(t *testing.T) {

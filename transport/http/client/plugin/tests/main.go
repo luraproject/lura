@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package main
 
-//
 import (
 	"context"
 	"errors"
 	"fmt"
 	"html"
 	"net/http"
-
-	"github.com/luraproject/lura/logging"
 )
 
 // ClientRegisterer is the symbol the plugin loader will try to load. It must implement the RegisterClient interface
@@ -17,15 +15,15 @@ var ClientRegisterer = registerer("krakend-client-example")
 
 type registerer string
 
-var logger logging.Logger = nil
+var logger Logger = nil
 
 func (r registerer) RegisterLogger(v interface{}) {
-	l, ok := v.(logging.Logger)
+	l, ok := v.(Logger)
 	if !ok {
 		return
 	}
 	logger = l
-	logger.Debug(ClientRegisterer, "client plugin loaded!!!")
+	logger.Debug(fmt.Sprintf("[PLUGIN: %s] Logger loaded", ClientRegisterer))
 }
 
 func (r registerer) RegisterClients(f func(
@@ -59,8 +57,13 @@ func (r registerer) registerClients(ctx context.Context, extra map[string]interf
 	}), nil
 }
 
-func init() {
-	fmt.Println(ClientRegisterer, "client plugin loaded!!!")
-}
-
 func main() {}
+
+type Logger interface {
+	Debug(v ...interface{})
+	Info(v ...interface{})
+	Warning(v ...interface{})
+	Error(v ...interface{})
+	Critical(v ...interface{})
+	Fatal(v ...interface{})
+}

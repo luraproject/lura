@@ -1,6 +1,8 @@
-/* Package mux provides some basic implementations for building routers based on net/http mux
- */
 // SPDX-License-Identifier: Apache-2.0
+
+/*
+	Package mux provides some basic implementations for building routers based on net/http mux
+*/
 package mux
 
 import (
@@ -8,14 +10,16 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/luraproject/lura/config"
-	"github.com/luraproject/lura/logging"
-	"github.com/luraproject/lura/proxy"
-	"github.com/luraproject/lura/router"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v2/proxy"
+	"github.com/luraproject/lura/v2/router"
+	"github.com/luraproject/lura/v2/transport/http/server"
 )
 
 // DefaultDebugPattern is the default pattern used to define the debug endpoint
 const DefaultDebugPattern = "/__debug/"
+const logPrefix = "[SERVICE: Mux]"
 
 // RunServerFunc is a func that will run the http Server with the given params.
 type RunServerFunc func(context.Context, config.ServiceConfig, http.Handler) error
@@ -46,7 +50,7 @@ func DefaultFactory(pf proxy.Factory, logger logging.Logger) router.Factory {
 			ProxyFactory:   pf,
 			Logger:         logger,
 			DebugPattern:   DefaultDebugPattern,
-			RunServer:      router.RunServer,
+			RunServer:      server.RunServer,
 		},
 	}
 }
@@ -105,22 +109,22 @@ func (r httpRouter) Run(cfg config.ServiceConfig) {
 	}
 	r.cfg.Engine.Handle("/__health", "GET", http.HandlerFunc(HealthHandler))
 
-	router.InitHTTPDefaultTransport(cfg)
+	server.InitHTTPDefaultTransport(cfg)
 
 	r.registerKrakendEndpoints(cfg.Endpoints)
 
 	if err := r.RunServer(r.ctx, cfg, r.handler()); err != nil {
-		r.cfg.Logger.Error(err.Error())
+		r.cfg.Logger.Error(logPrefix, err.Error())
 	}
 
-	r.cfg.Logger.Info("Router execution ended")
+	r.cfg.Logger.Info(logPrefix, "Router execution ended")
 }
 
 func (r httpRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) {
 	for _, c := range endpoints {
 		proxyStack, err := r.cfg.ProxyFactory.New(c)
 		if err != nil {
-			r.cfg.Logger.Error("calling the ProxyFactory", err.Error())
+			r.cfg.Logger.Error(logPrefix, "Calling the ProxyFactory", err.Error())
 			continue
 		}
 
@@ -133,7 +137,7 @@ func (r httpRouter) registerKrakendEndpoint(method string, endpoint *config.Endp
 	path := endpoint.Endpoint
 	if method != http.MethodGet && totBackends > 1 {
 		if !router.IsValidSequentialEndpoint(endpoint) {
-			r.cfg.Logger.Error(method, " endpoints with sequential enabled is only the last one is allowed to be non GET! Ignoring", path)
+			r.cfg.Logger.Error(logPrefix, method, " endpoints with sequential proxy enabled only allow a non-GET in the last backend! Ignoring", path)
 			return
 		}
 	}
@@ -145,17 +149,17 @@ func (r httpRouter) registerKrakendEndpoint(method string, endpoint *config.Endp
 	case http.MethodPatch:
 	case http.MethodDelete:
 	default:
-		r.cfg.Logger.Error("Unsupported method", method)
+		r.cfg.Logger.Error(logPrefix, "Unsupported method", method)
 		return
 	}
-	r.cfg.Logger.Debug("registering the endpoint", method, path)
+	r.cfg.Logger.Debug(logPrefix, "Registering the endpoint", method, path)
 	r.cfg.Engine.Handle(path, method, handler)
 }
 
 func (r httpRouter) handler() http.Handler {
 	var handler http.Handler = r.cfg.Engine
 	for _, middleware := range r.cfg.Middlewares {
-		r.cfg.Logger.Debug("Adding the middleware", middleware)
+		r.cfg.Logger.Debug(logPrefix, "Adding the middleware", middleware)
 		handler = middleware.Handler(handler)
 	}
 	return handler

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 //Package plugin provides plugin register interfaces for building http handler plugins.
 //
 // Usage example:
@@ -44,5 +46,4 @@
 // 	}
 //
 // 	func main() {}
-// SPDX-License-Identifier: Apache-2.0
 package plugin

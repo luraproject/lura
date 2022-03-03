@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package proxy
 
 import (
@@ -7,10 +8,10 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/v2/config"
 )
 
-func BenchmarkEntityFormatter_whitelistingFilter(b *testing.B) {
+func BenchmarkEntityFormatter_allowFilter(b *testing.B) {
 	data := map[string]interface{}{
 		"supu": 42,
 		"tupu": false,
@@ -34,7 +35,7 @@ func BenchmarkEntityFormatter_whitelistingFilter(b *testing.B) {
 				IsComplete: true,
 			}
 			b.Run(fmt.Sprintf("with %d elements with %d extra fields", len(testCase), extraFields), func(b *testing.B) {
-				f := NewEntityFormatter(&config.Backend{Whitelist: testCase})
+				f := NewEntityFormatter(&config.Backend{AllowList: testCase})
 				b.ResetTimer()
 				b.ReportAllocs()
 				for i := 0; i < b.N; i++ {
@@ -80,19 +81,19 @@ func benchmarkDeepStructure(numTargets int, targetDepth int, extraFields int, ex
 	return data, targetKeys
 }
 
-func BenchmarkEntityFormatter_deepWhitelistingFilter(b *testing.B) {
+func BenchmarkEntityFormatter_deepAllowFilter(b *testing.B) {
 	numTargets := []int{0, 1, 2, 5, 10}
 	depths := []int{1, 3, 7}
 	for _, nTargets := range numTargets {
 		for _, depth := range depths {
 			extraFields := nTargets + depth*2
 			extraSiblings := nTargets
-			data, whitelist := benchmarkDeepStructure(nTargets, depth, extraFields, extraSiblings)
+			data, allow := benchmarkDeepStructure(nTargets, depth, extraFields, extraSiblings)
 			sample := Response{
 				Data:       data,
 				IsComplete: true,
 			}
-			f := NewEntityFormatter(&config.Backend{Whitelist: whitelist})
+			f := NewEntityFormatter(&config.Backend{AllowList: allow})
 			b.Run(fmt.Sprintf("numTargets:%d,depth:%d,extraFields:%d,extraSiblings:%d", nTargets, depth, extraFields, extraSiblings), func(b *testing.B) {
 				b.ReportAllocs()
 				b.ResetTimer()
@@ -104,7 +105,7 @@ func BenchmarkEntityFormatter_deepWhitelistingFilter(b *testing.B) {
 	}
 }
 
-func BenchmarkEntityFormatter_blacklistingFilter(b *testing.B) {
+func BenchmarkEntityFormatter_denyFilter(b *testing.B) {
 	data := map[string]interface{}{
 		"supu": 42,
 		"tupu": false,
@@ -128,7 +129,7 @@ func BenchmarkEntityFormatter_blacklistingFilter(b *testing.B) {
 				IsComplete: true,
 			}
 			b.Run(fmt.Sprintf("with %d elements with %d extra fields", len(testCase), extraFields), func(b *testing.B) {
-				f := NewEntityFormatter(&config.Backend{Blacklist: testCase})
+				f := NewEntityFormatter(&config.Backend{DenyList: testCase})
 				b.ResetTimer()
 				b.ReportAllocs()
 				for i := 0; i < b.N; i++ {

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package gin
 
 import (
@@ -6,20 +7,21 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/luraproject/lura/logging"
+	"github.com/luraproject/lura/v2/logging"
 )
 
 // DebugHandler creates a dummy handler function, useful for quick integration tests
 func DebugHandler(logger logging.Logger) gin.HandlerFunc {
+	logPrefixSecondary := "[ENDPOINT: /__debug/*]"
 	return func(c *gin.Context) {
-		logger.Debug("Method:", c.Request.Method)
-		logger.Debug("URL:", c.Request.RequestURI)
-		logger.Debug("Query:", c.Request.URL.Query())
-		logger.Debug("Params:", c.Params)
-		logger.Debug("Headers:", c.Request.Header)
+		logger.Debug(logPrefixSecondary, "Method:", c.Request.Method)
+		logger.Debug(logPrefixSecondary, "URL:", c.Request.RequestURI)
+		logger.Debug(logPrefixSecondary, "Query:", c.Request.URL.Query())
+		logger.Debug(logPrefixSecondary, "Params:", c.Params)
+		logger.Debug(logPrefixSecondary, "Headers:", c.Request.Header)
 		body, _ := ioutil.ReadAll(c.Request.Body)
 		c.Request.Body.Close()
-		logger.Debug("Body:", string(body))
+		logger.Debug(logPrefixSecondary, "Body:", string(body))
 		c.JSON(200, gin.H{
 			"message": "pong",
 		})

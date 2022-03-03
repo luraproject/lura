@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package encoding
 
 import (
@@ -8,11 +9,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/luraproject/lura/register"
+	"github.com/luraproject/lura/v2/register"
 )
 
 func TestNoOpDecoder(t *testing.T) {
-	d := Get(NOOP)(false)
+	decoders = initDecoderRegister()
+	defer func() { decoders = initDecoderRegister() }()
+
+	d := decoders.Get(NOOP)(false)
 
 	errorMsg := erroredReader("this error should never been sent")
 	var result map[string]interface{}
@@ -34,8 +38,8 @@ func TestRegister(t *testing.T) {
 		t.Error("Unexpected number of registered factories:", len(original.data.Clone()))
 	}
 
-	decoders = &DecoderRegister{register.NewUntyped()}
-	Register("some", NewJSONDecoder)
+	decoders = &DecoderRegister{data: register.NewUntyped()}
+	decoders.Register("some", NewJSONDecoder)
 
 	if len(decoders.data.Clone()) != 1 {
 		t.Error("Unexpected number of registered factories:", len(decoders.data.Clone()))
@@ -53,8 +57,8 @@ func TestGet(t *testing.T) {
 	checkDecoder(t, JSON)
 	checkDecoder(t, "some")
 
-	decoders = &DecoderRegister{register.NewUntyped()}
-	Register("some", NewJSONDecoder)
+	decoders = &DecoderRegister{data: register.NewUntyped()}
+	decoders.Register("some", NewJSONDecoder)
 
 	if len(decoders.data.Clone()) != 1 {
 		t.Error("Unexpected number of registered factories:", len(decoders.data.Clone()))
@@ -71,7 +75,7 @@ func TestRegister_complete_ok(t *testing.T) {
 	expectedMsg := "a custom message to decode"
 	expectedResponse := map[string]interface{}{"a": 42}
 
-	if err := Register("custom", func(_ bool) func(io.Reader, *map[string]interface{}) error {
+	if err := decoders.Register("custom", func(_ bool) func(io.Reader, *map[string]interface{}) error {
 		return func(r io.Reader, v *map[string]interface{}) error {
 			d, err := ioutil.ReadAll(r)
 			if err != nil {
@@ -90,7 +94,7 @@ func TestRegister_complete_ok(t *testing.T) {
 		return
 	}
 
-	decoder := Get("custom")(false)
+	decoder := decoders.Get("custom")(false)
 	input := strings.NewReader(expectedMsg)
 	var result map[string]interface{}
 	if err := decoder(input, &result); err != nil {
@@ -108,7 +112,7 @@ func TestRegister_complete_ko(t *testing.T) {
 	expectedMsg := "a custom message to decode"
 	expectedErr := errors.New("expect me")
 
-	if err := Register("custom", func(_ bool) func(io.Reader, *map[string]interface{}) error {
+	if err := decoders.Register("custom", func(_ bool) func(io.Reader, *map[string]interface{}) error {
 		return func(r io.Reader, v *map[string]interface{}) error {
 			d, err := ioutil.ReadAll(r)
 			if err != nil {
@@ -127,7 +131,7 @@ func TestRegister_complete_ko(t *testing.T) {
 		return
 	}
 
-	decoder := Get("custom")(false)
+	decoder := decoders.Get("custom")(false)
 	input := strings.NewReader(expectedMsg)
 	var result map[string]interface{}
 	if err := decoder(input, &result); err != expectedErr {
@@ -139,7 +143,7 @@ func TestRegister_complete_ko(t *testing.T) {
 }
 
 func checkDecoder(t *testing.T, name string) {
-	d := Get(name)(false)
+	d := decoders.Get(name)(false)
 
 	input := strings.NewReader(`{"foo": "bar"}`)
 	var result map[string]interface{}
@@ -149,4 +153,14 @@ func checkDecoder(t *testing.T, name string) {
 	if result["foo"] != "bar" {
 		t.Error("Unexpected value:", result["foo"])
 	}
+}
+
+type erroredReader string
+
+func (e erroredReader) Error() string {
+	return string(e)
+}
+
+func (e erroredReader) Read(_ []byte) (n int, err error) {
+	return 0, e
 }

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package proxy
 
 import (
@@ -14,9 +15,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luraproject/lura/config"
-	"github.com/luraproject/lura/encoding"
-	"github.com/luraproject/lura/transport/http/client"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/encoding"
+	"github.com/luraproject/lura/v2/transport/http/client"
 )
 
 func TestNewHTTPProxy_ok(t *testing.T) {

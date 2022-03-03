@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package proxy
 
 import (
@@ -6,7 +7,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/v2/config"
 )
 
 // NewConcurrentMiddleware creates a proxy middleware that enables sending several requests concurrently

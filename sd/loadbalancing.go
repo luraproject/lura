@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package sd
 
 import (
@@ -27,14 +28,21 @@ func NewBalancer(subscriber Subscriber) Balancer {
 	return NewRandomLB(subscriber)
 }
 
-// NewRoundRobinLB returns a new balancer using a round robin strategy
+// NewRoundRobinLB returns a new balancer using a round robin strategy and starting at a random
+// position in the set of hosts.
 func NewRoundRobinLB(subscriber Subscriber) Balancer {
-	if s, ok := subscriber.(FixedSubscriber); ok && len(s) == 1 {
-		return nopBalancer(s[0])
+	s, ok := subscriber.(FixedSubscriber)
+	start := uint64(0)
+	if ok {
+		if l := len(s); l == 1 {
+			return nopBalancer(s[0])
+		} else if l > 1 {
+			start = uint64(fastrand.Uint32n(uint32(l)))
+		}
 	}
 	return &roundRobinLB{
 		balancer: balancer{subscriber: subscriber},
-		counter:  0,
+		counter:  start,
 	}
 }
 

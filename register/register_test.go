@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package register
 
 import "testing"
 
-func Test(t *testing.T) {
+func TestNamespaced(t *testing.T) {
 	r := New()
 	r.Register("namespace1", "name1", 42)
 	r.AddNamespace("namespace1")

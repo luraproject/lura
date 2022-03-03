@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package main
 
 import (
@@ -7,8 +8,6 @@ import (
 	"fmt"
 	"html"
 	"net/http"
-
-	"github.com/luraproject/lura/logging"
 )
 
 // HandlerRegisterer is the symbol the plugin loader will try to load. It must implement the Registerer interface
@@ -16,15 +15,15 @@ var HandlerRegisterer = registerer("krakend-server-example")
 
 type registerer string
 
-var logger logging.Logger = nil
+var logger Logger = nil
 
 func (r registerer) RegisterLogger(v interface{}) {
-	l, ok := v.(logging.Logger)
+	l, ok := v.(Logger)
 	if !ok {
 		return
 	}
 	logger = l
-	logger.Debug(HandlerRegisterer, "server plugin loaded!!!")
+	logger.Debug(fmt.Sprintf("[PLUGIN: %s] Logger loaded", HandlerRegisterer))
 }
 
 func (r registerer) RegisterHandlers(f func(
@@ -58,8 +57,13 @@ func (r registerer) registerHandlers(ctx context.Context, extra map[string]inter
 	}), nil
 }
 
-func init() {
-	fmt.Println("krakend-example handler plugin loaded!!!")
-}
-
 func main() {}
+
+type Logger interface {
+	Debug(v ...interface{})
+	Info(v ...interface{})
+	Warning(v ...interface{})
+	Error(v ...interface{})
+	Critical(v ...interface{})
+	Fatal(v ...interface{})
+}

@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package router
 
 import (
 	"net/http"
 
-	"github.com/luraproject/lura/config"
-	"github.com/luraproject/lura/proxy"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/proxy"
 )
 
 func IsValidSequentialEndpoint(endpoint *config.EndpointConfig) bool {

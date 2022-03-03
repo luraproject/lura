@@ -1,12 +1,12 @@
-// Package mux provides some basic implementations for building routers based on net/http mux
 // SPDX-License-Identifier: Apache-2.0
+
 package mux
 
 import (
 	"net/http"
 	"sync"
 
-	"github.com/luraproject/lura/router"
+	"github.com/luraproject/lura/v2/transport/http/server"
 )
 
 // Engine defines the minimun required interface for the mux compatible engine
@@ -36,7 +36,7 @@ type HTTPErrorInterceptor struct {
 func (i *HTTPErrorInterceptor) WriteHeader(code int) {
 	i.once.Do(func() {
 		if code != http.StatusOK {
-			i.ResponseWriter.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
+			i.ResponseWriter.Header().Set(server.CompleteResponseHeaderName, server.HeaderIncompleteResponseValue)
 		}
 	})
 	i.ResponseWriter.WriteHeader(code)
@@ -72,7 +72,7 @@ func (e *engine) registrableHandler(pattern string) http.Handler {
 			return
 		}
 
-		rw.Header().Set(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
+		rw.Header().Set(server.CompleteResponseHeaderName, server.HeaderIncompleteResponseValue)
 		http.Error(rw, "", http.StatusMethodNotAllowed)
 	})
 }

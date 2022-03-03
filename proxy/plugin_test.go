@@ -1,6 +1,7 @@
 // +build integration !race
 
 // SPDX-License-Identifier: Apache-2.0
+
 package proxy
 
 import (
@@ -8,12 +9,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/luraproject/lura/config"
-	"github.com/luraproject/lura/proxy/plugin"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v2/proxy/plugin"
 )
 
 func TestNewPluginMiddleware(t *testing.T) {
-	plugin.LoadModifiers("./plugin/tests", ".so", plugin.RegisterModifier)
+	plugin.Load("./plugin/tests", ".so", plugin.RegisterModifier)
 
 	validator := func(ctx context.Context, r *Request) (*Response, error) {
 		if r.Path != "/bar/fooo/fooo" {
@@ -23,6 +25,7 @@ func TestNewPluginMiddleware(t *testing.T) {
 	}
 
 	bknd := NewBackendPluginMiddleware(
+		logging.NoOp,
 		&config.Backend{
 			ExtraConfig: map[string]interface{}{
 				plugin.Namespace: map[string]interface{}{
@@ -33,6 +36,7 @@ func TestNewPluginMiddleware(t *testing.T) {
 	)(validator)
 
 	p := NewPluginMiddleware(
+		logging.NoOp,
 		&config.EndpointConfig{
 			ExtraConfig: map[string]interface{}{
 				plugin.Namespace: map[string]interface{}{

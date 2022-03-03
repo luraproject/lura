@@ -1,6 +1,7 @@
 // +build integration !race
 
 // SPDX-License-Identifier: Apache-2.0
+
 package plugin
 
 import (
@@ -11,9 +12,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/luraproject/lura/config"
-	"github.com/luraproject/lura/logging"
-	"github.com/luraproject/lura/transport/http/client"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v2/transport/http/client"
 )
 
 func TestLoadWithLogger(t *testing.T) {
@@ -30,6 +31,7 @@ func TestLoadWithLogger(t *testing.T) {
 
 	hre := HTTPRequestExecutor(l, func(_ *config.Backend) client.HTTPRequestExecutor {
 		t.Error("this factory should not been called")
+		t.Fail()
 		return nil
 	})
 

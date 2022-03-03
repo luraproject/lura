@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package proxy
 
 import (
@@ -9,8 +10,53 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
 )
+
+func TestNewMergeDataMiddleware_empty(t *testing.T) {
+	timeout := 500 * time.Millisecond
+	backend := config.Backend{}
+	endpoint := config.EndpointConfig{
+		Backend: []*config.Backend{&backend, &backend},
+		Timeout: timeout,
+	}
+
+	expectedErr := errors.New("wait for me")
+
+	erroredProxy := func(_ context.Context, _ *Request) (*Response, error) {
+		return nil, expectedErr
+	}
+
+	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
+	p := mw(erroredProxy, erroredProxy)
+
+	mustEnd := time.After(2 * timeout)
+	out, err := p(context.Background(), &Request{})
+	mErr, ok := err.(mergeError)
+	if !ok {
+		t.Errorf("The middleware propagated an unexpected error: %s\n", err)
+		return
+	}
+	if len(mErr.errs) != 2 {
+		t.Errorf("The middleware propagated an unexpected error: %s\n", err)
+		return
+	}
+	if mErr.errs[0] != mErr.errs[1] || mErr.errs[0] != expectedErr {
+		t.Errorf("The middleware propagated an unexpected error: %s\n", err)
+		return
+	}
+	if out != nil {
+		t.Errorf("The proxy returned a result\n")
+		return
+	}
+	select {
+	case <-mustEnd:
+		t.Errorf("We were expecting a response but we got none\n")
+	default:
+	}
+
+}
 
 func TestNewMergeDataMiddleware_ok(t *testing.T) {
 	timeout := 500
@@ -19,7 +65,7 @@ func TestNewMergeDataMiddleware_ok(t *testing.T) {
 		Backend: []*config.Backend{&backend, &backend},
 		Timeout: time.Duration(timeout) * time.Millisecond,
 	}
-	mw := NewMergeDataMiddleware(&endpoint)
+	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	p := mw(
 		dummyProxy(&Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}),
 		dummyProxy(&Response{Data: map[string]interface{}{"tupu": true}, IsComplete: true}))
@@ -82,7 +128,7 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 		}
 	}
 
-	mw := NewMergeDataMiddleware(&endpoint)
+	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	p := mw(
 		dummyProxy(&Response{Data: map[string]interface{}{
 			"int":    42,
@@ -178,7 +224,7 @@ func TestNewMergeDataMiddleware_sequential_unavailableParams(t *testing.T) {
 			},
 		},
 	}
-	mw := NewMergeDataMiddleware(&endpoint)
+	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	p := mw(
 		dummyProxy(&Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}),
 		func(ctx context.Context, r *Request) (*Response, error) {
@@ -238,7 +284,7 @@ func TestNewMergeDataMiddleware_sequential_erroredBackend(t *testing.T) {
 		},
 	}
 	expecterErr := errors.New("wait for me")
-	mw := NewMergeDataMiddleware(&endpoint)
+	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	p := mw(
 		dummyProxy(&Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}),
 		func(ctx context.Context, r *Request) (*Response, error) {
@@ -290,7 +336,7 @@ func TestNewMergeDataMiddleware_sequential_erroredFirstBackend(t *testing.T) {
 		},
 	}
 	expecterErr := errors.New("wait for me")
-	mw := NewMergeDataMiddleware(&endpoint)
+	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	p := mw(
 		func(ctx context.Context, _ *Request) (*Response, error) {
 			return nil, expecterErr
@@ -328,7 +374,7 @@ func TestNewMergeDataMiddleware_mergeIncompleteResults(t *testing.T) {
 		Backend: []*config.Backend{&backend, &backend},
 		Timeout: time.Duration(timeout) * time.Millisecond,
 	}
-	mw := NewMergeDataMiddleware(&endpoint)
+	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	p := mw(
 		dummyProxy(&Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}),
 		dummyProxy(&Response{Data: map[string]interface{}{"tupu": true}, IsComplete: false}))
@@ -361,7 +407,7 @@ func TestNewMergeDataMiddleware_mergeEmptyResults(t *testing.T) {
 		Backend: []*config.Backend{&backend, &backend},
 		Timeout: time.Duration(timeout) * time.Millisecond,
 	}
-	mw := NewMergeDataMiddleware(&endpoint)
+	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	p := mw(
 		dummyProxy(&Response{Data: nil, IsComplete: false}),
 		dummyProxy(&Response{Data: nil, IsComplete: false}))
@@ -394,7 +440,7 @@ func TestNewMergeDataMiddleware_partialTimeout(t *testing.T) {
 		Backend: []*config.Backend{&backend, &backend},
 		Timeout: time.Duration(timeout) * time.Millisecond,
 	}
-	mw := NewMergeDataMiddleware(&endpoint)
+	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	p := mw(
 		delayedProxy(t, time.Duration(timeout/2)*time.Millisecond, &Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}),
 		delayedProxy(t, time.Duration(5*timeout)*time.Millisecond, nil))
@@ -427,7 +473,7 @@ func TestNewMergeDataMiddleware_partial(t *testing.T) {
 		Backend: []*config.Backend{&backend, &backend},
 		Timeout: time.Duration(timeout) * time.Millisecond,
 	}
-	mw := NewMergeDataMiddleware(&endpoint)
+	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	p := mw(
 		dummyProxy(&Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}),
 		dummyProxy(&Response{}))
@@ -459,7 +505,7 @@ func TestNewMergeDataMiddleware_nullResponse(t *testing.T) {
 	endpoint := config.EndpointConfig{
 		Backend: []*config.Backend{&backend, &backend},
 	}
-	mw := NewMergeDataMiddleware(&endpoint)
+	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 
 	mustEnd := time.After(time.Duration(2*timeout) * time.Millisecond)
 	out, err := mw(NoopProxy, NoopProxy)(context.Background(), &Request{})
@@ -480,7 +526,7 @@ func TestNewMergeDataMiddleware_nullResponse(t *testing.T) {
 	default:
 		t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
 	}
-	if out == nil {
+	if out != nil {
 		t.Errorf("The proxy returned a null result\n")
 		return
 	}
@@ -488,12 +534,6 @@ func TestNewMergeDataMiddleware_nullResponse(t *testing.T) {
 	case <-mustEnd:
 		t.Errorf("We were expecting a response but we got none\n")
 	default:
-		if len(out.Data) != 0 {
-			t.Errorf("We were expecting a partial response but we got %v!\n", out.Data)
-		}
-		if out.IsComplete {
-			t.Errorf("We were expecting an incompleted response but we got a completed one!\n")
-		}
 	}
 }
 
@@ -504,7 +544,7 @@ func TestNewMergeDataMiddleware_timeout(t *testing.T) {
 		Backend: []*config.Backend{&backend, &backend},
 		Timeout: time.Duration(timeout) * time.Millisecond,
 	}
-	mw := NewMergeDataMiddleware(&endpoint)
+	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	p := mw(
 		delayedProxy(t, time.Duration(5*timeout)*time.Millisecond, nil),
 		delayedProxy(t, time.Duration(5*timeout)*time.Millisecond, nil))
@@ -527,7 +567,7 @@ func TestNewMergeDataMiddleware_timeout(t *testing.T) {
 	default:
 		t.Errorf("The middleware propagated an unexpected error: %s", err.Error())
 	}
-	if out == nil {
+	if out != nil {
 		t.Errorf("The proxy returned a null result\n")
 		return
 	}
@@ -535,12 +575,6 @@ func TestNewMergeDataMiddleware_timeout(t *testing.T) {
 	case <-mustEnd:
 		t.Errorf("We were expecting a response but we got none\n")
 	default:
-		if len(out.Data) > 0 {
-			t.Errorf("We weren't expecting a response but we got one!\n")
-		}
-		if out.IsComplete {
-			t.Errorf("We were expecting an incompleted response but we got a completed one!\n")
-		}
 	}
 }
 
@@ -554,7 +588,7 @@ func TestNewMergeDataMiddleware_notEnoughBackends(t *testing.T) {
 	endpoint := config.EndpointConfig{
 		Backend: []*config.Backend{&backend},
 	}
-	mw := NewMergeDataMiddleware(&endpoint)
+	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	mw(explosiveProxy(t), explosiveProxy(t))
 }
 
@@ -568,7 +602,7 @@ func TestNewMergeDataMiddleware_notEnoughProxies(t *testing.T) {
 	endpoint := config.EndpointConfig{
 		Backend: []*config.Backend{&backend, &backend},
 	}
-	mw := NewMergeDataMiddleware(&endpoint)
+	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	mw(NoopProxy)
 }
 
@@ -579,7 +613,7 @@ func TestNewMergeDataMiddleware_noBackends(t *testing.T) {
 		}
 	}()
 	endpoint := config.EndpointConfig{}
-	NewMergeDataMiddleware(&endpoint)
+	NewMergeDataMiddleware(logging.NoOp, &endpoint)
 }
 func TestRegisterResponseCombiner(t *testing.T) {
 	subject := "test combiner"
@@ -603,7 +637,7 @@ func TestRegisterResponseCombiner(t *testing.T) {
 			},
 		},
 	}
-	mw := NewMergeDataMiddleware(&endpoint)
+	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	p := mw(
 		dummyProxy(&Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}),
 		dummyProxy(&Response{Data: map[string]interface{}{"tupu": true}, IsComplete: true}))
@@ -635,8 +669,8 @@ func Test_incrementalMergeAccumulator_invalidResponse(t *testing.T) {
 	acc.Merge(nil, nil)
 	acc.Merge(nil, nil)
 	res, err := acc.Result()
-	if res == nil {
-		t.Error("response should not be nil")
+	if res != nil {
+		t.Error("response should be nil")
 		return
 	}
 	if err == nil {

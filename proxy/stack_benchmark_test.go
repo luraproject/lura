@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package proxy
 
 import (
@@ -7,7 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
 )
 
 var result interface{}
@@ -19,7 +21,7 @@ func BenchmarkProxyStack_single(b *testing.B) {
 		Host:            []string{"supu:8080"},
 		Method:          "GET",
 		URLPattern:      "/a/{{.Tupu}}",
-		Blacklist:       []string{"map.aaaa"},
+		DenyList:        []string{"map.aaaa"},
 		Mapping:         map[string]string{"supu": "SUPUUUUU"},
 	}
 	cfg := &config.EndpointConfig{
@@ -58,7 +60,7 @@ func BenchmarkProxyStack_single(b *testing.B) {
 	p = NewRoundRobinLoadBalancedMiddleware(backend)(p)
 	p = NewConcurrentMiddleware(backend)(p)
 	p = NewRequestBuilderMiddleware(backend)(p)
-	p = NewStaticMiddleware(cfg)(p)
+	p = NewStaticMiddleware(logging.NoOp, cfg)(p)
 
 	request := &Request{
 		Method:  "GET",
@@ -83,7 +85,7 @@ func BenchmarkProxyStack_multi(b *testing.B) {
 		Host:            []string{"supu:8080"},
 		Method:          "GET",
 		URLPattern:      "/a/{{.Tupu}}",
-		Blacklist:       []string{"map.aaaa"},
+		DenyList:        []string{"map.aaaa"},
 		Mapping:         map[string]string{"supu": "SUPUUUUU"},
 	}
 
@@ -133,8 +135,8 @@ func BenchmarkProxyStack_multi(b *testing.B) {
 				backendProxy[i] = NewConcurrentMiddleware(backend)(backendProxy[i])
 				backendProxy[i] = NewRequestBuilderMiddleware(backend)(backendProxy[i])
 			}
-			p := NewMergeDataMiddleware(cfg)(backendProxy...)
-			p = NewStaticMiddleware(cfg)(p)
+			p := NewMergeDataMiddleware(logging.NoOp, cfg)(backendProxy...)
+			p = NewStaticMiddleware(logging.NoOp, cfg)(p)
 
 			var r *Response
 			b.ResetTimer()
@@ -205,7 +207,7 @@ func BenchmarkProxyStack_single_flatmap(b *testing.B) {
 	p = NewRoundRobinLoadBalancedMiddleware(backend)(p)
 	p = NewConcurrentMiddleware(backend)(p)
 	p = NewRequestBuilderMiddleware(backend)(p)
-	p = NewStaticMiddleware(cfg)(p)
+	p = NewStaticMiddleware(logging.NoOp, cfg)(p)
 
 	request := &Request{
 		Method:  "GET",
@@ -292,8 +294,8 @@ func BenchmarkProxyStack_multi_flatmap(b *testing.B) {
 				backendProxy[i] = NewConcurrentMiddleware(backend)(backendProxy[i])
 				backendProxy[i] = NewRequestBuilderMiddleware(backend)(backendProxy[i])
 			}
-			p := NewMergeDataMiddleware(cfg)(backendProxy...)
-			p = NewStaticMiddleware(cfg)(p)
+			p := NewMergeDataMiddleware(logging.NoOp, cfg)(backendProxy...)
+			p = NewStaticMiddleware(logging.NoOp, cfg)(p)
 
 			var r *Response
 			b.ResetTimer()

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package config
 
 import (
@@ -88,6 +89,9 @@ func NewParseError(err error, configFile string, offset int) *ParseError {
 }
 
 func getErrorRowCol(source []byte, offset int) (row, col int) {
+	if len(source) < offset {
+		offset = len(source) - 1
+	}
 	for i := 0; i < offset; i++ {
 		v := source[i]
 		if v == '\r' {
@@ -131,6 +135,7 @@ type FileReaderFunc func(string) ([]byte, error)
 type parseableServiceConfig struct {
 	Name                  string                     `json:"name"`
 	Endpoints             []*parseableEndpointConfig `json:"endpoints"`
+	AsyncAgents           []*parseableAsyncAgent     `json:"async_agent"`
 	Timeout               string                     `json:"timeout"`
 	CacheTTL              string                     `json:"cache_ttl"`
 	Host                  []string                   `json:"host"`
@@ -204,6 +209,11 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 		endpoints = append(endpoints, e.normalize())
 	}
 	cfg.Endpoints = endpoints
+	agents := make([]*AsyncAgent, 0, len(p.AsyncAgents))
+	for _, a := range p.AsyncAgents {
+		agents = append(agents, a.normalize())
+	}
+	cfg.AsyncAgents = agents
 	return cfg
 }
 
@@ -226,9 +236,9 @@ type parseableEndpointConfig struct {
 	ConcurrentCalls int                 `json:"concurrent_calls"`
 	Timeout         string              `json:"timeout"`
 	CacheTTL        int                 `json:"cache_ttl"`
-	QueryString     []string            `json:"querystring_params"`
+	QueryString     []string            `json:"input_query_strings"`
 	ExtraConfig     *ExtraConfig        `json:"extra_config,omitempty"`
-	HeadersToPass   []string            `json:"headers_to_pass"`
+	HeadersToPass   []string            `json:"input_headers"`
 	OutputEncoding  string              `json:"output_encoding"`
 }
 
@@ -254,14 +264,57 @@ func (p *parseableEndpointConfig) normalize() *EndpointConfig {
 	return &e
 }
 
+type parseableAsyncAgent struct {
+	Name       string `json:"name"`
+	Connection struct {
+		MaxRetries      int    `json:"max_retries"`
+		BackoffStrategy string `json:"backoff_strategy"`
+		HealthInterval  string `json:"health_interval"`
+	} `json:"connection"`
+	Consumer struct {
+		Timeout string  `json:"timeout"`
+		Workers int     `json:"workers"`
+		Topic   string  `json:"topic"`
+		MaxRate float64 `json:"max_rate"`
+	} `json:"consumer"`
+	Encoding    string              `json:"encoding"`
+	Backend     []*parseableBackend `json:"backend"`
+	ExtraConfig ExtraConfig         `json:"extra_config"`
+}
+
+func (p *parseableAsyncAgent) normalize() *AsyncAgent {
+	e := AsyncAgent{
+		Name:     p.Name,
+		Encoding: p.Encoding,
+		Connection: Connection{
+			MaxRetries:      p.Connection.MaxRetries,
+			BackoffStrategy: p.Connection.BackoffStrategy,
+			HealthInterval:  parseDuration(p.Connection.HealthInterval),
+		},
+		Consumer: Consumer{
+			Timeout: parseDuration(p.Consumer.Timeout),
+			Workers: p.Consumer.Workers,
+			Topic:   p.Consumer.Topic,
+			MaxRate: p.Consumer.MaxRate,
+		},
+	}
+	if p.ExtraConfig != nil {
+		e.ExtraConfig = p.ExtraConfig
+	}
+	backends := make([]*Backend, 0, len(p.Backend))
+	for _, b := range p.Backend {
+		backends = append(backends, b.normalize())
+	}
+	e.Backend = backends
+	return &e
+}
+
 type parseableBackend struct {
 	Group                    string            `json:"group"`
 	Method                   string            `json:"method"`
 	Host                     []string          `json:"host"`
 	HostSanitizationDisabled bool              `json:"disable_host_sanitize"`
 	URLPattern               string            `json:"url_pattern"`
-	Blacklist                []string          `json:"blacklist"`
-	Whitelist                []string          `json:"whitelist"`
 	AllowList                []string          `json:"allow"`
 	DenyList                 []string          `json:"deny"`
 	Mapping                  map[string]string `json:"mapping"`
@@ -279,8 +332,6 @@ func (p *parseableBackend) normalize() *Backend {
 		Host:                     p.Host,
 		HostSanitizationDisabled: p.HostSanitizationDisabled,
 		URLPattern:               p.URLPattern,
-		Blacklist:                p.Blacklist,
-		Whitelist:                p.Whitelist,
 		Mapping:                  p.Mapping,
 		Encoding:                 p.Encoding,
 		IsCollection:             p.IsCollection,

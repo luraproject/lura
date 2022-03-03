@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package mux
 
 import (
@@ -7,9 +8,9 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/luraproject/lura/config"
-	"github.com/luraproject/lura/encoding"
-	"github.com/luraproject/lura/proxy"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/encoding"
+	"github.com/luraproject/lura/v2/proxy"
 )
 
 // Render defines the signature of the functions to be use for the final response
@@ -129,7 +130,9 @@ func noopRender(w http.ResponseWriter, response *proxy.Response) {
 			w.Header().Add(k, v)
 		}
 	}
-	w.WriteHeader(response.Metadata.StatusCode)
+	if response.Metadata.StatusCode != 0 {
+		w.WriteHeader(response.Metadata.StatusCode)
+	}
 
 	if response.Io == nil {
 		return

@@ -1,7 +1,9 @@
-/* Package server provides tools to create http servers and handlers wrapping the
+// SPDX-License-Identifier: Apache-2.0
+
+/*
+	Package server provides tools to create http servers and handlers wrapping the
    lura router
 */
-// SPDX-License-Identifier: Apache-2.0
 package server
 
 import (
@@ -16,8 +18,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luraproject/lura/config"
-	"github.com/luraproject/lura/core"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/core"
 )
 
 // ToHTTPError translates an error into a HTTP status code

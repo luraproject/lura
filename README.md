@@ -99,18 +99,6 @@ A ready to use example:
 
 Visit the [framework overview](/docs/OVERVIEW.md) for more details about the components of the Lura project.
 
-### Examples
-
-You can find some implementation examples on [this KrakenD repository](https://github.com/devopsfaith/krakend-examples)
-
-1. [gin router](https://github.com/devopsfaith/krakend-examples/tree/master/gin/)
-2. [mux router](https://github.com/devopsfaith/krakend-examples/tree/master/mux/)
-3. [gorilla router](https://github.com/devopsfaith/krakend-examples/tree/master/gorilla/)
-4. [negroni middlewares](https://github.com/devopsfaith/krakend-examples/tree/master/negroni/)
-5. [dns srv service discovery](https://github.com/devopsfaith/krakend-examples/tree/master/dns/)
-6. [jwt middlewares](https://github.com/devopsfaith/krakend-examples/tree/master/jwt/)
-7. [httpcache based proxies](https://github.com/devopsfaith/krakend-examples/tree/master/httpcache/)
-
 ## Configuration file
 
 [Lura config file](/docs/CONFIG.md)

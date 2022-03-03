@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package main
 
 import (
@@ -7,19 +8,13 @@ import (
 	"io"
 	"net/url"
 	"path"
-
-	"github.com/luraproject/lura/logging"
 )
 
 func main() {}
 
-func init() {
-	fmt.Println(string(ModifierRegisterer), "loaded!!!")
-}
-
 var ModifierRegisterer = registerer("lura-request-modifier-example")
 
-var logger logging.Logger = nil
+var logger Logger = nil
 
 type registerer string
 
@@ -30,16 +25,15 @@ func (r registerer) RegisterModifiers(f func(
 	appliesToResponse bool,
 )) {
 	f(string(r), r.modifierFactory, true, false)
-	fmt.Println(string(ModifierRegisterer), "registered!!!")
 }
 
 func (r registerer) RegisterLogger(in interface{}) {
-	l, ok := in.(logging.Logger)
+	l, ok := in.(Logger)
 	if !ok {
 		return
 	}
 	logger = l
-	logger.Debug(string(ModifierRegisterer), "logger registered!!!")
+	logger.Debug(fmt.Sprintf("[PLUGIN: %s] Logger loaded", ModifierRegisterer))
 
 }
 
@@ -48,7 +42,6 @@ func (r registerer) modifierFactory(
 ) func(interface{}) (interface{}, error) {
 	// check the config
 	// return the modifier
-	fmt.Println(string(ModifierRegisterer), "injected!!!")
 
 	if logger == nil {
 		return func(input interface{}) (interface{}, error) {
@@ -121,3 +114,12 @@ func (r requestWrapper) Path() string                 { return r.path }
 func (r requestWrapper) Body() io.ReadCloser          { return r.body }
 func (r requestWrapper) Params() map[string]string    { return r.params }
 func (r requestWrapper) Headers() map[string][]string { return r.headers }
+
+type Logger interface {
+	Debug(v ...interface{})
+	Info(v ...interface{})
+	Warning(v ...interface{})
+	Error(v ...interface{})
+	Critical(v ...interface{})
+	Fatal(v ...interface{})
+}

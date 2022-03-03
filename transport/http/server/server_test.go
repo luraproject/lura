@@ -1,5 +1,5 @@
-//go:generate openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -out cert.pem -keyout key.pem -subj "/C=US/ST=California/L=Mountain View/O=Your Organization/OU=Your Unit/CN=localhost"
 // SPDX-License-Identifier: Apache-2.0
+
 package server
 
 import (
@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/v2/config"
 )
 
 func init() {

@@ -1,5 +1,5 @@
 {
-    "version": 2,
+    "version": 3,
     "name": "My lovely gateway",
     "port": {{.port}},
     "host": [ "http://local.machine" ],
@@ -31,7 +31,7 @@
         {
             "endpoint": "/param_forwarding/{first}/constant/{second}",
             "method": "POST",
-            "headers_to_pass": [
+            "input_headers": [
                 "Content-Type",
                 "Authorization",
                 "X-Y-Z"
@@ -170,7 +170,7 @@
         },
         {
             "endpoint": "/querystring-params-test/query-params",
-            "querystring_params": [ "a", "b" ],
+            "input_query_strings": [ "a", "b" ],
             "backend": [
                 {
                     "host": [ "{{.b6}}" ],
@@ -189,7 +189,7 @@
         },
         {
             "endpoint": "/querystring-params-test/all-params",
-            "querystring_params": [ "*" ],
+            "input_query_strings": [ "*" ],
             "backend": [
                 {
                     "host": [ "{{.b6}}" ],
@@ -208,7 +208,7 @@
         },
         {
             "endpoint": "/header-params-test/filter-params",
-            "headers_to_pass": [ "X-Test-1" ],
+            "input_headers": [ "X-Test-1" ],
             "backend": [
                 {
                     "host": [ "{{.b6}}" ],
@@ -218,7 +218,7 @@
         },
         {
             "endpoint": "/header-params-test/all-params",
-            "headers_to_pass": [ "*" ],
+            "input_headers": [ "*" ],
             "backend": [
                 {
                     "host": [ "{{.b6}}" ],
@@ -257,12 +257,12 @@
             {
               "url_pattern": "/provider/{param}",
               "host": [ "{{.b4}}" ],
-              "whitelist": [ "random" ]
+              "allow": [ "random" ]
             },
             {
               "url_pattern": "/recipient/{resp0_random}",
               "host": [ "{{.b7}}" ],
-              "whitelist": [ "path" ]
+              "allow": [ "path" ]
             }
           ]
         },
@@ -277,12 +277,12 @@
             {
               "url_pattern": "/provider/{param}",
               "host": [ "{{.b7}}" ],
-              "whitelist": [ "random" ]
+              "allow": [ "random" ]
             },
             {
               "url_pattern": "/recipient/{resp0_random}",
               "host": [ "{{.b4}}" ],
-              "whitelist": [ "path" ]
+              "allow": [ "path" ]
             }
           ]
         },
@@ -379,6 +379,57 @@
                         "{{.b3}}"
                     ],
                     "url_pattern": "/"
+                }
+            ]
+        },
+        {
+            "endpoint": "/error-status-code/1",
+            "backend": [
+                {
+                    "host": [ "{{.b3}}" ],
+                    "url_pattern": "/",
+                    "extra_config":{
+                        "github.com/devopsfaith/krakend/http":{
+                            "return_error_code":true
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "endpoint": "/error-status-code/2",
+            "backend": [
+                {
+                    "host": [ "{{.b4}}" ],
+                    "url_pattern": "/",
+                    "extra_config":{
+                        "github.com/devopsfaith/krakend/http":{
+                            "return_error_code":true
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "endpoint": "/error-status-code/3",
+            "backend": [
+                {
+                    "host": [ "{{.b3}}" ],
+                    "url_pattern": "/",
+                    "extra_config":{
+                        "github.com/devopsfaith/krakend/http":{
+                            "return_error_code":true
+                        }
+                    }
+                },
+                {
+                    "host": [ "{{.b4}}" ],
+                    "url_pattern": "/",
+                    "extra_config":{
+                        "github.com/devopsfaith/krakend/http":{
+                            "return_error_code":true
+                        }
+                    }
                 }
             ]
         }

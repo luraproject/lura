@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package mux
 
 import (
@@ -8,7 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/luraproject/lura/logging"
+	"github.com/luraproject/lura/v2/logging"
 )
 
 func TestDebugHandler(t *testing.T) {

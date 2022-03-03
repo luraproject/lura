@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package client
 
 import (
@@ -8,7 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/v2/config"
 )
 
 // Namespace to be used in extra config
@@ -29,8 +30,10 @@ func GetHTTPStatusHandler(remote *config.Backend) HTTPStatusHandler {
 		if m, ok := e.(map[string]interface{}); ok {
 			if v, ok := m["return_error_details"]; ok {
 				if b, ok := v.(string); ok && b != "" {
-					return DetailedHTTPStatusHandler(DefaultHTTPStatusHandler, b)
+					return DetailedHTTPStatusHandler(b)
 				}
+			} else if v, ok := m["return_error_code"].(bool); ok && v {
+				return ErrorHTTPStatusHandler
 			}
 		}
 	}
@@ -46,38 +49,51 @@ func DefaultHTTPStatusHandler(ctx context.Context, resp *http.Response) (*http.R
 	return resp, nil
 }
 
+// ErrorHTTPStatusHandler is a HTTPStatusHandler that returns the status code as part of the error details
+func ErrorHTTPStatusHandler(ctx context.Context, resp *http.Response) (*http.Response, error) {
+	if _, err := DefaultHTTPStatusHandler(ctx, resp); err == nil {
+		return resp, nil
+	}
+	return resp, newHTTPResponseError(resp)
+}
+
 // NoOpHTTPStatusHandler is a NO-OP implementation of HTTPStatusHandler
 func NoOpHTTPStatusHandler(_ context.Context, resp *http.Response) (*http.Response, error) {
 	return resp, nil
 }
 
 // DetailedHTTPStatusHandler is a HTTPStatusHandler implementation
-func DetailedHTTPStatusHandler(next HTTPStatusHandler, name string) HTTPStatusHandler {
+func DetailedHTTPStatusHandler(name string) HTTPStatusHandler {
 	return func(ctx context.Context, resp *http.Response) (*http.Response, error) {
-		if r, err := next(ctx, resp); err == nil {
-			return r, nil
+		if _, err := DefaultHTTPStatusHandler(ctx, resp); err == nil {
+			return resp, nil
 		}
 
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			body = []byte{}
-		}
-		resp.Body.Close()
-		resp.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-
-		return resp, HTTPResponseError{
-			Code: resp.StatusCode,
-			Msg:  string(body),
-			name: name,
+		return resp, NamedHTTPResponseError{
+			HTTPResponseError: newHTTPResponseError(resp),
+			name:              name,
 		}
 	}
 }
 
-// HTTPResponseError is the error to be returned by the DetailedHTTPStatusHandler
+func newHTTPResponseError(resp *http.Response) HTTPResponseError {
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		body = []byte{}
+	}
+	resp.Body.Close()
+	resp.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+
+	return HTTPResponseError{
+		Code: resp.StatusCode,
+		Msg:  string(body),
+	}
+}
+
+// HTTPResponseError is the error to be returned by the ErrorHTTPStatusHandler
 type HTTPResponseError struct {
 	Code int    `json:"http_status_code"`
 	Msg  string `json:"http_body,omitempty"`
-	name string
 }
 
 // Error returns the error message
@@ -85,12 +101,18 @@ func (r HTTPResponseError) Error() string {
 	return r.Msg
 }
 
-// Name returns the name of the error
-func (r HTTPResponseError) Name() string {
-	return r.name
-}
-
 // StatusCode returns the status code returned by the backend
 func (r HTTPResponseError) StatusCode() int {
 	return r.Code
+}
+
+// NamedHTTPResponseError is the error to be returned by the DetailedHTTPStatusHandler
+type NamedHTTPResponseError struct {
+	HTTPResponseError
+	name string
+}
+
+// Name returns the name of the backend where the error happened
+func (r NamedHTTPResponseError) Name() string {
+	return r.name
 }

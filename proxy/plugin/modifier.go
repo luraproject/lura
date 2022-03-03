@@ -1,6 +1,8 @@
-/* Package plugin provides tools for loading and registering proxy plugins
- */
 // SPDX-License-Identifier: Apache-2.0
+
+/*
+	Package plugin provides tools for loading and registering proxy plugins
+*/
 package plugin
 
 import (
@@ -8,9 +10,9 @@ import (
 	"plugin"
 	"strings"
 
-	"github.com/luraproject/lura/logging"
-	luraplugin "github.com/luraproject/lura/plugin"
-	"github.com/luraproject/lura/register"
+	"github.com/luraproject/lura/v2/logging"
+	luraplugin "github.com/luraproject/lura/v2/plugin"
+	"github.com/luraproject/lura/v2/register"
 )
 
 const (
@@ -61,11 +63,9 @@ func RegisterModifier(
 	appliesToResponse bool,
 ) {
 	if appliesToRequest {
-		fmt.Println("registering request modifier:", name)
 		modifierRegister.Register(requestNamespace, name, modifierFactory)
 	}
 	if appliesToResponse {
-		fmt.Println("registering response modifier:", name)
 		modifierRegister.Register(responseNamespace, name, modifierFactory)
 	}
 }
@@ -92,17 +92,13 @@ type RegisterModifierFunc func(
 	appliesToResponse bool,
 )
 
-// LoadModifiers scans the given path using the pattern and registers all the found modifier plugins into the rmf
-func LoadModifiers(path, pattern string, rmf RegisterModifierFunc) (int, error) {
-	plugins, err := luraplugin.Scan(path, pattern)
-	if err != nil {
-		return 0, err
-	}
-	return load(plugins, rmf, nil)
+// Load scans the given path using the pattern and registers all the found modifier plugins into the rmf
+func Load(path, pattern string, rmf RegisterModifierFunc) (int, error) {
+	return LoadWithLogger(path, pattern, rmf, nil)
 }
 
-// LoadModifiersWithLogger scans the given path using the pattern and registers all the found modifier plugins into the rmf
-func LoadModifiersWithLogger(path, pattern string, rmf RegisterModifierFunc, logger logging.Logger) (int, error) {
+// LoadWithLogger scans the given path using the pattern and registers all the found modifier plugins into the rmf
+func LoadWithLogger(path, pattern string, rmf RegisterModifierFunc, logger logging.Logger) (int, error) {
 	plugins, err := luraplugin.Scan(path, pattern)
 	if err != nil {
 		return 0, err
@@ -115,14 +111,14 @@ func load(plugins []string, rmf RegisterModifierFunc, logger logging.Logger) (in
 	loadedPlugins := 0
 	for k, pluginName := range plugins {
 		if err := open(pluginName, rmf, logger); err != nil {
-			errors = append(errors, fmt.Errorf("opening plugin %d (%s): %s", k, pluginName, err.Error()))
+			errors = append(errors, fmt.Errorf("plugin #%d (%s): %s", k, pluginName, err.Error()))
 			continue
 		}
 		loadedPlugins++
 	}
 
 	if len(errors) > 0 {
-		return loadedPlugins, loaderError{errors}
+		return loadedPlugins, loaderError{errors: errors}
 	}
 	return loadedPlugins, nil
 }
@@ -186,4 +182,12 @@ func (l loaderError) Error() string {
 		msgs[i] = err.Error()
 	}
 	return fmt.Sprintf("plugin loader found %d error(s): \n%s", len(msgs), strings.Join(msgs, "\n"))
+}
+
+func (l loaderError) Len() int {
+	return len(l.errors)
+}
+
+func (l loaderError) Errs() []error {
+	return l.errors
 }

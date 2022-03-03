@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package plugin
 
 import (
@@ -8,9 +9,9 @@ import (
 	"plugin"
 	"strings"
 
-	"github.com/luraproject/lura/logging"
-	luraplugin "github.com/luraproject/lura/plugin"
-	"github.com/luraproject/lura/register"
+	"github.com/luraproject/lura/v2/logging"
+	luraplugin "github.com/luraproject/lura/v2/plugin"
+	"github.com/luraproject/lura/v2/register"
 )
 
 var serverRegister = register.New()
@@ -55,14 +56,14 @@ func load(plugins []string, rcf RegisterHandlerFunc, logger logging.Logger) (int
 	loadedPlugins := 0
 	for k, pluginName := range plugins {
 		if err := open(pluginName, rcf, logger); err != nil {
-			errors = append(errors, fmt.Errorf("opening plugin %d (%s): %s", k, pluginName, err.Error()))
+			errors = append(errors, fmt.Errorf("plugin #%d (%s): %s", k, pluginName, err.Error()))
 			continue
 		}
 		loadedPlugins++
 	}
 
 	if len(errors) > 0 {
-		return loadedPlugins, loaderError{errors}
+		return loadedPlugins, loaderError{errors: errors}
 	}
 	return loadedPlugins, nil
 }
@@ -126,4 +127,12 @@ func (l loaderError) Error() string {
 		msgs[i] = err.Error()
 	}
 	return fmt.Sprintf("plugin loader found %d error(s): \n%s", len(msgs), strings.Join(msgs, "\n"))
+}
+
+func (l loaderError) Len() int {
+	return len(l.errors)
+}
+
+func (l loaderError) Errs() []error {
+	return l.errors
 }

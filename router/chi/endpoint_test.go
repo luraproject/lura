@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package chi
 
 import (
@@ -12,11 +13,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 
-	"github.com/luraproject/lura/config"
-	"github.com/luraproject/lura/proxy"
-	"github.com/luraproject/lura/router"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/proxy"
+	"github.com/luraproject/lura/v2/transport/http/server"
 )
 
 func TestEndpointHandler_ok(t *testing.T) {
@@ -242,13 +243,13 @@ func (tc endpointHandlerTestCase) test(t *testing.T) {
 		endpoint.HeadersToPass = tc.headers
 	}
 
-	server := startChiServer(NewEndpointHandler(endpoint, tc.proxy))
+	s := startChiServer(NewEndpointHandler(endpoint, tc.proxy))
 
 	req, _ := http.NewRequest(tc.method, "http://127.0.0.1:8080/_chi_endpoint/a?a=42&b=1&c[]=x&c[]=y&d=1&d=2", ioutil.NopCloser(&bytes.Buffer{}))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()
-	server.ServeHTTP(w, req)
+	s.ServeHTTP(w, req)
 
 	body, ioerr := ioutil.ReadAll(w.Result().Body)
 	if ioerr != nil {
@@ -261,11 +262,11 @@ func (tc endpointHandlerTestCase) test(t *testing.T) {
 	if resp.Header.Get("Cache-Control") != tc.expectedCache {
 		t.Error("Cache-Control error:", resp.Header.Get("Cache-Control"))
 	}
-	if tc.completed && resp.Header.Get(router.CompleteResponseHeaderName) != router.HeaderCompleteResponseValue {
-		t.Error(router.CompleteResponseHeaderName, "error:", resp.Header.Get(router.CompleteResponseHeaderName))
+	if tc.completed && resp.Header.Get(server.CompleteResponseHeaderName) != server.HeaderCompleteResponseValue {
+		t.Error(server.CompleteResponseHeaderName, "error:", resp.Header.Get(server.CompleteResponseHeaderName))
 	}
-	if !tc.completed && resp.Header.Get(router.CompleteResponseHeaderName) != router.HeaderIncompleteResponseValue {
-		t.Error(router.CompleteResponseHeaderName, "error:", resp.Header.Get(router.CompleteResponseHeaderName))
+	if !tc.completed && resp.Header.Get(server.CompleteResponseHeaderName) != server.HeaderIncompleteResponseValue {
+		t.Error(server.CompleteResponseHeaderName, "error:", resp.Header.Get(server.CompleteResponseHeaderName))
 	}
 	if resp.Header.Get("Content-Type") != tc.expectedContent {
 		t.Error("Content-Type error:", resp.Header.Get("Content-Type"))
@@ -287,7 +288,7 @@ func (tc endpointHandlerTestCase) test(t *testing.T) {
 }
 
 func startChiServer(handlerFunc http.HandlerFunc) *chi.Mux {
-	router := chi.NewRouter()
-	router.Handle("/_chi_endpoint/{param}", handlerFunc)
-	return router
+	r := chi.NewRouter()
+	r.Handle("/_chi_endpoint/{param}", handlerFunc)
+	return r
 }

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package proxy
 
 import (
@@ -9,11 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/luraproject/lura/config"
+	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
 )
 
 // NewMergeDataMiddleware creates proxy middleware for merging responses from several backends
-func NewMergeDataMiddleware(endpointConfig *config.EndpointConfig) Middleware {
+func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.EndpointConfig) Middleware {
 	totalBackends := len(endpointConfig.Backend)
 	if totalBackends == 0 {
 		panic(ErrNoBackends)
@@ -23,13 +25,24 @@ func NewMergeDataMiddleware(endpointConfig *config.EndpointConfig) Middleware {
 	}
 	serviceTimeout := time.Duration(85*endpointConfig.Timeout.Nanoseconds()/100) * time.Nanosecond
 	combiner := getResponseCombiner(endpointConfig.ExtraConfig)
+	isSequential := shouldRunSequentialMerger(endpointConfig)
+
+	logger.Debug(
+		fmt.Sprintf(
+			"[ENDPOINT: %s][Merge] Backends: %d, sequential: %t, combiner: %s",
+			endpointConfig.Endpoint,
+			totalBackends,
+			isSequential,
+			getResponseCombinerName(endpointConfig.ExtraConfig),
+		),
+	)
 
 	return func(next ...Proxy) Proxy {
 		if len(next) != totalBackends {
 			panic(ErrNotEnoughProxies)
 		}
 
-		if !shouldRunSequentialMerger(endpointConfig) {
+		if !isSequential {
 			return parallelMerge(serviceTimeout, combiner, next...)
 		}
 
@@ -213,7 +226,7 @@ func (i *incrementalMergeAccumulator) Merge(res *Response, err error) {
 
 func (i *incrementalMergeAccumulator) Result() (*Response, error) {
 	if i.data == nil {
-		return &Response{Data: make(map[string]interface{}, 0), IsComplete: false}, newMergeError(i.errs)
+		return nil, newMergeError(i.errs)
 	}
 
 	if i.pending != 0 || len(i.errs) != 0 {
@@ -273,6 +286,10 @@ func (m mergeError) Error() string {
 	return strings.Join(msg, "\n")
 }
 
+func (m mergeError) Errors() []error {
+	return m.errs
+}
+
 // ResponseCombiner func to merge the collected responses into a single one
 type ResponseCombiner func(int, []*Response) *Response
 
@@ -293,18 +310,23 @@ func initResponseCombiners() *combinerRegister {
 	return newCombinerRegister(map[string]ResponseCombiner{defaultCombinerName: combineData}, combineData)
 }
 
-func getResponseCombiner(extra config.ExtraConfig) ResponseCombiner {
-	combiner, _ := responseCombiners.GetResponseCombiner(defaultCombinerName)
+func getResponseCombinerName(extra config.ExtraConfig) string {
 	if v, ok := extra[Namespace]; ok {
 		if e, ok := v.(map[string]interface{}); ok {
 			if v, ok := e[mergeKey]; ok {
-				if c, ok := responseCombiners.GetResponseCombiner(v.(string)); ok {
-					combiner = c
+				if _, ok := responseCombiners.GetResponseCombiner(v.(string)); ok {
+					return v.(string)
 				}
 			}
 		}
 	}
-	return combiner
+	return defaultCombinerName
+}
+
+func getResponseCombiner(extra config.ExtraConfig) ResponseCombiner {
+	combiner := getResponseCombinerName(extra)
+	c, _ := responseCombiners.GetResponseCombiner(combiner)
+	return c
 }
 
 func combineData(total int, parts []*Response) *Response {

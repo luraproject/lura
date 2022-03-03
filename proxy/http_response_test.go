@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package proxy
 
 import (
@@ -9,7 +10,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/luraproject/lura/encoding"
+	"github.com/luraproject/lura/v2/encoding"
 )
 
 func TestNopHTTPResponseParser(t *testing.T) {

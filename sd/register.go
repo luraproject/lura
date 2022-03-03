@@ -1,44 +1,40 @@
 // SPDX-License-Identifier: Apache-2.0
+
 package sd
 
 import (
-	"github.com/luraproject/lura/config"
-	"github.com/luraproject/lura/register"
+	"github.com/luraproject/lura/v2/register"
 )
-
-// RegisterSubscriberFactory registers the received factory
-// Deprecated: RegisterSubscriberFactory. Use the GetRegister function
-func RegisterSubscriberFactory(name string, sf SubscriberFactory) error {
-	return subscriberFactories.Register(name, sf)
-}
-
-// GetSubscriber returns a subscriber from package register
-// Deprecated: GetSubscriber. Use the GetRegister function
-func GetSubscriber(cfg *config.Backend) Subscriber {
-	return subscriberFactories.Get(cfg.SD)(cfg)
-}
 
 // GetRegister returns the package register
 func GetRegister() *Register {
 	return subscriberFactories
 }
 
-// Register is a SD register
+type untypedRegister interface {
+	Register(name string, v interface{})
+	Get(name string) (interface{}, bool)
+}
+
+// Register is a SD register, mapping different SD subscriber factories
+// to their respective name, so they can be accessed by name
 type Register struct {
-	data register.Untyped
+	data untypedRegister
 }
 
 func initRegister() *Register {
 	return &Register{register.NewUntyped()}
 }
 
-// Register implements the RegisterSetter interface
+// Register adds the SubscriberFactory to the internal register under the given
+// name
 func (r *Register) Register(name string, sf SubscriberFactory) error {
 	r.data.Register(name, sf)
 	return nil
 }
 
-// Get implements the RegisterGetter interface
+// Get returns the SubscriberFactory stored under the given name. It falls back to
+// a FixedSubscriberFactory if there is no factory with that name
 func (r *Register) Get(name string) SubscriberFactory {
 	tmp, ok := r.data.Get(name)
 	if !ok {
