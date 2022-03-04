@@ -26,4 +26,4 @@ type HTTPClientFactory func(ctx context.Context) *http.Client
 // NewHTTPClient just returns the http default client
 func NewHTTPClient(ctx context.Context) *http.Client { return defaultHTTPClient }
 
-var defaultHTTPClient = &http.Client{Transport: http.DefaultTransport}
+var defaultHTTPClient = &http.Client{}
