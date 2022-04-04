@@ -94,7 +94,7 @@ func extractTarget(target string, entity *Response) {
 	}
 }
 
-func AllowlistPrune(wlDict map[string]interface{}, inDict map[string]interface{}) bool {
+func AllowlistPrune(wlDict, inDict map[string]interface{}) bool {
 	canDelete := true
 	var deleteSibling bool
 	for k, v := range inDict {
