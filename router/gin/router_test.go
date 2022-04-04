@@ -1,3 +1,4 @@
+//go:build !race
 // +build !race
 
 // SPDX-License-Identifier: Apache-2.0
@@ -272,7 +273,7 @@ func TestRunServer_ko(t *testing.T) {
 	serviceCfg := config.ServiceConfig{}
 	r.Run(serviceCfg)
 	re := regexp.MustCompile(errorMsg)
-	if !re.MatchString(string(buff.Bytes())) {
+	if !re.MatchString(buff.String()) {
 		t.Errorf("the logger doesn't contain the expected msg: %s", buff.Bytes())
 	}
 }
