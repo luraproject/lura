@@ -126,12 +126,11 @@ func sequentialMerge(patterns []string, timeout time.Duration, rc ResponseCombin
 								if !ok {
 									break
 								}
-								switch clean := v.(type) {
-								case map[string]interface{}:
-									data = clean
-								default:
+								clean, ok := v.(map[string]interface{})
+								if !ok {
 									break
 								}
+								data = clean
 							}
 						}
 
