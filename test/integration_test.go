@@ -129,9 +129,7 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 
 	go runRouter(logger, cfg)
 
-	select {
-	case <-time.After(300 * time.Millisecond):
-	}
+	<-time.After(300 * time.Millisecond)
 
 	defaultHeaders := map[string]string{
 		"Content-Type":        "application/json",
