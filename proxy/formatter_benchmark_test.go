@@ -47,7 +47,7 @@ func BenchmarkEntityFormatter_allowFilter(b *testing.B) {
 
 }
 
-func benchmarkDeepChilds(depth int, extraSiblings int) map[string]interface{} {
+func benchmarkDeepChilds(depth, extraSiblings int) map[string]interface{} {
 	data := make(map[string]interface{}, extraSiblings+1)
 	for i := 0; i < extraSiblings; i++ {
 		data[fmt.Sprintf("extra%d", i)] = "sibling_value"
@@ -60,7 +60,7 @@ func benchmarkDeepChilds(depth int, extraSiblings int) map[string]interface{} {
 	return data
 }
 
-func benchmarkDeepStructure(numTargets int, targetDepth int, extraFields int, extraSiblings int) (map[string]interface{}, []string) {
+func benchmarkDeepStructure(numTargets, targetDepth, extraFields, extraSiblings int) (map[string]interface{}, []string) {
 	data := make(map[string]interface{}, numTargets+extraFields)
 	targetKeys := make([]string, numTargets)
 	for i := 0; i < numTargets; i++ {
