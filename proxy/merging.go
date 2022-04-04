@@ -348,7 +348,7 @@ func combineData(total int, parts []*Response) *Response {
 
 	if nil == retResponse {
 		// do not allow nil data in the response:
-		return &Response{Data: make(map[string]interface{}, 0), IsComplete: isComplete}
+		return &Response{Data: make(map[string]interface{}), IsComplete: isComplete}
 	}
 	retResponse.IsComplete = isComplete
 	return retResponse
