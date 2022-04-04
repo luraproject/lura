@@ -18,9 +18,7 @@ type HandlerFactory func(*config.EndpointConfig, proxy.Proxy) http.HandlerFunc
 // NewEndpointHandler implements the HandleFactory interface using the default ToHTTPError function
 func NewEndpointHandler(cfg *config.EndpointConfig, prxy proxy.Proxy) http.HandlerFunc {
 	hf := mux.CustomEndpointHandler(
-		mux.NewRequestBuilder(func(r *http.Request) map[string]string {
-			return extractParamsFromEndpoint(r)
-		}),
+		mux.NewRequestBuilder(extractParamsFromEndpoint),
 	)
 	return hf(cfg, prxy)
 }
