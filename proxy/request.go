@@ -32,7 +32,7 @@ func (r *Request) GeneratePath(URLPattern string) {
 		key = append(key, "{{."...)
 		key = append(key, k...)
 		key = append(key, "}}"...)
-		buff = bytes.Replace(buff, key, []byte(v), -1)
+		buff = bytes.ReplaceAll(buff, key, []byte(v))
 	}
 	r.Path = string(buff)
 }
