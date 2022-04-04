@@ -114,6 +114,6 @@ func (l BasicLogger) prependLog(level string, v ...interface{}) {
 	msg := make([]interface{}, len(v)+2)
 	msg[0] = l.Prefix
 	msg[1] = level
-	copy(msg[2:], v[:])
+	copy(msg[2:], v)
 	l.Logger.Println(msg...)
 }
