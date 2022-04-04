@@ -551,7 +551,7 @@ func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]
 			}
 		}
 		key := strings.Title(output[:1]) + output[1:]
-		backend.URLPattern = strings.Replace(backend.URLPattern, "{"+output+"}", "{{."+key+"}}", -1)
+		backend.URLPattern = strings.ReplaceAll(backend.URLPattern, "{"+output+"}", "{{."+key+"}}")
 		backend.URLKeys = append(backend.URLKeys, key)
 	}
 	return nil
