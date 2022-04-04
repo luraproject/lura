@@ -89,7 +89,7 @@ func GetOptions(cfg config.ExtraConfig) (*Options, error) {
 }
 
 // New resturns a new Extractor, ready to be use on a middleware
-func New(opt Options) Extractor {
+func New(opt Options) *Extractor {
 	replacements := [][2]string{}
 	for k, v := range opt.Variables {
 		val, ok := v.(string)
@@ -104,7 +104,7 @@ func New(opt Options) Extractor {
 	if len(replacements) == 0 {
 		b, _ := json.Marshal(opt.GraphQLRequest)
 
-		return Extractor{
+		return &Extractor{
 			cfg: opt,
 			paramExtractor: func(map[string]string) (*GraphQLRequest, error) {
 				return &opt.GraphQLRequest, nil
@@ -130,7 +130,7 @@ func New(opt Options) Extractor {
 		return &val, nil
 	}
 
-	return Extractor{
+	return &Extractor{
 		cfg:            opt,
 		paramExtractor: paramExtractor,
 		newBody: func(params map[string]string) ([]byte, error) {
@@ -153,7 +153,7 @@ type Extractor struct {
 
 // QueryFromBody returns a url.Values containing the graphql request with the given query and the default variables
 // overiden by the request body
-func (e Extractor) QueryFromBody(r io.Reader) (url.Values, error) {
+func (e *Extractor) QueryFromBody(r io.Reader) (url.Values, error) {
 	gr, err := e.fromBody(r)
 	if err != nil {
 		return nil, err
@@ -174,7 +174,7 @@ func (e Extractor) QueryFromBody(r io.Reader) (url.Values, error) {
 
 // BodyFromBody returns a request body containing the graphql request with the given query and the default variables
 // overiden by the request body
-func (e Extractor) BodyFromBody(r io.Reader) ([]byte, error) {
+func (e *Extractor) BodyFromBody(r io.Reader) ([]byte, error) {
 	v, err := e.fromBody(r)
 	if err != nil {
 		return []byte{}, err
@@ -182,7 +182,7 @@ func (e Extractor) BodyFromBody(r io.Reader) ([]byte, error) {
 	return json.Marshal(v)
 }
 
-func (e Extractor) fromBody(r io.Reader) (*GraphQLRequest, error) {
+func (e *Extractor) fromBody(r io.Reader) (*GraphQLRequest, error) {
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -209,7 +209,7 @@ func (e Extractor) fromBody(r io.Reader) (*GraphQLRequest, error) {
 
 // QueryFromParams returns a url.Values containing the grapql request generated for the given query and the default
 // variables overiden by the request params
-func (e Extractor) QueryFromParams(params map[string]string) (url.Values, error) {
+func (e *Extractor) QueryFromParams(params map[string]string) (url.Values, error) {
 	gr, err := e.paramExtractor(params)
 	if err != nil {
 		return nil, err
@@ -230,6 +230,6 @@ func (e Extractor) QueryFromParams(params map[string]string) (url.Values, error)
 
 // BodyFromParams returns a request body containing the grapql request generated for the given query and the default
 // variables overiden by the request params
-func (e Extractor) BodyFromParams(params map[string]string) ([]byte, error) {
+func (e *Extractor) BodyFromParams(params map[string]string) ([]byte, error) {
 	return e.newBody(params)
 }
