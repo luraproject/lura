@@ -3,6 +3,7 @@
 package proxy
 
 import (
+	"bytes"
 	"io/ioutil"
 	"strings"
 	"testing"
@@ -142,7 +143,7 @@ func TestCloneRequest(t *testing.T) {
 	rb, _ := ioutil.ReadAll(r.Body)
 	cb, _ := ioutil.ReadAll(clone.Body)
 
-	if string(cb) != string(rb) || body != string(rb) {
+	if !bytes.Equal(cb, rb) || body != string(rb) {
 		t.Errorf("unexpected bodies. original: %s, returned: %s", string(rb), string(cb))
 	}
 }
