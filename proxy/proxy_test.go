@@ -46,7 +46,7 @@ func dummyProxy(r *Response) Proxy {
 	}
 }
 
-func delayedProxy(t *testing.T, timeout time.Duration, r *Response) Proxy {
+func delayedProxy(_ *testing.T, timeout time.Duration, r *Response) Proxy {
 	return func(ctx context.Context, _ *Request) (*Response, error) {
 		select {
 		case <-ctx.Done():
