@@ -306,8 +306,6 @@ func (e *ExtraConfig) Normalize() {
 // ExtraConfigAlias is the set of alias to accept as namespace
 var ExtraConfigAlias = map[string]string{}
 
-const defaultNamespace = "github.com/devopsfaith/krakend/config"
-
 var (
 	simpleURLKeysPattern    = regexp.MustCompile(`\{([\w\-\.:/]+)\}`)
 	sequentialParamsPattern = regexp.MustCompile(`^(resp[\d]+_.+)?(JWT\.([\w\-\.:/]+))?$`)
