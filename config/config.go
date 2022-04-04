@@ -283,8 +283,7 @@ type ExtraConfig map[string]interface{}
 
 func (e *ExtraConfig) sanitize() {
 	for module, extra := range *e {
-		switch extra := extra.(type) {
-		case map[interface{}]interface{}:
+		if extra, ok := extra.(map[interface{}]interface{}); ok {
 			sanitized := map[string]interface{}{}
 			for k, v := range extra {
 				sanitized[fmt.Sprintf("%v", k)] = v

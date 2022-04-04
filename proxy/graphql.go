@@ -108,7 +108,7 @@ func NewGraphQLMiddleware(logger logging.Logger, remote *config.Backend) Middlew
 
 			req.Body = ioutil.NopCloser(bytes.NewReader(b))
 			req.Method = string(opt.Method)
-			req.Headers["Content-Length"] = []string{strconv.Itoa(len(string(b)))}
+			req.Headers["Content-Length"] = []string{strconv.Itoa(len(b))}
 
 			return next[0](ctx, req)
 		}
