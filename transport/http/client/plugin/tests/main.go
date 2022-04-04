@@ -17,7 +17,7 @@ type registerer string
 
 var logger Logger = nil
 
-func (r registerer) RegisterLogger(v interface{}) {
+func (registerer) RegisterLogger(v interface{}) {
 	l, ok := v.(Logger)
 	if !ok {
 		return

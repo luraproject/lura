@@ -69,7 +69,7 @@ func (d dummyReadCloser) Read(p []byte) (int, error) {
 	return d.reader.Read(p)
 }
 
-func (d dummyReadCloser) Close() error {
+func (dummyReadCloser) Close() error {
 	return nil
 }
 
