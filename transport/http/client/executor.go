@@ -24,6 +24,6 @@ func DefaultHTTPRequestExecutor(clientFactory HTTPClientFactory) HTTPRequestExec
 type HTTPClientFactory func(ctx context.Context) *http.Client
 
 // NewHTTPClient just returns the http default client
-func NewHTTPClient(ctx context.Context) *http.Client { return defaultHTTPClient }
+func NewHTTPClient(_ context.Context) *http.Client { return defaultHTTPClient }
 
 var defaultHTTPClient = &http.Client{}
