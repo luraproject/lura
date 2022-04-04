@@ -698,9 +698,9 @@ func Test_incrementalMergeAccumulator_invalidResponse(t *testing.T) {
 
 func Test_incrementalMergeAccumulator_incompleteResponse(t *testing.T) {
 	acc := newIncrementalMergeAccumulator(3, combineData)
-	acc.Merge(&Response{Data: make(map[string]interface{}, 0), IsComplete: true}, nil)
-	acc.Merge(&Response{Data: make(map[string]interface{}, 0), IsComplete: false}, nil)
-	acc.Merge(&Response{Data: make(map[string]interface{}, 0), IsComplete: true}, nil)
+	acc.Merge(&Response{Data: make(map[string]interface{}), IsComplete: true}, nil)
+	acc.Merge(&Response{Data: make(map[string]interface{}), IsComplete: false}, nil)
+	acc.Merge(&Response{Data: make(map[string]interface{}), IsComplete: true}, nil)
 	res, err := acc.Result()
 	if res == nil {
 		t.Error("response should not be nil")
