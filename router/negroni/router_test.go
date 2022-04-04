@@ -1,3 +1,4 @@
+//go:build !race
 // +build !race
 
 // SPDX-License-Identifier: Apache-2.0
@@ -365,6 +366,6 @@ func (e erroredProxyFactory) New(_ *config.EndpointConfig) (proxy.Proxy, error) 
 
 type identityMiddleware struct{}
 
-func (i identityMiddleware) Handler(h http.Handler) http.Handler {
+func (identityMiddleware) Handler(h http.Handler) http.Handler {
 	return h
 }

@@ -456,7 +456,7 @@ func (s *ServiceConfig) paramExtractionPattern() *regexp.Regexp {
 	return endpointURLKeysPattern
 }
 
-func (s *ServiceConfig) extractPlaceHoldersFromURLTemplate(subject string, pattern *regexp.Regexp) []string {
+func (*ServiceConfig) extractPlaceHoldersFromURLTemplate(subject string, pattern *regexp.Regexp) []string {
 	matches := pattern.FindAllStringSubmatch(subject, -1)
 	keys := make([]string, len(matches))
 	for k, v := range matches {

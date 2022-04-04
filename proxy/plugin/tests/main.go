@@ -27,7 +27,7 @@ func (r registerer) RegisterModifiers(f func(
 	f(string(r), r.modifierFactory, true, false)
 }
 
-func (r registerer) RegisterLogger(in interface{}) {
+func (registerer) RegisterLogger(in interface{}) {
 	l, ok := in.(Logger)
 	if !ok {
 		return
@@ -37,7 +37,7 @@ func (r registerer) RegisterLogger(in interface{}) {
 
 }
 
-func (r registerer) modifierFactory(
+func (registerer) modifierFactory(
 	map[string]interface{},
 ) func(interface{}) (interface{}, error) {
 	// check the config
