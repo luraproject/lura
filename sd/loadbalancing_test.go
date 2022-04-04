@@ -15,9 +15,7 @@ func ExampleNewRoundRobinLB() {
 	balancer := NewRoundRobinLB(FixedSubscriber([]string{"a", "b", "c"}))
 
 	// code required in order to make the test deterministic
-	{
-		balancer.(*roundRobinLB).counter = 1
-	}
+	balancer.(*roundRobinLB).counter = 1
 
 	for i := 0; i < 5; i++ {
 		h, err := balancer.Host()
