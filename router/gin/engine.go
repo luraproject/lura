@@ -65,14 +65,16 @@ func NewEngine(cfg config.ServiceConfig, opt EngineOptions) *gin.Engine {
 		c.Header(server.CompleteResponseHeaderName, server.HeaderIncompleteResponseValue)
 	})
 
-	engine.Use(
-		gin.LoggerWithConfig(gin.LoggerConfig{
-			Output:    opt.Writer,
-			SkipPaths: paths,
-			Formatter: opt.Formatter,
-		}),
-		gin.Recovery(),
-	)
+	if !ginOptions.DisableAccessLog {
+		engine.Use(
+			gin.LoggerWithConfig(gin.LoggerConfig{
+				Output:    opt.Writer,
+				SkipPaths: paths,
+				Formatter: opt.Formatter,
+			}),
+		)
+	}
+	engine.Use(gin.Recovery())
 
 	if !ginOptions.DisableHealthEndpoint {
 		path := "/__health"
@@ -177,6 +179,9 @@ type engineConfiguration struct {
 
 	// HealthPath allows users to define a custom path for the health check endpoint
 	HealthPath string `json:"health_path"`
+
+	// DisableAccessLog blocks the injection of the router logger
+	DisableAccessLog bool `json:"disable_access_log"`
 }
 
 var returnErrorMsg bool
