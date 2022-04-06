@@ -509,6 +509,9 @@ func (s *ServiceConfig) initBackendDefaults(e, b int) {
 	if backend.Method == "" {
 		backend.Method = endpoint.Method
 	}
+	if endpoint.OutputEncoding == encoding.NOOP {
+		backend.Encoding = encoding.NOOP
+	}
 	backend.Timeout = endpoint.Timeout
 	backend.ConcurrentCalls = endpoint.ConcurrentCalls
 	backend.Decoder = encoding.GetRegister().Get(strings.ToLower(backend.Encoding))(backend.IsCollection)
