@@ -4,8 +4,11 @@ package gin
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
+	"net/http"
 	"net/textproto"
+	"net/url"
 	"sync"
 	"time"
 
@@ -76,6 +79,10 @@ func NewEngine(cfg config.ServiceConfig, opt EngineOptions) *gin.Engine {
 	}
 	engine.Use(gin.Recovery())
 
+	if !ginOptions.DisablePathDecoding {
+		engine.Use(paramChecker())
+	}
+
 	if !ginOptions.DisableHealthEndpoint {
 		path := "/__health"
 		if ginOptions.HealthPath != "" {
@@ -105,6 +112,24 @@ func healthEndpoint(health <-chan string) func(*gin.Context) {
 		defer mu.RUnlock()
 
 		c.JSON(200, gin.H{"status": "ok", "agents": reports, "now": time.Now().String()})
+	}
+}
+
+func paramChecker() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		for _, param := range c.Params {
+			s, err := url.PathUnescape(param.Value)
+			if err != nil {
+				c.String(http.StatusBadRequest, fmt.Sprintf("error: %s", err))
+				c.AbortWithStatus(http.StatusBadRequest)
+				return
+			}
+			if s != param.Value {
+				c.String(http.StatusBadRequest, "error: encoded url params")
+				c.AbortWithStatus(http.StatusBadRequest)
+				return
+			}
+		}
 	}
 }
 
@@ -182,6 +207,11 @@ type engineConfiguration struct {
 
 	// DisableAccessLog blocks the injection of the router logger
 	DisableAccessLog bool `json:"disable_access_log"`
+
+	// Disables automatic validation of the url params looking for url encoded ones.
+	// For example if /foo/..%252Fbar is requested and this flag is set to false, the router will
+	// reject the request with http status code 400.
+	DisablePathDecoding bool `json:"disable_path_decoding"`
 }
 
 var returnErrorMsg bool
