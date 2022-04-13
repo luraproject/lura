@@ -13,7 +13,6 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/core"
@@ -135,39 +134,15 @@ func (r ginRouter) registerEndpointsAndMiddlewares(cfg config.ServiceConfig) {
 }
 
 func (r ginRouter) registerKrakendEndpoints(rg *gin.RouterGroup, cfg config.ServiceConfig) {
-	if cfg.SequentialStart {
-		// build and register the pipes and endpoints sequentially
-		for _, c := range cfg.Endpoints {
-			proxyStack, err := r.cfg.ProxyFactory.New(c)
-			if err != nil {
-				r.cfg.Logger.Error(logPrefix, "Calling the ProxyFactory", err.Error())
-				continue
-			}
-			r.registerKrakendEndpoint(rg, c.Method, c, r.cfg.HandlerFactory(c, proxyStack), len(c.Backend))
-		}
-		return
-	}
-
-	// create an errgroup so every endpoint is registered concurrently, and the pipe build process too.
-	// concurrent builds generate less readable logs but improves the start-up times (depending on the
-	// number of endpoints and the complexity of the associated pipes)
-	g, gctx := errgroup.WithContext(r.ctx)
-	r.ctx = gctx
-
+	// build and register the pipes and endpoints sequentially
 	for _, c := range cfg.Endpoints {
-		c := c
-		g.Go(func() error {
-			proxyStack, err := r.cfg.ProxyFactory.New(c)
-			if err != nil {
-				r.cfg.Logger.Error(logPrefix, "Calling the ProxyFactory", err.Error())
-				return err
-			}
-			r.registerKrakendEndpoint(rg, c.Method, c, r.cfg.HandlerFactory(c, proxyStack), len(c.Backend))
-			return nil
-		})
+		proxyStack, err := r.cfg.ProxyFactory.New(c)
+		if err != nil {
+			r.cfg.Logger.Error(logPrefix, "Calling the ProxyFactory", err.Error())
+			continue
+		}
+		r.registerKrakendEndpoint(rg, c.Method, c, r.cfg.HandlerFactory(c, proxyStack), len(c.Backend))
 	}
-
-	g.Wait()
 }
 
 func (r ginRouter) registerKrakendEndpoint(rg *gin.RouterGroup, method string, e *config.EndpointConfig, h gin.HandlerFunc, total int) {
