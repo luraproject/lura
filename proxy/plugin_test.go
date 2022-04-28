@@ -1,3 +1,4 @@
+//go:build integration || !race
 // +build integration !race
 
 // SPDX-License-Identifier: Apache-2.0
@@ -21,7 +22,14 @@ func TestNewPluginMiddleware(t *testing.T) {
 		if r.Path != "/bar/fooo/fooo" {
 			return nil, fmt.Errorf("unexpected path %s", r.Path)
 		}
-		return nil, nil
+		return &Response{
+			Data:       map[string]interface{}{"foo": "bar"},
+			IsComplete: true,
+			Metadata: Metadata{
+				Headers:    map[string][]string{},
+				StatusCode: 0,
+			},
+		}, nil
 	}
 
 	bknd := NewBackendPluginMiddleware(
@@ -29,7 +37,7 @@ func TestNewPluginMiddleware(t *testing.T) {
 		&config.Backend{
 			ExtraConfig: map[string]interface{}{
 				plugin.Namespace: map[string]interface{}{
-					"name": []interface{}{"lura-request-modifier-example"},
+					"name": []interface{}{"lura-request-modifier-example-request"},
 				},
 			},
 		},
@@ -40,7 +48,10 @@ func TestNewPluginMiddleware(t *testing.T) {
 		&config.EndpointConfig{
 			ExtraConfig: map[string]interface{}{
 				plugin.Namespace: map[string]interface{}{
-					"name": []interface{}{"lura-request-modifier-example"},
+					"name": []interface{}{
+						"lura-request-modifier-example-request",
+						"lura-request-modifier-example-response",
+					},
 				},
 			},
 		},

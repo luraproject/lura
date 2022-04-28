@@ -24,7 +24,8 @@ func (r registerer) RegisterModifiers(f func(
 	appliesToRequest bool,
 	appliesToResponse bool,
 )) {
-	f(string(r), r.modifierFactory, true, false)
+	f(string(r)+"-request", r.requestModifierFactory, true, false)
+	f(string(r)+"-response", r.reqsponseModifierFactory, false, true)
 }
 
 func (registerer) RegisterLogger(in interface{}) {
@@ -37,9 +38,7 @@ func (registerer) RegisterLogger(in interface{}) {
 
 }
 
-func (registerer) modifierFactory(
-	map[string]interface{},
-) func(interface{}) (interface{}, error) {
+func (registerer) requestModifierFactory(_ map[string]interface{}) func(interface{}) (interface{}, error) {
 	// check the config
 	// return the modifier
 
@@ -73,6 +72,39 @@ func (registerer) modifierFactory(
 	}
 }
 
+func (registerer) reqsponseModifierFactory(cfg map[string]interface{}) func(interface{}) (interface{}, error) {
+	// check the cfg. If the modifier requires some configuration,
+	// it should be under the name of the plugin.
+	// ex: if this modifier required some A and B config params
+	/*
+	   "extra_config":{
+	       "plugin/req-resp-modifier":{
+	           "name":["krakend-debugger"],
+	           "krakend-debugger":{
+	               "A":"foo",
+	               "B":42
+	           }
+	       }
+	   }
+	*/
+
+	// return the modifier
+	fmt.Println("response dumper injected!!!")
+	return func(input interface{}) (interface{}, error) {
+		resp, ok := input.(ResponseWrapper)
+		if !ok {
+			return nil, unkownTypeErr
+		}
+
+		fmt.Println("data:", resp.Data())
+		fmt.Println("is complete:", resp.IsComplete())
+		fmt.Println("headers:", resp.Headers())
+		fmt.Println("status code:", resp.StatusCode())
+
+		return input, nil
+	}
+}
+
 func modifier(req RequestWrapper) requestWrapper {
 	return requestWrapper{
 		params:  req.Params(),
@@ -86,6 +118,13 @@ func modifier(req RequestWrapper) requestWrapper {
 }
 
 var unkownTypeErr = errors.New("unknow request type")
+
+type ResponseWrapper interface {
+	Data() map[string]interface{}
+	IsComplete() bool
+	Headers() map[string][]string
+	StatusCode() int
+}
 
 type RequestWrapper interface {
 	Params() map[string]string
