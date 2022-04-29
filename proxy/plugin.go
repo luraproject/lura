@@ -189,10 +189,8 @@ func executeResponseModifiers(respModifiers []func(interface{}) (interface{}, er
 	r.IsComplete = tmp.IsComplete()
 	r.Io = tmp.Io()
 	r.Metadata = Metadata{}
-	if m := tmp.Metadata(); m != nil {
-		r.Metadata.Headers = m.Headers()
-		r.Metadata.StatusCode = m.StatusCode()
-	}
+	r.Metadata.Headers = tmp.Headers()
+	r.Metadata.StatusCode = tmp.StatusCode()
 	return r, nil
 }
 
