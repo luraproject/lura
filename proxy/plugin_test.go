@@ -62,7 +62,12 @@ func TestNewPluginMiddleware(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	if resp != nil {
+	if resp == nil {
 		t.Errorf("unexpected response: %v", resp)
+		return
+	}
+
+	if v, ok := resp.Data["foo"].(string); !ok || v != "bar" {
+		t.Errorf("unexpected foo value: %v", resp.Data["foo"])
 	}
 }
