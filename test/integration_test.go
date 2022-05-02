@@ -467,7 +467,7 @@ func setupBackend(t *testing.T) (*config.ServiceConfig, error) {
 
 	// crasher backend
 	b4 := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		http.Error(rw, "sad panda", 429)
+		http.Error(rw, "sad panda", http.StatusTooManyRequests)
 	}))
 	data["b4"] = b4.URL
 
