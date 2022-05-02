@@ -256,9 +256,9 @@ type responseWrapper struct {
 	io         io.Reader
 }
 
-func (r responseWrapper) Data() map[string]interface{}      { return r.data }
-func (r responseWrapper) IsComplete() bool                  { return r.isComplete }
-func (r responseWrapper) Metadata() ResponseMetadataWrapper { return nil }
-func (r responseWrapper) Io() io.Reader                     { return r.io }
-func (r responseWrapper) Headers() map[string][]string      { return r.metadata.headers }
-func (r responseWrapper) StatusCode() int                   { return r.metadata.statusCode }
+func (r responseWrapper) Data() map[string]interface{}    { return r.data }
+func (r responseWrapper) IsComplete() bool                { return r.isComplete }
+func (responseWrapper) Metadata() ResponseMetadataWrapper { return nil }
+func (r responseWrapper) Io() io.Reader                   { return r.io }
+func (r responseWrapper) Headers() map[string][]string    { return r.metadata.headers }
+func (r responseWrapper) StatusCode() int                 { return r.metadata.statusCode }
