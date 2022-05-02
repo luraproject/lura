@@ -43,6 +43,7 @@ func (registerer) requestModifierFactory(_ map[string]interface{}) func(interfac
 	// return the modifier
 
 	if logger == nil {
+		fmt.Println("request modifier loaded without logger")
 		return func(input interface{}) (interface{}, error) {
 			req, ok := input.(RequestWrapper)
 			if !ok {
@@ -53,6 +54,7 @@ func (registerer) requestModifierFactory(_ map[string]interface{}) func(interfac
 		}
 	}
 
+	logger.Debug(fmt.Sprintf("[PLUGIN: %s] Request modifier injected", ModifierRegisterer))
 	return func(input interface{}) (interface{}, error) {
 		req, ok := input.(RequestWrapper)
 		if !ok {
@@ -89,19 +91,36 @@ func (registerer) reqsponseModifierFactory(cfg map[string]interface{}) func(inte
 	*/
 
 	// return the modifier
-	fmt.Println("response dumper injected!!!")
+	if logger == nil {
+		fmt.Println("response modifier loaded without logger")
+		return func(input interface{}) (interface{}, error) {
+			resp, ok := input.(ResponseWrapper)
+			if !ok {
+				return nil, unkownTypeErr
+			}
+
+			fmt.Println("data:", resp.Data())
+			fmt.Println("is complete:", resp.IsComplete())
+			fmt.Println("headers:", resp.Headers())
+			fmt.Println("status code:", resp.StatusCode())
+
+			return input, nil
+		}
+	}
+
+	logger.Debug(fmt.Sprintf("[PLUGIN: %s] Response modifier injected", ModifierRegisterer))
 	return func(input interface{}) (interface{}, error) {
 		resp, ok := input.(ResponseWrapper)
 		if !ok {
 			return nil, unkownTypeErr
 		}
 
-		fmt.Println("data:", resp.Data())
-		fmt.Println("is complete:", resp.IsComplete())
-		fmt.Println("headers:", resp.Headers())
-		fmt.Println("status code:", resp.StatusCode())
+		logger.Debug("data:", resp.Data())
+		logger.Debug("is complete:", resp.IsComplete())
+		logger.Debug("headers:", resp.Headers())
+		logger.Debug("status code:", resp.StatusCode())
 
-		return input, nil
+		return resp, nil
 	}
 }
 
@@ -117,7 +136,7 @@ func modifier(req RequestWrapper) requestWrapper {
 	}
 }
 
-var unkownTypeErr = errors.New("unknow request type")
+var unkownTypeErr = errors.New("unknown request type")
 
 type ResponseWrapper interface {
 	Data() map[string]interface{}

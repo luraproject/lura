@@ -27,6 +27,7 @@ import (
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/logging"
 	"github.com/luraproject/lura/v2/proxy"
+	"github.com/luraproject/lura/v2/proxy/plugin"
 	"github.com/luraproject/lura/v2/router/chi"
 	"github.com/luraproject/lura/v2/router/gin"
 	"github.com/luraproject/lura/v2/router/gorilla"
@@ -126,7 +127,7 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 		t.Error(err)
 		return
 	}
-
+	plugin.LoadWithLogger("./proxy/plugin/test", ".so", plugin.RegisterModifier, logger)
 	go runRouter(logger, cfg)
 
 	<-time.After(300 * time.Millisecond)
@@ -153,6 +154,22 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 		expHeaders    map[string]string
 		expStatusCode int
 	}{
+		{
+			name:          "modifier_status_code_req",
+			url:           "/abort/request",
+			headers:       map[string]string{},
+			expHeaders:    incompleteHeader,
+			expBody:       `request rejected just because`,
+			expStatusCode: http.StatusTeapot,
+		},
+		{
+			name:          "modifier_status_code_resp",
+			url:           "/abort/response",
+			headers:       map[string]string{},
+			expHeaders:    incompleteHeader,
+			expBody:       `response replaced because reasons`,
+			expStatusCode: http.StatusTeapot,
+		},
 		{
 			name:       "static",
 			url:        "/static",

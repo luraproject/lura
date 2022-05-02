@@ -17,8 +17,8 @@ func TestLoad(t *testing.T) {
 		t.Error(err.Error())
 		t.Fail()
 	}
-	if total != 1 {
-		t.Errorf("unexpected number of loaded plugins!. have %d, want 1", total)
+	if total != 2 {
+		t.Errorf("unexpected number of loaded plugins!. have %d, want 2", total)
 	}
 
 	modFactory, ok := GetRequestModifier("lura-request-modifier-example-request")
