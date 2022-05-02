@@ -74,7 +74,7 @@ func (registerer) requestModifierFactory(_ map[string]interface{}) func(interfac
 	}
 }
 
-func (registerer) reqsponseModifierFactory(cfg map[string]interface{}) func(interface{}) (interface{}, error) {
+func (registerer) reqsponseModifierFactory(_ map[string]interface{}) func(interface{}) (interface{}, error) {
 	// check the cfg. If the modifier requires some configuration,
 	// it should be under the name of the plugin.
 	// ex: if this modifier required some A and B config params

@@ -43,7 +43,7 @@ func (registerer) requestModifierFactory(_ map[string]interface{}) func(interfac
 	}
 }
 
-func (registerer) reqsponseModifierFactory(cfg map[string]interface{}) func(interface{}) (interface{}, error) {
+func (registerer) reqsponseModifierFactory(_ map[string]interface{}) func(interface{}) (interface{}, error) {
 	logger.Debug(fmt.Sprintf("[PLUGIN: %s] Response modifier injected", ModifierRegisterer))
 	return func(_ interface{}) (interface{}, error) {
 		logger.Debug(fmt.Sprintf("[PLUGIN: %s] Replacing response", ModifierRegisterer))
