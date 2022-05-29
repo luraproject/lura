@@ -121,13 +121,26 @@ func (r httpRouter) Run(cfg config.ServiceConfig) {
 }
 
 func (r httpRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) {
+	var wildcardEndpoints []*config.EndpointConfig
 	for _, c := range endpoints {
+		if v, ok := c.ExtraConfig["wildcard"].(map[string]interface{}); v != nil && ok {
+			wildcardEndpoints = append(wildcardEndpoints, c)
+			continue
+		}
 		proxyStack, err := r.cfg.ProxyFactory.New(c)
 		if err != nil {
 			r.cfg.Logger.Error(logPrefix, "Calling the ProxyFactory", err.Error())
 			continue
 		}
+		r.registerKrakendEndpoint(c.Method, c, r.cfg.HandlerFactory(c, proxyStack), len(c.Backend))
+	}
 
+	for _, c := range wildcardEndpoints {
+		proxyStack, err := r.cfg.ProxyFactory.New(c)
+		if err != nil {
+			r.cfg.Logger.Error(logPrefix, "Calling the ProxyFactory", err.Error())
+			continue
+		}
 		r.registerKrakendEndpoint(c.Method, c, r.cfg.HandlerFactory(c, proxyStack), len(c.Backend))
 	}
 }
@@ -153,6 +166,9 @@ func (r httpRouter) registerKrakendEndpoint(method string, endpoint *config.Endp
 		return
 	}
 	r.cfg.Logger.Debug(logPrefix, "Registering the endpoint", method, path)
+	if v, ok := endpoint.ExtraConfig["wildcard"].(map[string]interface{}); v != nil && ok {
+		method = method + ":wildcard"
+	}
 	r.cfg.Engine.Handle(path, method, handler)
 }
 

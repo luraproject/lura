@@ -106,6 +106,12 @@ func NewRequestBuilderMiddleware(remote *config.Backend) Middleware {
 		}
 		return func(ctx context.Context, request *Request) (*Response, error) {
 			r := request.Clone()
+			if v, ok := remote.ExtraConfig["wildcard"].(map[string]interface{}); v != nil && ok {
+				if keepPath, ok := v["keep_original_path"].(bool); keepPath && ok {
+					r.Method = remote.Method
+					return next[0](ctx, &r)
+				}
+			}
 			r.GeneratePath(remote.URLPattern)
 			r.Method = remote.Method
 			return next[0](ctx, &r)

@@ -154,6 +154,7 @@ func NewRequestBuilder(paramExtractor ParamExtractor) RequestBuilder {
 		}
 
 		return &proxy.Request{
+			Path:    r.URL.Path,
 			Method:  r.Method,
 			Query:   query,
 			Body:    r.Body,

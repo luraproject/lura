@@ -50,6 +50,11 @@ type gorillaEngine struct {
 
 // Handle implements the mux.Engine interface from the lura router package
 func (g gorillaEngine) Handle(pattern, method string, handler http.Handler) {
+
+	if strings.HasSuffix(method, ":wildcard") {
+		g.r.PathPrefix(pattern).Handler(handler)
+		return
+	}
 	g.r.Handle(pattern, handler).Methods(method)
 }
 
