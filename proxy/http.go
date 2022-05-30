@@ -99,7 +99,9 @@ func NewHTTPProxyDetailed(_ *config.Backend, re client.HTTPRequestExecutor, ch c
 
 // NewRequestBuilderMiddleware creates a proxy middleware that parses the request params received
 // from the outter layer and generates the path to the backend endpoints
-func NewRequestBuilderMiddleware(remote *config.Backend) Middleware {
+var NewRequestBuilderMiddleware = newRequestBuilderMiddleware
+
+func newRequestBuilderMiddleware(remote *config.Backend) Middleware {
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {
 			panic(ErrTooManyProxies)
