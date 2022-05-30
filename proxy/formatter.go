@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/devopsfaith/flatmap/tree"
+	"github.com/krakendio/flatmap/tree"
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/logging"
 )

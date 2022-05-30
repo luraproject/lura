@@ -3,7 +3,7 @@ module github.com/luraproject/lura/v2
 go 1.17
 
 require (
-	github.com/devopsfaith/flatmap v0.0.0-20200601181759-8521186182fc
+	github.com/krakendio/flatmap v0.0.0-20200601181759-8521186182fc
 	github.com/dimfeld/httptreemux/v5 v5.3.0
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/gin-gonic/gin v1.7.7
