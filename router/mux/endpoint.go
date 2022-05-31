@@ -14,6 +14,8 @@ import (
 	"github.com/luraproject/lura/v2/core"
 	"github.com/luraproject/lura/v2/proxy"
 	"github.com/luraproject/lura/v2/transport/http/server"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 const requestParamsAsterisk string = "*"
@@ -41,7 +43,8 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF server.ToHTTPErr
 		if len(headersToSend) == 0 {
 			headersToSend = server.HeadersToSend
 		}
-		method := strings.ToTitle(configuration.Method)
+		title := cases.Title(language.Und)
+		method := title.String(configuration.Method)
 
 		return func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set(core.KrakendHeaderName, core.KrakendHeaderValue)

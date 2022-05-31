@@ -8,7 +8,6 @@ package chi
 import (
 	"context"
 	"net/http"
-	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -18,6 +17,8 @@ import (
 	"github.com/luraproject/lura/v2/router"
 	"github.com/luraproject/lura/v2/router/mux"
 	"github.com/luraproject/lura/v2/transport/http/server"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // ChiDefaultDebugPattern is the default pattern used to define the debug endpoint
@@ -130,7 +131,8 @@ func (r chiRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) 
 }
 
 func (r chiRouter) registerKrakendEndpoint(method string, endpoint *config.EndpointConfig, handler http.HandlerFunc, totBackends int) {
-	method = strings.ToTitle(method)
+	title := cases.Title(language.Und)
+	method = title.String(method)
 	path := endpoint.Endpoint
 
 	if method != http.MethodGet && totBackends > 1 {

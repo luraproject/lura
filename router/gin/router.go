@@ -20,6 +20,8 @@ import (
 	"github.com/luraproject/lura/v2/proxy"
 	"github.com/luraproject/lura/v2/router"
 	"github.com/luraproject/lura/v2/transport/http/server"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 const logPrefix = "[SERVICE: Gin]"
@@ -146,7 +148,8 @@ func (r ginRouter) registerKrakendEndpoints(rg *gin.RouterGroup, cfg config.Serv
 }
 
 func (r ginRouter) registerKrakendEndpoint(rg *gin.RouterGroup, method string, e *config.EndpointConfig, h gin.HandlerFunc, total int) {
-	method = strings.ToTitle(method)
+	title := cases.Title(language.Und)
+	method = title.String(method)
 	path := e.Endpoint
 	if method != http.MethodGet && total > 1 {
 		if !router.IsValidSequentialEndpoint(e) {

@@ -8,13 +8,14 @@ package mux
 import (
 	"context"
 	"net/http"
-	"strings"
 
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/logging"
 	"github.com/luraproject/lura/v2/proxy"
 	"github.com/luraproject/lura/v2/router"
 	"github.com/luraproject/lura/v2/transport/http/server"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // DefaultDebugPattern is the default pattern used to define the debug endpoint
@@ -133,7 +134,8 @@ func (r httpRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig)
 }
 
 func (r httpRouter) registerKrakendEndpoint(method string, endpoint *config.EndpointConfig, handler http.HandlerFunc, totBackends int) {
-	method = strings.ToTitle(method)
+	title := cases.Title(language.Und)
+	method = title.String(method)
 	path := endpoint.Endpoint
 	if method != http.MethodGet && totBackends > 1 {
 		if !router.IsValidSequentialEndpoint(endpoint) {

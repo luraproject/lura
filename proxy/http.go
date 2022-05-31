@@ -7,11 +7,12 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/encoding"
 	"github.com/luraproject/lura/v2/transport/http/client"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 var httpProxy = CustomHTTPProxyFactory(client.NewHTTPClient)
@@ -48,7 +49,8 @@ func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, re client.HTTPRequestE
 // Decoder and HTTPResponseParser
 func NewHTTPProxyDetailed(_ *config.Backend, re client.HTTPRequestExecutor, ch client.HTTPStatusHandler, rp HTTPResponseParser) Proxy {
 	return func(ctx context.Context, request *Request) (*Response, error) {
-		requestToBakend, err := http.NewRequest(strings.ToTitle(request.Method), request.URL.String(), request.Body)
+		title := cases.Title(language.Und)
+		requestToBakend, err := http.NewRequest(title.String(request.Method), request.URL.String(), request.Body)
 		if err != nil {
 			return nil, err
 		}

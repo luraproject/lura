@@ -13,7 +13,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -21,6 +20,8 @@ import (
 	"github.com/luraproject/lura/v2/logging"
 	"github.com/luraproject/lura/v2/proxy"
 	"github.com/luraproject/lura/v2/transport/http/server"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func TestDefaultFactory_ok(t *testing.T) {
@@ -99,7 +100,8 @@ func TestDefaultFactory_ok(t *testing.T) {
 	time.Sleep(5 * time.Millisecond)
 
 	for _, endpoint := range serviceCfg.Endpoints {
-		req, _ := http.NewRequest(strings.ToTitle(endpoint.Method), fmt.Sprintf("http://127.0.0.1:8062%s", endpoint.Endpoint), nil)
+		title := cases.Title(language.Und)
+		req, _ := http.NewRequest(title.String(endpoint.Method), fmt.Sprintf("http://127.0.0.1:8062%s", endpoint.Endpoint), nil)
 		req.Header.Set("Content-Type", "application/json")
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
