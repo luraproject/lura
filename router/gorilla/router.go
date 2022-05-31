@@ -7,7 +7,6 @@ package gorilla
 
 import (
 	"net/http"
-	"strings"
 
 	gorilla "github.com/gorilla/mux"
 
@@ -16,6 +15,8 @@ import (
 	"github.com/luraproject/lura/v2/router"
 	"github.com/luraproject/lura/v2/router/mux"
 	"github.com/luraproject/lura/v2/transport/http/server"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // DefaultFactory returns a net/http mux router factory with the injected proxy factory and logger
@@ -38,8 +39,9 @@ func DefaultConfig(pf proxy.Factory, logger logging.Logger) mux.Config {
 
 func gorillaParamsExtractor(r *http.Request) map[string]string {
 	params := map[string]string{}
+	title := cases.Title(language.Und)
 	for key, value := range gorilla.Vars(r) {
-		params[strings.Title(key)] = value
+		params[title.String(key)] = value
 	}
 	return params
 }

@@ -15,6 +15,8 @@ import (
 	"strings"
 
 	"github.com/luraproject/lura/v2/config"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // Namespace is the key for the backend's extra config
@@ -91,13 +93,14 @@ func GetOptions(cfg config.ExtraConfig) (*Options, error) {
 // New resturns a new Extractor, ready to be use on a middleware
 func New(opt Options) *Extractor {
 	replacements := [][2]string{}
+	title := cases.Title(language.Und)
 	for k, v := range opt.Variables {
 		val, ok := v.(string)
 		if !ok {
 			continue
 		}
 		if val[0] == '{' && val[len(val)-1] == '}' {
-			replacements = append(replacements, [2]string{k, strings.Title(val[1:2]) + val[2:len(val)-1]})
+			replacements = append(replacements, [2]string{k, title.String(val[1:2]) + val[2:len(val)-1]})
 		}
 	}
 
