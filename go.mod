@@ -3,13 +3,13 @@ module github.com/luraproject/lura/v2
 go 1.17
 
 require (
-	github.com/krakendio/flatmap v0.0.0-20220531185225-4cb0ad6fbedd
 	github.com/dimfeld/httptreemux/v5 v5.3.0
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-chi/chi/v5 v5.0.4
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/gorilla/mux v1.8.0
+	github.com/krakendio/flatmap v1.1.1
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/urfave/negroni/v2 v2.0.2
 	github.com/valyala/fastrand v1.1.0
