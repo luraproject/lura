@@ -19,6 +19,7 @@ const Namespace = "github.com/devopsfaith/krakend/proxy"
 // Metadata is the Metadata of the Response which contains Headers and StatusCode
 type Metadata struct {
 	Headers    map[string][]string
+	Trailer    map[string][]string
 	StatusCode int
 }
 

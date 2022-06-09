@@ -125,6 +125,10 @@ func noopRender(w http.ResponseWriter, response *proxy.Response) {
 		return
 	}
 
+	for k := range response.Metadata.Trailer {
+		w.Header().Add("Trailer", k)
+	}
+
 	for k, vs := range response.Metadata.Headers {
 		for _, v := range vs {
 			w.Header().Add(k, v)
@@ -134,8 +138,13 @@ func noopRender(w http.ResponseWriter, response *proxy.Response) {
 		w.WriteHeader(response.Metadata.StatusCode)
 	}
 
-	if response.Io == nil {
-		return
+	if response.Io != nil {
+		_, _ = io.Copy(w, response.Io)
 	}
-	io.Copy(w, response.Io)
+
+	for k, vs := range response.Metadata.Trailer {
+		for _, v := range vs {
+			w.Header().Add(k, v)
+		}
+	}
 }
