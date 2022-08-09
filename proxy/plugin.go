@@ -88,12 +88,7 @@ func newPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[str
 
 		if totReqModifiers == 0 {
 			return func(ctx context.Context, r *Request) (*Response, error) {
-				resp, err := next[0](ctx, r)
-				if err != nil {
-					return resp, err
-				}
-
-				return executeResponseModifiers(respModifiers, resp)
+				return nextProxyWithResponseModifiers(ctx, r, next[0], respModifiers)
 			}
 		}
 
@@ -116,14 +111,20 @@ func newPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[str
 				return nil, err
 			}
 
-			resp, err := next[0](ctx, r)
-			if err != nil {
-				return resp, err
-			}
-
-			return executeResponseModifiers(respModifiers, resp)
+			return nextProxyWithResponseModifiers(ctx, r, next[0], respModifiers)
 		}
 	}
+}
+
+func nextProxyWithResponseModifiers(ctx context.Context, r *Request, next Proxy, respModifiers []func(interface{}) (interface{}, error)) (*Response, error) {
+	resp, err := next(ctx, r)
+	// merged responses of multiple backends will have a non nil resp if at least one of the backends responds
+	// successfully
+	if err != nil && resp == nil {
+		return resp, err
+	}
+
+	return executeResponseModifiers(respModifiers, resp)
 }
 
 func executeRequestModifiers(reqModifiers []func(interface{}) (interface{}, error), r *Request) (*Request, error) {

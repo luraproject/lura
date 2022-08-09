@@ -73,6 +73,59 @@ func TestNewPluginMiddleware_logger(t *testing.T) {
 	}
 }
 
+func TestNewPluginMiddleware_merge_error(t *testing.T) {
+	plugin.LoadWithLogger("./plugin/tests", ".so", plugin.RegisterModifier, logging.NoOp)
+
+	validator := func(ctx context.Context, r *Request) (*Response, error) {
+		return &Response{
+			Data:       map[string]interface{}{"foo": "bar"},
+			IsComplete: true,
+			Metadata: Metadata{
+				Headers:    map[string][]string{},
+				StatusCode: 0,
+			},
+		}, mergeError{errs: []error{fmt.Errorf("some backend error")}}
+	}
+
+	bknd := NewBackendPluginMiddleware(
+		logging.NoOp,
+		&config.Backend{
+			ExtraConfig: map[string]interface{}{
+				plugin.Namespace: map[string]interface{}{
+					"name": []interface{}{"lura-request-modifier-example-response"},
+				},
+			},
+		},
+	)(validator)
+
+	p := NewPluginMiddleware(
+		logging.NoOp,
+		&config.EndpointConfig{
+			ExtraConfig: map[string]interface{}{
+				plugin.Namespace: map[string]interface{}{
+					"name": []interface{}{
+						"lura-request-modifier-example-response",
+					},
+				},
+			},
+		},
+	)(bknd)
+
+	resp, err := p(context.Background(), &Request{Path: "/bar"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if resp == nil {
+		t.Errorf("unexpected response: %v", resp)
+		return
+	}
+
+	if v, ok := resp.Data["foo"].(string); !ok || v != "bar" {
+		t.Errorf("unexpected foo value: %v", resp.Data["foo"])
+	}
+}
+
 func TestNewPluginMiddleware_error_request(t *testing.T) {
 	plugin.LoadWithLogger("./plugin/tests", ".so", plugin.RegisterModifier, logging.NoOp)
 
