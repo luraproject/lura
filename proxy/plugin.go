@@ -15,7 +15,7 @@ import (
 
 // NewPluginMiddleware returns an endpoint middleware wrapped (if required) with the plugin middleware.
 // The plugin middleware will try to load all the required plugins from the register and execute them in order.
-// RequestModifiers are executed before passing the request to the next middlware. ResponseModifiers are executed
+// RequestModifiers are executed before passing the request to the next middleware. ResponseModifiers are executed
 // once the response is returned from the next middleware.
 func NewPluginMiddleware(logger logging.Logger, endpoint *config.EndpointConfig) Middleware {
 	cfg, ok := endpoint.ExtraConfig[plugin.Namespace].(map[string]interface{})
@@ -29,7 +29,7 @@ func NewPluginMiddleware(logger logging.Logger, endpoint *config.EndpointConfig)
 
 // NewBackendPluginMiddleware returns a backend middleware wrapped (if required) with the plugin middleware.
 // The plugin middleware will try to load all the required plugins from the register and execute them in order.
-// RequestModifiers are executed before passing the request to the next middlware. ResponseModifiers are executed
+// RequestModifiers are executed before passing the request to the next middleware. ResponseModifiers are executed
 // once the response is returned from the next middleware.
 func NewBackendPluginMiddleware(logger logging.Logger, remote *config.Backend) Middleware {
 	cfg, ok := remote.ExtraConfig[plugin.Namespace].(map[string]interface{})
