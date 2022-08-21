@@ -40,7 +40,7 @@ func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, re client.HTTPRequestE
 	}
 
 	ef := NewEntityFormatter(remote)
-	rp := DefaultHTTPResponseParserFactory(HTTPResponseParserConfig{dec, ef})
+	rp := DefaultHTTPResponseParserFactory(remote, HTTPResponseParserConfig{dec, ef})
 	return NewHTTPProxyDetailed(remote, re, client.GetHTTPStatusHandler(remote), rp)
 }
 

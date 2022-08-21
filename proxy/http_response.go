@@ -5,8 +5,10 @@ package proxy
 import (
 	"compress/gzip"
 	"context"
+	"github.com/luraproject/lura/v2/config"
 	"io"
 	"net/http"
+	"net/textproto"
 
 	"github.com/luraproject/lura/v2/encoding"
 )
@@ -30,7 +32,7 @@ type HTTPResponseParserConfig struct {
 type HTTPResponseParserFactory func(HTTPResponseParserConfig) HTTPResponseParser
 
 // DefaultHTTPResponseParserFactory is the default implementation of HTTPResponseParserFactory
-func DefaultHTTPResponseParserFactory(cfg HTTPResponseParserConfig) HTTPResponseParser {
+func DefaultHTTPResponseParserFactory(remote *config.Backend, cfg HTTPResponseParserConfig) HTTPResponseParser {
 	return func(ctx context.Context, resp *http.Response) (*Response, error) {
 		defer resp.Body.Close()
 
@@ -48,7 +50,21 @@ func DefaultHTTPResponseParserFactory(cfg HTTPResponseParserConfig) HTTPResponse
 			return nil, err
 		}
 
-		newResponse := Response{Data: data, IsComplete: true}
+		responseHeader := make(http.Header)
+		for i := range remote.HeadersFromResponse {
+			headerFromResponse := textproto.CanonicalMIMEHeaderKey(remote.HeadersFromResponse[i])
+			if resp.Header.Get(headerFromResponse) != "" {
+				responseHeader.Set(headerFromResponse, resp.Header.Get(headerFromResponse))
+			}
+		}
+
+		newResponse := Response{
+			Data:       data,
+			IsComplete: true,
+			Metadata: Metadata{
+				Headers: responseHeader,
+			},
+		}
 		newResponse = cfg.EntityFormatter.Format(newResponse)
 		return &newResponse, nil
 	}

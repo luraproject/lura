@@ -240,6 +240,8 @@ type Backend struct {
 	Mapping map[string]string `mapstructure:"mapping"`
 	// the encoding format
 	Encoding string `mapstructure:"encoding"`
+	// HeadersFromResponse defines the list of headers to pass from the backends
+	HeadersFromResponse []string `mapstructure:"response_headers"`
 	// the response to process is a collection
 	IsCollection bool `mapstructure:"is_collection"`
 	// name of the field to extract to the root. If empty, the formater will do nothing

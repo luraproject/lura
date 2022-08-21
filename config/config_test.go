@@ -157,10 +157,11 @@ func TestConfig_init(t *testing.T) {
 		Encoding:   "rss",
 	}
 	postBackend := Backend{
-		URLPattern: "/posts/{user}",
-		Host:       []string{"https://jsonplaceholder.typicode.com"},
-		Group:      "posts",
-		Encoding:   "xml",
+		URLPattern:          "/posts/{user}",
+		Host:                []string{"https://jsonplaceholder.typicode.com"},
+		Group:               "posts",
+		Encoding:            "xml",
+		HeadersFromResponse: []string{"X-Request-Id"},
 	}
 	userEndpoint := EndpointConfig{
 		Endpoint: "/users/{user}",
@@ -210,7 +211,7 @@ func TestConfig_init(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	if hash != "3YYe7crlYj5Qpm/oUoBqO2mQrKcalJmAoNfkRYM7aDI=" {
+	if hash != "L/J3zAB9Yyjfy0JdqbR7I+t6c0/KySnf4/2fRNun8Jc=" {
 		t.Errorf("unexpected hash: %s", hash)
 	}
 }
