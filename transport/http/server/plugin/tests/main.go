@@ -4,7 +4,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"html"
 	"net/http"
@@ -33,15 +32,20 @@ func (r registerer) RegisterHandlers(f func(
 	f(string(r), r.registerHandlers)
 }
 
-func (r registerer) registerHandlers(_ context.Context, extra map[string]interface{}, _ http.Handler) (http.Handler, error) {
+func (registerer) registerHandlers(_ context.Context, _ map[string]interface{}, _ http.Handler) (http.Handler, error) {
 	// check the passed configuration and initialize the plugin
-	name, ok := extra["name"].(string)
-	if !ok {
-		return nil, errors.New("wrong config")
-	}
-	if name != string(r) {
-		return nil, fmt.Errorf("unknown register %s", name)
-	}
+	// possible config example:
+	/*
+	   "extra_config":{
+	       "plugin/http-server":{
+	           "name":["krakend-server-example"],
+	           "krakend-server-example":{
+	               "A":"foo",
+	               "B":42
+	           }
+	       }
+	   }
+	*/
 
 	if logger == nil {
 		// return the actual handler wrapping or your custom logic so it can be used as a replacement for the default http handler
