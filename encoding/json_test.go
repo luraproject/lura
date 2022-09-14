@@ -163,7 +163,7 @@ func TestNewSafeJSONDecoder_other(t *testing.T) {
 	if err := decoder(original, &result); err != nil {
 		t.Error("Unexpected error:", err.Error())
 	}
-	if v, ok := result["result"]; !ok || v.(json.Number).String() != "3" {
+	if v, ok := result["content"]; !ok || v.(json.Number).String() != "3" {
 		t.Error("wrong result:", result)
 	}
 }

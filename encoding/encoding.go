@@ -86,7 +86,7 @@ func SafeJSONDecoder(r io.Reader, v *map[string]interface{}) error {
 	case []interface{}:
 		*v = map[string]interface{}{"collection": tt}
 	default:
-		*v = map[string]interface{}{"result": tt}
+		*v = map[string]interface{}{"content": tt}
 	}
 	return nil
 }
