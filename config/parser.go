@@ -77,7 +77,7 @@ func CheckErr(err error, configFile string) error {
 
 // NewParseError returns a new ParseError
 func NewParseError(err error, configFile string, offset int) *ParseError {
-	b, _ := ioutil.ReadFile(configFile)
+	b, _ := os.ReadFile(configFile)
 	row, col := getErrorRowCol(b, offset)
 	return &ParseError{
 		ConfigFile: configFile,
