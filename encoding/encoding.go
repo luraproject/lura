@@ -9,14 +9,12 @@ Decode decodes HTTP responses:
 	...
 	var data map[string]interface{}
 	err := JSONDecoder(resp.Body, &data)
-
 */
 package encoding
 
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 )
 
 // Decoder is a function that reads from the reader and decodes it
@@ -86,7 +84,7 @@ func SafeJSONDecoder(r io.Reader, v *map[string]interface{}) error {
 	case []interface{}:
 		*v = map[string]interface{}{"collection": tt}
 	default:
-		*v = map[string]interface{}{"result": tt}
+		*v = map[string]interface{}{"content": tt}
 	}
 	return nil
 }
@@ -101,7 +99,7 @@ func NewStringDecoder(_ bool) func(io.Reader, *map[string]interface{}) error {
 
 // StringDecoder returns a map with the content of the reader under the key 'content'
 func StringDecoder(r io.Reader, v *map[string]interface{}) error {
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return err
 	}
