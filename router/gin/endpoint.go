@@ -148,6 +148,7 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 		}
 
 		return &proxy.Request{
+			Path:    c.Request.URL.Path,
 			Method:  c.Request.Method,
 			Query:   query,
 			Body:    c.Request.Body,
