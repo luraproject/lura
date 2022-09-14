@@ -32,7 +32,7 @@ func (r registerer) RegisterHandlers(f func(
 	f(string(r), r.registerHandlers)
 }
 
-func (r registerer) registerHandlers(_ context.Context, extra map[string]interface{}, _ http.Handler) (http.Handler, error) {
+func (registerer) registerHandlers(_ context.Context, _ map[string]interface{}, _ http.Handler) (http.Handler, error) {
 	// check the passed configuration and initialize the plugin
 	// possible config example:
 	/*
