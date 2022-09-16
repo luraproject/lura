@@ -162,6 +162,10 @@ type ServiceConfig struct {
 	// SequentialStart flags if the agents should be started sequentially
 	// before starting the router
 	SequentialStart bool `mapstructure:"sequential_start"`
+
+	// AllowInsecureConnections sets the http client tls configuration to allow
+	// insecure connections to the backends for development (enables InsecureSkipVerify)
+	AllowInsecureConnections bool `mapstructure:"allow_insecure_connections"`
 }
 
 // AsyncAgent defines the configuration of a single subscriber/consumer to be initialized

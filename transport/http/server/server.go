@@ -75,6 +75,7 @@ func InitHTTPDefaultTransport(cfg config.ServiceConfig) {
 			ResponseHeaderTimeout: cfg.ResponseHeaderTimeout,
 			ExpectContinueTimeout: cfg.ExpectContinueTimeout,
 			TLSHandshakeTimeout:   10 * time.Second,
+			TLSClientConfig:       &tls.Config{InsecureSkipVerify: cfg.AllowInsecureConnections},
 		}
 	})
 }
