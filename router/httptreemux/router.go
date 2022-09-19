@@ -7,7 +7,6 @@ package httptreemux
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/dimfeld/httptreemux/v5"
 	"github.com/luraproject/lura/v2/logging"
@@ -15,6 +14,8 @@ import (
 	"github.com/luraproject/lura/v2/router"
 	"github.com/luraproject/lura/v2/router/mux"
 	"github.com/luraproject/lura/v2/transport/http/server"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // DefaultFactory returns a net/http mux router factory with the injected proxy factory and logger
@@ -37,8 +38,9 @@ func DefaultConfig(pf proxy.Factory, logger logging.Logger) mux.Config {
 
 func ParamsExtractor(r *http.Request) map[string]string {
 	params := map[string]string{}
+	title := cases.Title(language.Und)
 	for key, value := range httptreemux.ContextParams(r.Context()) {
-		params[strings.Title(key)] = value
+		params[title.String(key)] = value
 	}
 	return params
 }

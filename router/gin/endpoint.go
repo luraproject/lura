@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"net/textproto"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -15,6 +14,8 @@ import (
 	"github.com/luraproject/lura/v2/logging"
 	"github.com/luraproject/lura/v2/proxy"
 	"github.com/luraproject/lura/v2/transport/http/server"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 const requestParamsAsterisk string = "*"
@@ -105,8 +106,9 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 
 	return func(c *gin.Context, queryString []string) *proxy.Request {
 		params := make(map[string]string, len(c.Params))
+		title := cases.Title(language.Und)
 		for _, param := range c.Params {
-			params[strings.Title(param.Key[:1])+param.Key[1:]] = param.Value
+			params[title.String(param.Key[:1])+param.Key[1:]] = param.Value
 		}
 
 		headers := make(map[string][]string, 3+len(headersToSend))

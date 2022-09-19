@@ -4,12 +4,13 @@ package chi
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/proxy"
 	"github.com/luraproject/lura/v2/router/mux"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // HandlerFactory creates a handler function that adapts the chi router with the injected proxy
@@ -29,8 +30,9 @@ func extractParamsFromEndpoint(r *http.Request) map[string]string {
 
 	params := map[string]string{}
 	if len(rctx.URLParams.Keys) > 0 {
+		title := cases.Title(language.Und)
 		for _, param := range rctx.URLParams.Keys {
-			params[strings.Title(param[:1])+param[1:]] = chi.URLParam(r, param)
+			params[title.String(param[:1])+param[1:]] = chi.URLParam(r, param)
 		}
 	}
 	return params

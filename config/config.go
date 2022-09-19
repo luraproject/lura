@@ -19,6 +19,8 @@ import (
 	"time"
 
 	"github.com/luraproject/lura/v2/encoding"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 const (
@@ -550,7 +552,8 @@ func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]
 				}
 			}
 		}
-		key := strings.Title(output[:1]) + output[1:]
+		title := cases.Title(language.Und)
+		key := title.String(output[:1]) + output[1:]
 		backend.URLPattern = strings.ReplaceAll(backend.URLPattern, "{"+output+"}", "{{."+key+"}}")
 		backend.URLKeys = append(backend.URLKeys, key)
 	}
