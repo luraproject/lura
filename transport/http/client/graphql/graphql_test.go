@@ -4,7 +4,6 @@ package graphql
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -95,7 +94,7 @@ func ExampleNewGraphQLParamExtractor() {
 }
 
 func ExampleNewGraphQLParamExtractor_fromFile() {
-	ioutil.WriteFile(".graphql_query.txt", []byte("{\n  find_follower(func: uid(\"0x3\")) {\n    name \n    }\n  }\n"), 0664)
+	os.WriteFile(".graphql_query.txt", []byte("{\n  find_follower(func: uid(\"0x3\")) {\n    name \n    }\n  }\n"), 0664)
 	defer os.Remove(".graphql_query.txt")
 
 	cfg, err := GetOptions(config.ExtraConfig{

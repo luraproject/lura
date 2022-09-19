@@ -7,7 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -245,13 +245,13 @@ func (tc endpointHandlerTestCase) test(t *testing.T) {
 
 	s := startChiServer(NewEndpointHandler(endpoint, tc.proxy))
 
-	req, _ := http.NewRequest(tc.method, "http://127.0.0.1:8080/_chi_endpoint/a?a=42&b=1&c[]=x&c[]=y&d=1&d=2", ioutil.NopCloser(&bytes.Buffer{}))
+	req, _ := http.NewRequest(tc.method, "http://127.0.0.1:8080/_chi_endpoint/a?a=42&b=1&c[]=x&c[]=y&d=1&d=2", io.NopCloser(&bytes.Buffer{}))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()
 	s.ServeHTTP(w, req)
 
-	body, ioerr := ioutil.ReadAll(w.Result().Body)
+	body, ioerr := io.ReadAll(w.Result().Body)
 	if ioerr != nil {
 		t.Error("Reading the response:", ioerr.Error())
 		return

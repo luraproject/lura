@@ -5,7 +5,6 @@ package encoding
 import (
 	"errors"
 	"io"
-	"io/ioutil"
 	"strings"
 	"testing"
 
@@ -77,7 +76,7 @@ func TestRegister_complete_ok(t *testing.T) {
 
 	if err := decoders.Register("custom", func(_ bool) func(io.Reader, *map[string]interface{}) error {
 		return func(r io.Reader, v *map[string]interface{}) error {
-			d, err := ioutil.ReadAll(r)
+			d, err := io.ReadAll(r)
 			if err != nil {
 				t.Error(err)
 				return err
@@ -114,7 +113,7 @@ func TestRegister_complete_ko(t *testing.T) {
 
 	if err := decoders.Register("custom", func(_ bool) func(io.Reader, *map[string]interface{}) error {
 		return func(r io.Reader, v *map[string]interface{}) error {
-			d, err := ioutil.ReadAll(r)
+			d, err := io.ReadAll(r)
 			if err != nil {
 				t.Error(err)
 				return err

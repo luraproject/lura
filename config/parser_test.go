@@ -3,7 +3,6 @@
 package config
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -100,7 +99,7 @@ func TestNewParser_ok(t *testing.T) {
     ],
     "extra_config" : {"user":"test","hits":6,"parents":["gomez","morticia"]}
 }`)
-	if err := ioutil.WriteFile(configPath, configContent, 0644); err != nil {
+	if err := os.WriteFile(configPath, configContent, 0644); err != nil {
 		t.FailNow()
 	}
 
@@ -217,7 +216,7 @@ func TestNewParser_errorMessages(t *testing.T) {
 		},
 	} {
 		t.Run(configContent.name, func(t *testing.T) {
-			if err := ioutil.WriteFile(configContent.path, configContent.content, 0644); err != nil {
+			if err := os.WriteFile(configContent.path, configContent.content, 0644); err != nil {
 				t.Error(err)
 				return
 			}
@@ -264,7 +263,7 @@ func TestNewParser_unknownFile(t *testing.T) {
 func TestNewParser_readingError(t *testing.T) {
 	wrongConfigPath := "/tmp/reading.json"
 	wrongConfigContent := []byte("{hello\ngo\n")
-	if err := ioutil.WriteFile(wrongConfigPath, wrongConfigContent, 0644); err != nil {
+	if err := os.WriteFile(wrongConfigPath, wrongConfigContent, 0644); err != nil {
 		t.FailNow()
 	}
 
@@ -281,7 +280,7 @@ func TestNewParser_readingError(t *testing.T) {
 func TestNewParser_initError(t *testing.T) {
 	wrongConfigPath := "/tmp/unmarshall.json"
 	wrongConfigContent := []byte("{\"a\":42}")
-	if err := ioutil.WriteFile(wrongConfigPath, wrongConfigContent, 0644); err != nil {
+	if err := os.WriteFile(wrongConfigPath, wrongConfigContent, 0644); err != nil {
 		t.FailNow()
 	}
 

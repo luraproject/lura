@@ -4,7 +4,7 @@ package proxy
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"strings"
 	"testing"
 )
@@ -99,7 +99,7 @@ func TestCloneRequest(t *testing.T) {
 		Headers: map[string][]string{
 			"Content-Type": {"application/json"},
 		},
-		Body: ioutil.NopCloser(strings.NewReader(body)),
+		Body: io.NopCloser(strings.NewReader(body)),
 	}
 	clone := CloneRequest(&r)
 
@@ -140,8 +140,8 @@ func TestCloneRequest(t *testing.T) {
 		t.Error("the cloned instance shares its params with the original one")
 	}
 
-	rb, _ := ioutil.ReadAll(r.Body)
-	cb, _ := ioutil.ReadAll(clone.Body)
+	rb, _ := io.ReadAll(r.Body)
+	cb, _ := io.ReadAll(clone.Body)
 
 	if !bytes.Equal(cb, rb) || body != string(rb) {
 		t.Errorf("unexpected bodies. original: %s, returned: %s", string(rb), string(cb))

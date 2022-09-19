@@ -11,11 +11,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"text/template"
@@ -53,7 +53,7 @@ func TestKrakenD_ginRouter(t *testing.T) {
 		ignoredChan := make(chan string)
 		opts := gin.EngineOptions{
 			Logger: logger,
-			Writer: ioutil.Discard,
+			Writer: io.Discard,
 			Health: (<-chan string)(ignoredChan),
 		}
 
@@ -398,7 +398,7 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 				return
 			}
 
-			b, _ := ioutil.ReadAll(resp.Body)
+			b, _ := io.ReadAll(resp.Body)
 			resp.Body.Close()
 			if tc.expBody != string(b) {
 				t.Errorf(
@@ -434,7 +434,7 @@ func setupBackend(t *testing.T) (*config.ServiceConfig, error) {
 			http.Error(rw, "bad X-Y-Z", 400)
 			return
 		}
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			t.Error(err)
 			return
@@ -532,7 +532,7 @@ func setupBackend(t *testing.T) (*config.ServiceConfig, error) {
 }
 
 func loadConfig(data map[string]interface{}) (*config.ServiceConfig, error) {
-	content, _ := ioutil.ReadFile("lura.json")
+	content, _ := os.ReadFile("lura.json")
 	tmpl, err := template.New("test").Parse(string(content))
 	if err != nil {
 		return nil, err

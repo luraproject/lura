@@ -12,9 +12,9 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -147,7 +147,7 @@ func ParseTLSConfig(cfg *config.TLS) *tls.Config {
 		certPool = x509.NewCertPool()
 	}
 
-	caCert, err := ioutil.ReadFile(cfg.PublicKey)
+	caCert, err := os.ReadFile(cfg.PublicKey)
 	if err != nil {
 		return tlsConfig
 	}

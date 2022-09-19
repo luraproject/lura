@@ -5,7 +5,7 @@ package proxy
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"reflect"
 	"strings"
 	"testing"
@@ -40,7 +40,7 @@ func TestNewGraphQLMiddleware_mutation(t *testing.T) {
 		Data: map[string]interface{}{"foo": "bar"},
 	}
 	prxy := mw(func(ctx context.Context, req *Request) (*Response, error) {
-		b, err := ioutil.ReadAll(req.Body)
+		b, err := io.ReadAll(req.Body)
 		req.Body.Close()
 		if err != nil {
 			return nil, err
@@ -53,7 +53,7 @@ func TestNewGraphQLMiddleware_mutation(t *testing.T) {
 	})
 
 	resp, err := prxy(context.Background(), &Request{
-		Body: ioutil.NopCloser(strings.NewReader(`{
+		Body: io.NopCloser(strings.NewReader(`{
 			"name": "foo",
 			"dob": "bar"
 		}`)),
@@ -122,7 +122,7 @@ func TestNewGraphQLMiddleware_query(t *testing.T) {
 			"Foo": "foo",
 			"Bar": "bar",
 		},
-		Body:    ioutil.NopCloser(strings.NewReader("")),
+		Body:    io.NopCloser(strings.NewReader("")),
 		Headers: map[string][]string{},
 	})
 

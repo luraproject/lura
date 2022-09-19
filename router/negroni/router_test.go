@@ -9,7 +9,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 	"time"
@@ -99,7 +99,7 @@ func TestDefaultFactory_ok(t *testing.T) {
 		}
 		defer resp.Body.Close()
 
-		body, ioerr := ioutil.ReadAll(resp.Body)
+		body, ioerr := io.ReadAll(resp.Body)
 		if ioerr != nil {
 			t.Error("Reading the response:", ioerr.Error())
 			return
@@ -171,7 +171,7 @@ func TestDefaultFactory_middlewares(t *testing.T) {
 		}
 		defer resp.Body.Close()
 
-		body, ioerr := ioutil.ReadAll(resp.Body)
+		body, ioerr := io.ReadAll(resp.Body)
 		if ioerr != nil {
 			t.Error("Reading the response:", ioerr.Error())
 			return
@@ -319,7 +319,7 @@ func checkResponseIs404(t *testing.T, req *http.Request) {
 		return
 	}
 	defer resp.Body.Close()
-	body, ioerr := ioutil.ReadAll(resp.Body)
+	body, ioerr := io.ReadAll(resp.Body)
 	if ioerr != nil {
 		t.Error("Reading the response:", ioerr.Error())
 		return

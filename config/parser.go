@@ -5,7 +5,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"time"
 )
@@ -24,7 +23,7 @@ func (f ParserFunc) Parse(configFile string) (ServiceConfig, error) { return f(c
 
 // NewParser creates a new parser using the json library
 func NewParser() Parser {
-	return NewParserWithFileReader(ioutil.ReadFile)
+	return NewParserWithFileReader(os.ReadFile)
 }
 
 // NewParserWithFileReader returns a Parser with the injected FileReaderFunc function

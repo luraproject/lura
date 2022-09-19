@@ -6,7 +6,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/url"
 	"strconv"
 	"strings"
@@ -83,7 +83,7 @@ func NewGraphQLMiddleware(logger logging.Logger, remote *config.Backend) Middlew
 					return nil, err
 				}
 
-				req.Body = ioutil.NopCloser(bytes.NewReader([]byte{}))
+				req.Body = io.NopCloser(bytes.NewReader([]byte{}))
 				req.Method = string(opt.Method)
 				req.Headers["Content-Length"] = []string{"0"}
 				if req.Query != nil {
@@ -106,7 +106,7 @@ func NewGraphQLMiddleware(logger logging.Logger, remote *config.Backend) Middlew
 				return nil, err
 			}
 
-			req.Body = ioutil.NopCloser(bytes.NewReader(b))
+			req.Body = io.NopCloser(bytes.NewReader(b))
 			req.Method = string(opt.Method)
 			req.Headers["Content-Length"] = []string{strconv.Itoa(len(b))}
 

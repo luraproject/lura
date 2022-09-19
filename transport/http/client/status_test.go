@@ -5,7 +5,7 @@ package client
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 
@@ -26,7 +26,7 @@ func TestDetailedHTTPStatusHandler(t *testing.T) {
 	for _, code := range []int{http.StatusOK, http.StatusCreated} {
 		resp := &http.Response{
 			StatusCode: code,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(`{"foo":"bar"}`)),
+			Body:       io.NopCloser(bytes.NewBufferString(`{"foo":"bar"}`)),
 		}
 
 		r, err := sh(context.Background(), resp)
@@ -47,7 +47,7 @@ func TestDetailedHTTPStatusHandler(t *testing.T) {
 
 		resp := &http.Response{
 			StatusCode: code,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(msg)),
+			Body:       io.NopCloser(bytes.NewBufferString(msg)),
 		}
 
 		r, err := sh(context.Background(), resp)
@@ -86,7 +86,7 @@ func TestDefaultHTTPStatusHandler(t *testing.T) {
 	for _, code := range []int{http.StatusOK, http.StatusCreated} {
 		resp := &http.Response{
 			StatusCode: code,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(`{"foo":"bar"}`)),
+			Body:       io.NopCloser(bytes.NewBufferString(`{"foo":"bar"}`)),
 		}
 
 		r, err := sh(context.Background(), resp)
@@ -107,7 +107,7 @@ func TestDefaultHTTPStatusHandler(t *testing.T) {
 
 		resp := &http.Response{
 			StatusCode: code,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(msg)),
+			Body:       io.NopCloser(bytes.NewBufferString(msg)),
 		}
 
 		r, err := sh(context.Background(), resp)
