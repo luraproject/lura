@@ -6,7 +6,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -42,7 +42,7 @@ func BenchmarkEndpointHandler_ko(b *testing.B) {
 func BenchmarkEndpointHandler_ok(b *testing.B) {
 	pResp := proxy.Response{
 		Data:       map[string]interface{}{},
-		Io:         ioutil.NopCloser(&bytes.Buffer{}),
+		Io:         io.NopCloser(&bytes.Buffer{}),
 		IsComplete: true,
 		Metadata:   proxy.Metadata{},
 	}
@@ -96,7 +96,7 @@ func BenchmarkEndpointHandler_ko_Parallel(b *testing.B) {
 func BenchmarkEndpointHandler_ok_Parallel(b *testing.B) {
 	pResp := proxy.Response{
 		Data:       map[string]interface{}{},
-		Io:         ioutil.NopCloser(&bytes.Buffer{}),
+		Io:         io.NopCloser(&bytes.Buffer{}),
 		IsComplete: true,
 		Metadata:   proxy.Metadata{},
 	}

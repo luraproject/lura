@@ -3,19 +3,18 @@
 package plugin
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 )
 
 func TestScan_ok(t *testing.T) {
-	tmpDir, err := ioutil.TempDir(".", "test")
+	tmpDir, err := os.MkdirTemp(".", "test")
 	if err != nil {
 		t.Error("unexpected error:", err.Error())
 		return
 	}
 	defer os.RemoveAll(tmpDir)
-	f, err := ioutil.TempFile(tmpDir, "test.so")
+	f, err := os.CreateTemp(tmpDir, "test.so")
 	if err != nil {
 		t.Error("unexpected error:", err.Error())
 		return
@@ -48,7 +47,7 @@ func TestScan_noFolder(t *testing.T) {
 }
 
 func TestScan_emptyFolder(t *testing.T) {
-	name, err := ioutil.TempDir(".", "test")
+	name, err := os.MkdirTemp(".", "test")
 	if err != nil {
 		t.Error("unexpected error:", err.Error())
 		return
@@ -64,13 +63,13 @@ func TestScan_emptyFolder(t *testing.T) {
 }
 
 func TestScan_noMatches(t *testing.T) {
-	tmpDir, err := ioutil.TempDir(".", "test")
+	tmpDir, err := os.MkdirTemp(".", "test")
 	if err != nil {
 		t.Error("unexpected error:", err.Error())
 		return
 	}
 	defer os.RemoveAll(tmpDir)
-	f, err := ioutil.TempFile(tmpDir, "test")
+	f, err := os.CreateTemp(tmpDir, "test")
 	if err != nil {
 		t.Error("unexpected error:", err.Error())
 		return

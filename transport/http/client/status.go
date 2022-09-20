@@ -6,7 +6,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/luraproject/lura/v2/config"
@@ -77,12 +77,12 @@ func DetailedHTTPStatusHandler(name string) HTTPStatusHandler {
 }
 
 func newHTTPResponseError(resp *http.Response) HTTPResponseError {
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		body = []byte{}
 	}
 	resp.Body.Close()
-	resp.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+	resp.Body = io.NopCloser(bytes.NewBuffer(body))
 
 	return HTTPResponseError{
 		Code: resp.StatusCode,

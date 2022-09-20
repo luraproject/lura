@@ -5,7 +5,7 @@ package proxy
 import (
 	"compress/gzip"
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -39,7 +39,7 @@ func TestNopHTTPResponseParser(t *testing.T) {
 	if h, ok := headers["Header1"]; !ok || h[0] != "value1" {
 		t.Error("unexpected result:", result.Metadata.Headers)
 	}
-	body, err := ioutil.ReadAll(result.Io)
+	body, err := io.ReadAll(result.Io)
 	if err != nil {
 		t.Error("unexpected error:", err.Error())
 	}

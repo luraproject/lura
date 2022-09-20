@@ -4,7 +4,7 @@ package mux
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -22,13 +22,13 @@ func TestDebugHandler(t *testing.T) {
 
 	handler := DebugHandler(logger)
 
-	req, _ := http.NewRequest("GET", "http://127.0.0.1:8089/_mux_debug?b=1", ioutil.NopCloser(&bytes.Buffer{}))
+	req, _ := http.NewRequest("GET", "http://127.0.0.1:8089/_mux_debug?b=1", io.NopCloser(&bytes.Buffer{}))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
 
-	body, ioerr := ioutil.ReadAll(w.Result().Body)
+	body, ioerr := io.ReadAll(w.Result().Body)
 	if ioerr != nil {
 		t.Error("reading a response:", err.Error())
 		return

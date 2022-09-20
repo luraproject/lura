@@ -5,7 +5,7 @@ package gin
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -45,7 +45,7 @@ func TestRender_Negotiated_ok(t *testing.T) {
 		{"json", "application/json", "application/json; charset=utf-8", `{"content":{"B":"supu"}}`},
 		{"xml", "application/xml", "application/xml; charset=utf-8", `<A><B>supu</B></A>`},
 	} {
-		req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", ioutil.NopCloser(&bytes.Buffer{}))
+		req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", io.NopCloser(&bytes.Buffer{}))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Accept", testData[1])
 
@@ -54,7 +54,7 @@ func TestRender_Negotiated_ok(t *testing.T) {
 
 		defer w.Result().Body.Close()
 
-		body, ioerr := ioutil.ReadAll(w.Result().Body)
+		body, ioerr := io.ReadAll(w.Result().Body)
 		if ioerr != nil {
 			t.Error("reading response body:", ioerr)
 			return
@@ -102,7 +102,7 @@ func TestRender_Negotiated_noData(t *testing.T) {
 		{"json", "application/json", "application/json; charset=utf-8", "{}"},
 		{"xml", "application/xml", "application/xml; charset=utf-8", ""},
 	} {
-		req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", ioutil.NopCloser(&bytes.Buffer{}))
+		req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", io.NopCloser(&bytes.Buffer{}))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Accept", testData[1])
 
@@ -111,7 +111,7 @@ func TestRender_Negotiated_noData(t *testing.T) {
 
 		defer w.Result().Body.Close()
 
-		body, ioerr := ioutil.ReadAll(w.Result().Body)
+		body, ioerr := io.ReadAll(w.Result().Body)
 		if ioerr != nil {
 			t.Error("reading response body:", ioerr)
 			return
@@ -154,7 +154,7 @@ func TestRender_Negotiated_noResponse(t *testing.T) {
 		{"json", "application/json", "application/json; charset=utf-8", "{}"},
 		{"xml", "application/xml", "application/xml; charset=utf-8", ""},
 	} {
-		req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", ioutil.NopCloser(&bytes.Buffer{}))
+		req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", io.NopCloser(&bytes.Buffer{}))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Accept", testData[1])
 
@@ -163,7 +163,7 @@ func TestRender_Negotiated_noResponse(t *testing.T) {
 
 		defer w.Result().Body.Close()
 
-		body, ioerr := ioutil.ReadAll(w.Result().Body)
+		body, ioerr := io.ReadAll(w.Result().Body)
 		if ioerr != nil {
 			t.Error("reading response body:", ioerr)
 			return
@@ -212,7 +212,7 @@ func TestRender_unknown(t *testing.T) {
 		{"json", "application/json"},
 		{"unknown", "unknown"},
 	} {
-		req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", ioutil.NopCloser(&bytes.Buffer{}))
+		req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", io.NopCloser(&bytes.Buffer{}))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Accept", testData[1])
 
@@ -221,7 +221,7 @@ func TestRender_unknown(t *testing.T) {
 
 		defer w.Result().Body.Close()
 
-		body, ioerr := ioutil.ReadAll(w.Result().Body)
+		body, ioerr := io.ReadAll(w.Result().Body)
 		if ioerr != nil {
 			t.Error("reading response body:", ioerr)
 			return
@@ -273,7 +273,7 @@ func TestRender_string(t *testing.T) {
 		{"json", "application/json"},
 		{"unknown", "unknown"},
 	} {
-		req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", ioutil.NopCloser(&bytes.Buffer{}))
+		req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", io.NopCloser(&bytes.Buffer{}))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Accept", testData[1])
 
@@ -282,7 +282,7 @@ func TestRender_string(t *testing.T) {
 
 		defer w.Result().Body.Close()
 
-		body, ioerr := ioutil.ReadAll(w.Result().Body)
+		body, ioerr := io.ReadAll(w.Result().Body)
 		if ioerr != nil {
 			t.Error("reading response body:", ioerr)
 			return
@@ -339,7 +339,7 @@ func TestRender_string_noData(t *testing.T) {
 		server := gin.New()
 		server.GET("/_gin_endpoint/:param", EndpointHandler(endpoint, p))
 
-		req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", ioutil.NopCloser(&bytes.Buffer{}))
+		req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", io.NopCloser(&bytes.Buffer{}))
 		req.Header.Set("Content-Type", "application/json")
 
 		w := httptest.NewRecorder()
@@ -347,7 +347,7 @@ func TestRender_string_noData(t *testing.T) {
 
 		defer w.Result().Body.Close()
 
-		body, ioerr := ioutil.ReadAll(w.Result().Body)
+		body, ioerr := io.ReadAll(w.Result().Body)
 		if ioerr != nil {
 			t.Error("reading response body:", ioerr)
 			return
@@ -422,7 +422,7 @@ func TestRender_noop(t *testing.T) {
 	server := gin.New()
 	server.GET("/_gin_endpoint/:param", EndpointHandler(endpoint, p))
 
-	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", ioutil.NopCloser(&bytes.Buffer{}))
+	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", io.NopCloser(&bytes.Buffer{}))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()
@@ -430,7 +430,7 @@ func TestRender_noop(t *testing.T) {
 
 	defer w.Result().Body.Close()
 
-	body, ioerr := ioutil.ReadAll(w.Result().Body)
+	body, ioerr := io.ReadAll(w.Result().Body)
 	if ioerr != nil {
 		t.Error("reading response body:", ioerr)
 		return
@@ -473,7 +473,7 @@ func TestRender_noop_nilBody(t *testing.T) {
 	server := gin.New()
 	server.GET("/_gin_endpoint/:param", EndpointHandler(endpoint, p))
 
-	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", ioutil.NopCloser(&bytes.Buffer{}))
+	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", io.NopCloser(&bytes.Buffer{}))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()
@@ -481,7 +481,7 @@ func TestRender_noop_nilBody(t *testing.T) {
 
 	defer w.Result().Body.Close()
 
-	body, ioerr := ioutil.ReadAll(w.Result().Body)
+	body, ioerr := io.ReadAll(w.Result().Body)
 	if ioerr != nil {
 		t.Error("reading response body:", ioerr)
 		return
@@ -517,7 +517,7 @@ func TestRender_noop_nilResponse(t *testing.T) {
 	server := gin.New()
 	server.GET("/_gin_endpoint/:param", EndpointHandler(endpoint, p))
 
-	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", ioutil.NopCloser(&bytes.Buffer{}))
+	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", io.NopCloser(&bytes.Buffer{}))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()

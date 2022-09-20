@@ -4,7 +4,7 @@ package mux
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -28,7 +28,7 @@ func TestEngine(t *testing.T) {
 		{status: http.StatusTeapot, method: "DELETE"},
 		{status: http.StatusMethodNotAllowed, method: "GET"},
 	} {
-		req, _ := http.NewRequest(tc.method, "http://127.0.0.1:8081/_mux_endpoint?b=1&c[]=x&c[]=y&d=1&d=2&a=42", ioutil.NopCloser(&bytes.Buffer{}))
+		req, _ := http.NewRequest(tc.method, "http://127.0.0.1:8081/_mux_endpoint?b=1&c[]=x&c[]=y&d=1&d=2&a=42", io.NopCloser(&bytes.Buffer{}))
 
 		w := httptest.NewRecorder()
 		e.ServeHTTP(w, req)

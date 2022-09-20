@@ -5,7 +5,7 @@ package proxy
 import (
 	"context"
 	"errors"
-	"io/ioutil"
+	"io"
 	"strings"
 	"testing"
 	"time"
@@ -115,7 +115,7 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 			t.Error("empty body")
 			return
 		}
-		b, err := ioutil.ReadAll(r.Body)
+		b, err := io.ReadAll(r.Body)
 		if err != nil {
 			t.Error(err)
 			return
@@ -181,7 +181,7 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 	mustEnd := time.After(time.Duration(2*timeout) * time.Millisecond)
 	out, err := p(context.Background(), &Request{
 		Params: map[string]string{},
-		Body:   ioutil.NopCloser(strings.NewReader(expectedBody)),
+		Body:   io.NopCloser(strings.NewReader(expectedBody)),
 	})
 	if err != nil {
 		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())

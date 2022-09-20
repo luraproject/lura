@@ -9,9 +9,9 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/luraproject/lura/v2/config"
@@ -80,7 +80,7 @@ func GetOptions(cfg config.ExtraConfig) (*Options, error) {
 	}
 
 	if opt.QueryPath != "" {
-		q, err := ioutil.ReadFile(opt.QueryPath)
+		q, err := os.ReadFile(opt.QueryPath)
 		if err != nil {
 			return nil, err
 		}
@@ -186,7 +186,7 @@ func (e *Extractor) BodyFromBody(r io.Reader) ([]byte, error) {
 }
 
 func (e *Extractor) fromBody(r io.Reader) (*GraphQLRequest, error) {
-	b, err := ioutil.ReadAll(r)
+	b, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}

@@ -6,14 +6,14 @@
 package plugin
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 )
 
 // Scan returns all the files contained in the received folder with a filename matching the given pattern
 func Scan(folder, pattern string) ([]string, error) {
-	files, err := ioutil.ReadDir(folder)
+	files, err := os.ReadDir(folder)
 	if err != nil {
 		return []string{}, err
 	}

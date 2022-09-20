@@ -8,7 +8,6 @@ package logging
 import (
 	"errors"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -49,7 +48,7 @@ var (
 		"CRITICAL": LEVEL_CRITICAL,
 	}
 	// NoOp is the NO-OP logger
-	NoOp, _ = NewLogger("CRITICAL", ioutil.Discard, "")
+	NoOp, _ = NewLogger("CRITICAL", io.Discard, "")
 )
 
 // NewLogger creates and returns a Logger object

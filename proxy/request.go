@@ -5,7 +5,6 @@ package proxy
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"net/url"
 )
 
@@ -67,8 +66,8 @@ func CloneRequest(r *Request) *Request {
 	buf.ReadFrom(r.Body)
 	r.Body.Close()
 
-	r.Body = ioutil.NopCloser(bytes.NewReader(buf.Bytes()))
-	clone.Body = ioutil.NopCloser(buf)
+	r.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
+	clone.Body = io.NopCloser(buf)
 
 	return &clone
 }

@@ -9,10 +9,10 @@ import (
 	"errors"
 	"fmt"
 	"html"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
@@ -283,7 +283,7 @@ func dummyHandler(rw http.ResponseWriter, req *http.Request) {
 }
 
 func testKeysAreAvailable(t *testing.T) {
-	files, err := ioutil.ReadDir(".")
+	files, err := os.ReadDir(".")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -303,7 +303,7 @@ func testKeysAreAvailable(t *testing.T) {
 }
 
 func httpsClient(cert string) (*http.Client, error) {
-	cer, err := ioutil.ReadFile(cert)
+	cer, err := os.ReadFile(cert)
 	if err != nil {
 		return nil, err
 	}
@@ -335,7 +335,7 @@ func mtlsClient(certPath, keyPath string) (*http.Client, error) {
 		return nil, err
 	}
 
-	cacer, err := ioutil.ReadFile(certPath)
+	cacer, err := os.ReadFile(certPath)
 	if err != nil {
 		return nil, err
 	}

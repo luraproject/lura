@@ -4,7 +4,7 @@ package mux
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/luraproject/lura/v2/logging"
@@ -19,7 +19,7 @@ func DebugHandler(logger logging.Logger) http.HandlerFunc {
 		logger.Debug(logPrefixSecondary, "Query:", r.URL.Query())
 		// logger.Debug(logPrefixSecondary, "Params:", c.Params)
 		logger.Debug(logPrefixSecondary, "Headers:", r.Header)
-		body, _ := ioutil.ReadAll(r.Body)
+		body, _ := io.ReadAll(r.Body)
 		r.Body.Close()
 		logger.Debug(logPrefixSecondary, "Body:", string(body))
 

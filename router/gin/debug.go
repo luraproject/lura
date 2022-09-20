@@ -3,7 +3,7 @@
 package gin
 
 import (
-	"io/ioutil"
+	"io"
 
 	"github.com/gin-gonic/gin"
 
@@ -19,7 +19,7 @@ func DebugHandler(logger logging.Logger) gin.HandlerFunc {
 		logger.Debug(logPrefixSecondary, "Query:", c.Request.URL.Query())
 		logger.Debug(logPrefixSecondary, "Params:", c.Params)
 		logger.Debug(logPrefixSecondary, "Headers:", c.Request.Header)
-		body, _ := ioutil.ReadAll(c.Request.Body)
+		body, _ := io.ReadAll(c.Request.Body)
 		c.Request.Body.Close()
 		logger.Debug(logPrefixSecondary, "Body:", string(body))
 		c.JSON(200, gin.H{
