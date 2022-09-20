@@ -143,9 +143,11 @@ func ParseTLSConfig(cfg *config.TLS) *tls.Config {
 		return tlsConfig
 	}
 
-	certPool, err := x509.SystemCertPool()
-	if err != nil {
-		certPool = x509.NewCertPool()
+	certPool := x509.NewCertPool()
+	if !cfg.DisableSystemCaPool {
+		if systemCertPool, err := x509.SystemCertPool(); err != nil {
+			certPool = systemCertPool
+		}
 	}
 
 	caCert, err := os.ReadFile(cfg.PublicKey)
