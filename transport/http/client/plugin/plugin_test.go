@@ -1,3 +1,4 @@
+//go:build integration || !race
 // +build integration !race
 
 // SPDX-License-Identifier: Apache-2.0
@@ -43,7 +44,7 @@ func TestLoadWithLogger(t *testing.T) {
 		},
 	})
 
-	req, _ := http.NewRequest("GET", "http://some.example.tld/path", nil)
+	req, _ := http.NewRequest("GET", "http://some.example.tld/path", http.NoBody)
 	resp, err := h(context.Background(), req)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err.Error())

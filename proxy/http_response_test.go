@@ -19,7 +19,7 @@ func TestNopHTTPResponseParser(t *testing.T) {
 		w.Header().Set("header1", "value1")
 		w.Write([]byte("some nice, interesting and long content"))
 	}
-	req, _ := http.NewRequest("GET", "/url", nil)
+	req, _ := http.NewRequest("GET", "/url", http.NoBody)
 	handler(w, req)
 	result, err := NoOpHTTPResponseParser(context.Background(), w.Result())
 	if err != nil {
@@ -60,7 +60,7 @@ func TestDefaultHTTPResponseParser_gzipped(t *testing.T) {
 		gzipWriter.Write([]byte(`{"msg":"some nice, interesting and long content"}`))
 		gzipWriter.Flush()
 	}
-	req, _ := http.NewRequest("GET", "/url", nil)
+	req, _ := http.NewRequest("GET", "/url", http.NoBody)
 	req.Header.Add("Accept-Encoding", "gzip")
 	handler(w, req)
 
@@ -90,7 +90,7 @@ func TestDefaultHTTPResponseParser_plain(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.Write([]byte(`{"msg":"some nice, interesting and long content"}`))
 	}
-	req, _ := http.NewRequest("GET", "/url", nil)
+	req, _ := http.NewRequest("GET", "/url", http.NoBody)
 	handler(w, req)
 
 	result, err := DefaultHTTPResponseParserFactory(HTTPResponseParserConfig{

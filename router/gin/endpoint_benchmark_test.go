@@ -31,7 +31,7 @@ func BenchmarkEndpointHandler_ko(b *testing.B) {
 	router := gin.New()
 	router.GET("/_gin_endpoint/:param", EndpointHandler(endpoint, p))
 
-	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", nil)
+	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", http.NoBody)
 	req.Header.Set("Content-Type", "application/json")
 
 	b.ReportAllocs()
@@ -61,7 +61,7 @@ func BenchmarkEndpointHandler_ok(b *testing.B) {
 	router := gin.New()
 	router.GET("/_gin_endpoint/:param", EndpointHandler(endpoint, p))
 
-	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", nil)
+	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", http.NoBody)
 	req.Header.Set("Content-Type", "application/json")
 
 	b.ReportAllocs()
@@ -85,7 +85,7 @@ func BenchmarkEndpointHandler_ko_Parallel(b *testing.B) {
 	router := gin.New()
 	router.GET("/_gin_endpoint/:param", EndpointHandler(endpoint, p))
 
-	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", nil)
+	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", http.NoBody)
 	req.Header.Set("Content-Type", "application/json")
 
 	b.ReportAllocs()
@@ -117,7 +117,7 @@ func BenchmarkEndpointHandler_ok_Parallel(b *testing.B) {
 	router := gin.New()
 	router.GET("/_gin_endpoint/:param", EndpointHandler(endpoint, p))
 
-	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", nil)
+	req, _ := http.NewRequest("GET", "http://127.0.0.1:8080/_gin_endpoint/a?b=1", http.NoBody)
 	req.Header.Set("Content-Type", "application/json")
 
 	b.ReportAllocs()

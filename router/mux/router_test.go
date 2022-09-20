@@ -99,7 +99,7 @@ func TestDefaultFactory_ok(t *testing.T) {
 	time.Sleep(5 * time.Millisecond)
 
 	for _, endpoint := range serviceCfg.Endpoints {
-		req, _ := http.NewRequest(strings.ToTitle(endpoint.Method), fmt.Sprintf("http://127.0.0.1:8062%s", endpoint.Endpoint), nil)
+		req, _ := http.NewRequest(strings.ToTitle(endpoint.Method), fmt.Sprintf("http://127.0.0.1:8062%s", endpoint.Endpoint), http.NoBody)
 		req.Header.Set("Content-Type", "application/json")
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
@@ -194,7 +194,7 @@ func TestDefaultFactory_ko(t *testing.T) {
 		{"GET", "empty"},
 		{"PUT", "also-ignored"},
 	} {
-		req, _ := http.NewRequest(subject[0], fmt.Sprintf("http://127.0.0.1:8063/%s", subject[1]), nil)
+		req, _ := http.NewRequest(subject[0], fmt.Sprintf("http://127.0.0.1:8063/%s", subject[1]), http.NoBody)
 		req.Header.Set("Content-Type", "application/json")
 		checkResponseIs404(t, req)
 	}
@@ -236,7 +236,7 @@ func TestDefaultFactory_proxyFactoryCrash(t *testing.T) {
 	time.Sleep(5 * time.Millisecond)
 
 	for _, subject := range [][]string{{"GET", "ignored"}, {"PUT", "also-ignored"}} {
-		req, _ := http.NewRequest(subject[0], fmt.Sprintf("http://127.0.0.1:8064/%s", subject[1]), nil)
+		req, _ := http.NewRequest(subject[0], fmt.Sprintf("http://127.0.0.1:8064/%s", subject[1]), http.NoBody)
 		req.Header.Set("Content-Type", "application/json")
 		checkResponseIs404(t, req)
 	}
