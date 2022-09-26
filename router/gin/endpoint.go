@@ -72,9 +72,11 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 			if err != nil {
 				if t, ok := err.(multiError); ok {
 					for i, errN := range t.Errors() {
+						c.Error(errN)
 						logger.Error(fmt.Sprintf("%s Error #%d: %s", logPrefix, i, errN.Error()))
 					}
 				} else {
+					c.Error(err)
 					logger.Error(logPrefix, err.Error())
 				}
 
