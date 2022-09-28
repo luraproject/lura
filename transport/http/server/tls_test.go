@@ -70,8 +70,15 @@ func generateCerts() error {
 		return err
 	}
 
+	caBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
+	if err != nil {
+		log.Fatalf("Failed to create ca: %v", err)
+		return err
+	}
+
 	serverCert := "cert.pem"
 	serverKey := "key.pem"
+	caCert := "ca.pem"
 
 	certOut, err := os.Create(serverCert)
 	if err != nil {
@@ -107,5 +114,20 @@ func generateCerts() error {
 		return err
 	}
 	log.Printf("wrote %s\n", serverKey)
+
+	caOut, err := os.Create(caCert)
+	if err != nil {
+		log.Fatalf("Failed to open %s for writing: %v", caCert, err)
+		return err
+	}
+	if err := pem.Encode(caOut, &pem.Block{Type: "CERTIFICATE", Bytes: caBytes}); err != nil {
+		log.Fatalf("Failed to write data to %s: %v", caCert, err)
+		return err
+	}
+	if err := caOut.Close(); err != nil {
+		log.Fatalf("Error closing %s: %v", caCert, err)
+		return err
+	}
+	log.Printf("wrote %s\n", caCert)
 	return nil
 }

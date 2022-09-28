@@ -150,6 +150,14 @@ func ParseTLSConfig(cfg *config.TLS) *tls.Config {
 		}
 	}
 
+	if len(cfg.CaCerts) > 0 {
+		for _, path := range cfg.CaCerts {
+			if ca, err := os.ReadFile(path); err == nil {
+				certPool.AppendCertsFromPEM(ca)
+			}
+		}
+	}
+
 	caCert, err := os.ReadFile(cfg.PublicKey)
 	if err != nil {
 		return tlsConfig

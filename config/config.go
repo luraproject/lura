@@ -276,6 +276,7 @@ type TLS struct {
 	IsDisabled               bool     `mapstructure:"disabled"`
 	PublicKey                string   `mapstructure:"public_key"`
 	PrivateKey               string   `mapstructure:"private_key"`
+	CaCerts                  []string `mapstructure:"ca_certs"`
 	MinVersion               string   `mapstructure:"min_version"`
 	MaxVersion               string   `mapstructure:"max_version"`
 	CurvePreferences         []uint16 `mapstructure:"curve_preferences"`
