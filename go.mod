@@ -7,7 +7,6 @@ require (
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-chi/chi/v5 v5.0.4
-	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/krakendio/flatmap v1.1.1
 	github.com/mattn/go-isatty v0.0.14 // indirect
@@ -15,7 +14,10 @@ require (
 	github.com/valyala/fastrand v1.1.0
 )
 
-require golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
+require (
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
+	golang.org/x/text v0.3.7
+)
 
 require (
 	github.com/go-playground/locales v0.14.0 // indirect
@@ -31,7 +33,6 @@ require (
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110 // indirect
 	golang.org/x/sys v0.0.0-20211004093028-2c5d950f24ef // indirect
-	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
