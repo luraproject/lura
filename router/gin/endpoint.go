@@ -105,10 +105,10 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 	if len(headersToSend) == 0 {
 		headersToSend = server.HeadersToSend
 	}
+	title := cases.Title(language.Und)
 
 	return func(c *gin.Context, queryString []string) *proxy.Request {
 		params := make(map[string]string, len(c.Params))
-		title := cases.Title(language.Und)
 		for _, param := range c.Params {
 			params[title.String(param.Key[:1])+param.Key[1:]] = param.Value
 		}

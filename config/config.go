@@ -542,6 +542,7 @@ func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]
 		}
 	}
 
+	title := cases.Title(language.Und)
 	backend.URLKeys = []string{}
 	for _, output := range outputParams {
 		if !sequentialParamsPattern.MatchString(output) {
@@ -556,7 +557,6 @@ func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]
 				}
 			}
 		}
-		title := cases.Title(language.Und)
 		key := title.String(output[:1]) + output[1:]
 		backend.URLPattern = strings.ReplaceAll(backend.URLPattern, "{"+output+"}", "{{."+key+"}}")
 		backend.URLKeys = append(backend.URLKeys, key)
