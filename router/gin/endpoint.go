@@ -69,6 +69,10 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 
 			c.Header(server.CompleteResponseHeaderName, complete)
 
+			for _, err := range c.Errors {
+				logger.Error(logPrefix, err.Error())
+			}
+
 			if err != nil {
 				if t, ok := err.(multiError); ok {
 					for i, errN := range t.Errors() {
