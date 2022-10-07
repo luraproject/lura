@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package server provides tools to create http servers and handlers wrapping the
-   lura router
+Package server provides tools to create http servers and handlers wrapping the lura router
 */
 package server
 
@@ -20,6 +19,7 @@ import (
 
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/core"
+	"github.com/luraproject/lura/v2/logging"
 )
 
 // ToHTTPError translates an error into a HTTP status code
@@ -53,7 +53,9 @@ var (
 	// ErrPrivateKey is the error returned by the router when the private key is not defined
 	ErrPrivateKey = errors.New("private key not defined")
 	// ErrPublicKey is the error returned by the router when the public key is not defined
-	ErrPublicKey = errors.New("public key not defined")
+	ErrPublicKey                = errors.New("public key not defined")
+	loggerPrefix                = "[SERVICE: HTTP Server]"
+	Logger       logging.Logger = logging.NoOp
 )
 
 // InitHTTPDefaultTransport ensures the default HTTP transport is configured just once per execution
@@ -145,8 +147,10 @@ func ParseTLSConfig(cfg *config.TLS) *tls.Config {
 
 	certPool := x509.NewCertPool()
 	if !cfg.DisableSystemCaPool {
-		if systemCertPool, err := x509.SystemCertPool(); err != nil {
+		if systemCertPool, err := x509.SystemCertPool(); err == nil {
 			certPool = systemCertPool
+		} else {
+			Logger.Error(fmt.Sprintf("%s Cannot load system CA pool: %s", loggerPrefix, err.Error()))
 		}
 	}
 
@@ -154,12 +158,15 @@ func ParseTLSConfig(cfg *config.TLS) *tls.Config {
 		for _, path := range cfg.CaCerts {
 			if ca, err := os.ReadFile(path); err == nil {
 				certPool.AppendCertsFromPEM(ca)
+			} else {
+				Logger.Error(fmt.Sprintf("%s Cannot load certificate CA %s: %s", loggerPrefix, path, err.Error()))
 			}
 		}
 	}
 
 	caCert, err := os.ReadFile(cfg.PublicKey)
 	if err != nil {
+		Logger.Error(fmt.Sprintf("%s Cannot load public key %s: %s", loggerPrefix, cfg.PublicKey, err.Error()))
 		return tlsConfig
 	}
 	certPool.AppendCertsFromPEM(caCert)
