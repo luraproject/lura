@@ -17,7 +17,9 @@ func TestNewEngine_contextIsPropagated(t *testing.T) {
 		EngineOptions{},
 	)
 
-	ctxKey := "foo"
+	type ctxKeyType string
+
+	ctxKey := ctxKeyType("foo")
 	ctxValue := "bar"
 
 	engine.GET("/some/path", func(c *gin.Context) {
