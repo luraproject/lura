@@ -38,6 +38,7 @@ func NewEngine(cfg config.ServiceConfig, opt EngineOptions) *gin.Engine {
 	engine.RedirectTrailingSlash = true
 	engine.RedirectFixedPath = true
 	engine.HandleMethodNotAllowed = true
+	engine.ContextWithFallback = true
 
 	paths := []string{}
 
