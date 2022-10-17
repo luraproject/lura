@@ -53,9 +53,8 @@ var (
 	// ErrPrivateKey is the error returned by the router when the private key is not defined
 	ErrPrivateKey = errors.New("private key not defined")
 	// ErrPublicKey is the error returned by the router when the public key is not defined
-	ErrPublicKey                = errors.New("public key not defined")
-	loggerPrefix                = "[SERVICE: HTTP Server]"
-	Logger       logging.Logger = logging.NoOp
+	ErrPublicKey = errors.New("public key not defined")
+	loggerPrefix = "[SERVICE: HTTP Server]"
 )
 
 // InitHTTPDefaultTransport ensures the default HTTP transport is configured just once per execution
@@ -127,6 +126,10 @@ func NewServer(cfg config.ServiceConfig, handler http.Handler) *http.Server {
 
 // ParseTLSConfig creates a tls.Config from the TLS section of the service configuration
 func ParseTLSConfig(cfg *config.TLS) *tls.Config {
+	return ParseTLSConfigWithLogger(cfg, logging.NoOp)
+}
+
+func ParseTLSConfigWithLogger(cfg *config.TLS, logger logging.Logger) *tls.Config {
 	if cfg == nil {
 		return nil
 	}
@@ -150,7 +153,7 @@ func ParseTLSConfig(cfg *config.TLS) *tls.Config {
 		if systemCertPool, err := x509.SystemCertPool(); err == nil {
 			certPool = systemCertPool
 		} else {
-			Logger.Error(fmt.Sprintf("%s Cannot load system CA pool: %s", loggerPrefix, err.Error()))
+			logger.Error(fmt.Sprintf("%s Cannot load system CA pool: %s", loggerPrefix, err.Error()))
 		}
 	}
 
@@ -159,14 +162,14 @@ func ParseTLSConfig(cfg *config.TLS) *tls.Config {
 			if ca, err := os.ReadFile(path); err == nil {
 				certPool.AppendCertsFromPEM(ca)
 			} else {
-				Logger.Error(fmt.Sprintf("%s Cannot load certificate CA %s: %s", loggerPrefix, path, err.Error()))
+				logger.Error(fmt.Sprintf("%s Cannot load certificate CA %s: %s", loggerPrefix, path, err.Error()))
 			}
 		}
 	}
 
 	caCert, err := os.ReadFile(cfg.PublicKey)
 	if err != nil {
-		Logger.Error(fmt.Sprintf("%s Cannot load public key %s: %s", loggerPrefix, cfg.PublicKey, err.Error()))
+		logger.Error(fmt.Sprintf("%s Cannot load public key %s: %s", loggerPrefix, cfg.PublicKey, err.Error()))
 		return tlsConfig
 	}
 	certPool.AppendCertsFromPEM(caCert)
