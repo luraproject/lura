@@ -40,6 +40,7 @@ func TestRunServer_TLS(t *testing.T) {
 				TLS: &config.TLS{
 					PublicKey:  "cert.pem",
 					PrivateKey: "key.pem",
+					CaCerts:    []string{"ca.pem"},
 				},
 			},
 			http.HandlerFunc(dummyHandler),
@@ -87,6 +88,7 @@ func TestRunServer_MTLS(t *testing.T) {
 				TLS: &config.TLS{
 					PublicKey:  "cert.pem",
 					PrivateKey: "key.pem",
+					CaCerts:    []string{"ca.pem"},
 					EnableMTLS: true,
 				},
 			},

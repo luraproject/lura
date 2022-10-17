@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package server provides tools to create http servers and handlers wrapping the
-   lura router
+Package server provides tools to create http servers and handlers wrapping the lura router
 */
 package server
 
@@ -20,6 +19,7 @@ import (
 
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/core"
+	"github.com/luraproject/lura/v2/logging"
 )
 
 // ToHTTPError translates an error into a HTTP status code
@@ -54,6 +54,7 @@ var (
 	ErrPrivateKey = errors.New("private key not defined")
 	// ErrPublicKey is the error returned by the router when the public key is not defined
 	ErrPublicKey = errors.New("public key not defined")
+	loggerPrefix = "[SERVICE: HTTP Server]"
 )
 
 // InitHTTPDefaultTransport ensures the default HTTP transport is configured just once per execution
@@ -112,6 +113,10 @@ func RunServer(ctx context.Context, cfg config.ServiceConfig, handler http.Handl
 
 // NewServer returns a http.Server ready to serve the injected handler
 func NewServer(cfg config.ServiceConfig, handler http.Handler) *http.Server {
+	return NewServerWithLogger(cfg, handler, nil)
+}
+
+func NewServerWithLogger(cfg config.ServiceConfig, handler http.Handler, logger logging.Logger) *http.Server {
 	return &http.Server{
 		Addr:              fmt.Sprintf(":%d", cfg.Port),
 		Handler:           handler,
@@ -119,17 +124,25 @@ func NewServer(cfg config.ServiceConfig, handler http.Handler) *http.Server {
 		WriteTimeout:      cfg.WriteTimeout,
 		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
 		IdleTimeout:       cfg.IdleTimeout,
-		TLSConfig:         ParseTLSConfig(cfg.TLS),
+		TLSConfig:         ParseTLSConfigWithLogger(cfg.TLS, logger),
 	}
 }
 
 // ParseTLSConfig creates a tls.Config from the TLS section of the service configuration
 func ParseTLSConfig(cfg *config.TLS) *tls.Config {
+	return ParseTLSConfigWithLogger(cfg, nil)
+}
+
+func ParseTLSConfigWithLogger(cfg *config.TLS, logger logging.Logger) *tls.Config {
 	if cfg == nil {
 		return nil
 	}
 	if cfg.IsDisabled {
 		return nil
+	}
+
+	if logger == nil {
+		logger = logging.NoOp
 	}
 
 	tlsConfig := &tls.Config{
@@ -143,13 +156,28 @@ func ParseTLSConfig(cfg *config.TLS) *tls.Config {
 		return tlsConfig
 	}
 
-	certPool, err := x509.SystemCertPool()
-	if err != nil {
-		certPool = x509.NewCertPool()
+	certPool := x509.NewCertPool()
+	if !cfg.DisableSystemCaPool {
+		if systemCertPool, err := x509.SystemCertPool(); err == nil {
+			certPool = systemCertPool
+		} else {
+			logger.Error(fmt.Sprintf("%s Cannot load system CA pool: %s", loggerPrefix, err.Error()))
+		}
+	}
+
+	if len(cfg.CaCerts) > 0 {
+		for _, path := range cfg.CaCerts {
+			if ca, err := os.ReadFile(path); err == nil {
+				certPool.AppendCertsFromPEM(ca)
+			} else {
+				logger.Error(fmt.Sprintf("%s Cannot load certificate CA %s: %s", loggerPrefix, path, err.Error()))
+			}
+		}
 	}
 
 	caCert, err := os.ReadFile(cfg.PublicKey)
 	if err != nil {
+		logger.Error(fmt.Sprintf("%s Cannot load public key %s: %s", loggerPrefix, cfg.PublicKey, err.Error()))
 		return tlsConfig
 	}
 	certPool.AppendCertsFromPEM(caCert)

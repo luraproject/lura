@@ -276,12 +276,14 @@ type TLS struct {
 	IsDisabled               bool     `mapstructure:"disabled"`
 	PublicKey                string   `mapstructure:"public_key"`
 	PrivateKey               string   `mapstructure:"private_key"`
+	CaCerts                  []string `mapstructure:"ca_certs"`
 	MinVersion               string   `mapstructure:"min_version"`
 	MaxVersion               string   `mapstructure:"max_version"`
 	CurvePreferences         []uint16 `mapstructure:"curve_preferences"`
 	PreferServerCipherSuites bool     `mapstructure:"prefer_server_cipher_suites"`
 	CipherSuites             []uint16 `mapstructure:"cipher_suites"`
 	EnableMTLS               bool     `mapstructure:"enable_mtls"`
+	DisableSystemCaPool      bool     `mapstructure:"disable_system_ca_pool"`
 }
 
 // ExtraConfig is a type to store extra configurations for customized behaviours
