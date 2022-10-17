@@ -113,6 +113,10 @@ func RunServer(ctx context.Context, cfg config.ServiceConfig, handler http.Handl
 
 // NewServer returns a http.Server ready to serve the injected handler
 func NewServer(cfg config.ServiceConfig, handler http.Handler) *http.Server {
+	return NewServerWithLogger(cfg, handler, nil)
+}
+
+func NewServerWithLogger(cfg config.ServiceConfig, handler http.Handler, logger logging.Logger) *http.Server {
 	return &http.Server{
 		Addr:              fmt.Sprintf(":%d", cfg.Port),
 		Handler:           handler,
@@ -120,13 +124,13 @@ func NewServer(cfg config.ServiceConfig, handler http.Handler) *http.Server {
 		WriteTimeout:      cfg.WriteTimeout,
 		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
 		IdleTimeout:       cfg.IdleTimeout,
-		TLSConfig:         ParseTLSConfig(cfg.TLS),
+		TLSConfig:         ParseTLSConfigWithLogger(cfg.TLS, logger),
 	}
 }
 
 // ParseTLSConfig creates a tls.Config from the TLS section of the service configuration
 func ParseTLSConfig(cfg *config.TLS) *tls.Config {
-	return ParseTLSConfigWithLogger(cfg, logging.NoOp)
+	return ParseTLSConfigWithLogger(cfg, nil)
 }
 
 func ParseTLSConfigWithLogger(cfg *config.TLS, logger logging.Logger) *tls.Config {
@@ -135,6 +139,10 @@ func ParseTLSConfigWithLogger(cfg *config.TLS, logger logging.Logger) *tls.Confi
 	}
 	if cfg.IsDisabled {
 		return nil
+	}
+
+	if logger == nil {
+		logger = logging.NoOp
 	}
 
 	tlsConfig := &tls.Config{
