@@ -84,30 +84,36 @@ func InitHTTPDefaultTransport(cfg config.ServiceConfig) {
 // RunServer runs a http.Server with the given handler and configuration.
 // It configures the TLS layer if required by the received configuration.
 func RunServer(ctx context.Context, cfg config.ServiceConfig, handler http.Handler) error {
-	done := make(chan error)
-	s := NewServer(cfg, handler)
+	return RunServerWithLoggerFactory(nil)(ctx, cfg, handler)
+}
 
-	if s.TLSConfig == nil {
-		go func() {
-			done <- s.ListenAndServe()
-		}()
-	} else {
-		if cfg.TLS.PublicKey == "" {
-			return ErrPublicKey
-		}
-		if cfg.TLS.PrivateKey == "" {
-			return ErrPrivateKey
-		}
-		go func() {
-			done <- s.ListenAndServeTLS(cfg.TLS.PublicKey, cfg.TLS.PrivateKey)
-		}()
-	}
+func RunServerWithLoggerFactory(l logging.Logger) func(context.Context, config.ServiceConfig, http.Handler) error {
+	return func(ctx context.Context, cfg config.ServiceConfig, handler http.Handler) error {
+		done := make(chan error)
+		s := NewServerWithLogger(cfg, handler, l)
 
-	select {
-	case err := <-done:
-		return err
-	case <-ctx.Done():
-		return s.Shutdown(context.Background())
+		if s.TLSConfig == nil {
+			go func() {
+				done <- s.ListenAndServe()
+			}()
+		} else {
+			if cfg.TLS.PublicKey == "" {
+				return ErrPublicKey
+			}
+			if cfg.TLS.PrivateKey == "" {
+				return ErrPrivateKey
+			}
+			go func() {
+				done <- s.ListenAndServeTLS(cfg.TLS.PublicKey, cfg.TLS.PrivateKey)
+			}()
+		}
+
+		select {
+		case err := <-done:
+			return err
+		case <-ctx.Done():
+			return s.Shutdown(context.Background())
+		}
 	}
 }
 
