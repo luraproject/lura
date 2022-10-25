@@ -14,8 +14,6 @@ import (
 	"github.com/luraproject/lura/v2/logging"
 	"github.com/luraproject/lura/v2/proxy"
 	"github.com/luraproject/lura/v2/transport/http/server"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 const requestParamsAsterisk string = "*"
@@ -109,12 +107,11 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 	if len(headersToSend) == 0 {
 		headersToSend = server.HeadersToSend
 	}
-	title := cases.Title(language.Und)
 
 	return func(c *gin.Context, queryString []string) *proxy.Request {
 		params := make(map[string]string, len(c.Params))
 		for _, param := range c.Params {
-			params[title.String(param.Key[:1])+param.Key[1:]] = param.Value
+			params[textproto.CanonicalMIMEHeaderKey(param.Key[:1])+param.Key[1:]] = param.Value
 		}
 
 		headers := make(map[string][]string, 3+len(headersToSend))
