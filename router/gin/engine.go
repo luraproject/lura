@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/core"
 	"github.com/luraproject/lura/v2/logging"
 	"github.com/luraproject/lura/v2/transport/http/server"
 )
@@ -61,6 +62,10 @@ func NewEngine(cfg config.ServiceConfig, opt EngineOptions) *gin.Engine {
 				paths = ginOptions.LoggerSkipPaths
 
 				returnErrorMsg = ginOptions.ReturnErrorMsg
+
+				if ginOptions.ObfuscateVersionHeader {
+					core.KrakendHeaderValue = "Version undefined"
+				}
 			}
 		}
 	}
@@ -209,10 +214,14 @@ type engineConfiguration struct {
 	// DisableAccessLog blocks the injection of the router logger
 	DisableAccessLog bool `json:"disable_access_log"`
 
-	// Disables automatic validation of the url params looking for url encoded ones.
+	// DisablePathDecoding disables automatic validation of the url params looking for url encoded ones.
 	// For example if /foo/..%252Fbar is requested and this flag is set to false, the router will
 	// reject the request with http status code 400.
 	DisablePathDecoding bool `json:"disable_path_decoding"`
+
+	// ObfuscateVersionHeader flags if the version header returned by the router should replace the actual
+	// version with the value "undefined"
+	ObfuscateVersionHeader bool `json:"obfuscate_version_header"`
 }
 
 var returnErrorMsg bool
