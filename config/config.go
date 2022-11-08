@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package config defines the config structs and some config parser interfaces and implementations
+Package config defines the config structs and some config parser interfaces and implementations
 */
 package config
 
@@ -158,7 +158,7 @@ type ServiceConfig struct {
 	TLS *TLS `mapstructure:"tls"`
 
 	// run lura in debug mode
-	Debug     bool
+	Debug     bool `mapstructure:"debug_endpoint"`
 	uriParser URIParser
 
 	// SequentialStart flags if the agents should be started sequentially

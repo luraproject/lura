@@ -157,9 +157,9 @@ type parseableServiceConfig struct {
 	DialerTimeout         string                     `json:"dialer_timeout"`
 	DialerFallbackDelay   string                     `json:"dialer_fallback_delay"`
 	DialerKeepAlive       string                     `json:"dialer_keep_alive"`
-	Debug                 bool
-	Plugin                *Plugin       `json:"plugin,omitempty"`
-	TLS                   *parseableTLS `json:"tls,omitempty"`
+	Debug                 bool                       `json:"debug_endpoint"`
+	Plugin                *Plugin                    `json:"plugin,omitempty"`
+	TLS                   *parseableTLS              `json:"tls,omitempty"`
 }
 
 func (p *parseableServiceConfig) normalize() ServiceConfig {
