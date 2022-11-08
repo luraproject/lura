@@ -221,7 +221,7 @@ type engineConfiguration struct {
 
 	// ObfuscateVersionHeader flags if the version header returned by the router should replace the actual
 	// version with the value "undefined"
-	ObfuscateVersionHeader bool `json:"obfuscate_version_header"`
+	ObfuscateVersionHeader bool `json:"hide_version_header"`
 }
 
 var returnErrorMsg bool
