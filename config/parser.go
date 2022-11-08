@@ -240,7 +240,7 @@ type parseableEndpointConfig struct {
 	Backend         []*parseableBackend `json:"backend"`
 	ConcurrentCalls int                 `json:"concurrent_calls"`
 	Timeout         string              `json:"timeout"`
-	CacheTTL        int                 `json:"cache_ttl"`
+	CacheTTL        string              `json:"cache_ttl"`
 	QueryString     []string            `json:"input_query_strings"`
 	ExtraConfig     *ExtraConfig        `json:"extra_config,omitempty"`
 	HeadersToPass   []string            `json:"input_headers"`
@@ -253,7 +253,7 @@ func (p *parseableEndpointConfig) normalize() *EndpointConfig {
 		Method:          p.Method,
 		ConcurrentCalls: p.ConcurrentCalls,
 		Timeout:         parseDuration(p.Timeout),
-		CacheTTL:        time.Duration(p.CacheTTL) * time.Second,
+		CacheTTL:        parseDuration(p.CacheTTL),
 		QueryString:     p.QueryString,
 		HeadersToPass:   p.HeadersToPass,
 		OutputEncoding:  p.OutputEncoding,
