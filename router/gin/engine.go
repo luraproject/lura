@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/textproto"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -130,7 +131,7 @@ func paramChecker() gin.HandlerFunc {
 				c.AbortWithStatus(http.StatusBadRequest)
 				return
 			}
-			if s != param.Value {
+			if s != param.Value || strings.Contains(s, "?") || strings.Contains(s, "#") {
 				c.String(http.StatusBadRequest, "error: encoded url params")
 				c.AbortWithStatus(http.StatusBadRequest)
 				return
