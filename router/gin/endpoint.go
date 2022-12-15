@@ -89,6 +89,9 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 						c.Status(errF(err))
 					}
 					if returnErrorMsg {
+						if te, ok := err.(encodedResponseError); ok && te.Encoding() != "" {
+							c.Header("Content-Type", te.Encoding())
+						}
 						c.Writer.WriteString(err.Error())
 					}
 					cancel()
@@ -161,6 +164,11 @@ func NewRequest(headersToSend []string) func(*gin.Context, []string) *proxy.Requ
 			Headers: headers,
 		}
 	}
+}
+
+type encodedResponseError interface {
+	responseError
+	Encoding() string
 }
 
 type responseError interface {
