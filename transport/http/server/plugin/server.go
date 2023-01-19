@@ -41,7 +41,7 @@ func New(logger logging.Logger, next RunServer) RunServer {
 			logger.Debug(logPrefix, "No plugins required in the extra config")
 			return next(ctx, cfg, handler)
 		}
-		fifo := []string{}
+		var fifo []string
 
 		if !fifoOk {
 			fifo = []string{name}
@@ -69,7 +69,7 @@ func New(logger logging.Logger, next RunServer) RunServer {
 			handlerWrapper, err := hf(context.Background(), extra, handler)
 			if err != nil {
 				logger.Warning(logPrefix, "Error getting the plugin handler:", err.Error())
-				return next(ctx, cfg, handler)
+				continue
 			}
 
 			logger.Debug(logPrefix, "Injecting plugin", name)
