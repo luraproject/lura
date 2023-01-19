@@ -69,7 +69,7 @@ func New(logger logging.Logger, next RunServer) RunServer {
 			handlerWrapper, err := hf(context.Background(), extra, handler)
 			if err != nil {
 				logger.Warning(logPrefix, "Error getting the plugin handler:", err.Error())
-				return next(ctx, cfg, handler)
+				continue
 			}
 
 			logger.Debug(logPrefix, "Injecting plugin", name)
