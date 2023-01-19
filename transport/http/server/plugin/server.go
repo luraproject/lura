@@ -41,7 +41,7 @@ func New(logger logging.Logger, next RunServer) RunServer {
 			logger.Debug(logPrefix, "No plugins required in the extra config")
 			return next(ctx, cfg, handler)
 		}
-		fifo := []string{}
+		var fifo []string
 
 		if !fifoOk {
 			fifo = []string{name}
