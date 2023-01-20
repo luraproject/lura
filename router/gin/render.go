@@ -162,6 +162,14 @@ func noopRender(c *gin.Context, response *proxy.Response) {
 		return
 	}
 	io.Copy(c.Writer, response.Io)
+	httpResp := response.Data["httpResp"].(*http.Response)
+	httpResp.Body.Close()
+	for k, vv := range httpResp.Trailer {
+		k = http.TrailerPrefix + k
+		for _, v := range vv {
+			c.Writer.Header().Add(k, v)
+		}
+	}
 }
 
 var emptyResponse = gin.H{}
