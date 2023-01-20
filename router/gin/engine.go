@@ -41,6 +41,7 @@ func NewEngine(cfg config.ServiceConfig, opt EngineOptions) *gin.Engine {
 	engine.RedirectFixedPath = true
 	engine.HandleMethodNotAllowed = true
 	engine.ContextWithFallback = true
+	engine.UseH2C = true
 
 	paths := []string{}
 

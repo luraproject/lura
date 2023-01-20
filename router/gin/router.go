@@ -107,7 +107,7 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 	go r.cfg.Engine.Run("XXXX")
 
 	r.cfg.Logger.Info("[SERVICE: Gin] Listening on port:", cfg.Port)
-	if err := r.runServerF(r.ctx, cfg, r.cfg.Engine); err != nil && err != http.ErrServerClosed {
+	if err := r.runServerF(r.ctx, cfg, r.cfg.Engine.Handler()); err != nil && err != http.ErrServerClosed {
 		r.cfg.Logger.Error(logPrefix, err.Error())
 	}
 
