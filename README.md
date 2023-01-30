@@ -7,6 +7,7 @@
 ![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/3151/badge)
 ![Docker Pulls](https://img.shields.io/docker/pulls/devopsfaith/krakend.svg)
 [![Slack Widget](https://img.shields.io/badge/join-us%20on%20slack-gray.svg?longCache=true&logo=slack&colorB=red)](https://gophers.slack.com/messages/lura)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fluraproject%2Flura.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fluraproject%2Flura?ref=badge_shield)
 
 
 An open framework to assemble ultra performance API Gateways with middlewares; formerly known as _KrakenD framework_, and core service of the [KrakenD API Gateway](http://www.krakend.io).
@@ -120,3 +121,7 @@ Read [CONTRIBUTING.md](/CONTRIBUTING.md) for more information.
 - **Read the [documentation](/docs/OVERVIEW.md)**
 
 Enjoy Lura!
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fluraproject%2Flura.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fluraproject%2Flura?ref=badge_large)
