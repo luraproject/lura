@@ -58,7 +58,9 @@ func DefaultHTTPResponseParserFactory(cfg HTTPResponseParserConfig) HTTPResponse
 // http response body into the proxy response IO
 func NoOpHTTPResponseParser(ctx context.Context, resp *http.Response) (*Response, error) {
 	return &Response{
-		Data:       map[string]interface{}{},
+		Data:       map[string]interface{}{
+			"httpResp" : resp,
+		},
 		IsComplete: true,
 		Io:         NewReadCloserWrapper(ctx, resp.Body),
 		Metadata: Metadata{
