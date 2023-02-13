@@ -4,6 +4,7 @@ package proxy
 
 import (
 	"context"
+	"time"
 
 	"github.com/luraproject/lura/v2/config"
 )
@@ -42,7 +43,7 @@ func (s shadowFactory) New(cfg *config.EndpointConfig) (p Proxy, err error) {
 	if len(shadow) > 0 {
 		cfg.Backend = shadow
 		pShadow, _ := s.f.New(cfg)
-		p = ShadowMiddleware(p, pShadow)
+		p = ShadowMiddlewareWithTimeout(cfg.Timeout, p, pShadow)
 	}
 
 	return
@@ -67,11 +68,32 @@ func ShadowMiddleware(next ...Proxy) Proxy {
 	}
 }
 
+func ShadowMiddlewareWithTimeout(timeout time.Duration, next ...Proxy) Proxy {
+	switch len(next) {
+	case 0:
+		panic(ErrNotEnoughProxies)
+	case 1:
+		return next[0]
+	case 2:
+		return NewShadowProxyWithTimeout(timeout, next[0], next[1])
+	default:
+		panic(ErrTooManyProxies)
+	}
+}
+
 // NewShadowProxy returns a Proxy that sends requests to p1 and p2 but ignores
 // the response of p2
 func NewShadowProxy(p1, p2 Proxy) Proxy {
+	return NewShadowProxyWithTimeout(config.DefaultTimeout, p1, p2)
+}
+
+func NewShadowProxyWithTimeout(timeout time.Duration, p1, p2 Proxy) Proxy {
 	return func(ctx context.Context, request *Request) (*Response, error) {
-		go p2(newcontextWrapper(ctx), CloneRequest(request))
+		shadowCtx, cancel := newcontextWrapperWithTimeout(ctx, timeout)
+		go func() {
+			p2(shadowCtx, CloneRequest(request))
+			cancel()
+		}()
 		return p1(ctx, request)
 	}
 }
@@ -97,9 +119,10 @@ func (c contextWrapper) Value(key interface{}) interface{} {
 	return c.data.Value(key)
 }
 
-func newcontextWrapper(data context.Context) contextWrapper {
+func newcontextWrapperWithTimeout(data context.Context, timeout time.Duration) (contextWrapper, context.CancelFunc) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	return contextWrapper{
-		Context: context.Background(),
+		Context: ctx,
 		data:    data,
-	}
+	}, cancel
 }
