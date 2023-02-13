@@ -25,8 +25,9 @@ func (s shadowFactory) New(cfg *config.EndpointConfig) (p Proxy, err error) {
 		return
 	}
 
-	shadow := []*config.Backend{}
-	regular := []*config.Backend{}
+	var shadow []*config.Backend
+
+	var regular []*config.Backend
 
 	for _, b := range cfg.Backend {
 		if isShadowBackend(b) {
