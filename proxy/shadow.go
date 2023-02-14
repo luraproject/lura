@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	shadowKey = "shadow"
+	shadowKey        = "shadow"
+	shadowTimeoutKey = "shadow_timeout"
 )
 
 type shadowFactory struct {
@@ -26,11 +27,13 @@ func (s shadowFactory) New(cfg *config.EndpointConfig) (p Proxy, err error) {
 	}
 
 	var shadow []*config.Backend
-
 	var regular []*config.Backend
-
+	var maxTimeout time.Duration
 	for _, b := range cfg.Backend {
-		if isShadowBackend(b) {
+		if d, ok := isShadowBackend(b); ok {
+			if maxTimeout < d {
+				maxTimeout = d
+			}
 			shadow = append(shadow, b)
 			continue
 		}
@@ -38,13 +41,12 @@ func (s shadowFactory) New(cfg *config.EndpointConfig) (p Proxy, err error) {
 	}
 
 	cfg.Backend = regular
-
 	p, err = s.f.New(cfg)
 
 	if len(shadow) > 0 {
 		cfg.Backend = shadow
 		pShadow, _ := s.f.New(cfg)
-		p = ShadowMiddlewareWithTimeout(cfg.Timeout, p, pShadow)
+		p = ShadowMiddlewareWithTimeout(maxTimeout, p, pShadow)
 	}
 
 	return
@@ -99,16 +101,37 @@ func NewShadowProxyWithTimeout(timeout time.Duration, p1, p2 Proxy) Proxy {
 	}
 }
 
-func isShadowBackend(c *config.Backend) bool {
-	if v, ok := c.ExtraConfig[Namespace]; ok {
-		if e, ok := v.(map[string]interface{}); ok {
-			if v, ok := e[shadowKey]; ok {
-				c, ok := v.(bool)
-				return ok && c
-			}
-		}
+func isShadowBackend(c *config.Backend) (time.Duration, bool) {
+	duration := c.Timeout
+	v, ok := c.ExtraConfig[Namespace]
+	if !ok {
+		return duration, false
 	}
-	return false
+
+	e, ok := v.(map[string]interface{})
+	if !ok {
+		return duration, false
+	}
+
+	k, ok := e[shadowKey]
+	if !ok {
+		return duration, false
+	}
+
+	if s, ok := k.(bool); !ok || !s {
+		return duration, false
+	}
+
+	t, ok := e[shadowTimeoutKey].(string)
+	if !ok {
+		return duration, true
+	}
+
+	if d, err := time.ParseDuration(t); err == nil {
+		duration = d
+	}
+
+	return duration, true
 }
 
 type contextWrapper struct {
