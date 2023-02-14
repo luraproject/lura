@@ -19,7 +19,8 @@ type shadowFactory struct {
 }
 
 // New check the Backends for an ExtraConfig with the "shadow" param to true
-// implements the Factory interface
+// implements the Factory interface. Sets the "shadow_timeout" defined in the
+// config; uses the backend timeout as fallback.
 func (s shadowFactory) New(cfg *config.EndpointConfig) (p Proxy, err error) {
 	if len(cfg.Backend) == 0 {
 		err = ErrNoBackends
@@ -71,6 +72,7 @@ func ShadowMiddleware(next ...Proxy) Proxy {
 	}
 }
 
+// ShadowMiddlewareWithTimeout is a Middleware that creates a shadowProxy with a timeout in the context
 func ShadowMiddlewareWithTimeout(timeout time.Duration, next ...Proxy) Proxy {
 	switch len(next) {
 	case 0:
@@ -85,11 +87,13 @@ func ShadowMiddlewareWithTimeout(timeout time.Duration, next ...Proxy) Proxy {
 }
 
 // NewShadowProxy returns a Proxy that sends requests to p1 and p2 but ignores
-// the response of p2
+// the response of p2.
 func NewShadowProxy(p1, p2 Proxy) Proxy {
 	return NewShadowProxyWithTimeout(config.DefaultTimeout, p1, p2)
 }
 
+// NewShadowProxyWithTimeout returns a Proxy that sends requests to p1 and p2 but ignores
+// the response of p2. Sets a timeout in the context.
 func NewShadowProxyWithTimeout(timeout time.Duration, p1, p2 Proxy) Proxy {
 	return func(ctx context.Context, request *Request) (*Response, error) {
 		shadowCtx, cancel := newcontextWrapperWithTimeout(ctx, timeout)
