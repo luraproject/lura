@@ -708,3 +708,12 @@ func (w *WrongNumberOfParamsError) Error() string {
 		w.OutputParams,
 	)
 }
+
+func SetSequentialParamsPattern(pattern string) error {
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		return err
+	}
+	sequentialParamsPattern = re
+	return nil
+}
