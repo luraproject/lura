@@ -97,8 +97,9 @@ func NewShadowProxy(p1, p2 Proxy) Proxy {
 func NewShadowProxyWithTimeout(timeout time.Duration, p1, p2 Proxy) Proxy {
 	return func(ctx context.Context, request *Request) (*Response, error) {
 		shadowCtx, cancel := newcontextWrapperWithTimeout(ctx, timeout)
+		shadowRequest := CloneRequest(request)
 		go func() {
-			p2(shadowCtx, CloneRequest(request))
+			p2(shadowCtx, shadowRequest)
 			cancel()
 		}()
 		return p1(ctx, request)
