@@ -14,40 +14,40 @@ import (
 // NewLoadBalancedMiddleware creates proxy middleware adding the most perfomant balancer
 // over a default subscriber
 func NewLoadBalancedMiddleware(remote *config.Backend) Middleware {
-	return NewLoadBalancedMiddlewareWithSubscriber(sd.GetRegister().Get(remote.SD)(remote))
+	return NewLoadBalancedMiddlewareWithSubscriber(sd.GetRegister().Get(remote.SD)(remote), remote)
 }
 
 // NewLoadBalancedMiddlewareWithSubscriber creates proxy middleware adding the most perfomant balancer
 // over the received subscriber
-func NewLoadBalancedMiddlewareWithSubscriber(subscriber sd.Subscriber) Middleware {
-	return newLoadBalancedMiddleware(sd.NewBalancer(subscriber))
+func NewLoadBalancedMiddlewareWithSubscriber(subscriber sd.Subscriber, remote *config.Backend) Middleware {
+	return newLoadBalancedMiddleware(sd.NewBalancer(subscriber), remote)
 }
 
 // NewRoundRobinLoadBalancedMiddleware creates proxy middleware adding a round robin balancer
 // over a default subscriber
 func NewRoundRobinLoadBalancedMiddleware(remote *config.Backend) Middleware {
-	return NewRoundRobinLoadBalancedMiddlewareWithSubscriber(sd.GetRegister().Get(remote.SD)(remote))
+	return NewRoundRobinLoadBalancedMiddlewareWithSubscriber(sd.GetRegister().Get(remote.SD)(remote), remote)
 }
 
 // NewRandomLoadBalancedMiddleware creates proxy middleware adding a random balancer
 // over a default subscriber
 func NewRandomLoadBalancedMiddleware(remote *config.Backend) Middleware {
-	return NewRandomLoadBalancedMiddlewareWithSubscriber(sd.GetRegister().Get(remote.SD)(remote))
+	return NewRandomLoadBalancedMiddlewareWithSubscriber(sd.GetRegister().Get(remote.SD)(remote), remote)
 }
 
 // NewRoundRobinLoadBalancedMiddlewareWithSubscriber creates proxy middleware adding a round robin
 // balancer over the received subscriber
-func NewRoundRobinLoadBalancedMiddlewareWithSubscriber(subscriber sd.Subscriber) Middleware {
-	return newLoadBalancedMiddleware(sd.NewRoundRobinLB(subscriber))
+func NewRoundRobinLoadBalancedMiddlewareWithSubscriber(subscriber sd.Subscriber, remote *config.Backend) Middleware {
+	return newLoadBalancedMiddleware(sd.NewRoundRobinLB(subscriber), remote)
 }
 
 // NewRandomLoadBalancedMiddlewareWithSubscriber creates proxy middleware adding a random
 // balancer over the received subscriber
-func NewRandomLoadBalancedMiddlewareWithSubscriber(subscriber sd.Subscriber) Middleware {
-	return newLoadBalancedMiddleware(sd.NewRandomLB(subscriber))
+func NewRandomLoadBalancedMiddlewareWithSubscriber(subscriber sd.Subscriber, remote *config.Backend) Middleware {
+	return newLoadBalancedMiddleware(sd.NewRandomLB(subscriber), remote)
 }
 
-func newLoadBalancedMiddleware(lb sd.Balancer) Middleware {
+func newLoadBalancedMiddleware(lb sd.Balancer, remote *config.Backend) Middleware {
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {
 			panic(ErrTooManyProxies)
@@ -66,13 +66,22 @@ func newLoadBalancedMiddleware(lb sd.Balancer) Middleware {
 			if err != nil {
 				return nil, err
 			}
+
 			if len(r.Query) > 0 {
-				q, _ := url.QueryUnescape(r.Query.Encode())
-				qe := url.PathEscape(q)
-				if len(r.URL.RawQuery) > 0 {
-					r.URL.RawQuery += "&" + qe
+				var qp string
+				if remote.DisableQueryParametersEncoding {
+					q, err := url.QueryUnescape(r.Query.Encode())
+					if err != nil {
+						return nil, err
+					}
+					qp = url.PathEscape(q)
 				} else {
-					r.URL.RawQuery += qe
+					qp = r.Query.Encode()
+				}
+				if len(r.URL.RawQuery) > 0 {
+					r.URL.RawQuery += "&" + qp
+				} else {
+					r.URL.RawQuery += qp
 				}
 			}
 
