@@ -13,7 +13,7 @@ const veryLargeString = "abcdefghijklmopqrstuvwxyzabcdefghijklmopqrstuvwxyzabcde
 func BenchmarkNewLoadBalancedMiddleware(b *testing.B) {
 	for _, tc := range []int{3, 5, 9, 13, 17, 21, 25, 50, 100} {
 		b.Run(strconv.Itoa(tc), func(b *testing.B) {
-			proxy := newLoadBalancedMiddleware(dummyBalancer(veryLargeString[:tc]))(dummyProxy(&Response{}))
+			proxy := newLoadBalancedMiddleware(dummyBalancer(veryLargeString[:tc]), &config.Backend{})(dummyProxy(&Response{}))
 			b.ResetTimer()
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
@@ -63,7 +63,7 @@ func BenchmarkNewLoadBalancedMiddleware_parallel100(b *testing.B) {
 
 func benchmarkNewLoadBalancedMiddleware_parallel(b *testing.B, subject string) {
 	b.RunParallel(func(pb *testing.PB) {
-		proxy := newLoadBalancedMiddleware(dummyBalancer(subject))(dummyProxy(&Response{}))
+		proxy := newLoadBalancedMiddleware(dummyBalancer(subject), &config.Backend{})(dummyProxy(&Response{}))
 		for pb.Next() {
 			proxy(context.Background(), &Request{
 				Path: subject,
