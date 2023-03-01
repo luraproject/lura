@@ -114,6 +114,48 @@ func TestNewLoadBalancedMiddleware_parsingError(t *testing.T) {
 	}
 }
 
+func TestNewLoadBalancerMiddleware_DisableQueryParametersEncoding(t *testing.T) {
+	lb := NewRoundRobinLoadBalancedMiddleware(&config.Backend{
+		Host:                           []string{"http://127.0.0.1:8080"},
+		DisableQueryParametersEncoding: true,
+	})
+
+	for _, tc := range []struct {
+		path     string
+		query    url.Values
+		expected string
+	}{
+		{
+			path:     "/tupu",
+			query:    url.Values{"some": []string{"foo%20eq%20bar"}},
+			expected: "http://127.0.0.1:8080/tupu?some=foo%20eq%20bar",
+		},
+		{
+			path:     "/tupu",
+			query:    url.Values{"some": []string{"foo+eq+bar"}},
+			expected: "http://127.0.0.1:8080/tupu?some=foo+eq+bar",
+		},
+		{
+			path:     "/tupu",
+			query:    url.Values{"some": []string{"foo eq bar"}},
+			expected: "http://127.0.0.1:8080/tupu?some=foo eq bar",
+		},
+	} {
+		assertion := func(ctx context.Context, request *Request) (*Response, error) {
+			if request.URL.String() != tc.expected {
+				t.Errorf("The middleware did not diable the query parameters encoding! want [%s], have [%s]\n", tc.expected, request.URL.String())
+			}
+			return nil, nil
+		}
+		if _, err := lb(assertion)(context.Background(), &Request{
+			Path:  tc.path,
+			Query: tc.query,
+		}); err != nil {
+			t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
+		}
+	}
+}
+
 func TestNewRoundRobinLoadBalancedMiddleware_DNSSRV(t *testing.T) {
 	defaultLookup := dnssrv.DefaultLookup
 
