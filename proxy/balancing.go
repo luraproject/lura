@@ -66,15 +66,20 @@ func newLoadBalancedMiddleware(lb sd.Balancer, remote *config.Backend) Middlewar
 			if err != nil {
 				return nil, err
 			}
-
 			if len(r.Query) > 0 {
 				var qp string
 				if remote.DisableQueryParametersEncoding {
-					q, err := url.QueryUnescape(r.Query.Encode())
-					if err != nil {
-						return nil, err
+					var qpv []string
+					for k, v := range r.Query {
+						for _, i := range v {
+							var qb strings.Builder
+							qb.WriteString(k)
+							qb.WriteString("=")
+							qb.WriteString(i)
+							qpv = append(qpv, qb.String())
+						}
 					}
-					qp = url.PathEscape(q)
+					qp = strings.Join(qpv, "&")
 				} else {
 					qp = r.Query.Encode()
 				}
