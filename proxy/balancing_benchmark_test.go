@@ -4,6 +4,7 @@ package proxy
 
 import (
 	"context"
+	"github.com/luraproject/lura/v2/config"
 	"strconv"
 	"testing"
 )
