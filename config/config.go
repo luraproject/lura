@@ -263,6 +263,8 @@ type Backend struct {
 	Decoder encoding.Decoder `json:"-"`
 	// Backend Extra configuration for customized behaviours
 	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
+	// Decides whether to disable the encoding of the query parameters received by the client when calling the backend
+	DisableQueryParametersEncoding bool `mapstructure:"disable_query_parameters_encoding"`
 }
 
 // Plugin contains the config required by the plugin module
