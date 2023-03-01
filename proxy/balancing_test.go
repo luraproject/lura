@@ -15,7 +15,7 @@ import (
 
 func TestNewLoadBalancedMiddleware_ok(t *testing.T) {
 	want := "supu:8080/tupu"
-	lb := newLoadBalancedMiddleware(dummyBalancer("supu:8080"))
+	lb := newLoadBalancedMiddleware(dummyBalancer("supu:8080"), &config.Backend{})
 	assertion := func(ctx context.Context, request *Request) (*Response, error) {
 		if request.URL.String() != want {
 			t.Errorf("The middleware did not update the request URL! want [%s], have [%s]\n", want, request.URL)
@@ -35,13 +35,13 @@ func TestNewLoadBalancedMiddleware_multipleNext(t *testing.T) {
 			t.Errorf("The code did not panic\n")
 		}
 	}()
-	lb := newLoadBalancedMiddleware(dummyBalancer("supu"))
+	lb := newLoadBalancedMiddleware(dummyBalancer("supu"), &config.Backend{})
 	lb(explosiveProxy(t), explosiveProxy(t))
 }
 
 func TestNewLoadBalancedMiddleware_explosiveBalancer(t *testing.T) {
 	expected := errors.New("supu")
-	lb := newLoadBalancedMiddleware(explosiveBalancer{expected})
+	lb := newLoadBalancedMiddleware(explosiveBalancer{expected}, &config.Backend{})
 	if _, err := lb(explosiveProxy(t))(context.Background(), &Request{}); err != expected {
 		t.Errorf("The middleware did not propagate the lb error\n")
 	}
@@ -126,7 +126,7 @@ func TestNewRoundRobinLoadBalancedMiddleware_DNSSRV(t *testing.T) {
 			},
 		}, nil
 	}
-	testLoadBalancedMw(t, NewRoundRobinLoadBalancedMiddlewareWithSubscriber(dnssrv.New("some.service.example.tld")))
+	testLoadBalancedMw(t, NewRoundRobinLoadBalancedMiddlewareWithSubscriber(dnssrv.New("some.service.example.tld"), &config.Backend{}))
 
 	dnssrv.DefaultLookup = defaultLookup
 }
