@@ -47,8 +47,9 @@ func newPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[str
 		return EmptyMiddleware
 	}
 
-	reqModifiers := []func(interface{}) (interface{}, error){}
-	respModifiers := []func(interface{}) (interface{}, error){}
+	var reqModifiers []func(interface{}) (interface{}, error)
+
+	var respModifiers []func(interface{}) (interface{}, error)
 
 	for _, p := range plugins {
 		name, ok := p.(string)
