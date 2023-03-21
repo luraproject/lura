@@ -57,12 +57,16 @@ func newPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[str
 		}
 
 		if mf, ok := plugin.GetRequestModifier(name); ok {
-			reqModifiers = append(reqModifiers, mf(cfg))
+			if fn := mf(cfg); fn != nil {
+				reqModifiers = append(reqModifiers, fn)
+			}
 			continue
 		}
 
 		if mf, ok := plugin.GetResponseModifier(name); ok {
-			respModifiers = append(respModifiers, mf(cfg))
+			if fn := mf(cfg); fn != nil {
+				respModifiers = append(respModifiers, fn)
+			}
 		}
 	}
 

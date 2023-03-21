@@ -193,6 +193,54 @@ func TestNewPluginMiddleware_error_response(t *testing.T) {
 	}
 }
 
+func TestNewPluginMiddleware_PoisonedPlugin(t *testing.T) {
+	plugin.RegisterModifier("poisoned", func(map[string]interface{}) func(interface{}) (interface{}, error) {
+		return nil
+	}, false, true)
+
+	expectedResp := &Response{
+		Data:       map[string]interface{}{"foo": "bar"},
+		IsComplete: true,
+		Metadata: Metadata{
+			Headers: map[string][]string{},
+		},
+	}
+
+	validator := func(ctx context.Context, r *Request) (*Response, error) {
+		return expectedResp, nil
+	}
+
+	bknd := NewBackendPluginMiddleware(
+		logging.NoOp,
+		&config.Backend{},
+	)(validator)
+
+	p := NewPluginMiddleware(
+		logging.NoOp,
+		&config.EndpointConfig{
+			ExtraConfig: map[string]interface{}{
+				plugin.Namespace: map[string]interface{}{
+					"name": []interface{}{
+						"poisoned",
+					},
+				},
+			},
+		},
+	)(bknd)
+
+	resp, err := p(context.Background(), &Request{Path: "/bar"})
+
+	if resp != expectedResp {
+		t.Errorf("unexpected response: %v", resp)
+		return
+	}
+
+	if err != nil {
+		t.Error("error expected")
+		return
+	}
+}
+
 type statusCodeError interface {
 	error
 	StatusCode() int
