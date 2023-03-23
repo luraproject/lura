@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// DebugHandler creates a dummy handler function, useful for quick integration tests
+// EchoHandler creates a dummy handler function, useful for quick integration tests
 func EchoHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		body, _ := io.ReadAll(c.Request.Body)

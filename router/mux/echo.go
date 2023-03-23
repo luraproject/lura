@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-// DebugHandler creates a dummy handler function, useful for quick integration tests
+// EchoHandler creates a dummy handler function, useful for quick integration tests
 func EchoHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
