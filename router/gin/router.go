@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package gin provides some basic implementations for building routers based on gin-gonic/gin
+Package gin provides some basic implementations for building routers based on gin-gonic/gin
 */
 package gin
 
@@ -119,6 +119,10 @@ func (r ginRouter) registerEndpointsAndMiddlewares(cfg config.ServiceConfig) {
 		r.cfg.Engine.Any("/__debug/*param", DebugHandler(r.cfg.Logger))
 	}
 
+	if cfg.Echo {
+		r.cfg.Engine.Any("/__echo/*param", EchoHandler())
+	}
+
 	endpointGroup := r.cfg.Engine.Group("/")
 	endpointGroup.Use(r.cfg.Middlewares...)
 
@@ -130,7 +134,6 @@ func (r ginRouter) registerEndpointsAndMiddlewares(cfg config.ServiceConfig) {
 			r.registerOptionEndpoints(endpointGroup)
 		}
 	}
-
 }
 
 func (r ginRouter) registerKrakendEndpoints(rg *gin.RouterGroup, cfg config.ServiceConfig) {

@@ -3,29 +3,22 @@
 package gin
 
 import (
-	"bytes"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
-
-	"github.com/luraproject/lura/v2/logging"
 )
 
-func TestDebugHandler(t *testing.T) {
-	buff := bytes.NewBuffer(make([]byte, 1024))
-	logger, err := logging.NewLogger("ERROR", buff, "pref")
-	if err != nil {
-		t.Error("building the logger:", err.Error())
-		return
-	}
-
+func TestEchoHandler(t *testing.T) {
+	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	router.GET("/_gin_endpoint/:param", DebugHandler(logger))
+	router.GET("/_gin_endpoint/:param", EchoHandler())
 
-	req, _ := http.NewRequest("GET", "http://127.0.0.1:8088/_gin_endpoint/a?b=1", io.NopCloser(&bytes.Buffer{}))
+	reqBody := `{"message":"some body to send"}`
+	req := httptest.NewRequest("GET", "http://127.0.0.1:8088/_gin_endpoint/a?b=1", strings.NewReader(reqBody))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()
@@ -39,8 +32,7 @@ func TestDebugHandler(t *testing.T) {
 	}
 	w.Result().Body.Close()
 
-	expectedBody := "{\"message\":\"pong\"}"
-
+	expectedBody := `{"Body":"{\"message\":\"some body to send\"}","Headers":{"Content-Type":["application/json"]},"Method":"GET","Params":[{"Key":"param","Value":"a"}],"Query":{"b":["1"]},"URL":"http://127.0.0.1:8088/_gin_endpoint/a?b=1"}`
 	content := string(body)
 	if w.Result().Header.Get("Cache-Control") != "" {
 		t.Error("Cache-Control error:", w.Result().Header.Get("Cache-Control"))
