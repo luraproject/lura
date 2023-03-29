@@ -161,6 +161,7 @@ type parseableServiceConfig struct {
 	Echo                  bool                       `json:"echo_endpoint"`
 	Plugin                *Plugin                    `json:"plugin,omitempty"`
 	TLS                   *parseableTLS              `json:"tls,omitempty"`
+	ClientTLS             *parseableClientTLS        `json:"client_tls,omitempty"`
 }
 
 func (p *parseableServiceConfig) normalize() ServiceConfig {
@@ -192,17 +193,27 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 	}
 	if p.TLS != nil {
 		cfg.TLS = &TLS{
-			IsDisabled:               p.TLS.IsDisabled,
-			PublicKey:                p.TLS.PublicKey,
-			PrivateKey:               p.TLS.PrivateKey,
-			CaCerts:                  p.TLS.CaCerts,
-			MinVersion:               p.TLS.MinVersion,
-			MaxVersion:               p.TLS.MaxVersion,
-			CurvePreferences:         p.TLS.CurvePreferences,
-			PreferServerCipherSuites: p.TLS.PreferServerCipherSuites,
-			CipherSuites:             p.TLS.CipherSuites,
-			EnableMTLS:               p.TLS.EnableMTLS,
-			DisableSystemCaPool:      p.TLS.DisableSystemCaPool,
+			IsDisabled:          p.TLS.IsDisabled,
+			PublicKey:           p.TLS.PublicKey,
+			PrivateKey:          p.TLS.PrivateKey,
+			CaCerts:             p.TLS.CaCerts,
+			MinVersion:          p.TLS.MinVersion,
+			MaxVersion:          p.TLS.MaxVersion,
+			CurvePreferences:    p.TLS.CurvePreferences,
+			CipherSuites:        p.TLS.CipherSuites,
+			EnableMTLS:          p.TLS.EnableMTLS,
+			DisableSystemCaPool: p.TLS.DisableSystemCaPool,
+		}
+	}
+	if p.ClientTLS != nil {
+		cfg.ClientTLS = &ClientTLS{
+			AllowInsecureConnections: p.ClientTLS.AllowInsecureConnections,
+			CaCerts:                  p.ClientTLS.CaCerts,
+			DisableSystemCaPool:      p.ClientTLS.DisableSystemCaPool,
+			MinVersion:               p.ClientTLS.MinVersion,
+			MaxVersion:               p.ClientTLS.MaxVersion,
+			CurvePreferences:         p.ClientTLS.CurvePreferences,
+			CipherSuites:             p.ClientTLS.CipherSuites,
 		}
 	}
 	if p.ExtraConfig != nil {
@@ -233,6 +244,16 @@ type parseableTLS struct {
 	CipherSuites             []uint16 `json:"cipher_suites"`
 	EnableMTLS               bool     `json:"enable_mtls"`
 	DisableSystemCaPool      bool     `json:"disable_system_ca_pool"`
+}
+
+type parseableClientTLS struct {
+	AllowInsecureConnections bool     `json:"allow_insecure_connections"`
+	CaCerts                  []string `json:"ca_certs"`
+	DisableSystemCaPool      bool     `json:"disable_system_ca_pool"`
+	MinVersion               string   `json:"min_version"`
+	MaxVersion               string   `json:"max_version"`
+	CurvePreferences         []uint16 `json:"curve_preferences"`
+	CipherSuites             []uint16 `json:"cipher_suites"`
 }
 
 type parseableEndpointConfig struct {

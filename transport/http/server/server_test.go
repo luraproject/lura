@@ -262,7 +262,7 @@ func Test_parseTLSVersion(t *testing.T) {
 
 func Test_parseCurveIDs(t *testing.T) {
 	original := []uint16{1, 2, 3}
-	cs := parseCurveIDs(&config.TLS{CurvePreferences: original})
+	cs := parseCurveIDs(original)
 	for k, v := range cs {
 		if original[k] != uint16(v) {
 			t.Errorf("unexpected curves %v. expected: %v", cs, original)
@@ -272,7 +272,7 @@ func Test_parseCurveIDs(t *testing.T) {
 
 func Test_parseCipherSuites(t *testing.T) {
 	original := []uint16{1, 2, 3}
-	cs := parseCipherSuites(&config.TLS{CipherSuites: original})
+	cs := parseCipherSuites(original)
 	for k, v := range cs {
 		if original[k] != uint16(v) {
 			t.Errorf("unexpected ciphersuites %v. expected: %v", cs, original)
