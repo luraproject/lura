@@ -296,8 +296,6 @@ type ClientTLS struct {
 	AllowInsecureConnections bool     `mapstructure:"allow_insecure_connections"`
 	RootCAs                  []string `mapstructure:"root_cas"`
 	DisableSystemRootPool    bool     `mapstructure:"disable_system_root_pool"`
-	CaCerts                  []string `mapstructure:"ca_certs"`
-	DisableSystemCaPool      bool     `mapstructure:"disable_system_ca_pool"`
 	MinVersion               string   `mapstructure:"min_version"`
 	MaxVersion               string   `mapstructure:"max_version"`
 	CurvePreferences         []uint16 `mapstructure:"curve_preferences"`
