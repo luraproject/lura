@@ -34,7 +34,7 @@ func TestDebugHandler(t *testing.T) {
 
 	body, ioerr := io.ReadAll(w.Result().Body)
 	if ioerr != nil {
-		t.Error("reading a response:", err.Error())
+		t.Error("reading a response:", ioerr.Error())
 		return
 	}
 	w.Result().Body.Close()

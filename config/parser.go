@@ -158,6 +158,7 @@ type parseableServiceConfig struct {
 	DialerFallbackDelay   string                     `json:"dialer_fallback_delay"`
 	DialerKeepAlive       string                     `json:"dialer_keep_alive"`
 	Debug                 bool                       `json:"debug_endpoint"`
+	Echo                  bool                       `json:"echo_endpoint"`
 	Plugin                *Plugin                    `json:"plugin,omitempty"`
 	TLS                   *parseableTLS              `json:"tls,omitempty"`
 }

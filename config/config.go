@@ -159,6 +159,7 @@ type ServiceConfig struct {
 
 	// run lura in debug mode
 	Debug     bool `mapstructure:"debug_endpoint"`
+	Echo      bool `mapstructure:"echo_endpoint"`
 	uriParser URIParser
 
 	// SequentialStart flags if the agents should be started sequentially
