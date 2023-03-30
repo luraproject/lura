@@ -187,13 +187,11 @@ func ParseTLSConfigWithLogger(cfg *config.TLS, logger logging.Logger) *tls.Confi
 }
 
 func ParseClientTLSConfigWithLogger(cfg *config.ClientTLS, logger logging.Logger) *tls.Config {
-	minVersion := parseTLSVersion(cfg.MinVersion)
-	maxVersion := parseTLSVersion(cfg.MaxVersion)
 	return &tls.Config{
 		InsecureSkipVerify: cfg.AllowInsecureConnections,
 		RootCAs:            LoadCertPool(cfg.DisableSystemCaPool, cfg.CaCerts, logger),
-		MinVersion:         minVersion,
-		MaxVersion:         maxVersion,
+		MinVersion:         parseTLSVersion(cfg.MinVersion),
+		MaxVersion:         parseTLSVersion(cfg.MaxVersion),
 		CurvePreferences:   parseCurveIDs(cfg.CurvePreferences),
 		CipherSuites:       parseCipherSuites(cfg.CipherSuites),
 	}

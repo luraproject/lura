@@ -64,6 +64,26 @@ func TestRunServer_TLS(t *testing.T) {
 		t.Errorf("unexpected status code: %d", resp.StatusCode)
 		return
 	}
+
+	// now lets initialize the global default transport and use a regular
+	// client to connect to the server
+	InitHTTPDefaultTransport(config.ServiceConfig{
+		ClientTLS: &config.ClientTLS{
+			CaCerts:             []string{"ca.pem"},
+			DisableSystemCaPool: true,
+		},
+	})
+	rawClient := http.Client{}
+	resp, err = rawClient.Get(fmt.Sprintf("https://localhost:%d", port))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if resp.StatusCode != 200 {
+		t.Errorf("unexpected status code: %d", resp.StatusCode)
+		return
+	}
+
 	cancel()
 
 	if err = <-done; err != nil {
