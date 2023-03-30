@@ -171,7 +171,7 @@ func ParseTLSConfigWithLogger(cfg *config.TLS, logger logging.Logger) *tls.Confi
 		return tlsConfig
 	}
 
-	certPool := LoadCertPool(cfg.DisableSystemCaPool, cfg.CaCerts, logger)
+	certPool := loadCertPool(cfg.DisableSystemCaPool, cfg.CaCerts, logger)
 
 	caCert, err := os.ReadFile(cfg.PublicKey)
 	if err != nil {
@@ -192,7 +192,7 @@ func ParseClientTLSConfigWithLogger(cfg *config.ClientTLS, logger logging.Logger
 	}
 	return &tls.Config{
 		InsecureSkipVerify: cfg.AllowInsecureConnections,
-		RootCAs:            LoadCertPool(cfg.DisableSystemRootPool, cfg.RootCAs, logger),
+		RootCAs:            loadCertPool(cfg.DisableSystemCaPool, cfg.CaCerts, logger),
 		MinVersion:         parseTLSVersion(cfg.MinVersion),
 		MaxVersion:         parseTLSVersion(cfg.MaxVersion),
 		CurvePreferences:   parseCurveIDs(cfg.CurvePreferences),
@@ -200,7 +200,7 @@ func ParseClientTLSConfigWithLogger(cfg *config.ClientTLS, logger logging.Logger
 	}
 }
 
-func LoadCertPool(disableSystemCaPool bool, caCerts []string, logger logging.Logger) *x509.CertPool {
+func loadCertPool(disableSystemCaPool bool, caCerts []string, logger logging.Logger) *x509.CertPool {
 	certPool := x509.NewCertPool()
 	if !disableSystemCaPool {
 		if systemCertPool, err := x509.SystemCertPool(); err == nil {

@@ -69,8 +69,8 @@ func TestRunServer_TLS(t *testing.T) {
 	// client to connect to the server
 	InitHTTPDefaultTransport(config.ServiceConfig{
 		ClientTLS: &config.ClientTLS{
-			RootCAs:               []string{"ca.pem"},
-			DisableSystemRootPool: true,
+			CaCerts:             []string{"ca.pem"},
+			DisableSystemCaPool: true,
 		},
 	})
 	rawClient := http.Client{}

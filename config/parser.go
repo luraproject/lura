@@ -209,8 +209,8 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 	if p.ClientTLS != nil {
 		cfg.ClientTLS = &ClientTLS{
 			AllowInsecureConnections: p.ClientTLS.AllowInsecureConnections,
-			RootCAs:                  p.ClientTLS.RootCAs,
-			DisableSystemRootPool:    p.ClientTLS.DisableSystemRootPool,
+			CaCerts:                  p.ClientTLS.CaCerts,
+			DisableSystemCaPool:      p.ClientTLS.DisableSystemCaPool,
 			MinVersion:               p.ClientTLS.MinVersion,
 			MaxVersion:               p.ClientTLS.MaxVersion,
 			CurvePreferences:         p.ClientTLS.CurvePreferences,
@@ -249,8 +249,8 @@ type parseableTLS struct {
 
 type parseableClientTLS struct {
 	AllowInsecureConnections bool     `json:"allow_insecure_connections"`
-	RootCAs                  []string `json:"root_cas"`
-	DisableSystemRootPool    bool     `json:"disable_system_root_pool"`
+	CaCerts                  []string `json:"ca_certs"`
+	DisableSystemCaPool      bool     `json:"disable_system_ca_pool"`
 	MinVersion               string   `json:"min_version"`
 	MaxVersion               string   `json:"max_version"`
 	CurvePreferences         []uint16 `json:"curve_preferences"`
