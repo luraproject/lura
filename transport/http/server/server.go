@@ -187,6 +187,9 @@ func ParseTLSConfigWithLogger(cfg *config.TLS, logger logging.Logger) *tls.Confi
 }
 
 func ParseClientTLSConfigWithLogger(cfg *config.ClientTLS, logger logging.Logger) *tls.Config {
+	if cfg == nil {
+		return nil
+	}
 	return &tls.Config{
 		InsecureSkipVerify: cfg.AllowInsecureConnections,
 		RootCAs:            LoadCertPool(cfg.DisableSystemRootPool, cfg.RootCAs, logger),
