@@ -193,23 +193,24 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 	}
 	if p.TLS != nil {
 		cfg.TLS = &TLS{
-			IsDisabled:          p.TLS.IsDisabled,
-			PublicKey:           p.TLS.PublicKey,
-			PrivateKey:          p.TLS.PrivateKey,
-			CaCerts:             p.TLS.CaCerts,
-			MinVersion:          p.TLS.MinVersion,
-			MaxVersion:          p.TLS.MaxVersion,
-			CurvePreferences:    p.TLS.CurvePreferences,
-			CipherSuites:        p.TLS.CipherSuites,
-			EnableMTLS:          p.TLS.EnableMTLS,
-			DisableSystemCaPool: p.TLS.DisableSystemCaPool,
+			IsDisabled:               p.TLS.IsDisabled,
+			PublicKey:                p.TLS.PublicKey,
+			PrivateKey:               p.TLS.PrivateKey,
+			CaCerts:                  p.TLS.CaCerts,
+			MinVersion:               p.TLS.MinVersion,
+			MaxVersion:               p.TLS.MaxVersion,
+			CurvePreferences:         p.TLS.CurvePreferences,
+			PreferServerCipherSuites: p.TLS.PreferServerCipherSuites,
+			CipherSuites:             p.TLS.CipherSuites,
+			EnableMTLS:               p.TLS.EnableMTLS,
+			DisableSystemCaPool:      p.TLS.DisableSystemCaPool,
 		}
 	}
 	if p.ClientTLS != nil {
 		cfg.ClientTLS = &ClientTLS{
 			AllowInsecureConnections: p.ClientTLS.AllowInsecureConnections,
-			CaCerts:                  p.ClientTLS.CaCerts,
-			DisableSystemCaPool:      p.ClientTLS.DisableSystemCaPool,
+			RootCAs:                  p.ClientTLS.RootCAs,
+			DisableSystemRootPool:    p.ClientTLS.DisableSystemRootPool,
 			MinVersion:               p.ClientTLS.MinVersion,
 			MaxVersion:               p.ClientTLS.MaxVersion,
 			CurvePreferences:         p.ClientTLS.CurvePreferences,
@@ -248,8 +249,8 @@ type parseableTLS struct {
 
 type parseableClientTLS struct {
 	AllowInsecureConnections bool     `json:"allow_insecure_connections"`
-	CaCerts                  []string `json:"ca_certs"`
-	DisableSystemCaPool      bool     `json:"disable_system_ca_pool"`
+	RootCAs                  []string `json:"root_cas"`
+	DisableSystemRootPool    bool     `json:"disable_system_root_pool"`
 	MinVersion               string   `json:"min_version"`
 	MaxVersion               string   `json:"max_version"`
 	CurvePreferences         []uint16 `json:"curve_preferences"`
