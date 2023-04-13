@@ -282,9 +282,9 @@ func TestConfig_initKOInvalidHost(t *testing.T) {
 }
 
 func TestConfig_initKOInvalidDebugPattern(t *testing.T) {
-	dp := debugPattern
+	dp := invalidPattern
 
-	debugPattern = "a(b"
+	invalidPattern = "a(b"
 	subject := ServiceConfig{
 		Version: ConfigVersion,
 		Host:    []string{"http://127.0.0.1:8080"},
@@ -302,5 +302,5 @@ func TestConfig_initKOInvalidDebugPattern(t *testing.T) {
 		t.Error("Expecting an error at the configuration init!", err)
 	}
 
-	debugPattern = dp
+	invalidPattern = dp
 }

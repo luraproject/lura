@@ -317,7 +317,7 @@ var ExtraConfigAlias = map[string]string{}
 var (
 	simpleURLKeysPattern    = regexp.MustCompile(`\{([\w\-\.:/]+)\}`)
 	sequentialParamsPattern = regexp.MustCompile(`^(resp[\d]+_.+)?(JWT\.([\w\-\.:/]+))?$`)
-	debugPattern            = "^[^/]|/__debug(/.*)?$"
+	invalidPattern          = `^[^/]|\*.|/__(debug|echo|health)(/.*)?$`
 	errInvalidHost          = errors.New("invalid host")
 	errInvalidNoOpEncoding  = errors.New("can not use NoOp encoding with more than one backends connected to the same endpoint")
 	defaultPort             = 8080
@@ -597,7 +597,7 @@ func uniqueOutput(output []string) ([]string, int) {
 }
 
 func (e *EndpointConfig) validate() error {
-	matched, err := regexp.MatchString(debugPattern, e.Endpoint)
+	matched, err := regexp.MatchString(invalidPattern, e.Endpoint)
 	if err != nil {
 		return &EndpointMatchError{
 			Err:    err,
