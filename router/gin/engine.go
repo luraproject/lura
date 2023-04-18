@@ -68,6 +68,7 @@ func NewEngine(cfg config.ServiceConfig, opt EngineOptions) *gin.Engine {
 				engine.AppEngine = ginOptions.AppEngine
 				engine.MaxMultipartMemory = ginOptions.MaxMultipartMemory
 				engine.RemoveExtraSlash = ginOptions.RemoveExtraSlash
+				engine.UseH2C = ginOptions.UseH2C
 				paths = ginOptions.LoggerSkipPaths
 
 				returnErrorMsg = ginOptions.ReturnErrorMsg
@@ -231,6 +232,9 @@ type engineConfiguration struct {
 	// ObfuscateVersionHeader flags if the version header returned by the router should replace the actual
 	// version with the value "undefined"
 	ObfuscateVersionHeader bool `json:"hide_version_header"`
+
+	// UseH2C enable h2c support.
+	UseH2C bool `json:"use_h2c"`
 }
 
 var returnErrorMsg bool

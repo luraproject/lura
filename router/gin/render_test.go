@@ -5,6 +5,7 @@ package gin
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -40,7 +41,7 @@ func TestRender_Negotiated_ok(t *testing.T) {
 	server.GET("/_gin_endpoint/:param", EndpointHandler(endpoint, p))
 
 	for _, testData := range [][]string{
-		{"plain", "text/plain", "application/x-yaml; charset=utf-8", "content:\n  b: supu\n"},
+		{"plain", "text/plain", "application/x-yaml; charset=utf-8", "content:\n    b: supu\n"},
 		{"none", "", "application/json; charset=utf-8", `{"content":{"B":"supu"}}`},
 		{"json", "application/json", "application/json; charset=utf-8", `{"content":{"B":"supu"}}`},
 		{"xml", "application/xml", "application/xml; charset=utf-8", `<A><B>supu</B></A>`},
@@ -74,7 +75,7 @@ func TestRender_Negotiated_ok(t *testing.T) {
 			t.Error(testData[0], "Unexpected status code:", w.Result().StatusCode)
 		}
 		if content != testData[3] {
-			t.Error(testData[0], "Unexpected body:", content, "expected:", testData[3])
+			t.Error(testData[0], fmt.Sprintf("Unexpected body: '%s'\nexpected: '%s'", content, testData[3]))
 		}
 	}
 }
