@@ -48,10 +48,18 @@ func NewEngine(cfg config.ServiceConfig, opt EngineOptions) *gin.Engine {
 	if v, ok := cfg.ExtraConfig[Namespace]; ok {
 		if b, err := json.Marshal(v); err == nil {
 			if err := json.Unmarshal(b, &ginOptions); err == nil {
-				engine.RedirectTrailingSlash = !ginOptions.DisableRedirectTrailingSlash
-				engine.RedirectFixedPath = !ginOptions.DisableRedirectFixedPath
-				engine.HandleMethodNotAllowed = !ginOptions.DisableHandleMethodNotAllowed
-				engine.ForwardedByClientIP = ginOptions.ForwardedByClientIP
+				if ginOptions.DisableRedirectTrailingSlash != nil {
+					engine.RedirectTrailingSlash = !*ginOptions.DisableRedirectTrailingSlash
+				}
+				if ginOptions.DisableRedirectFixedPath != nil {
+					engine.RedirectFixedPath = !*ginOptions.DisableRedirectFixedPath
+				}
+				if ginOptions.DisableHandleMethodNotAllowed != nil {
+					engine.HandleMethodNotAllowed = !*ginOptions.DisableHandleMethodNotAllowed
+				}
+				if ginOptions.ForwardedByClientIP != nil {
+					engine.ForwardedByClientIP = *ginOptions.ForwardedByClientIP
+				}
 				engine.RemoteIPHeaders = ginOptions.RemoteIPHeaders
 				for k, h := range engine.RemoteIPHeaders {
 					engine.RemoteIPHeaders[k] = textproto.CanonicalMIMEHeaderKey(h)
@@ -146,7 +154,7 @@ type engineConfiguration struct {
 	// For example if /foo/ is requested but a route only exists for /foo, the
 	// client is redirected to /foo with http status code 301 for GET requests
 	// and 307 for all other request methods.
-	DisableRedirectTrailingSlash bool `json:"disable_redirect_trailing_slash"`
+	DisableRedirectTrailingSlash *bool `json:"disable_redirect_trailing_slash"`
 
 	// If enabled, the router tries to fix the current request path, if no
 	// handle is registered for it.
@@ -157,7 +165,7 @@ type engineConfiguration struct {
 	// all other request methods.
 	// For example /FOO and /..//Foo could be redirected to /foo.
 	// RedirectTrailingSlash is independent of this option.
-	DisableRedirectFixedPath bool `json:"disable_redirect_fixed_path"`
+	DisableRedirectFixedPath *bool `json:"disable_redirect_fixed_path"`
 
 	// If enabled, the router checks if another method is allowed for the
 	// current route, if the current request can not be routed.
@@ -165,13 +173,13 @@ type engineConfiguration struct {
 	// and HTTP status code 405.
 	// If no other Method is allowed, the request is delegated to the NotFound
 	// handler.
-	DisableHandleMethodNotAllowed bool `json:"disable_handle_method_not_allowed"`
+	DisableHandleMethodNotAllowed *bool `json:"disable_handle_method_not_allowed"`
 
 	// If enabled, client IP will be parsed from the request's headers that
 	// match those stored at `(*gin.Engine).RemoteIPHeaders`. If no IP was
 	// fetched, it falls back to the IP obtained from
 	// `(*gin.Context).Request.RemoteAddr`.
-	ForwardedByClientIP bool `json:"forwarded_by_client_ip"`
+	ForwardedByClientIP *bool `json:"forwarded_by_client_ip"`
 
 	// List of headers used to obtain the client IP when
 	// `(*gin.Engine).ForwardedByClientIP` is `true` and
