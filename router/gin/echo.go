@@ -30,7 +30,6 @@ func EchoHandler() gin.HandlerFunc {
 		resp := echoResponse{
 			Uri: c.Request.RequestURI,
 			UriDetails: map[string]string{
-				"scheme":   c.Request.URL.Scheme,
 				"user":     c.Request.URL.User.String(),
 				"host":     c.Request.Host,
 				"path":     c.Request.URL.Path,

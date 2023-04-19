@@ -29,7 +29,6 @@ func EchoHandler() http.HandlerFunc {
 		resp, err := json.Marshal(echoResponse{
 			Uri: r.RequestURI,
 			UriDetails: map[string]string{
-				"scheme":   r.URL.Scheme,
 				"user":     r.URL.User.String(),
 				"host":     r.Host,
 				"path":     r.URL.Path,

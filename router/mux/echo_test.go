@@ -12,9 +12,9 @@ import (
 
 func TestEchoHandlerNew(t *testing.T) {
 	reqBody := `{"message":"some body to send"}`
-	expectedRespBody := `{"req_uri":"http://127.0.0.1:8088/_gin_endpoint/a?b=1","req_uri_details":{"fragment":"","host":"127.0.0.1:8088","path":"/_gin_endpoint/a","query":"b=1","scheme":"http","user":""},"req_method":"GET","req_querystring":{"b":["1"]},"req_body":"{\"message\":\"some body to send\"}","req_headers":{"Content-Type":["application/json"]}}`
-	expectedRespNoBody := `{"req_uri":"http://127.0.0.1:8088/_gin_endpoint/a?b=1","req_uri_details":{"fragment":"","host":"127.0.0.1:8088","path":"/_gin_endpoint/a","query":"b=1","scheme":"http","user":""},"req_method":"GET","req_querystring":{"b":["1"]},"req_body":"","req_headers":{"Content-Type":["application/json"]}}`
-	expectedRespString := `{"req_uri":"http://127.0.0.1:8088/_gin_endpoint/a?b=1","req_uri_details":{"fragment":"","host":"127.0.0.1:8088","path":"/_gin_endpoint/a","query":"b=1","scheme":"http","user":""},"req_method":"GET","req_querystring":{"b":["1"]},"req_body":"Hello lura","req_headers":{"Content-Type":["application/json"]}}`
+	expectedRespBody := `{"req_uri":"http://127.0.0.1:8088/_gin_endpoint/a?b=1","req_uri_details":{"fragment":"","host":"127.0.0.1:8088","path":"/_gin_endpoint/a","query":"b=1","user":""},"req_method":"GET","req_querystring":{"b":["1"]},"req_body":"{\"message\":\"some body to send\"}","req_headers":{"Content-Type":["application/json"]}}`
+	expectedRespNoBody := `{"req_uri":"http://127.0.0.1:8088/_gin_endpoint/a?b=1","req_uri_details":{"fragment":"","host":"127.0.0.1:8088","path":"/_gin_endpoint/a","query":"b=1","user":""},"req_method":"GET","req_querystring":{"b":["1"]},"req_body":"","req_headers":{"Content-Type":["application/json"]}}`
+	expectedRespString := `{"req_uri":"http://127.0.0.1:8088/_gin_endpoint/a?b=1","req_uri_details":{"fragment":"","host":"127.0.0.1:8088","path":"/_gin_endpoint/a","query":"b=1","user":""},"req_method":"GET","req_querystring":{"b":["1"]},"req_body":"Hello lura","req_headers":{"Content-Type":["application/json"]}}`
 	e := EchoHandler()
 
 	for _, tc := range []struct {
