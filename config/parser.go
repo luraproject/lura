@@ -172,6 +172,7 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 		Port:                  p.Port,
 		Version:               p.Version,
 		Debug:                 p.Debug,
+		Echo:                  p.Echo,
 		ReadTimeout:           parseDuration(p.ReadTimeout),
 		WriteTimeout:          parseDuration(p.WriteTimeout),
 		IdleTimeout:           parseDuration(p.IdleTimeout),

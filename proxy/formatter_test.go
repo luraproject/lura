@@ -132,6 +132,11 @@ func TestEntityFormatter_newDenyFilter(t *testing.T) {
 			"tupu": false,
 			"foo":  "bar",
 			"a": map[string]interface{}{
+				"a": map[string]interface{}{
+					"b": true,
+					"c": 42,
+					"d": "tupu",
+				},
 				"b": true,
 				"c": 42,
 				"d": "tupu",
@@ -144,12 +149,16 @@ func TestEntityFormatter_newDenyFilter(t *testing.T) {
 			"tupu": false,
 			"foo":  "bar",
 			"a": map[string]interface{}{
+				"a": map[string]interface{}{
+					"c": 42,
+					"d": "tupu",
+				},
 				"d": "tupu",
 			},
 		},
 		IsComplete: true,
 	}
-	f := NewEntityFormatter(&config.Backend{DenyList: []string{"supu", "a.b", "a.c", "foo.unknown"}})
+	f := NewEntityFormatter(&config.Backend{DenyList: []string{"supu", "a.b", "a.c", "foo.unknown", "a.a.b"}})
 	result := f.Format(sample)
 	if v, ok := result.Data["tupu"]; !ok || v != expected.Data["tupu"] {
 		t.Errorf("The formatter returned an unexpected result for the field tupu: %v\n", result)
@@ -170,6 +179,10 @@ func TestEntityFormatter_newDenyFilter(t *testing.T) {
 	}
 	if len(result.Data) != 3 || result.IsComplete != expected.IsComplete {
 		t.Errorf("The formatter returned an unexpected result size: %v\n", result)
+	}
+
+	if !reflect.DeepEqual(expected.Data, result.Data) {
+		t.Errorf("unexpected response. have: %+v, want: %+v", result.Data, expected.Data)
 	}
 }
 
