@@ -174,7 +174,8 @@ func TestEntityFormatter_newDenyFilter(t *testing.T) {
 	if d, okk := tmp["d"]; !okk || d != "tupu" {
 		t.Errorf("The formatter returned an unexpected result for the field a.d: %v\n", result)
 	}
-	if len(tmp) != 1 {
+	if len(tmp) != 2 {
+		// a.a should exist , and a.d should exist
 		t.Errorf("The formatter returned an unexpected result size for the field a: %v\n", result)
 	}
 	if len(result.Data) != 3 || result.IsComplete != expected.IsComplete {
