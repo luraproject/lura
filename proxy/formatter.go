@@ -280,7 +280,7 @@ func newFlatmapFormatter(cfg config.ExtraConfig, target, group string) *flatmapF
 				if len(vs) == 0 {
 					return nil
 				}
-				ops := []flatmapOp{}
+				var ops []flatmapOp
 				for _, v := range vs {
 					m, ok := v.(map[string]interface{})
 					if !ok {
