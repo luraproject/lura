@@ -136,6 +136,16 @@ func TestEntityFormatter_newDenyFilter(t *testing.T) {
 					"b": true,
 					"c": 42,
 					"d": "tupu",
+					"deeper": map[string]interface{}{
+						"a": map[string]interface{}{
+							"aa": "deleteme deeper.a.aa",
+							"bb": "do not deleteme deeper.a.bb",
+						},
+						"b": map[string]interface{}{
+							"aa": "deleteme deeper.b.aa",
+							"bb": "do not deleteme deeper.b.bb",
+						},
+					},
 				},
 				"b": true,
 				"c": 42,
@@ -152,13 +162,29 @@ func TestEntityFormatter_newDenyFilter(t *testing.T) {
 				"a": map[string]interface{}{
 					"c": 42,
 					"d": "tupu",
+					"deeper": map[string]interface{}{
+						"a": map[string]interface{}{
+							"bb": "do not deleteme deeper.a.bb",
+						},
+						"b": map[string]interface{}{
+							"bb": "do not deleteme deeper.b.bb",
+						},
+					},
 				},
 				"d": "tupu",
 			},
 		},
 		IsComplete: true,
 	}
-	f := NewEntityFormatter(&config.Backend{DenyList: []string{"supu", "a.b", "a.c", "foo.unknown", "a.a.b"}})
+	f := NewEntityFormatter(&config.Backend{DenyList: []string{
+		"supu",
+		"a.b",
+		"a.c",
+		"foo.unknown",
+		"a.a.b",
+		"a.a.deeper.a.aa",
+		"a.a.deeper.b.aa",
+	}})
 	result := f.Format(sample)
 	if v, ok := result.Data["tupu"]; !ok || v != expected.Data["tupu"] {
 		t.Errorf("The formatter returned an unexpected result for the field tupu: %v\n", result)
