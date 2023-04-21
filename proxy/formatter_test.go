@@ -132,6 +132,21 @@ func TestEntityFormatter_newDenyFilter(t *testing.T) {
 			"tupu": false,
 			"foo":  "bar",
 			"a": map[string]interface{}{
+				"a": map[string]interface{}{
+					"b": true,
+					"c": 42,
+					"d": "tupu",
+					"deeper": map[string]interface{}{
+						"a": map[string]interface{}{
+							"aa": "deleteme deeper.a.aa",
+							"bb": "do not deleteme deeper.a.bb",
+						},
+						"b": map[string]interface{}{
+							"aa": "deleteme deeper.b.aa",
+							"bb": "do not deleteme deeper.b.bb",
+						},
+					},
+				},
 				"b": true,
 				"c": 42,
 				"d": "tupu",
@@ -144,12 +159,32 @@ func TestEntityFormatter_newDenyFilter(t *testing.T) {
 			"tupu": false,
 			"foo":  "bar",
 			"a": map[string]interface{}{
+				"a": map[string]interface{}{
+					"c": 42,
+					"d": "tupu",
+					"deeper": map[string]interface{}{
+						"a": map[string]interface{}{
+							"bb": "do not deleteme deeper.a.bb",
+						},
+						"b": map[string]interface{}{
+							"bb": "do not deleteme deeper.b.bb",
+						},
+					},
+				},
 				"d": "tupu",
 			},
 		},
 		IsComplete: true,
 	}
-	f := NewEntityFormatter(&config.Backend{DenyList: []string{"supu", "a.b", "a.c", "foo.unknown"}})
+	f := NewEntityFormatter(&config.Backend{DenyList: []string{
+		"supu",
+		"a.b",
+		"a.c",
+		"foo.unknown",
+		"a.a.b",
+		"a.a.deeper.a.aa",
+		"a.a.deeper.b.aa",
+	}})
 	result := f.Format(sample)
 	if v, ok := result.Data["tupu"]; !ok || v != expected.Data["tupu"] {
 		t.Errorf("The formatter returned an unexpected result for the field tupu: %v\n", result)
@@ -165,11 +200,16 @@ func TestEntityFormatter_newDenyFilter(t *testing.T) {
 	if d, okk := tmp["d"]; !okk || d != "tupu" {
 		t.Errorf("The formatter returned an unexpected result for the field a.d: %v\n", result)
 	}
-	if len(tmp) != 1 {
+	if len(tmp) != 2 {
+		// a.a should exist , and a.d should exist
 		t.Errorf("The formatter returned an unexpected result size for the field a: %v\n", result)
 	}
 	if len(result.Data) != 3 || result.IsComplete != expected.IsComplete {
 		t.Errorf("The formatter returned an unexpected result size: %v\n", result)
+	}
+
+	if !reflect.DeepEqual(expected.Data, result.Data) {
+		t.Errorf("unexpected response. have: %+v, want: %+v", result.Data, expected.Data)
 	}
 }
 
