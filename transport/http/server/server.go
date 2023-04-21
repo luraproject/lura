@@ -59,6 +59,16 @@ var (
 
 // InitHTTPDefaultTransport ensures the default HTTP transport is configured just once per execution
 func InitHTTPDefaultTransport(cfg config.ServiceConfig) {
+	InitHTTPDefaultTransportWithLogger(cfg, nil)
+}
+
+func InitHTTPDefaultTransportWithLogger(cfg config.ServiceConfig, logger logging.Logger) {
+	if logger == nil {
+		logger = logging.NoOp
+	}
+	if cfg.AllowInsecureConnections {
+		cfg.ClientTLS.AllowInsecureConnections = true
+	}
 	onceTransportConfig.Do(func() {
 		http.DefaultTransport = &http.Transport{
 			Proxy: http.ProxyFromEnvironment,
@@ -76,7 +86,7 @@ func InitHTTPDefaultTransport(cfg config.ServiceConfig) {
 			ResponseHeaderTimeout: cfg.ResponseHeaderTimeout,
 			ExpectContinueTimeout: cfg.ExpectContinueTimeout,
 			TLSHandshakeTimeout:   10 * time.Second,
-			TLSClientConfig:       &tls.Config{InsecureSkipVerify: cfg.AllowInsecureConnections}, // skipcq: GSC-G402
+			TLSClientConfig:       ParseClientTLSConfigWithLogger(cfg.ClientTLS, logger),
 		}
 	})
 }
@@ -152,34 +162,16 @@ func ParseTLSConfigWithLogger(cfg *config.TLS, logger logging.Logger) *tls.Confi
 	}
 
 	tlsConfig := &tls.Config{
-		MinVersion:               parseTLSVersion(cfg.MinVersion),
-		MaxVersion:               parseTLSVersion(cfg.MaxVersion),
-		CurvePreferences:         parseCurveIDs(cfg),
-		PreferServerCipherSuites: cfg.PreferServerCipherSuites,
-		CipherSuites:             parseCipherSuites(cfg),
+		MinVersion:       parseTLSVersion(cfg.MinVersion),
+		MaxVersion:       parseTLSVersion(cfg.MaxVersion),
+		CurvePreferences: parseCurveIDs(cfg.CurvePreferences),
+		CipherSuites:     parseCipherSuites(cfg.CipherSuites),
 	}
 	if !cfg.EnableMTLS {
 		return tlsConfig
 	}
 
-	certPool := x509.NewCertPool()
-	if !cfg.DisableSystemCaPool {
-		if systemCertPool, err := x509.SystemCertPool(); err == nil {
-			certPool = systemCertPool
-		} else {
-			logger.Error(fmt.Sprintf("%s Cannot load system CA pool: %s", loggerPrefix, err.Error()))
-		}
-	}
-
-	if len(cfg.CaCerts) > 0 {
-		for _, path := range cfg.CaCerts {
-			if ca, err := os.ReadFile(path); err == nil {
-				certPool.AppendCertsFromPEM(ca)
-			} else {
-				logger.Error(fmt.Sprintf("%s Cannot load certificate CA %s: %s", loggerPrefix, path, err.Error()))
-			}
-		}
-	}
+	certPool := loadCertPool(cfg.DisableSystemCaPool, cfg.CaCerts, logger)
 
 	caCert, err := os.ReadFile(cfg.PublicKey)
 	if err != nil {
@@ -194,6 +186,40 @@ func ParseTLSConfigWithLogger(cfg *config.TLS, logger logging.Logger) *tls.Confi
 	return tlsConfig
 }
 
+func ParseClientTLSConfigWithLogger(cfg *config.ClientTLS, logger logging.Logger) *tls.Config {
+	if cfg == nil {
+		return nil
+	}
+	return &tls.Config{
+		InsecureSkipVerify: cfg.AllowInsecureConnections,
+		RootCAs:            loadCertPool(cfg.DisableSystemCaPool, cfg.CaCerts, logger),
+		MinVersion:         parseTLSVersion(cfg.MinVersion),
+		MaxVersion:         parseTLSVersion(cfg.MaxVersion),
+		CurvePreferences:   parseCurveIDs(cfg.CurvePreferences),
+		CipherSuites:       parseCipherSuites(cfg.CipherSuites),
+	}
+}
+
+func loadCertPool(disableSystemCaPool bool, caCerts []string, logger logging.Logger) *x509.CertPool {
+	certPool := x509.NewCertPool()
+	if !disableSystemCaPool {
+		if systemCertPool, err := x509.SystemCertPool(); err == nil {
+			certPool = systemCertPool
+		} else {
+			logger.Error(fmt.Sprintf("%s Cannot load system CA pool: %s", loggerPrefix, err.Error()))
+		}
+	}
+
+	for _, path := range caCerts {
+		if ca, err := os.ReadFile(path); err == nil {
+			certPool.AppendCertsFromPEM(ca)
+		} else {
+			logger.Error(fmt.Sprintf("%s Cannot load certificate CA %s: %s", loggerPrefix, path, err.Error()))
+		}
+	}
+	return certPool
+}
+
 func parseTLSVersion(key string) uint16 {
 	if v, ok := versions[key]; ok {
 		return v
@@ -201,28 +227,28 @@ func parseTLSVersion(key string) uint16 {
 	return tls.VersionTLS13
 }
 
-func parseCurveIDs(cfg *config.TLS) []tls.CurveID {
-	l := len(cfg.CurvePreferences)
+func parseCurveIDs(curvePreferences []uint16) []tls.CurveID {
+	l := len(curvePreferences)
 	if l == 0 {
 		return defaultCurves
 	}
 
-	curves := make([]tls.CurveID, len(cfg.CurvePreferences))
+	curves := make([]tls.CurveID, len(curvePreferences))
 	for i := range curves {
-		curves[i] = tls.CurveID(cfg.CurvePreferences[i])
+		curves[i] = tls.CurveID(curvePreferences[i])
 	}
 	return curves
 }
 
-func parseCipherSuites(cfg *config.TLS) []uint16 {
-	l := len(cfg.CipherSuites)
+func parseCipherSuites(cipherSuites []uint16) []uint16 {
+	l := len(cipherSuites)
 	if l == 0 {
 		return defaultCipherSuites
 	}
 
 	cs := make([]uint16, l)
 	for i := range cs {
-		cs[i] = uint16(cfg.CipherSuites[i])
+		cs[i] = uint16(cipherSuites[i])
 	}
 	return cs
 }
