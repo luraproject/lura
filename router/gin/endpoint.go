@@ -27,7 +27,7 @@ var ErrorResponseWriter = func(c *gin.Context, statusCode int, err error) {
 	if te, ok := err.(encodedResponseError); ok && te.Encoding() != "" {
 		c.Header("Content-Type", te.Encoding())
 	}
-	c.String(statusCode, err.Error())
+	c.Writer.WriteString(err.Error())
 }
 
 // EndpointHandler implements the HandlerFactory interface using the default ToHTTPError function
