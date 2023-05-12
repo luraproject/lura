@@ -137,13 +137,15 @@ func paramChecker() gin.HandlerFunc {
 		for _, param := range c.Params {
 			s, err := url.PathUnescape(param.Value)
 			if err != nil {
-				ErrorResponseWriter(c, http.StatusBadRequest, fmt.Errorf("error: %s", err))
-				c.AbortWithStatus(http.StatusBadRequest)
+				c.Status(http.StatusBadRequest)
+				ErrorResponseWriter(c, fmt.Errorf("error: %s", err))
+				c.Abort()
 				return
 			}
 			if s != param.Value || strings.Contains(s, "?") || strings.Contains(s, "#") {
-				ErrorResponseWriter(c, http.StatusBadRequest, errors.New("error: encoded url params"))
-				c.AbortWithStatus(http.StatusBadRequest)
+				c.Status(http.StatusBadRequest)
+				ErrorResponseWriter(c, errors.New("error: encoded url params"))
+				c.Abort()
 				return
 			}
 		}
