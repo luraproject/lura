@@ -23,7 +23,7 @@ type HandlerFactory func(*config.EndpointConfig, proxy.Proxy) gin.HandlerFunc
 
 // ErrorResponseWriter writes the string representation of an error into the response body
 // and sets a Content-Type header for errors that implement the encodedResponseError interface.
-var ErrorResponseWriter = func(c *gin.Context, statusCode int, err error) {
+var ErrorResponseWriter = func(c *gin.Context, err error) {
 	if te, ok := err.(encodedResponseError); ok && te.Encoding() != "" {
 		c.Header("Content-Type", te.Encoding())
 	}
@@ -92,15 +92,13 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 				}
 
 				if response == nil {
-					var statusCode int
 					if t, ok := err.(responseError); ok {
-						statusCode = t.StatusCode()
+						c.Status(t.StatusCode())
 					} else {
-						statusCode = errF(err)
+						c.Status(errF(err))
 					}
-					c.Status(statusCode)
 					if returnErrorMsg {
-						ErrorResponseWriter(c, statusCode, err)
+						ErrorResponseWriter(c, err)
 					}
 					cancel()
 					return
