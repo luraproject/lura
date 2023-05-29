@@ -92,7 +92,8 @@ func GetOptions(cfg config.ExtraConfig) (*Options, error) {
 
 // New resturns a new Extractor, ready to be use on a middleware
 func New(opt Options) *Extractor {
-	replacements := [][2]string{}
+	var replacements [][2]string
+
 	title := cases.Title(language.Und)
 	for k, v := range opt.Variables {
 		val, ok := v.(string)
