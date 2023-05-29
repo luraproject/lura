@@ -26,10 +26,10 @@ import (
 func NewGraphQLMiddleware(logger logging.Logger, remote *config.Backend) Middleware {
 	opt, err := graphql.GetOptions(remote.ExtraConfig)
 	if err != nil {
-        if err != graphql.ErrNoConfigFound {
-            logger.Warning(
-                fmt.Sprintf("[BACKEND: %s][GraphQL] %s", remote.URLPattern, err.Error()))
-        }
+		if err != graphql.ErrNoConfigFound {
+			logger.Warning(
+				fmt.Sprintf("[BACKEND: %s][GraphQL] %s", remote.URLPattern, err.Error()))
+		}
 		return EmptyMiddleware
 	}
 
