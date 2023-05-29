@@ -53,13 +53,13 @@ type Options struct {
 	Method    OperationMethod `json:"method"`
 }
 
-var errNoConfigFound = errors.New("grapghql: no configuration found")
+var ErrNoConfigFound = errors.New("grapghql: no configuration found")
 
 // GetOptions extracts the Options config from the backend's extra config
 func GetOptions(cfg config.ExtraConfig) (*Options, error) {
 	tmp, ok := cfg[Namespace]
 	if !ok {
-		return nil, errNoConfigFound
+		return nil, ErrNoConfigFound
 	}
 
 	b, err := json.Marshal(tmp)
