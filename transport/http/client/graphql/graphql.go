@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package graphql offers a param extractor and basic types for building GraphQL requests
+Package graphql offers a param extractor and basic types for building GraphQL requests
 */
 package graphql
 
@@ -53,13 +53,13 @@ type Options struct {
 	Method    OperationMethod `json:"method"`
 }
 
-var errNoConfigFound = errors.New("grapghql: no configuration found")
+var ErrNoConfigFound = errors.New("grapghql: no configuration found")
 
 // GetOptions extracts the Options config from the backend's extra config
 func GetOptions(cfg config.ExtraConfig) (*Options, error) {
 	tmp, ok := cfg[Namespace]
 	if !ok {
-		return nil, errNoConfigFound
+		return nil, ErrNoConfigFound
 	}
 
 	b, err := json.Marshal(tmp)
@@ -92,7 +92,8 @@ func GetOptions(cfg config.ExtraConfig) (*Options, error) {
 
 // New resturns a new Extractor, ready to be use on a middleware
 func New(opt Options) *Extractor {
-	replacements := [][2]string{}
+	var replacements [][2]string
+
 	title := cases.Title(language.Und)
 	for k, v := range opt.Variables {
 		val, ok := v.(string)
