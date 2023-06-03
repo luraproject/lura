@@ -96,7 +96,7 @@ func NewShadowProxy(p1, p2 Proxy) Proxy {
 // the response of p2. Sets a timeout in the context.
 func NewShadowProxyWithTimeout(timeout time.Duration, p1, p2 Proxy) Proxy {
 	return func(ctx context.Context, request *Request) (*Response, error) {
-		shadowCtx, cancel := newcontextWrapperWithTimeout(ctx, timeout)
+		shadowCtx, cancel := newContextWrapperWithTimeout(ctx, timeout)
 		shadowRequest := CloneRequest(request)
 		go func() {
 			p2(shadowCtx, shadowRequest)
@@ -148,7 +148,7 @@ func (c contextWrapper) Value(key interface{}) interface{} {
 	return c.data.Value(key)
 }
 
-func newcontextWrapperWithTimeout(data context.Context, timeout time.Duration) (contextWrapper, context.CancelFunc) {
+func newContextWrapperWithTimeout(data context.Context, timeout time.Duration) (contextWrapper, context.CancelFunc) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	return contextWrapper{
 		Context: ctx,

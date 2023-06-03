@@ -656,7 +656,7 @@ func (n *NoBackendsError) Error() string {
 }
 
 // UnsupportedVersionError is the error returned by the configuration init process when the configuration
-// version is not supoprted
+// version is not supported
 type UnsupportedVersionError struct {
 	Have int
 	Want int
