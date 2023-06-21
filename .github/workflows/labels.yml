@@ -1,24 +1,9 @@
-name: Label Commenter
-
+name: Label commenter
 on:
-  workflow_call:
-
-#on:
-#  issues:
-#    types: [labeled, unlabeled]
-#  pull_request_target:
-#    types: [labeled, unlabeled]
-
-permissions:
-  contents: read
-  issues: write
-  pull-requests: write
-
+  issues:
+    types: [labeled, unlabeled]
+  pull_request_target:
+    types: [labeled, unlabeled]
 jobs:
-  comment:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Label Commenter
-        uses: peaceiris/actions-label-commenter@v1
+  stale:
+    uses: luraproject/.github/.github/workflows/label-commenter.yml@main
