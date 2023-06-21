@@ -3,7 +3,6 @@ server.rsa.crt
 server.rsa.key
 *.pem
 *.json
-*.yml
 *.toml
 *.dot
 *.out
