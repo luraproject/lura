@@ -170,7 +170,7 @@ func (r ginRouter) registerKrakendEndpoint(rg *gin.RouterGroup, method string, e
 	case http.MethodDelete:
 		rg.DELETE(path, h)
 	default:
-		r.cfg.Logger.Error(logPrefix, "Unsupported method", method)
+		r.cfg.Logger.Error(logPrefix, "[ENDPOINT:", path, "] Unsupported method", method)
 		return
 	}
 
