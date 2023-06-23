@@ -127,6 +127,61 @@ func ExampleNewDetailed() {
 	// http://foobar:90
 }
 
+func ExampleNewDetailedWithScheme() {
+	srvSet := []*net.SRV{
+		{
+			Port:   90,
+			Target: "foobar",
+			Weight: 2,
+		},
+		{
+			Port:   90,
+			Target: "127.0.0.1",
+			Weight: 2,
+		},
+		{
+			Port:   80,
+			Target: "127.0.0.1",
+			Weight: 2,
+		},
+		{
+			Port:   81,
+			Target: "127.0.0.1",
+			Weight: 4,
+		},
+		{
+			Port:     82,
+			Target:   "127.0.0.1",
+			Weight:   10,
+			Priority: 2,
+		},
+		{
+			Port:   83,
+			Target: "127.0.0.1",
+		},
+	}
+	lookupFunc := func(service, proto, name string) (cname string, addrs []*net.SRV, err error) {
+		return "cname", srvSet, nil
+	}
+
+	s := NewDetailedWithScheme("some.example.tld", lookupFunc, 10*time.Second, "https")
+	hosts, err := s.Hosts()
+	if err != nil {
+		fmt.Println("Getting the hosts:", err.Error())
+		return
+	}
+	for _, h := range hosts {
+		fmt.Println(h)
+	}
+
+	// output:
+	// https://127.0.0.1:81
+	// https://127.0.0.1:81
+	// https://127.0.0.1:80
+	// https://127.0.0.1:90
+	// https://foobar:90
+}
+
 func TestSubscriber_LoockupError(t *testing.T) {
 	errToReturn := errors.New("Some random error")
 	defaultLookup := func(service, proto, name string) (cname string, addrs []*net.SRV, err error) {
