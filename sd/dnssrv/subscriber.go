@@ -48,7 +48,7 @@ func NewDetailed(name string, lookup lookup, ttl time.Duration) sd.Subscriber {
 // NewDetailedWithScheme creates a DNS subscriber with the received values and the scheme to use
 // for the fetched server entries.
 func NewDetailedWithScheme(name string, lookup lookup, ttl time.Duration, scheme string) sd.Subscriber {
-	if scheme != "http" && scheme != "https" {
+	if scheme == "" {
 		scheme = "http"
 	}
 	s := subscriber{

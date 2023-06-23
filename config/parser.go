@@ -371,7 +371,7 @@ func (p *parseableBackend) normalize() *Backend {
 		AllowList:                p.AllowList,
 		DenyList:                 p.DenyList,
 	}
-	if b.SDScheme != "http" && b.SDScheme != "https" {
+	if b.SDScheme == "" {
 		b.SDScheme = "http"
 	}
 	if p.ExtraConfig != nil {

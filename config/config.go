@@ -540,7 +540,9 @@ func (s *ServiceConfig) initBackendDefaults(e, b int) {
 	backend.Timeout = endpoint.Timeout
 	backend.ConcurrentCalls = endpoint.ConcurrentCalls
 	backend.Decoder = encoding.GetRegister().Get(strings.ToLower(backend.Encoding))(backend.IsCollection)
-	backend.SDScheme = "http"
+	if backend.SDScheme == "" {
+		backend.SDScheme = "http"
+	}
 }
 
 func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]interface{}) error {
