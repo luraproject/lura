@@ -42,28 +42,11 @@ func New(name string) sd.Subscriber {
 
 // NewDetailed creates a DNS subscriber with the received values
 func NewDetailed(name string, lookup lookup, ttl time.Duration) sd.Subscriber {
-	s := subscriber{
-		name:   name,
-		cache:  &sd.FixedSubscriber{},
-		mutex:  &sync.RWMutex{},
-		ttl:    ttl,
-		lookup: lookup,
-		scheme: "http",
-	}
-
-	s.update()
-
-	go func() {
-		for {
-			<-time.After(s.ttl)
-			s.update()
-		}
-	}()
-
-	return s
+	return NewDetailedWithScheme(name, lookup, ttl, "http")
 }
 
-// NewDetailed creates a DNS subscriber with the received values
+// NewDetailedWithScheme creates a DNS subscriber with the received values and the scheme to use
+// for the fetched server entries.
 func NewDetailedWithScheme(name string, lookup lookup, ttl time.Duration, scheme string) sd.Subscriber {
 	if scheme != "http" && scheme != "https" {
 		scheme = "http"
@@ -153,8 +136,8 @@ func (s subscriber) resolve() ([]string, error) {
 		},
 	)
 
-	ws := []uint16{}
-	host := []string{}
+	ws := make([]uint16, 0, len(srvs))
+	host := make([]string, 0, len(srvs))
 
 	for _, a := range srvs {
 		if a.Priority > srvs[0].Priority {
@@ -164,7 +147,7 @@ func (s subscriber) resolve() ([]string, error) {
 		host = append(host, s.scheme+"://"+net.JoinHostPort(a.Target, fmt.Sprint(a.Port)))
 	}
 
-	instances := []string{}
+	instances := make([]string, 0, len(ws))
 	for i, times := range compact(ws) {
 		for j := uint16(0); j < times; j++ {
 			instances = append(instances, host[i])
