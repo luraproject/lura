@@ -11,7 +11,7 @@ import (
 
 // NewFilterHeadersMiddleware returns a middleware with or without a header filtering
 // proxy wrapping the next element (depending on the configuration).
-func NewFilterHeadersMiddleware(logger logging.Logger, remote *config.Backend) Middleware {
+func NewFilterHeadersMiddleware(_ logging.Logger, remote *config.Backend) Middleware {
 	if len(remote.HeadersToPass) == 0 {
 		return EmptyMiddleware
 	}
