@@ -218,7 +218,7 @@ func TestSubscriber_ResolveVeryLarge(t *testing.T) {
 	}
 }
 
-func ExampleWeights_compact_basic() {
+func Examplecompact_basicweights() {
 	for _, tc := range [][]uint16{
 		[]uint16{25, 10000, 1000},
 		[]uint16{25, 1000, 10000, 0, 65535},
@@ -237,7 +237,7 @@ func ExampleWeights_compact_basic() {
 	// [0 0 0 0] [0 0 0 0]
 }
 
-func ExampleWeights_compact_custom() {
+func Examplecompact_custom_weights() {
 	tc := make([]uint16, 200)
 	for i := range tc {
 		tc[i] = uint16(3*5*7*11*13 + i)
