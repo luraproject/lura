@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-   Package backoff contains some basic implementations and a selector by strategy name
+Package backoff contains some basic implementations and a selector by strategy name
 */
 package backoff
 
@@ -44,7 +44,7 @@ func ExponentialBackoff(i int) time.Duration {
 }
 
 // ExponentialJitterBackoff returns ever increasing backoffs by a power of 2
-// with +/- 0-33% to prevent sychronized reuqests.
+// with +/- 0-33% to prevent sychronized requests.
 func ExponentialJitterBackoff(i int) time.Duration {
 	return jitter(int(1 << uint(i)))
 }
@@ -55,7 +55,7 @@ func LinearBackoff(i int) time.Duration {
 }
 
 // LinearJitterBackoff returns increasing durations, each a second longer than the last
-// with +/- 0-33% to prevent sychronized reuqests.
+// with +/- 0-33% to prevent sychronized requests.
 func LinearJitterBackoff(i int) time.Duration {
 	return jitter(i)
 }
