@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package dnssrv defines some implementations for a dns based service discovery
+Package dnssrv defines some implementations for a dns based service discovery
 */
 package dnssrv
 
@@ -32,7 +32,7 @@ var DefaultLookup = net.LookupSRV
 
 // SubscriberFactory builds a DNS_SRV Subscriber with the received config
 func SubscriberFactory(cfg *config.Backend) sd.Subscriber {
-	return New(cfg.Host[0])
+	return NewDetailedWithScheme(cfg.Host[0], DefaultLookup, TTL, cfg.SDScheme)
 }
 
 // New creates a DNS subscriber with the default values
@@ -48,6 +48,33 @@ func NewDetailed(name string, lookup lookup, ttl time.Duration) sd.Subscriber {
 		mutex:  &sync.RWMutex{},
 		ttl:    ttl,
 		lookup: lookup,
+		scheme: "http",
+	}
+
+	s.update()
+
+	go func() {
+		for {
+			<-time.After(s.ttl)
+			s.update()
+		}
+	}()
+
+	return s
+}
+
+// NewDetailed creates a DNS subscriber with the received values
+func NewDetailedWithScheme(name string, lookup lookup, ttl time.Duration, scheme string) sd.Subscriber {
+	if scheme != "http" && scheme != "https" {
+		scheme = "http"
+	}
+	s := subscriber{
+		name:   name,
+		cache:  &sd.FixedSubscriber{},
+		mutex:  &sync.RWMutex{},
+		ttl:    ttl,
+		lookup: lookup,
+		scheme: scheme,
 	}
 
 	s.update()
@@ -70,6 +97,7 @@ type subscriber struct {
 	mutex  *sync.RWMutex
 	ttl    time.Duration
 	lookup lookup
+	scheme string
 }
 
 // Hosts returns a copy of the cached set of hosts. It is safe to call it concurrently
@@ -133,7 +161,7 @@ func (s subscriber) resolve() ([]string, error) {
 			break
 		}
 		ws = append(ws, a.Weight)
-		host = append(host, "http://"+net.JoinHostPort(a.Target, fmt.Sprint(a.Port)))
+		host = append(host, s.scheme+"://"+net.JoinHostPort(a.Target, fmt.Sprint(a.Port)))
 	}
 
 	instances := []string{}

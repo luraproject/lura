@@ -257,6 +257,8 @@ type Backend struct {
 	Target string `mapstructure:"target"`
 	// name of the service discovery driver to use
 	SD string `mapstructure:"sd"`
+	// scheme to use for servers fetched from
+	SDScheme string `mapstructure:"sd_scheme"`
 
 	// list of keys to be replaced in the URLPattern
 	URLKeys []string
@@ -401,7 +403,6 @@ func (s *ServiceConfig) initGlobalParams() {
 	}
 
 	s.Host = s.uriParser.CleanHosts(s.Host)
-
 	s.ExtraConfig.sanitize()
 }
 
@@ -539,6 +540,7 @@ func (s *ServiceConfig) initBackendDefaults(e, b int) {
 	backend.Timeout = endpoint.Timeout
 	backend.ConcurrentCalls = endpoint.ConcurrentCalls
 	backend.Decoder = encoding.GetRegister().Get(strings.ToLower(backend.Encoding))(backend.IsCollection)
+	backend.SDScheme = "http"
 }
 
 func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]interface{}) error {

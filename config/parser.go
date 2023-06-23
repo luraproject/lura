@@ -352,6 +352,7 @@ type parseableBackend struct {
 	Target                   string            `json:"target"`
 	ExtraConfig              *ExtraConfig      `json:"extra_config,omitempty"`
 	SD                       string            `json:"sd"`
+	SDScheme                 string            `json:"sd_scheme"`
 }
 
 func (p *parseableBackend) normalize() *Backend {
@@ -366,8 +367,12 @@ func (p *parseableBackend) normalize() *Backend {
 		IsCollection:             p.IsCollection,
 		Target:                   p.Target,
 		SD:                       p.SD,
+		SDScheme:                 p.SDScheme,
 		AllowList:                p.AllowList,
 		DenyList:                 p.DenyList,
+	}
+	if b.SDScheme != "http" && b.SDScheme != "https" {
+		b.SDScheme = "http"
 	}
 	if p.ExtraConfig != nil {
 		b.ExtraConfig = *p.ExtraConfig
