@@ -268,6 +268,8 @@ type Backend struct {
 	Decoder encoding.Decoder `json:"-"`
 	// Backend Extra configuration for customized behaviours
 	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
+	// HeadersToPass defines the list of headers to pass to this backend
+	HeadersToPass []string `mapstructure:"input_headers"`
 }
 
 // Plugin contains the config required by the plugin module
@@ -539,6 +541,10 @@ func (s *ServiceConfig) initBackendDefaults(e, b int) {
 	backend.Timeout = endpoint.Timeout
 	backend.ConcurrentCalls = endpoint.ConcurrentCalls
 	backend.Decoder = encoding.GetRegister().Get(strings.ToLower(backend.Encoding))(backend.IsCollection)
+
+	for i := range backend.HeadersToPass {
+		backend.HeadersToPass[i] = textproto.CanonicalMIMEHeaderKey(backend.HeadersToPass[i])
+	}
 }
 
 func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]interface{}) error {

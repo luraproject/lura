@@ -352,6 +352,7 @@ type parseableBackend struct {
 	Target                   string            `json:"target"`
 	ExtraConfig              *ExtraConfig      `json:"extra_config,omitempty"`
 	SD                       string            `json:"sd"`
+	HeadersToPass            []string          `json:"input_headers"`
 }
 
 func (p *parseableBackend) normalize() *Backend {
@@ -368,6 +369,7 @@ func (p *parseableBackend) normalize() *Backend {
 		SD:                       p.SD,
 		AllowList:                p.AllowList,
 		DenyList:                 p.DenyList,
+		HeadersToPass:            p.HeadersToPass,
 	}
 	if p.ExtraConfig != nil {
 		b.ExtraConfig = *p.ExtraConfig
