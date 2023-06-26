@@ -352,6 +352,7 @@ type parseableBackend struct {
 	Target                   string            `json:"target"`
 	ExtraConfig              *ExtraConfig      `json:"extra_config,omitempty"`
 	SD                       string            `json:"sd"`
+	HeadersToPass            []string          `json:"input_headers"`
 	SDScheme                 string            `json:"sd_scheme"`
 }
 
@@ -370,6 +371,7 @@ func (p *parseableBackend) normalize() *Backend {
 		SDScheme:                 p.SDScheme,
 		AllowList:                p.AllowList,
 		DenyList:                 p.DenyList,
+		HeadersToPass:            p.HeadersToPass,
 	}
 	if b.SDScheme == "" {
 		b.SDScheme = "http"
