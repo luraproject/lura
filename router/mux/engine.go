@@ -21,7 +21,7 @@ type BasicEngine struct {
 	dict    map[string]map[string]http.HandlerFunc
 }
 
-// NewHTTPErrorInterceptor returns a HTTPErrorInterceptor over theinjected response writer
+// NewHTTPErrorInterceptor returns a HTTPErrorInterceptor over the injected response writer
 func NewHTTPErrorInterceptor(w http.ResponseWriter) *HTTPErrorInterceptor {
 	return &HTTPErrorInterceptor{w, new(sync.Once)}
 }

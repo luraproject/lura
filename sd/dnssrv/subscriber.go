@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package dnssrv defines some implementations for a dns based service discovery
+Package dnssrv defines some implementations for a dns based service discovery
 */
 package dnssrv
 
@@ -32,7 +32,7 @@ var DefaultLookup = net.LookupSRV
 
 // SubscriberFactory builds a DNS_SRV Subscriber with the received config
 func SubscriberFactory(cfg *config.Backend) sd.Subscriber {
-	return New(cfg.Host[0])
+	return NewDetailedWithScheme(cfg.Host[0], DefaultLookup, TTL, cfg.SDScheme)
 }
 
 // New creates a DNS subscriber with the default values
@@ -42,12 +42,22 @@ func New(name string) sd.Subscriber {
 
 // NewDetailed creates a DNS subscriber with the received values
 func NewDetailed(name string, lookup lookup, ttl time.Duration) sd.Subscriber {
+	return NewDetailedWithScheme(name, lookup, ttl, "http")
+}
+
+// NewDetailedWithScheme creates a DNS subscriber with the received values and the scheme to use
+// for the fetched server entries.
+func NewDetailedWithScheme(name string, lookup lookup, ttl time.Duration, scheme string) sd.Subscriber {
+	if scheme == "" {
+		scheme = "http"
+	}
 	s := subscriber{
 		name:   name,
 		cache:  &sd.FixedSubscriber{},
 		mutex:  &sync.RWMutex{},
 		ttl:    ttl,
 		lookup: lookup,
+		scheme: scheme,
 	}
 
 	s.update()
@@ -70,6 +80,7 @@ type subscriber struct {
 	mutex  *sync.RWMutex
 	ttl    time.Duration
 	lookup lookup
+	scheme string
 }
 
 // Hosts returns a copy of the cached set of hosts. It is safe to call it concurrently
@@ -125,18 +136,18 @@ func (s subscriber) resolve() ([]string, error) {
 		},
 	)
 
-	ws := []uint16{}
-	host := []string{}
+	ws := make([]uint16, 0, len(srvs))
+	host := make([]string, 0, len(srvs))
 
 	for _, a := range srvs {
 		if a.Priority > srvs[0].Priority {
 			break
 		}
 		ws = append(ws, a.Weight)
-		host = append(host, "http://"+net.JoinHostPort(a.Target, fmt.Sprint(a.Port)))
+		host = append(host, s.scheme+"://"+net.JoinHostPort(a.Target, fmt.Sprint(a.Port)))
 	}
 
-	instances := []string{}
+	instances := make([]string, 0, len(ws))
 	for i, times := range compact(ws) {
 		for j := uint16(0); j < times; j++ {
 			instances = append(instances, host[i])
