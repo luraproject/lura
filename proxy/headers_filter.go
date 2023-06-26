@@ -28,15 +28,20 @@ func NewFilterHeadersMiddleware(_ logging.Logger, remote *config.Backend) Middle
 			numHeadersToPass := 0
 			for _, v := range remote.HeadersToPass {
 				if _, ok := request.Headers[v]; ok {
-					numHeadersToPass += 1
+					numHeadersToPass++
 				}
 			}
 			if numHeadersToPass == len(request.Headers) {
 				// all the headers should pass, no need to clone the headers
 				return nextProxy(ctx, request)
 			}
-			// this is not a clone, it just filters the headers we do not want to send
-			// so issues that could happen when not using header filtering still apply
+			// ATTENTION: this is not a clone of headers!
+			// this just filters the headers we do not want to send:
+			// issues and race conditions could happen the same way as when we
+			// do not filter the headers. This is a design decission, and if we
+			// want to clone the header values (because of write modifications),
+			// that should be done at an upper level (so the approach is the same
+			// for non filtered parallel requests).
 			newHeaders := make(map[string][]string, numHeadersToPass)
 			for _, v := range remote.HeadersToPass {
 				if values, ok := request.Headers[v]; ok {
