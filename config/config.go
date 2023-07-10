@@ -297,13 +297,14 @@ type TLS struct {
 
 // ClientTLS defines the configuration params for an HTTP Client
 type ClientTLS struct {
-	AllowInsecureConnections bool     `mapstructure:"allow_insecure_connections"`
-	CaCerts                  []string `mapstructure:"ca_certs"`
-	DisableSystemCaPool      bool     `mapstructure:"disable_system_ca_pool"`
-	MinVersion               string   `mapstructure:"min_version"`
-	MaxVersion               string   `mapstructure:"max_version"`
-	CurvePreferences         []uint16 `mapstructure:"curve_preferences"`
-	CipherSuites             []uint16 `mapstructure:"cipher_suites"`
+	AllowInsecureConnections bool       `mapstructure:"allow_insecure_connections"`
+	CaCerts                  []string   `mapstructure:"ca_certs"`
+	DisableSystemCaPool      bool       `mapstructure:"disable_system_ca_pool"`
+	MinVersion               string     `mapstructure:"min_version"`
+	MaxVersion               string     `mapstructure:"max_version"`
+	CurvePreferences         []uint16   `mapstructure:"curve_preferences"`
+	CipherSuites             []uint16   `mapstructure:"cipher_suites"`
+	ClientCerts              [][]string `mapstructure:"client_cert"`
 }
 
 // ExtraConfig is a type to store extra configurations for customized behaviours

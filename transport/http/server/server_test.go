@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
 )
 
 func init() {
@@ -100,20 +101,25 @@ func TestRunServer_MTLS(t *testing.T) {
 	port := newPort()
 	port = 36517
 	done := make(chan error)
-	go func() {
-		done <- RunServer(
-			ctx,
-			config.ServiceConfig{
-				Port: port,
-				TLS: &config.TLS{
-					PublicKey:  "cert.pem",
-					PrivateKey: "key.pem",
-					CaCerts:    []string{"ca.pem"},
-					EnableMTLS: true,
-				},
+
+	serviceConfig := config.ServiceConfig{
+		Port: port,
+		TLS: &config.TLS{
+			PublicKey:  "cert.pem",
+			PrivateKey: "key.pem",
+			CaCerts:    []string{"ca.pem"},
+			EnableMTLS: true,
+		},
+		ClientTLS: &config.ClientTLS{
+			AllowInsecureConnections: false, // we do not check the server cert
+			CaCerts:                  []string{"ca.pem"},
+			ClientCerts: [][]string{
+				[]string{"cert.pem", "key.pem"},
 			},
-			http.HandlerFunc(dummyHandler),
-		)
+		},
+	}
+	go func() {
+		done <- RunServer(ctx, serviceConfig, http.HandlerFunc(dummyHandler))
 	}()
 
 	client, err := mtlsClient("cert.pem", "key.pem")
@@ -133,6 +139,21 @@ func TestRunServer_MTLS(t *testing.T) {
 		t.Errorf("unexpected status code: %d", resp.StatusCode)
 		return
 	}
+
+	// check with the default client (that with the DefaultTransport configured
+	// to use the client certs, should work)
+	InitHTTPDefaultTransportWithLogger(serviceConfig, logging.NoOp)
+	defClient := http.Client{}
+	resp, err = defClient.Get(fmt.Sprintf("https://localhost:%d", port))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if resp.StatusCode != 200 {
+		t.Errorf("unexpected status code: %d", resp.StatusCode)
+		return
+	}
+
 	cancel()
 
 	if err = <-done; err != nil {
