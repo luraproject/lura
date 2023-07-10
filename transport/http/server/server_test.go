@@ -99,7 +99,6 @@ func TestRunServer_MTLS(t *testing.T) {
 	defer cancel()
 
 	port := newPort()
-	port = 36517
 	done := make(chan error)
 
 	serviceConfig := config.ServiceConfig{
