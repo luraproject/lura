@@ -11,6 +11,7 @@ import (
 	"html"
 	"log"
 	"math/rand"
+	"net"
 	"net/http"
 	"os"
 	"testing"
@@ -98,10 +99,10 @@ func TestRunServer_MTLS(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	port := newPort()
+	port := 36517
 	done := make(chan error)
 
-	serviceConfig := config.ServiceConfig{
+	cfg := config.ServiceConfig{
 		Port: port,
 		TLS: &config.TLS{
 			PublicKey:  "cert.pem",
@@ -118,7 +119,7 @@ func TestRunServer_MTLS(t *testing.T) {
 		},
 	}
 	go func() {
-		done <- RunServer(ctx, serviceConfig, http.HandlerFunc(dummyHandler))
+		done <- RunServer(ctx, cfg, http.HandlerFunc(dummyHandler))
 	}()
 
 	client, err := mtlsClient("cert.pem", "key.pem")
@@ -139,10 +140,35 @@ func TestRunServer_MTLS(t *testing.T) {
 		return
 	}
 
-	// check with the default client (that with the DefaultTransport configured
-	// to use the client certs, should work)
-	InitHTTPDefaultTransportWithLogger(serviceConfig, logging.NoOp)
-	defClient := http.Client{}
+	logger := logging.NoOp
+	// since test are run in a suite, and `InitHTTPDefaultTransportWithLogger` is
+	// used to setup the `http.DefaultTransport` global variable once, we need to
+	// create a client here like if it was using the default created with the
+	// clientTLS config.
+	// This is a copy of the code we can find inside
+	// InitHTTPDefaultTransportWithLogger(serviceConfig, nil):
+	transport := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:       cfg.DialerTimeout,
+			KeepAlive:     cfg.DialerKeepAlive,
+			FallbackDelay: cfg.DialerFallbackDelay,
+			DualStack:     true,
+		}).DialContext,
+		DisableCompression:    cfg.DisableCompression,
+		DisableKeepAlives:     cfg.DisableKeepAlives,
+		MaxIdleConns:          cfg.MaxIdleConns,
+		MaxIdleConnsPerHost:   cfg.MaxIdleConnsPerHost,
+		IdleConnTimeout:       cfg.IdleConnTimeout,
+		ResponseHeaderTimeout: cfg.ResponseHeaderTimeout,
+		ExpectContinueTimeout: cfg.ExpectContinueTimeout,
+		TLSHandshakeTimeout:   10 * time.Second,
+		TLSClientConfig:       ParseClientTLSConfigWithLogger(cfg.ClientTLS, logger),
+	}
+
+	defClient := http.Client{
+		Transport: transport,
+	}
 	resp, err = defClient.Get(fmt.Sprintf("https://localhost:%d", port))
 	if err != nil {
 		t.Error(err)
