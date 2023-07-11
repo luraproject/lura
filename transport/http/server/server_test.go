@@ -11,7 +11,6 @@ import (
 	"html"
 	"log"
 	"math/rand"
-	"net"
 	"net/http"
 	"os"
 	"testing"
@@ -147,24 +146,7 @@ func TestRunServer_MTLS(t *testing.T) {
 	// clientTLS config.
 	// This is a copy of the code we can find inside
 	// InitHTTPDefaultTransportWithLogger(serviceConfig, nil):
-	transport := &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:       cfg.DialerTimeout,
-			KeepAlive:     cfg.DialerKeepAlive,
-			FallbackDelay: cfg.DialerFallbackDelay,
-			DualStack:     true,
-		}).DialContext,
-		DisableCompression:    cfg.DisableCompression,
-		DisableKeepAlives:     cfg.DisableKeepAlives,
-		MaxIdleConns:          cfg.MaxIdleConns,
-		MaxIdleConnsPerHost:   cfg.MaxIdleConnsPerHost,
-		IdleConnTimeout:       cfg.IdleConnTimeout,
-		ResponseHeaderTimeout: cfg.ResponseHeaderTimeout,
-		ExpectContinueTimeout: cfg.ExpectContinueTimeout,
-		TLSHandshakeTimeout:   10 * time.Second,
-		TLSClientConfig:       ParseClientTLSConfigWithLogger(cfg.ClientTLS, logger),
-	}
+	transport := newTransport(cfg, logger)
 
 	defClient := http.Client{
 		Transport: transport,

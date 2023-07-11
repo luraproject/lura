@@ -70,25 +70,29 @@ func InitHTTPDefaultTransportWithLogger(cfg config.ServiceConfig, logger logging
 		cfg.ClientTLS.AllowInsecureConnections = true
 	}
 	onceTransportConfig.Do(func() {
-		http.DefaultTransport = &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
-			DialContext: (&net.Dialer{
-				Timeout:       cfg.DialerTimeout,
-				KeepAlive:     cfg.DialerKeepAlive,
-				FallbackDelay: cfg.DialerFallbackDelay,
-				DualStack:     true,
-			}).DialContext,
-			DisableCompression:    cfg.DisableCompression,
-			DisableKeepAlives:     cfg.DisableKeepAlives,
-			MaxIdleConns:          cfg.MaxIdleConns,
-			MaxIdleConnsPerHost:   cfg.MaxIdleConnsPerHost,
-			IdleConnTimeout:       cfg.IdleConnTimeout,
-			ResponseHeaderTimeout: cfg.ResponseHeaderTimeout,
-			ExpectContinueTimeout: cfg.ExpectContinueTimeout,
-			TLSHandshakeTimeout:   10 * time.Second,
-			TLSClientConfig:       ParseClientTLSConfigWithLogger(cfg.ClientTLS, logger),
-		}
+		http.DefaultTransport = newTransport(cfg, logger)
 	})
+}
+
+func newTransport(cfg config.ServiceConfig, logger logging.Logger) *http.Transport {
+	return &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:       cfg.DialerTimeout,
+			KeepAlive:     cfg.DialerKeepAlive,
+			FallbackDelay: cfg.DialerFallbackDelay,
+			DualStack:     true,
+		}).DialContext,
+		DisableCompression:    cfg.DisableCompression,
+		DisableKeepAlives:     cfg.DisableKeepAlives,
+		MaxIdleConns:          cfg.MaxIdleConns,
+		MaxIdleConnsPerHost:   cfg.MaxIdleConnsPerHost,
+		IdleConnTimeout:       cfg.IdleConnTimeout,
+		ResponseHeaderTimeout: cfg.ResponseHeaderTimeout,
+		ExpectContinueTimeout: cfg.ExpectContinueTimeout,
+		TLSHandshakeTimeout:   10 * time.Second,
+		TLSClientConfig:       ParseClientTLSConfigWithLogger(cfg.ClientTLS, logger),
+	}
 }
 
 // RunServer runs a http.Server with the given handler and configuration.
