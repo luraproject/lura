@@ -304,7 +304,7 @@ type ClientTLS struct {
 	MaxVersion               string     `mapstructure:"max_version"`
 	CurvePreferences         []uint16   `mapstructure:"curve_preferences"`
 	CipherSuites             []uint16   `mapstructure:"cipher_suites"`
-	ClientCerts              [][]string `mapstructure:"client_cert"`
+	ClientCerts              [][]string `mapstructure:"client_certs"`
 }
 
 // ExtraConfig is a type to store extra configurations for customized behaviours
