@@ -86,13 +86,17 @@ func NewEngine(cfg config.ServiceConfig, opt EngineOptions) *gin.Engine {
 	})
 
 	if !ginOptions.DisableAccessLog {
-		engine.Use(
-			gin.LoggerWithConfig(gin.LoggerConfig{
-				Output:    opt.Writer,
-				SkipPaths: paths,
-				Formatter: opt.Formatter,
-			}),
-		)
+		if ginOptions.CustomLoggerMiddleware != nil {
+			engine.Use(*ginOptions.CustomLoggerMiddleware)
+		} else {
+			engine.Use(
+				gin.LoggerWithConfig(gin.LoggerConfig{
+					Output:    opt.Writer,
+					SkipPaths: paths,
+					Formatter: opt.Formatter,
+				}),
+			)
+		}
 	}
 	engine.Use(gin.Recovery())
 
@@ -226,6 +230,9 @@ type engineConfiguration struct {
 
 	// DisableAccessLog blocks the injection of the router logger
 	DisableAccessLog bool `json:"disable_access_log"`
+
+	// CustomLoggerMiddleware defines a custom logger middleware if defined
+	CustomLoggerMiddleware *gin.HandlerFunc `json:"custom_logger_middleware"`
 
 	// DisablePathDecoding disables automatic validation of the url params looking for url encoded ones.
 	// For example if /foo/..%252Fbar is requested and this flag is set to false, the router will
