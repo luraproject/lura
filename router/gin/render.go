@@ -152,17 +152,20 @@ func noopRender(c *gin.Context, response *proxy.Response) {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
-	for k, vs := range response.Metadata.Headers {
-		for _, v := range vs {
-			c.Writer.Header().Add(k, v)
-		}
-	}
 	c.Status(response.Metadata.StatusCode)
 	if response.Io == nil {
 		return
 	}
 	io.Copy(c.Writer, response.Io)
-	httpResp := response.Data["httpResp"].(*http.Response)
+
+	//read and add trailers from the response
+	val , exists := response.Data["httpResp"]
+	if !exists{
+		return
+	}
+	httpResp := val.(*http.Response)
+
+	//close the body to recieve the trailers
 	httpResp.Body.Close()
 	for k, vv := range httpResp.Trailer {
 		k = http.TrailerPrefix + k

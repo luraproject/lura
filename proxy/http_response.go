@@ -56,6 +56,7 @@ func DefaultHTTPResponseParserFactory(cfg HTTPResponseParserConfig) HTTPResponse
 
 // NoOpHTTPResponseParser is a HTTPResponseParser implementation that just copies the
 // http response body into the proxy response IO
+// HttpResp is set in data for the the NoOpRender to read the trailers 
 func NoOpHTTPResponseParser(ctx context.Context, resp *http.Response) (*Response, error) {
 	return &Response{
 		Data:       map[string]interface{}{

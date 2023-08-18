@@ -14,7 +14,7 @@ import (
 	"github.com/luraproject/lura/v2/transport/http/client"
 )
 
-var httpProxy = CustomHTTPProxyFactory(client.NewHTTP2Client)
+var httpProxy = CustomHTTPProxyFactory(client.NewHTTPClient)
 
 // HTTPProxyFactory returns a BackendFactory. The Proxies it creates will use the received net/http.Client
 func HTTPProxyFactory(client *http.Client) BackendFactory {

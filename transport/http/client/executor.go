@@ -10,6 +10,7 @@ import (
 	"crypto/tls"
 	"net"
 	"net/http"
+	"time"
 
 	"golang.org/x/net/http2"
 )
@@ -30,8 +31,21 @@ type HTTPClientFactory func(ctx context.Context) *http.Client
 // NewHTTPClient just returns the http default client
 func NewHTTPClient(_ context.Context) *http.Client { return defaultHTTPClient }
 
+//This should be only called once on init and use the client for all requests
 func NewHTTP2Client(_ context.Context) *http.Client{
-	transport := &http.Transport{}
+	//default transport settings from http.DefaultTransport
+	transport := &http.Transport{
+		DialContext: defaultTransportDialContext(&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}),
+		ForceAttemptHTTP2:     false,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+	//converts h2c host to http
 	transportH2C := &h2cTransportWrapper{
 		Transport: &http2.Transport{
 			DialTLS: func(network, addr string, cfg *tls.Config) (net.Conn, error) {
@@ -40,11 +54,17 @@ func NewHTTP2Client(_ context.Context) *http.Client{
 			AllowHTTP: true,
 		},
 	}
+	//only use http2 transport when host is h2c
 	transport.RegisterProtocol("h2c", transportH2C)
 	return &http.Client{
 		Transport: transport,
 	}
 }
+
+func defaultTransportDialContext(dialer *net.Dialer) func(context.Context, string, string) (net.Conn, error) {
+	return dialer.DialContext
+}
+
 
 type h2cTransportWrapper struct {
 	*http2.Transport
