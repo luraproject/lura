@@ -48,27 +48,27 @@ func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, re client.HTTPRequestE
 // Decoder and HTTPResponseParser
 func NewHTTPProxyDetailed(_ *config.Backend, re client.HTTPRequestExecutor, ch client.HTTPStatusHandler, rp HTTPResponseParser) Proxy {
 	return func(ctx context.Context, request *Request) (*Response, error) {
-		requestToBakend, err := http.NewRequest(strings.ToTitle(request.Method), request.URL.String(), request.Body)
+		requestToBackend, err := http.NewRequest(strings.ToTitle(request.Method), request.URL.String(), request.Body)
 		if err != nil {
 			return nil, err
 		}
-		requestToBakend.Header = make(map[string][]string, len(request.Headers))
+		requestToBackend.Header = make(map[string][]string, len(request.Headers))
 		for k, vs := range request.Headers {
 			tmp := make([]string, len(vs))
 			copy(tmp, vs)
-			requestToBakend.Header[k] = tmp
+			requestToBackend.Header[k] = tmp
 		}
 		if request.Body != nil {
 			if v, ok := request.Headers["Content-Length"]; ok && len(v) == 1 && v[0] != "chunked" {
 				if size, err := strconv.Atoi(v[0]); err == nil {
-					requestToBakend.ContentLength = int64(size)
+					requestToBackend.ContentLength = int64(size)
 				}
 			}
 		}
 
-		resp, err := re(ctx, requestToBakend)
-		if requestToBakend.Body != nil {
-			requestToBakend.Body.Close()
+		resp, err := re(ctx, requestToBackend)
+		if requestToBackend.Body != nil {
+			requestToBackend.Body.Close()
 		}
 
 		select {
@@ -98,7 +98,7 @@ func NewHTTPProxyDetailed(_ *config.Backend, re client.HTTPRequestExecutor, ch c
 }
 
 // NewRequestBuilderMiddleware creates a proxy middleware that parses the request params received
-// from the outter layer and generates the path to the backend endpoints
+// from the outer layer and generates the path to the backend endpoints
 var NewRequestBuilderMiddleware = newRequestBuilderMiddleware
 
 func newRequestBuilderMiddleware(remote *config.Backend) Middleware {

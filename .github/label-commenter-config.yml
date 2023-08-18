@@ -1,0 +1,92 @@
+comment:
+  footer:  |
+    ---
+    > This is an automated comment. Responding to the bot or mentioning it won't have any effect
+
+labels:
+  - name: invalid
+    labeled:
+      issue:
+        body: |
+          Hi, thanks for bringing this issue to our attention.
+
+          Unfortunately, this issue has been marked invalid and will be closed.
+          The most common reasons for marking an issue or pull request as invalid is because:
+
+          - It's vague or not clearly actionable
+          - It contains insufficient details to reproduce
+          - It's plugin review or custom code review
+          - It does not use the issue template
+          - It's unrelated to the project (e.g., related to one of its libraries)
+          - It does not follow the technical philosophy of the project
+          - Violates our [Code of Conduct](https://lfprojects.org/policies/code-of-conduct/)
+          - It's about KrakenD functionalities (which uses and mantain Lura, but is not part of the Linux Foundation)
+
+          You can still make an edit or leave additional comments that lead to reopening this issue.
+        action: close
+      pr:
+        body: |
+          Hi @{{ pull_request.user.login }}, thanks for having spent the time to code and send an improvement to Lura.
+
+          Unfortunately, this pull request has been marked as invalid and will be closed without merging.
+          The most common reasons for marking an issue or pull request as invalid is because:
+
+          - Contains insufficient details, it's unclear for the reviewer, or it's impossible to move forward without a lot of interaction
+          - It's unrelated to the project (e.g., related to one of its libraries)
+          - It does not follow the philosophy of the project
+          - Violates our [Code of Conduct](https://lfprojects.org/policies/code-of-conduct/)
+
+          You can still make an edit or leave additional comments that lead to reopening this issue.
+        action: close
+  - name: wontfix
+    labeled:
+      issue:
+        body: |
+          Hi, thank you for bringing this issue to our attention.
+
+          Many factors influence our product roadmaps and determine the features, fixes, and suggestions we implement.
+          When deciding what to prioritize and work on, we combine your feedback and suggestions with insights from our development team, product analytics, research findings, and more.
+
+          This information, combined with our product vision, determines what we implement and its priority order. Unfortunately, we don't foresee this issue progressing any further in the short-medium term, and we are closing it.
+
+          While this issue is now closed, we continue monitoring requests for our future roadmap, **including this one**.
+
+          If you have additional information you would like to provide, please share.
+        action: close
+      pr:
+        body: |
+          Hi @{{ pull_request.user.login }}, thanks for having spent the time to code and send an improvement to Lura.
+
+          When deciding what to accept and include in our product, we are cautious about what we add, and the time our team needs to spend to have it done exemplary, considering all edge cases. As a result, we rarely add features, make changes that a tiny number of users need, or are out-of-scope of the project. For example, we might choose safety over having a specific additional feature that adds complexity we don't see crystal clear. Sometimes "less is more" because we can focus better on crucial functionality.
+
+          Although it's never nice to reject someone's work, after evaluating your code, we think it's better not to merge it or continue putting effort into it on both sides. If this PR is to solve what you considered a bug, our understanding of the functionality does not need to match your thinking. So while this pull request is now closed, **this is not a definitive decision**. You are free to provide additional information that would help us change our minds.
+
+          Lura is indirectly used in millions of servers every year, and the slightest change has an impact. We are doing it for all community users' benefit and to keep the code's simplicity, philosophy, and maintainability for the long run.
+        action: close
+  - name: duplicate
+    labeled:
+      issue:
+        body: An issue like this already exists, please follow it in the other thread
+        action: close
+  - name: good first issue
+    labeled:
+      issue:
+        body: This issue is easy for contributing. Everyone can work on this.
+  - name: spam
+    labeled:
+      issue:
+        body: |
+          This issue has been **LOCKED** because of spam!
+
+          Please do not spam messages and/or issues on the issue tracker. You may get blocked from this repository for doing so.
+        action: close
+        locking: lock
+        lock_reason: spam
+      pr:
+        body: |
+          This pull-request has been **LOCKED** because of spam!
+
+          Please do not spam messages and/or pull-requests on this project. You may get blocked from this repository for doing so.
+        action: close
+        locking: lock
+        lock_reason: spam

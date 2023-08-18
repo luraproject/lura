@@ -210,7 +210,7 @@ func TestConfig_init(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	if hash != "ip9OZeBfyY9vrjovdU+IivbOev4bH1jDcT2EC9QU1U8=" {
+	if hash != "0O1SlXMLFZwKikXa02ymwM301C8q0P4ekbb5PzsBbxM=" {
 		t.Errorf("unexpected hash: %s", hash)
 	}
 }
@@ -282,9 +282,9 @@ func TestConfig_initKOInvalidHost(t *testing.T) {
 }
 
 func TestConfig_initKOInvalidDebugPattern(t *testing.T) {
-	dp := debugPattern
+	dp := invalidPattern
 
-	debugPattern = "a(b"
+	invalidPattern = "a(b"
 	subject := ServiceConfig{
 		Version: ConfigVersion,
 		Host:    []string{"http://127.0.0.1:8080"},
@@ -302,5 +302,5 @@ func TestConfig_initKOInvalidDebugPattern(t *testing.T) {
 		t.Error("Expecting an error at the configuration init!", err)
 	}
 
-	debugPattern = dp
+	invalidPattern = dp
 }

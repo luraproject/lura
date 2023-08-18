@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package gorilla provides some basic implementations for building routers based on gorilla/mux
+Package gorilla provides some basic implementations for building routers based on gorilla/mux
 */
 package gorilla
 
@@ -33,6 +33,7 @@ func DefaultConfig(pf proxy.Factory, logger logging.Logger) mux.Config {
 		ProxyFactory:   pf,
 		Logger:         logger,
 		DebugPattern:   "/__debug/{params}",
+		EchoPattern:    "/__echo/{params}",
 		RunServer:      server.RunServer,
 	}
 }
