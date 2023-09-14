@@ -292,6 +292,53 @@
           ]
         },
         {
+          "endpoint": "/multipost/sequential/{param}",
+          "method":"POST",
+          "extra_config": {
+            "github.com/devopsfaith/krakend/proxy": {
+              "sequential": true
+            }
+          },
+          "backend": [
+            {
+              "url_pattern": "/provider/{param}",
+              "host": [ "{{.b7}}" ],
+              "method":"GET",
+              "group": "first"
+            },
+            {
+              "url_pattern": "/recipient/{resp0_first.random}",
+              "host": [ "{{.b12}}" ],
+              "method":"POST",
+              "group": "second"
+            },
+            {
+              "url_pattern": "/recipient/{resp0_first.random}",
+              "host": [ "{{.b12}}" ],
+              "method":"POST",
+              "group": "third"
+            }
+          ]
+        },
+        {
+          "endpoint": "/multipost/parallel/{param}",
+          "method":"POST",
+          "backend": [
+            {
+              "url_pattern": "/provider/{param}",
+              "host": [ "{{.b12}}" ],
+              "method":"POST",
+              "group": "first"
+            },
+            {
+              "url_pattern": "/recipient/{param}",
+              "host": [ "{{.b12}}" ],
+              "method":"POST",
+              "group": "second"
+            }
+          ]
+        },
+        {
             "endpoint": "/redirect",
             "backend": [
                 {

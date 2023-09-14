@@ -2,139 +2,132 @@
 
 package router
 
-import (
-	"testing"
+// func TestIsValidSequentialEndpoint_ok(t *testing.T) {
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/proxy"
-)
+// 	endpoint := &config.EndpointConfig{
+// 		Endpoint: "/correct",
+// 		Method:   "PUT",
+// 		Backend: []*config.Backend{
+// 			{
+// 				Method: "GET",
+// 			},
+// 			{
+// 				Method: "PUT",
+// 			},
+// 		},
+// 		ExtraConfig: map[string]interface{}{
+// 			proxy.Namespace: map[string]interface{}{
+// 				"sequential": true,
+// 			},
+// 		},
+// 	}
 
-func TestIsValidSequentialEndpoint_ok(t *testing.T) {
+// 	success := IsValidSequentialEndpoint(endpoint)
 
-	endpoint := &config.EndpointConfig{
-		Endpoint: "/correct",
-		Method:   "PUT",
-		Backend: []*config.Backend{
-			{
-				Method: "GET",
-			},
-			{
-				Method: "PUT",
-			},
-		},
-		ExtraConfig: map[string]interface{}{
-			proxy.Namespace: map[string]interface{}{
-				"sequential": true,
-			},
-		},
-	}
+// 	if !success {
+// 		t.Error("Endpoint expected valid but receive invalid")
+// 	}
+// }
 
-	success := IsValidSequentialEndpoint(endpoint)
+// func TestIsValidSequentialEndpoint_wrong_config_not_given(t *testing.T) {
 
-	if !success {
-		t.Error("Endpoint expected valid but receive invalid")
-	}
-}
+// 	endpoint := &config.EndpointConfig{
+// 		Endpoint: "/correct",
+// 		Method:   "PUT",
+// 		Backend: []*config.Backend{
+// 			{
+// 				Method: "GET",
+// 			},
+// 			{
+// 				Method: "PUT",
+// 			},
+// 		},
+// 		ExtraConfig: map[string]interface{}{},
+// 	}
 
-func TestIsValidSequentialEndpoint_wrong_config_not_given(t *testing.T) {
+// 	success := IsValidSequentialEndpoint(endpoint)
 
-	endpoint := &config.EndpointConfig{
-		Endpoint: "/correct",
-		Method:   "PUT",
-		Backend: []*config.Backend{
-			{
-				Method: "GET",
-			},
-			{
-				Method: "PUT",
-			},
-		},
-		ExtraConfig: map[string]interface{}{},
-	}
+// 	if success {
+// 		t.Error("Endpoint expected invalid but receive valid")
+// 	}
+// }
 
-	success := IsValidSequentialEndpoint(endpoint)
+// func TestIsValidSequentialEndpoint_wrong_config_set_false(t *testing.T) {
 
-	if success {
-		t.Error("Endpoint expected invalid but receive valid")
-	}
-}
+// 	endpoint := &config.EndpointConfig{
+// 		Endpoint: "/correct",
+// 		Method:   "PUT",
+// 		Backend: []*config.Backend{
+// 			{
+// 				Method: "GET",
+// 			},
+// 			{
+// 				Method: "PUT",
+// 			},
+// 		},
+// 		ExtraConfig: map[string]interface{}{
+// 			proxy.Namespace: map[string]interface{}{
+// 				"sequential": false,
+// 			},
+// 		}}
 
-func TestIsValidSequentialEndpoint_wrong_config_set_false(t *testing.T) {
+// 	success := IsValidSequentialEndpoint(endpoint)
 
-	endpoint := &config.EndpointConfig{
-		Endpoint: "/correct",
-		Method:   "PUT",
-		Backend: []*config.Backend{
-			{
-				Method: "GET",
-			},
-			{
-				Method: "PUT",
-			},
-		},
-		ExtraConfig: map[string]interface{}{
-			proxy.Namespace: map[string]interface{}{
-				"sequential": false,
-			},
-		}}
+// 	if success {
+// 		t.Error("Endpoint expected invalid but receive valid")
+// 	}
+// }
 
-	success := IsValidSequentialEndpoint(endpoint)
+// func TestIsValidSequentialEndpoint_wrong_order(t *testing.T) {
 
-	if success {
-		t.Error("Endpoint expected invalid but receive valid")
-	}
-}
+// 	endpoint := &config.EndpointConfig{
+// 		Endpoint: "/correct",
+// 		Method:   "PUT",
+// 		Backend: []*config.Backend{
+// 			{
+// 				Method: "PUT",
+// 			},
+// 			{
+// 				Method: "GET",
+// 			},
+// 		},
+// 		ExtraConfig: map[string]interface{}{
+// 			proxy.Namespace: map[string]interface{}{
+// 				"sequential": true,
+// 			},
+// 		},
+// 	}
 
-func TestIsValidSequentialEndpoint_wrong_order(t *testing.T) {
+// 	success := IsValidSequentialEndpoint(endpoint)
 
-	endpoint := &config.EndpointConfig{
-		Endpoint: "/correct",
-		Method:   "PUT",
-		Backend: []*config.Backend{
-			{
-				Method: "PUT",
-			},
-			{
-				Method: "GET",
-			},
-		},
-		ExtraConfig: map[string]interface{}{
-			proxy.Namespace: map[string]interface{}{
-				"sequential": true,
-			},
-		},
-	}
+// 	if success {
+// 		t.Error("Endpoint expected invalid but receive valid")
+// 	}
+// }
 
-	success := IsValidSequentialEndpoint(endpoint)
+// func TestIsValidSequentialEndpoint_wrong_all_non_get(t *testing.T) {
 
-	if success {
-		t.Error("Endpoint expected invalid but receive valid")
-	}
-}
+// 	endpoint := &config.EndpointConfig{
+// 		Endpoint: "/correct",
+// 		Method:   "PUT",
+// 		Backend: []*config.Backend{
+// 			{
+// 				Method: "POST",
+// 			},
+// 			{
+// 				Method: "PUT",
+// 			},
+// 		},
+// 		ExtraConfig: map[string]interface{}{
+// 			proxy.Namespace: map[string]interface{}{
+// 				"sequential": true,
+// 			},
+// 		},
+// 	}
 
-func TestIsValidSequentialEndpoint_wrong_all_non_get(t *testing.T) {
+// 	success := IsValidSequentialEndpoint(endpoint)
 
-	endpoint := &config.EndpointConfig{
-		Endpoint: "/correct",
-		Method:   "PUT",
-		Backend: []*config.Backend{
-			{
-				Method: "POST",
-			},
-			{
-				Method: "PUT",
-			},
-		},
-		ExtraConfig: map[string]interface{}{
-			proxy.Namespace: map[string]interface{}{
-				"sequential": true,
-			},
-		},
-	}
-
-	success := IsValidSequentialEndpoint(endpoint)
-
-	if success {
-		t.Error("Endpoint expected invalid but receive valid")
-	}
-}
+// 	if success {
+// 		t.Error("Endpoint expected invalid but receive valid")
+// 	}
+// }

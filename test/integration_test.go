@@ -352,6 +352,24 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 			url:           "/error-status-code/3",
 			expStatusCode: 200,
 		},
+		{
+			method:        "POST",
+			name:          "multipost_parallel",
+			url:           "/multipost/parallel/foo",
+			body:          `{"foo":"bar"}`,
+			expStatusCode: 200,
+			expHeaders:    defaultHeaders,
+			expBody:       fmt.Sprintf(`{"first":{"body":"{\"foo\":\"bar\"}","headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["127.0.0.1"],"X-Forwarded-Host":["localhost:%d"]},"method":"POST","url":"/provider/foo"},"second":{"body":"{\"foo\":\"bar\"}","headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["127.0.0.1"],"X-Forwarded-Host":["localhost:%d"]},"method":"POST","url":"/recipient/foo"}}`, cfg.Port, cfg.Port),
+		},
+		{
+			method:        "POST",
+			name:          "multipost_sequential",
+			url:           "/multipost/sequential/foo",
+			body:          `{"foo":"bar"}`,
+			expStatusCode: 200,
+			expHeaders:    defaultHeaders,
+			expBody:       fmt.Sprintf(`{"first":{"path":"/provider/foo","random":42},"second":{"body":"{\"foo\":\"bar\"}","headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["127.0.0.1"],"X-Forwarded-Host":["localhost:%d"]},"method":"POST","url":"/recipient/42"},"third":{"body":"{\"foo\":\"bar\"}","headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["127.0.0.1"],"X-Forwarded-Host":["localhost:%d"]},"method":"POST","url":"/recipient/42"}}`, cfg.Port, cfg.Port),
+		},
 	} {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
@@ -522,6 +540,20 @@ func setupBackend(t *testing.T) (*config.ServiceConfig, error) {
 		})
 	}))
 	data["b11"] = b11.URL
+
+	// Echo backend
+	b12 := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		rw.Header().Add("Content-Type", "application/json")
+		b, _ := io.ReadAll(r.Body)
+		r.Body.Close()
+		json.NewEncoder(rw).Encode(map[string]interface{}{
+			"headers": r.Header,
+			"body":    string(b),
+			"url":     r.URL.String(),
+			"method":  r.Method,
+		})
+	}))
+	data["b12"] = b12.URL
 
 	c, err := loadConfig(data)
 	if err != nil {

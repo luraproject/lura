@@ -5,6 +5,7 @@ package proxy
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -43,19 +44,19 @@ func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.Endpoi
 		}
 
 		if !isSequential {
-			return parallelMerge(serviceTimeout, combiner, next...)
+			return parallelMerge(hasUnsafeBackends(endpointConfig), serviceTimeout, combiner, next...)
 		}
 
 		patterns := make([]string, len(endpointConfig.Backend))
 		for i, b := range endpointConfig.Backend {
 			patterns[i] = b.URLPattern
 		}
-		return sequentialMerge(patterns, serviceTimeout, combiner, next...)
+		return sequentialMerge(hasUnsafeBackends(endpointConfig), patterns, serviceTimeout, combiner, next...)
 	}
 }
 
-func shouldRunSequentialMerger(endpointConfig *config.EndpointConfig) bool {
-	if v, ok := endpointConfig.ExtraConfig[Namespace]; ok {
+func shouldRunSequentialMerger(cfg *config.EndpointConfig) bool {
+	if v, ok := cfg.ExtraConfig[Namespace]; ok {
 		if e, ok := v.(map[string]interface{}); ok {
 			if v, ok := e[isSequentialKey]; ok {
 				c, ok := v.(bool)
@@ -66,7 +67,16 @@ func shouldRunSequentialMerger(endpointConfig *config.EndpointConfig) bool {
 	return false
 }
 
-func parallelMerge(timeout time.Duration, rc ResponseCombiner, next ...Proxy) Proxy {
+func hasUnsafeBackends(cfg *config.EndpointConfig) bool {
+	for _, b := range cfg.Backend {
+		if m := strings.ToUpper(b.Method); m != http.MethodGet && m != http.MethodHead {
+			return true
+		}
+	}
+	return false
+}
+
+func parallelMerge(requiresDeepClone bool, timeout time.Duration, rc ResponseCombiner, next ...Proxy) Proxy {
 	return func(ctx context.Context, request *Request) (*Response, error) {
 		localCtx, cancel := context.WithTimeout(ctx, timeout)
 
@@ -74,6 +84,10 @@ func parallelMerge(timeout time.Duration, rc ResponseCombiner, next ...Proxy) Pr
 		failed := make(chan error, len(next))
 
 		for _, n := range next {
+			if requiresDeepClone {
+				go requestPart(localCtx, n, CloneRequest(request), parts, failed)
+				continue
+			}
 			go requestPart(localCtx, n, request, parts, failed)
 		}
 
@@ -95,7 +109,7 @@ func parallelMerge(timeout time.Duration, rc ResponseCombiner, next ...Proxy) Pr
 
 var reMergeKey = regexp.MustCompile(`\{\{\.Resp(\d+)_([\d\w-_\.]+)\}\}`)
 
-func sequentialMerge(patterns []string, timeout time.Duration, rc ResponseCombiner, next ...Proxy) Proxy {
+func sequentialMerge(requiresDeepClone bool, patterns []string, timeout time.Duration, rc ResponseCombiner, next ...Proxy) Proxy {
 	return func(ctx context.Context, request *Request) (*Response, error) {
 		localCtx, cancel := context.WithTimeout(ctx, timeout)
 
@@ -164,7 +178,13 @@ func sequentialMerge(patterns []string, timeout time.Duration, rc ResponseCombin
 					}
 				}
 			}
-			sequentialRequestPart(localCtx, n, request, out, errCh)
+
+			if requiresDeepClone {
+				sequentialRequestPart(localCtx, n, CloneRequest(request), out, errCh)
+			} else {
+				sequentialRequestPart(localCtx, n, request, out, errCh)
+			}
+
 			select {
 			case err := <-errCh:
 				if i == 0 {
