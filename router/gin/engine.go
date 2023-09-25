@@ -67,7 +67,9 @@ func NewEngine(cfg config.ServiceConfig, opt EngineOptions) *gin.Engine {
 						engine.RemoteIPHeaders[k] = textproto.CanonicalMIMEHeaderKey(h)
 					}
 				}
-				engine.SetTrustedProxies(ginOptions.TrustedProxies)
+				if len(ginOptions.TrustedProxies) > 0 {
+					engine.SetTrustedProxies(ginOptions.TrustedProxies)
+				}
 				engine.AppEngine = ginOptions.AppEngine
 				engine.MaxMultipartMemory = ginOptions.MaxMultipartMemory
 				engine.RemoveExtraSlash = ginOptions.RemoveExtraSlash
