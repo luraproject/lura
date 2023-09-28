@@ -393,7 +393,7 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 			body:          `{"foo":"bar"}`,
 			expStatusCode: 200,
 			expHeaders:    defaultHeaders,
-			expBody:       fmt.Sprintf(`{"first":{"path":"/provider/foo","random":42},"second":{"body":"{\"foo\":\"bar\"}","headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["`+localhostIP+`"],"X-Forwarded-Host":["localhost:%d"]},"method":"POST","url":"/recipient/42"},"third":{"body":"{\"foo\":\"bar\"}","headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["127.0.0.1"],"X-Forwarded-Host":["localhost:%d"]},"method":"POST","url":"/recipient/42"}}`, cfg.Port, cfg.Port),
+			expBody:       fmt.Sprintf(`{"first":{"path":"/provider/foo","random":42},"second":{"body":"{\"foo\":\"bar\"}","headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["`+localhostIP+`"],"X-Forwarded-Host":["localhost:%d"]},"method":"POST","url":"/recipient/42"},"third":{"body":"{\"foo\":\"bar\"}","headers":{"Accept-Encoding":["gzip"],"User-Agent":["KrakenD Version undefined"],"X-Forwarded-For":["`+localhostIP+`"],"X-Forwarded-Host":["localhost:%d"]},"method":"POST","url":"/recipient/42"}}`, cfg.Port, cfg.Port),
 		},
 	} {
 		tc := tc
