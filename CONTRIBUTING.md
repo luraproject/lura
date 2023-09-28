@@ -23,7 +23,7 @@ the change with the owners before investing a lot of time coding. The process
 could be:
 
 1. Open an issue explaining the improvment or fix you want to add
-2. [Fork the project](https://github.com/luraproject/lura/fork_select)
+2. [Fork the project](https://github.com/luraproject/lura/fork)
 3. Code it in your fork
 4. Submit a [pull request](https://help.github.com/articles/creating-a-pull-request) referencing the issue
 

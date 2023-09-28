@@ -6,10 +6,8 @@
 
 Visit the [framework overview](/docs/OVERVIEW.md) for details about the components of the Lura project.
 
-### Examples
-
-1. [gin router](/examples/gin/README.md)
-2. [mux router](/examples/mux/README.md)
+A good example about how to use it can be found in the [KrakenD CE](https://github.com/krakend/krakend-ce)
+API Gateway project.
 
 ## Configuration file
 
@@ -20,3 +18,6 @@ Visit the [framework overview](/docs/OVERVIEW.md) for details about the componen
 Check out the [benchmark results](/docs/BENCHMARKS.md) of several Lura components.
 
 ## Contributing
+
+Read the guidelines about [contributing](../CONTRIBUTING.md).
+
