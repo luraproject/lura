@@ -61,11 +61,15 @@ func NewEngine(cfg config.ServiceConfig, opt EngineOptions) *gin.Engine {
 				if ginOptions.ForwardedByClientIP != nil {
 					engine.ForwardedByClientIP = *ginOptions.ForwardedByClientIP
 				}
-				engine.RemoteIPHeaders = ginOptions.RemoteIPHeaders
-				for k, h := range engine.RemoteIPHeaders {
-					engine.RemoteIPHeaders[k] = textproto.CanonicalMIMEHeaderKey(h)
+				if len(ginOptions.RemoteIPHeaders) > 0 {
+					engine.RemoteIPHeaders = ginOptions.RemoteIPHeaders
+					for k, h := range engine.RemoteIPHeaders {
+						engine.RemoteIPHeaders[k] = textproto.CanonicalMIMEHeaderKey(h)
+					}
 				}
-				engine.SetTrustedProxies(ginOptions.TrustedProxies)
+				if len(ginOptions.TrustedProxies) > 0 {
+					engine.SetTrustedProxies(ginOptions.TrustedProxies)
+				}
 				engine.AppEngine = ginOptions.AppEngine
 				engine.MaxMultipartMemory = ginOptions.MaxMultipartMemory
 				engine.RemoveExtraSlash = ginOptions.RemoveExtraSlash
