@@ -67,6 +67,9 @@ func InitHTTPDefaultTransportWithLogger(cfg config.ServiceConfig, logger logging
 		logger = logging.NoOp
 	}
 	if cfg.AllowInsecureConnections {
+		if cfg.ClientTLS == nil {
+			cfg.ClientTLS = &config.ClientTLS{}
+		}
 		cfg.ClientTLS.AllowInsecureConnections = true
 	}
 	onceTransportConfig.Do(func() {
