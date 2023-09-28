@@ -160,7 +160,7 @@ type ServiceConfig struct {
 	// run lura in debug mode
 	Debug     bool `mapstructure:"debug_endpoint"`
 	Echo      bool `mapstructure:"echo_endpoint"`
-	uriParser URIParser
+	uriParser SafeURIParser
 
 	// SequentialStart flags if the agents should be started sequentially
 	// before starting the router
@@ -361,7 +361,7 @@ func (s *ServiceConfig) Hash() (string, error) {
 // Init also sanitizes the values, applies the default ones whenever necessary and
 // normalizes all the things.
 func (s *ServiceConfig) Init() error {
-	s.uriParser = NewURIParser()
+	s.uriParser = NewSafeURIParser()
 
 	if s.Version != ConfigVersion {
 		return &UnsupportedVersionError{
@@ -370,9 +370,13 @@ func (s *ServiceConfig) Init() error {
 		}
 	}
 
-	s.initGlobalParams()
+	if err := s.initGlobalParams(); err != nil {
+		return err
+	}
 
-	s.initAsyncAgents()
+	if err := s.initAsyncAgents(); err != nil {
+		return err
+	}
 
 	return s.initEndpoints()
 }
@@ -393,7 +397,7 @@ func (s *ServiceConfig) Normalize() {
 	}
 }
 
-func (s *ServiceConfig) initGlobalParams() {
+func (s *ServiceConfig) initGlobalParams() error {
 	if s.Port == 0 {
 		s.Port = defaultPort
 	}
@@ -404,8 +408,13 @@ func (s *ServiceConfig) initGlobalParams() {
 		s.Timeout = DefaultTimeout
 	}
 
-	s.Host = s.uriParser.CleanHosts(s.Host)
+	var err error
+	s.Host, err = s.uriParser.SafeCleanHosts(s.Host)
+	if err != nil {
+		return err
+	}
 	s.ExtraConfig.sanitize()
+	return nil
 }
 
 func (s *ServiceConfig) initAsyncAgents() error {
@@ -418,7 +427,11 @@ func (s *ServiceConfig) initAsyncAgents() error {
 			if len(b.Host) == 0 {
 				b.Host = s.Host
 			} else if !b.HostSanitizationDisabled {
-				b.Host = s.uriParser.CleanHosts(b.Host)
+				var err error
+				b.Host, err = s.uriParser.SafeCleanHosts(b.Host)
+				if err != nil {
+					return err
+				}
 			}
 			if b.Method == "" {
 				b.Method = http.MethodGet
@@ -461,7 +474,9 @@ func (s *ServiceConfig) initEndpoints() error {
 		e.ExtraConfig.sanitize()
 
 		for j, b := range e.Backend {
-			s.initBackendDefaults(i, j)
+			if err := s.initBackendDefaults(i, j); err != nil {
+				return err
+			}
 
 			if err := s.initBackendURLMappings(i, j, inputSet); err != nil {
 				return err
@@ -525,13 +540,17 @@ func (s *ServiceConfig) initAsyncAgentDefaults(e int) {
 	}
 }
 
-func (s *ServiceConfig) initBackendDefaults(e, b int) {
+func (s *ServiceConfig) initBackendDefaults(e, b int) error {
 	endpoint := s.Endpoints[e]
 	backend := endpoint.Backend[b]
 	if len(backend.Host) == 0 {
 		backend.Host = s.Host
 	} else if !backend.HostSanitizationDisabled {
-		backend.Host = s.uriParser.CleanHosts(backend.Host)
+		var err error
+		backend.Host, err = s.uriParser.SafeCleanHosts(backend.Host)
+		if err != nil {
+			return err
+		}
 	}
 	if backend.Method == "" {
 		backend.Method = endpoint.Method
@@ -549,6 +568,7 @@ func (s *ServiceConfig) initBackendDefaults(e, b int) {
 	if backend.SDScheme == "" {
 		backend.SDScheme = "http"
 	}
+	return nil
 }
 
 func (s *ServiceConfig) initBackendURLMappings(e, b int, inputParams map[string]interface{}) error {

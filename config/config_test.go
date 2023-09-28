@@ -3,6 +3,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -61,7 +62,7 @@ func TestConfig_initBackendURLMappings_ok(t *testing.T) {
 
 	backend := Backend{}
 	endpoint := EndpointConfig{Backend: []*Backend{&backend}}
-	subject := ServiceConfig{Endpoints: []*EndpointConfig{&endpoint}, uriParser: NewURIParser()}
+	subject := ServiceConfig{Endpoints: []*EndpointConfig{&endpoint}, uriParser: NewSafeURIParser()}
 
 	inputSet := map[string]interface{}{
 		"tupu":     nil,
@@ -89,7 +90,7 @@ func TestConfig_initBackendURLMappings_tooManyOutput(t *testing.T) {
 		Endpoint: "/some/{tupu}",
 		Backend:  []*Backend{&backend},
 	}
-	subject := ServiceConfig{Endpoints: []*EndpointConfig{&endpoint}, uriParser: NewURIParser()}
+	subject := ServiceConfig{Endpoints: []*EndpointConfig{&endpoint}, uriParser: NewSafeURIParser()}
 
 	inputSet := map[string]interface{}{
 		"tupu": nil,
@@ -106,7 +107,7 @@ func TestConfig_initBackendURLMappings_tooManyOutput(t *testing.T) {
 func TestConfig_initBackendURLMappings_undefinedOutput(t *testing.T) {
 	backend := Backend{URLPattern: "supu/{tupu_56}/{supu-5t6}?a={foo}&b={foo}"}
 	endpoint := EndpointConfig{Endpoint: "/", Method: "GET", Backend: []*Backend{&backend}}
-	subject := ServiceConfig{Endpoints: []*EndpointConfig{&endpoint}, uriParser: NewURIParser()}
+	subject := ServiceConfig{Endpoints: []*EndpointConfig{&endpoint}, uriParser: NewSafeURIParser()}
 
 	inputSet := map[string]interface{}{
 		"tupu": nil,
@@ -261,11 +262,6 @@ func TestConfig_initKOMultipleBackendsForNoopEncoder(t *testing.T) {
 }
 
 func TestConfig_initKOInvalidHost(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The init process did not panic with an invalid host!")
-		}
-	}()
 	subject := ServiceConfig{
 		Version: ConfigVersion,
 		Host:    []string{"http://127.0.0.1:8080http://127.0.0.1:8080"},
@@ -278,7 +274,16 @@ func TestConfig_initKOInvalidHost(t *testing.T) {
 		},
 	}
 
-	subject.Init()
+	err := subject.Init()
+	if err == nil {
+		t.Errorf("expected to fail with invalid host")
+		return
+	}
+
+	if !errors.Is(err, errInvalidHost) {
+		t.Errorf("expected 'errInvalidHost' got: %s", err.Error())
+		return
+	}
 }
 
 func TestConfig_initKOInvalidDebugPattern(t *testing.T) {
