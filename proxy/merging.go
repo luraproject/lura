@@ -18,6 +18,9 @@ import (
 func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.EndpointConfig) Middleware {
 	totalBackends := len(endpointConfig.Backend)
 	if totalBackends == 0 {
+		// we leave the panic here, because we do not want to continue
+		// if this configuration is wrong, as it would lead to unexpected
+		// behaviour.
 		panic(ErrNoBackends)
 	}
 	if totalBackends == 1 {
@@ -39,6 +42,9 @@ func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.Endpoi
 
 	return func(next ...Proxy) Proxy {
 		if len(next) != totalBackends {
+			// we leave the panic here, because we do not want to continue
+			// if this configuration is wrong, as it would lead to unexpected
+			// behaviour.
 			panic(ErrNotEnoughProxies)
 		}
 
