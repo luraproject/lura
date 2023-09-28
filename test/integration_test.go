@@ -40,7 +40,7 @@ var localhostIP string
 func init() {
 	ln, err := net.Listen("tcp", ":8080")
 	if err != nil {
-		// handle error
+		return
 	}
 
 	go func() {
@@ -51,7 +51,7 @@ func init() {
 
 	conn, err := ln.Accept()
 	if err != nil {
-		// handle error
+		return
 	}
 	h, _, err := net.SplitHostPort(conn.RemoteAddr().String())
 	if err == nil {
