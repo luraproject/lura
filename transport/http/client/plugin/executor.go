@@ -18,6 +18,14 @@ func HTTPRequestExecutor(
 	logger logging.Logger,
 	next func(*config.Backend) client.HTTPRequestExecutor,
 ) func(*config.Backend) client.HTTPRequestExecutor {
+	return HTTPRequestExecutorWithContext(context.Background(), logger, next)
+}
+
+func HTTPRequestExecutorWithContext(
+	ctx context.Context,
+	logger logging.Logger,
+	next func(*config.Backend) client.HTTPRequestExecutor,
+) func(*config.Backend) client.HTTPRequestExecutor {
 	return func(cfg *config.Backend) client.HTTPRequestExecutor {
 		logPrefix := "[BACKEND: " + cfg.URLPattern + "]"
 		v, ok := cfg.ExtraConfig[Namespace]
@@ -55,7 +63,7 @@ func HTTPRequestExecutor(
 			return next(cfg)
 		}
 
-		handler, err := hf(context.Background(), extra)
+		handler, err := hf(ctx, extra)
 		if err != nil {
 			logger.Warning(logPrefix, "Error getting the plugin handler:", err.Error())
 			return next(cfg)
