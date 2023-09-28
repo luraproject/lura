@@ -578,20 +578,6 @@ func TestNewMergeDataMiddleware_timeout(t *testing.T) {
 	}
 }
 
-func TestNewMergeDataMiddleware_notEnoughBackends(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The code did not panic\n")
-		}
-	}()
-	backend := config.Backend{}
-	endpoint := config.EndpointConfig{
-		Backend: []*config.Backend{&backend},
-	}
-	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
-	mw(explosiveProxy(t), explosiveProxy(t))
-}
-
 func TestNewMergeDataMiddleware_notEnoughProxies(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {

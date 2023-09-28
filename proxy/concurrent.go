@@ -5,21 +5,24 @@ package proxy
 import (
 	"context"
 	"errors"
+	"os"
 	"time"
 
 	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
 )
 
 // NewConcurrentMiddleware creates a proxy middleware that enables sending several requests concurrently
 func NewConcurrentMiddleware(remote *config.Backend) Middleware {
+	l, _ := logging.NewLogger("DEBUG", os.Stdout, "[LURA]")
 	if remote.ConcurrentCalls == 1 {
-		panic(ErrTooManyProxies)
+		l.Error("TooFewConcurrentCalls: NewConcurrentMiddleware expects more than 1 concurrent call")
 	}
 	serviceTimeout := time.Duration(75*remote.Timeout.Nanoseconds()/100) * time.Nanosecond
 
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {
-			panic(ErrTooManyProxies)
+			l.Error("ErrTooManyProxies: NewConcurrentMiddleware only accepts 1 proxy, got %s (extra proxies will be ignored)", len(next))
 		}
 
 		return func(ctx context.Context, request *Request) (*Response, error) {

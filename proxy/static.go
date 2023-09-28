@@ -31,7 +31,7 @@ func NewStaticMiddleware(logger logging.Logger, endpointConfig *config.EndpointC
 
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {
-			panic(ErrTooManyProxies)
+			logger.Error("ErrTooManyProxies: EmptyMiddleware only accepts 1 proxy, got %s (extra proxies will be ignored)", len(next))
 		}
 		return func(ctx context.Context, request *Request) (*Response, error) {
 			result, err := next[0](ctx, request)

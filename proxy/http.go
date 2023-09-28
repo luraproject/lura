@@ -6,11 +6,13 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/encoding"
+	"github.com/luraproject/lura/v2/logging"
 	"github.com/luraproject/lura/v2/transport/http/client"
 )
 
@@ -102,9 +104,10 @@ func NewHTTPProxyDetailed(_ *config.Backend, re client.HTTPRequestExecutor, ch c
 var NewRequestBuilderMiddleware = newRequestBuilderMiddleware
 
 func newRequestBuilderMiddleware(remote *config.Backend) Middleware {
+	l, _ := logging.NewLogger("DEBUG", os.Stdout, "[LURA]")
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {
-			panic(ErrTooManyProxies)
+			l.Error("ErrTooManyProxies: newRequestBuilderMiddleware only accepts 1 proxy, got %s (extra proxies will be ignored)", len(next))
 		}
 		return func(ctx context.Context, request *Request) (*Response, error) {
 			r := request.Clone()

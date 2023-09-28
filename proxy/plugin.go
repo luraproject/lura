@@ -88,7 +88,7 @@ func newPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[str
 
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {
-			panic(ErrTooManyProxies)
+			logger.Error("ErrTooManyProxies: newPluginMiddleware only accepts 1 proxy, got %s (extra proxies will be ignored) tag: %s, pattern: %s", len(next), tag, pattern)
 		}
 
 		if totReqModifiers == 0 {

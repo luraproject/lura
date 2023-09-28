@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package proxy provides proxy and proxy middleware interfaces and implementations.
+Package proxy provides proxy and proxy middleware interfaces and implementations.
 */
 package proxy
 
@@ -9,8 +9,10 @@ import (
 	"context"
 	"errors"
 	"io"
+	"os"
 
 	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
 )
 
 // Namespace to be used in extra config
@@ -74,6 +76,7 @@ type BackendFactory func(remote *config.Backend) Proxy
 // exposing a proxy interface.
 //
 // Proxy middlewares can be stacked:
+//
 //	var p Proxy
 //	p := EmptyMiddleware(NoopProxy)
 //	response, err := p(ctx, r)
@@ -81,8 +84,9 @@ type Middleware func(next ...Proxy) Proxy
 
 // EmptyMiddleware is a dummy middleware, useful for testing and fallback
 func EmptyMiddleware(next ...Proxy) Proxy {
+	l, _ := logging.NewLogger("DEBUG", os.Stdout, "[LURA]")
 	if len(next) > 1 {
-		panic(ErrTooManyProxies)
+		l.Error("ErrTooManyProxies: EmptyMiddleware only accepts 1 proxy, got %s (extra proxies will be ignored)", len(next))
 	}
 	return next[0]
 }

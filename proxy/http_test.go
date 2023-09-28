@@ -400,17 +400,6 @@ func TestNewRequestBuilderMiddleware_ok(t *testing.T) {
 	}
 }
 
-func TestNewRequestBuilderMiddleware_multipleNext(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The code did not panic\n")
-		}
-	}()
-	sampleBackend := config.Backend{}
-	mw := NewRequestBuilderMiddleware(&sampleBackend)
-	mw(explosiveProxy(t), explosiveProxy(t))
-}
-
 func TestDefaultHTTPResponseParserConfig_nopDecoder(t *testing.T) {
 	result := map[string]interface{}{}
 	if err := DefaultHTTPResponseParserConfig.Decoder(bytes.NewBufferString("some body"), &result); err != nil {

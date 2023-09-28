@@ -5,9 +5,11 @@ package proxy
 import (
 	"context"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
 	"github.com/luraproject/lura/v2/sd"
 )
 
@@ -48,9 +50,10 @@ func NewRandomLoadBalancedMiddlewareWithSubscriber(subscriber sd.Subscriber) Mid
 }
 
 func newLoadBalancedMiddleware(lb sd.Balancer) Middleware {
+	l, _ := logging.NewLogger("DEBUG", os.Stdout, "[LURA]")
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {
-			panic(ErrTooManyProxies)
+			l.Error("ErrTooManyProxies: newLoadBalancedMiddleware only accepts 1 proxy, got %s (extra proxies will be ignored)", len(next))
 		}
 		return func(ctx context.Context, request *Request) (*Response, error) {
 			host, err := lb.Host()
