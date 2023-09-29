@@ -87,7 +87,7 @@ func NewRandomLoadBalancedMiddlewareWithSubscriberAndLogger(l logging.Logger, su
 func newLoadBalancedMiddleware(l logging.Logger, lb sd.Balancer) Middleware {
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {
-			l.Fatal("too many proxies for this proxy middleware: newLoadBalancedMiddleware only accepts 1 proxy, got %s", len(next))
+			l.Fatal("too many proxies for this proxy middleware: newLoadBalancedMiddleware only accepts 1 proxy, got %d", len(next))
 			return nil
 		}
 		return func(ctx context.Context, request *Request) (*Response, error) {

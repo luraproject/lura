@@ -70,7 +70,7 @@ func ShadowMiddlewareWithLogger(logger logging.Logger, next ...Proxy) Proxy {
 	case 2:
 		return NewShadowProxy(next[0], next[1])
 	default:
-		logger.Fatal("too many proxies for this proxy middleware: ShadowMiddlewareWithLogger only accepts 1 or 2 proxies, got %s", len(next))
+		logger.Fatal("too many proxies for this proxy middleware: ShadowMiddlewareWithLogger only accepts 1 or 2 proxies, got %d", len(next))
 		return nil
 	}
 }
@@ -91,7 +91,7 @@ func ShadowMiddlewareWithTimeoutAndLogger(logger logging.Logger, timeout time.Du
 	case 2:
 		return NewShadowProxyWithTimeout(timeout, next[0], next[1])
 	default:
-		logger.Fatal("too many proxies for this proxy middleware: ShadowMiddlewareWithTimeoutAndLogger only accepts 1 or 2 proxies, got %s", len(next))
+		logger.Fatal("too many proxies for this proxy middleware: ShadowMiddlewareWithTimeoutAndLogger only accepts 1 or 2 proxies, got %d", len(next))
 		return nil
 	}
 }
