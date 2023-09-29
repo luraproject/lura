@@ -68,7 +68,7 @@ func NewGraphQLMiddleware(logger logging.Logger, remote *config.Backend) Middlew
 
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {
-			logger.Error("ErrTooManyProxies: NewGraphQLMiddleware only accepts 1 proxy, got %s (extra proxies will be ignored)", len(next))
+			logger.Fatal("too many proxies for this proxy middleware: NewGraphQLMiddleware only accepts 1 proxy, got %d", len(next))
 		}
 
 		logger.Debug(

@@ -15,7 +15,7 @@ func NewLoggingMiddleware(logger logging.Logger, name string) Middleware {
 	logPrefix := "[" + strings.ToUpper(name) + "]"
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {
-			logger.Error("ErrTooManyProxies: NewLoggingMiddleware only accepts 1 proxy, got %s (extra proxies will be ignored)", len(next))
+			logger.Fatal("too many proxies for this proxy middleware: NewLoggingMiddleware only accepts 1 proxy, got %d", len(next))
 		}
 		return func(ctx context.Context, request *Request) (*Response, error) {
 			begin := time.Now()
