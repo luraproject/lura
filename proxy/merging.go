@@ -24,7 +24,7 @@ func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.Endpoi
 		panic(ErrNoBackends)
 	}
 	if totalBackends == 1 {
-		return EmptyMiddleware
+		return emptyMiddlewareFallback(logger)
 	}
 	serviceTimeout := time.Duration(85*endpointConfig.Timeout.Nanoseconds()/100) * time.Nanosecond
 	combiner := getResponseCombiner(endpointConfig.ExtraConfig)

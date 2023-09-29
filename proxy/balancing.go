@@ -5,7 +5,6 @@ package proxy
 import (
 	"context"
 	"net/url"
-	"os"
 	"strings"
 
 	"github.com/luraproject/lura/v2/config"
@@ -22,7 +21,7 @@ func NewLoadBalancedMiddleware(remote *config.Backend) Middleware {
 // NewLoadBalancedMiddlewareWithSubscriber creates proxy middleware adding the most perfomant balancer
 // over the received subscriber
 func NewLoadBalancedMiddlewareWithSubscriber(subscriber sd.Subscriber) Middleware {
-	return newLoadBalancedMiddleware(sd.NewBalancer(subscriber))
+	return newLoadBalancedMiddleware(logging.NoOp, sd.NewBalancer(subscriber))
 }
 
 // NewRoundRobinLoadBalancedMiddleware creates proxy middleware adding a round robin balancer
@@ -40,20 +39,56 @@ func NewRandomLoadBalancedMiddleware(remote *config.Backend) Middleware {
 // NewRoundRobinLoadBalancedMiddlewareWithSubscriber creates proxy middleware adding a round robin
 // balancer over the received subscriber
 func NewRoundRobinLoadBalancedMiddlewareWithSubscriber(subscriber sd.Subscriber) Middleware {
-	return newLoadBalancedMiddleware(sd.NewRoundRobinLB(subscriber))
+	return newLoadBalancedMiddleware(logging.NoOp, sd.NewRoundRobinLB(subscriber))
 }
 
 // NewRandomLoadBalancedMiddlewareWithSubscriber creates proxy middleware adding a random
 // balancer over the received subscriber
 func NewRandomLoadBalancedMiddlewareWithSubscriber(subscriber sd.Subscriber) Middleware {
-	return newLoadBalancedMiddleware(sd.NewRandomLB(subscriber))
+	return newLoadBalancedMiddleware(logging.NoOp, sd.NewRandomLB(subscriber))
 }
 
-func newLoadBalancedMiddleware(lb sd.Balancer) Middleware {
-	l, _ := logging.NewLogger("DEBUG", os.Stdout, "[LURA]")
+// NewLoadBalancedMiddlewareWithLogger creates proxy middleware adding the most perfomant balancer
+// over a default subscriber
+func NewLoadBalancedMiddlewareWithLogger(l logging.Logger, remote *config.Backend) Middleware {
+	return NewLoadBalancedMiddlewareWithSubscriberAndLogger(l, sd.GetRegister().Get(remote.SD)(remote))
+}
+
+// NewLoadBalancedMiddlewareWithSubscriberAndLogger creates proxy middleware adding the most perfomant balancer
+// over the received subscriber
+func NewLoadBalancedMiddlewareWithSubscriberAndLogger(l logging.Logger, subscriber sd.Subscriber) Middleware {
+	return newLoadBalancedMiddleware(l, sd.NewBalancer(subscriber))
+}
+
+// NewRoundRobinLoadBalancedMiddlewareWithLogger creates proxy middleware adding a round robin balancer
+// over a default subscriber
+func NewRoundRobinLoadBalancedMiddlewareWithLogger(l logging.Logger, remote *config.Backend) Middleware {
+	return NewRoundRobinLoadBalancedMiddlewareWithSubscriberAndLogger(l, sd.GetRegister().Get(remote.SD)(remote))
+}
+
+// NewRandomLoadBalancedMiddlewareWithLogger creates proxy middleware adding a random balancer
+// over a default subscriber
+func NewRandomLoadBalancedMiddlewareWithLogger(l logging.Logger, remote *config.Backend) Middleware {
+	return NewRandomLoadBalancedMiddlewareWithSubscriberAndLogger(l, sd.GetRegister().Get(remote.SD)(remote))
+}
+
+// NewRoundRobinLoadBalancedMiddlewareWithSubscriberAndLogger creates proxy middleware adding a round robin
+// balancer over the received subscriber
+func NewRoundRobinLoadBalancedMiddlewareWithSubscriberAndLogger(l logging.Logger, subscriber sd.Subscriber) Middleware {
+	return newLoadBalancedMiddleware(l, sd.NewRoundRobinLB(subscriber))
+}
+
+// NewRandomLoadBalancedMiddlewareWithSubscriberAndLogger creates proxy middleware adding a random
+// balancer over the received subscriber
+func NewRandomLoadBalancedMiddlewareWithSubscriberAndLogger(l logging.Logger, subscriber sd.Subscriber) Middleware {
+	return newLoadBalancedMiddleware(l, sd.NewRandomLB(subscriber))
+}
+
+func newLoadBalancedMiddleware(l logging.Logger, lb sd.Balancer) Middleware {
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {
-			l.Error("ErrTooManyProxies: newLoadBalancedMiddleware only accepts 1 proxy, got %s (extra proxies will be ignored)", len(next))
+			l.Fatal("too many proxies for this proxy middleware: newLoadBalancedMiddleware only accepts 1 proxy, got %s", len(next))
+			return nil
 		}
 		return func(ctx context.Context, request *Request) (*Response, error) {
 			host, err := lb.Host()

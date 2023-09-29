@@ -4,7 +4,6 @@ package proxy
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"github.com/luraproject/lura/v2/config"
@@ -60,40 +59,46 @@ func NewShadowFactory(f Factory) Factory {
 	return shadowFactory{f}
 }
 
-// ShadowMiddleware is a Middleware that creates a shadowProxy
-func ShadowMiddleware(next ...Proxy) Proxy {
-	l, _ := logging.NewLogger("DEBUG", os.Stdout, "[LURA]")
+// ShadowMiddlewareWithLogger is a Middleware that creates a shadowProxy
+func ShadowMiddlewareWithLogger(logger logging.Logger, next ...Proxy) Proxy {
 	switch len(next) {
 	case 0:
-		l.Error("ErrNotEnoughProxies: ShadowMiddleware only accepts 1 or 2 proxies, got 0")
-		// this is actually a good reason to panic, when there is no next handler of the request:
-		panic(ErrNotEnoughProxies)
+		logger.Fatal("not enough proxies for this endpoint: ShadowMiddlewareWithLogger only accepts 1 or 2 proxies, got 0")
+		return nil
 	case 1:
 		return next[0]
 	case 2:
 		return NewShadowProxy(next[0], next[1])
 	default:
-		l.Error("ErrTooManyProxies: ShadowMiddleware only accepts 1 or 2 proxies, got %s (only first 2 proxies will be used)", len(next))
-		return NewShadowProxy(next[0], next[1])
+		logger.Fatal("too many proxies for this proxy middleware: ShadowMiddlewareWithLogger only accepts 1 or 2 proxies, got %s", len(next))
+		return nil
+	}
+}
+
+// ShadowMiddleware is a Middleware that creates a shadowProxy
+func ShadowMiddleware(next ...Proxy) Proxy {
+	return ShadowMiddlewareWithLogger(logging.NoOp, next...)
+}
+
+// ShadowMiddlewareWithTimeoutAndLogger is a Middleware that creates a shadowProxy with a timeout in the context
+func ShadowMiddlewareWithTimeoutAndLogger(logger logging.Logger, timeout time.Duration, next ...Proxy) Proxy {
+	switch len(next) {
+	case 0:
+		logger.Fatal("not enough proxies for this endpoint: ShadowMiddlewareWithTimeoutAndLogger only accepts 1 or 2 proxies, got 0")
+		return nil
+	case 1:
+		return next[0]
+	case 2:
+		return NewShadowProxyWithTimeout(timeout, next[0], next[1])
+	default:
+		logger.Fatal("too many proxies for this proxy middleware: ShadowMiddlewareWithTimeoutAndLogger only accepts 1 or 2 proxies, got %s", len(next))
+		return nil
 	}
 }
 
 // ShadowMiddlewareWithTimeout is a Middleware that creates a shadowProxy with a timeout in the context
 func ShadowMiddlewareWithTimeout(timeout time.Duration, next ...Proxy) Proxy {
-	l, _ := logging.NewLogger("DEBUG", os.Stdout, "[LURA]")
-	switch len(next) {
-	case 0:
-		l.Error("ErrNotEnoughProxies: ShadowMiddleware only accepts 1 or 2 proxies, got 0")
-		// this is actually a good reason to panic, when there is no next handler of the request:
-		panic(ErrNotEnoughProxies)
-	case 1:
-		return next[0]
-	case 2:
-		return NewShadowProxyWithTimeout(timeout, next[0], next[1])
-	default:
-		l.Error("ErrTooManyProxies: ShadowMiddleware only accepts 1 or 2 proxies, got %s (only first 2 proxies will be used)", len(next))
-		return NewShadowProxyWithTimeout(timeout, next[0], next[1])
-	}
+	return ShadowMiddlewareWithTimeoutAndLogger(logging.NoOp, timeout, next...)
 }
 
 // NewShadowProxy returns a Proxy that sends requests to p1 and p2 but ignores

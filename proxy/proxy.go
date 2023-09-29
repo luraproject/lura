@@ -9,7 +9,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"os"
 
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/logging"
@@ -82,13 +81,23 @@ type BackendFactory func(remote *config.Backend) Proxy
 //	response, err := p(ctx, r)
 type Middleware func(next ...Proxy) Proxy
 
-// EmptyMiddleware is a dummy middleware, useful for testing and fallback
-func EmptyMiddleware(next ...Proxy) Proxy {
-	l, _ := logging.NewLogger("DEBUG", os.Stdout, "[LURA]")
+// EmptyMiddlewareWithLoggger is a dummy middleware, useful for testing and fallback
+func EmptyMiddlewareWithLogger(logger logging.Logger, next ...Proxy) Proxy {
 	if len(next) > 1 {
-		l.Error("ErrTooManyProxies: EmptyMiddleware only accepts 1 proxy, got %s (extra proxies will be ignored)", len(next))
+		logger.Fatal("too many proxies for this proxy middleware: EmptyMiddleware only accepts 1 proxy, got %d", len(next))
+		return nil
 	}
 	return next[0]
+}
+
+func EmptyMiddleware(next ...Proxy) Proxy {
+	return EmptyMiddlewareWithLogger(logging.NoOp, next...)
+}
+
+func emptyMiddlewareFallback(logger logging.Logger) Middleware {
+	return func(next ...Proxy) Proxy {
+		return EmptyMiddlewareWithLogger(logger, next...)
+	}
 }
 
 // NoopProxy is a do nothing proxy, useful for testing

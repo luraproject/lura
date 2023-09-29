@@ -5,24 +5,22 @@ package proxy
 import (
 	"context"
 	"errors"
-	"os"
 	"time"
 
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/logging"
 )
 
-// NewConcurrentMiddleware creates a proxy middleware that enables sending several requests concurrently
-func NewConcurrentMiddleware(remote *config.Backend) Middleware {
-	l, _ := logging.NewLogger("DEBUG", os.Stdout, "[LURA]")
+// NewConcurrentMiddlewareWithLogger creates a proxy middleware that enables sending several requests concurrently
+func NewConcurrentMiddlewareWithLogger(logger logging.Logger, remote *config.Backend) Middleware {
 	if remote.ConcurrentCalls == 1 {
-		l.Error("TooFewConcurrentCalls: NewConcurrentMiddleware expects more than 1 concurrent call")
+		logger.Fatal("too few concurrent calls: NewConcurrentMiddleware expects more than 1 concurrent call, got %d", remote.ConcurrentCalls)
 	}
 	serviceTimeout := time.Duration(75*remote.Timeout.Nanoseconds()/100) * time.Nanosecond
 
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {
-			l.Error("ErrTooManyProxies: NewConcurrentMiddleware only accepts 1 proxy, got %s (extra proxies will be ignored)", len(next))
+			logger.Fatal("too many proxies for this proxy middleware: NewConcurrentMiddleware only accepts 1 proxy, got %d", len(next))
 		}
 
 		return func(ctx context.Context, request *Request) (*Response, error) {
@@ -53,6 +51,12 @@ func NewConcurrentMiddleware(remote *config.Backend) Middleware {
 			return response, err
 		}
 	}
+}
+
+// NewConcurrentMiddlewareWithLogger creates a proxy middleware that enables sending several requests concurrently.
+// Is recommended to use the version with a logger param.
+func NewConcurrentMiddleware(remote *config.Backend) Middleware {
+	return NewConcurrentMiddlewareWithLogger(logging.NoOp, remote)
 }
 
 var errNullResult = errors.New("invalid response")

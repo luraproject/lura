@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 
@@ -101,13 +100,19 @@ func NewHTTPProxyDetailed(_ *config.Backend, re client.HTTPRequestExecutor, ch c
 
 // NewRequestBuilderMiddleware creates a proxy middleware that parses the request params received
 // from the outer layer and generates the path to the backend endpoints
-var NewRequestBuilderMiddleware = newRequestBuilderMiddleware
+var NewRequestBuilderMiddleware = func(remote *config.Backend) Middleware {
+	return newRequestBuilderMiddleware(logging.NoOp, remote)
+}
 
-func newRequestBuilderMiddleware(remote *config.Backend) Middleware {
-	l, _ := logging.NewLogger("DEBUG", os.Stdout, "[LURA]")
+func NewRequestBuilderMiddlewareWithLogger(logger logging.Logger, remote *config.Backend) Middleware {
+	return newRequestBuilderMiddleware(logger, remote)
+}
+
+func newRequestBuilderMiddleware(l logging.Logger, remote *config.Backend) Middleware {
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {
-			l.Error("ErrTooManyProxies: newRequestBuilderMiddleware only accepts 1 proxy, got %s (extra proxies will be ignored)", len(next))
+			l.Fatal("too many proxies for this proxy middleware: newRequestBuilderMiddleware only accepts 1 proxy, got %d", len(next))
+			return nil
 		}
 		return func(ctx context.Context, request *Request) (*Response, error) {
 			r := request.Clone()

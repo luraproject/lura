@@ -30,7 +30,7 @@ func NewGraphQLMiddleware(logger logging.Logger, remote *config.Backend) Middlew
 			logger.Warning(
 				fmt.Sprintf("[BACKEND: %s][GraphQL] %s", remote.URLPattern, err.Error()))
 		}
-		return EmptyMiddleware
+		return emptyMiddlewareFallback(logger)
 	}
 
 	extractor := graphql.New(*opt)
@@ -63,7 +63,7 @@ func NewGraphQLMiddleware(logger logging.Logger, remote *config.Backend) Middlew
 		}
 
 	default:
-		return EmptyMiddleware
+		return emptyMiddlewareFallback(logger)
 	}
 
 	return func(next ...Proxy) Proxy {
