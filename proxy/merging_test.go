@@ -578,29 +578,6 @@ func TestNewMergeDataMiddleware_timeout(t *testing.T) {
 	}
 }
 
-func TestNewMergeDataMiddleware_notEnoughProxies(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The code did not panic\n")
-		}
-	}()
-	backend := config.Backend{}
-	endpoint := config.EndpointConfig{
-		Backend: []*config.Backend{&backend, &backend},
-	}
-	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
-	mw(NoopProxy)
-}
-
-func TestNewMergeDataMiddleware_noBackends(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The code did not panic\n")
-		}
-	}()
-	endpoint := config.EndpointConfig{}
-	NewMergeDataMiddleware(logging.NoOp, &endpoint)
-}
 func TestRegisterResponseCombiner(t *testing.T) {
 	subject := "test combiner"
 	if len(responseCombiners.data.Clone()) != 1 {

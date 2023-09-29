@@ -19,6 +19,7 @@ func NewFilterHeadersMiddleware(logger logging.Logger, remote *config.Backend) M
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {
 			logger.Fatal("too many proxies for this proxy middleware: NewFilterHeadersMiddleware only accepts 1 proxy, got %d", len(next))
+			return nil
 		}
 		nextProxy := next[0]
 		return func(ctx context.Context, request *Request) (*Response, error) {

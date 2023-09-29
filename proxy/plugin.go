@@ -90,6 +90,7 @@ func newPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[str
 		if len(next) > 1 {
 			logger.Fatal("too many proxies for this proxy middleware: newPluginMiddleware only accepts 1 proxy, got %d tag: %s, pattern: %s",
 				len(next), tag, pattern)
+			return nil
 		}
 
 		if totReqModifiers == 0 {

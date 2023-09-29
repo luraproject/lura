@@ -322,6 +322,7 @@ func NewFlatmapMiddleware(logger logging.Logger, cfg *config.EndpointConfig) Mid
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {
 			logger.Fatal("too many proxies for this proxy middleware: NewFlatmapMiddleware only accepts 1 proxy, got %d", len(next))
+			return nil
 		}
 
 		if formatter == nil {
