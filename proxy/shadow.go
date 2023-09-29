@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
 )
 
 const (
@@ -58,32 +59,46 @@ func NewShadowFactory(f Factory) Factory {
 	return shadowFactory{f}
 }
 
-// ShadowMiddleware is a Middleware that creates a shadowProxy
-func ShadowMiddleware(next ...Proxy) Proxy {
+// ShadowMiddlewareWithLogger is a Middleware that creates a shadowProxy
+func ShadowMiddlewareWithLogger(logger logging.Logger, next ...Proxy) Proxy {
 	switch len(next) {
 	case 0:
-		panic(ErrNotEnoughProxies)
+		logger.Fatal("not enough proxies for this endpoint: ShadowMiddlewareWithLogger only accepts 1 or 2 proxies, got 0")
+		return nil
 	case 1:
 		return next[0]
 	case 2:
 		return NewShadowProxy(next[0], next[1])
 	default:
-		panic(ErrTooManyProxies)
+		logger.Fatal("too many proxies for this proxy middleware: ShadowMiddlewareWithLogger only accepts 1 or 2 proxies, got %d", len(next))
+		return nil
 	}
 }
 
-// ShadowMiddlewareWithTimeout is a Middleware that creates a shadowProxy with a timeout in the context
-func ShadowMiddlewareWithTimeout(timeout time.Duration, next ...Proxy) Proxy {
+// ShadowMiddleware is a Middleware that creates a shadowProxy
+func ShadowMiddleware(next ...Proxy) Proxy {
+	return ShadowMiddlewareWithLogger(logging.NoOp, next...)
+}
+
+// ShadowMiddlewareWithTimeoutAndLogger is a Middleware that creates a shadowProxy with a timeout in the context
+func ShadowMiddlewareWithTimeoutAndLogger(logger logging.Logger, timeout time.Duration, next ...Proxy) Proxy {
 	switch len(next) {
 	case 0:
-		panic(ErrNotEnoughProxies)
+		logger.Fatal("not enough proxies for this endpoint: ShadowMiddlewareWithTimeoutAndLogger only accepts 1 or 2 proxies, got 0")
+		return nil
 	case 1:
 		return next[0]
 	case 2:
 		return NewShadowProxyWithTimeout(timeout, next[0], next[1])
 	default:
-		panic(ErrTooManyProxies)
+		logger.Fatal("too many proxies for this proxy middleware: ShadowMiddlewareWithTimeoutAndLogger only accepts 1 or 2 proxies, got %d", len(next))
+		return nil
 	}
+}
+
+// ShadowMiddlewareWithTimeout is a Middleware that creates a shadowProxy with a timeout in the context
+func ShadowMiddlewareWithTimeout(timeout time.Duration, next ...Proxy) Proxy {
+	return ShadowMiddlewareWithTimeoutAndLogger(logging.NoOp, timeout, next...)
 }
 
 // NewShadowProxy returns a Proxy that sends requests to p1 and p2 but ignores

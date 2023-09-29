@@ -92,10 +92,10 @@ func (pf defaultFactory) newStack(backend *config.Backend) (p Proxy) {
 	p = NewBackendPluginMiddleware(pf.logger, backend)(p)
 	p = NewGraphQLMiddleware(pf.logger, backend)(p)
 	p = NewFilterHeadersMiddleware(pf.logger, backend)(p)
-	p = NewLoadBalancedMiddlewareWithSubscriber(pf.subscriberFactory(backend))(p)
+	p = NewLoadBalancedMiddlewareWithSubscriberAndLogger(pf.logger, pf.subscriberFactory(backend))(p)
 	if backend.ConcurrentCalls > 1 {
-		p = NewConcurrentMiddleware(backend)(p)
+		p = NewConcurrentMiddlewareWithLogger(pf.logger, backend)(p)
 	}
-	p = NewRequestBuilderMiddleware(backend)(p)
+	p = NewRequestBuilderMiddlewareWithLogger(pf.logger, backend)(p)
 	return
 }

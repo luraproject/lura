@@ -19,10 +19,11 @@ import (
 func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.EndpointConfig) Middleware {
 	totalBackends := len(endpointConfig.Backend)
 	if totalBackends == 0 {
-		panic(ErrNoBackends)
+		logger.Fatal("all endpoints must have at least one backend: NewMergeDataMiddleware")
+		return nil
 	}
 	if totalBackends == 1 {
-		return EmptyMiddleware
+		return emptyMiddlewareFallback(logger)
 	}
 	serviceTimeout := time.Duration(85*endpointConfig.Timeout.Nanoseconds()/100) * time.Nanosecond
 	combiner := getResponseCombiner(endpointConfig.ExtraConfig)
@@ -40,7 +41,11 @@ func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.Endpoi
 
 	return func(next ...Proxy) Proxy {
 		if len(next) != totalBackends {
-			panic(ErrNotEnoughProxies)
+			// we leave the panic here, because we do not want to continue
+			// if this configuration is wrong, as it would lead to unexpected
+			// behaviour.
+			logger.Fatal("not enough proxies for this endpoint: NewMergeDataMiddleware")
+			return nil
 		}
 		reqClone := func(r *Request) *Request { return r }
 
@@ -116,7 +121,7 @@ func parallelMerge(reqCloner func(*Request) *Request, timeout time.Duration, rc 
 	}
 }
 
-var reMergeKey = regexp.MustCompile(`\{\{\.Resp(\d+)_([\d\w-_\.]+)\}\}`)
+var reMergeKey = regexp.MustCompile(`\{\{\.Resp(\d+)_([\w-\.]+)\}\}`)
 
 func sequentialMerge(reqCloner func(*Request) *Request, patterns []string, timeout time.Duration, rc ResponseCombiner, next ...Proxy) Proxy {
 	return func(ctx context.Context, request *Request) (*Response, error) {

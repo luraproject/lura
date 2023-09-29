@@ -24,15 +24,6 @@ func TestEmptyMiddleware_ok(t *testing.T) {
 	}
 }
 
-func TestEmptyMiddleware_multipleNext(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The code did not panic\n")
-		}
-	}()
-	EmptyMiddleware(NoopProxy, NoopProxy)
-}
-
 func explosiveProxy(t *testing.T) Proxy {
 	return func(ctx context.Context, _ *Request) (*Response, error) {
 		t.Error("This proxy shouldn't been executed!")

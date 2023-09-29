@@ -30,7 +30,7 @@ func NewGraphQLMiddleware(logger logging.Logger, remote *config.Backend) Middlew
 			logger.Warning(
 				fmt.Sprintf("[BACKEND: %s][GraphQL] %s", remote.URLPattern, err.Error()))
 		}
-		return EmptyMiddleware
+		return emptyMiddlewareFallback(logger)
 	}
 
 	extractor := graphql.New(*opt)
@@ -63,12 +63,13 @@ func NewGraphQLMiddleware(logger logging.Logger, remote *config.Backend) Middlew
 		}
 
 	default:
-		return EmptyMiddleware
+		return emptyMiddlewareFallback(logger)
 	}
 
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {
-			panic(ErrTooManyProxies)
+			logger.Fatal("too many proxies for this proxy middleware: NewGraphQLMiddleware only accepts 1 proxy, got %d", len(next))
+			return nil
 		}
 
 		logger.Debug(

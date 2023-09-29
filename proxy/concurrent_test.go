@@ -126,24 +126,3 @@ func TestNewConcurrentMiddleware_timeout(t *testing.T) {
 	default:
 	}
 }
-
-func TestNewConcurrentMiddleware_multipleNext(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The code did not panic\n")
-		}
-	}()
-	backend := config.Backend{ConcurrentCalls: 2}
-	mw := NewConcurrentMiddleware(&backend)
-	mw(explosiveProxy(t), explosiveProxy(t))
-}
-
-func TestNewConcurrentMiddleware_insuficientConcurrentCalls(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The code did not panic\n")
-		}
-	}()
-	backend := config.Backend{ConcurrentCalls: 1}
-	NewConcurrentMiddleware(&backend)
-}

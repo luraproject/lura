@@ -21,7 +21,7 @@ func NewPluginMiddleware(logger logging.Logger, endpoint *config.EndpointConfig)
 	cfg, ok := endpoint.ExtraConfig[plugin.Namespace].(map[string]interface{})
 
 	if !ok {
-		return EmptyMiddleware
+		return emptyMiddlewareFallback(logger)
 	}
 
 	return newPluginMiddleware(logger, "ENDPOINT", endpoint.Endpoint, cfg)
@@ -35,7 +35,7 @@ func NewBackendPluginMiddleware(logger logging.Logger, remote *config.Backend) M
 	cfg, ok := remote.ExtraConfig[plugin.Namespace].(map[string]interface{})
 
 	if !ok {
-		return EmptyMiddleware
+		return emptyMiddlewareFallback(logger)
 	}
 
 	return newPluginMiddleware(logger, "BACKEND", remote.URLPattern, cfg)
@@ -44,7 +44,7 @@ func NewBackendPluginMiddleware(logger logging.Logger, remote *config.Backend) M
 func newPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[string]interface{}) Middleware {
 	plugins, ok := cfg["name"].([]interface{})
 	if !ok {
-		return EmptyMiddleware
+		return emptyMiddlewareFallback(logger)
 	}
 
 	var reqModifiers []func(interface{}) (interface{}, error)
@@ -73,7 +73,7 @@ func newPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[str
 
 	totReqModifiers, totRespModifiers := len(reqModifiers), len(respModifiers)
 	if totReqModifiers == totRespModifiers && totRespModifiers == 0 {
-		return EmptyMiddleware
+		return emptyMiddlewareFallback(logger)
 	}
 
 	logger.Debug(
@@ -88,7 +88,9 @@ func newPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[str
 
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {
-			panic(ErrTooManyProxies)
+			logger.Fatal("too many proxies for this proxy middleware: newPluginMiddleware only accepts 1 proxy, got %d tag: %s, pattern: %s",
+				len(next), tag, pattern)
+			return nil
 		}
 
 		if totReqModifiers == 0 {

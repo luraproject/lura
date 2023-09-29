@@ -12,30 +12,6 @@ import (
 	"github.com/luraproject/lura/v2/logging"
 )
 
-func TestNewStaticMiddleware_multipleNext(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("The code did not panic")
-		}
-	}()
-	endpoint := config.EndpointConfig{
-		ExtraConfig: config.ExtraConfig{
-			Namespace: map[string]interface{}{
-				staticKey: map[string]interface{}{
-					"data": map[string]interface{}{
-						"new-1": true,
-						"new-2": map[string]interface{}{"k1": 42},
-						"new-3": "42",
-					},
-					"strategy": "incomplete",
-				},
-			},
-		},
-	}
-	mw := NewStaticMiddleware(logging.NoOp, &endpoint)
-	mw(explosiveProxy(t), explosiveProxy(t))
-}
-
 func TestNewStaticMiddleware_ok(t *testing.T) {
 	endpoint := config.EndpointConfig{
 		ExtraConfig: config.ExtraConfig{

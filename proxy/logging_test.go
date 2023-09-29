@@ -12,18 +12,6 @@ import (
 	"github.com/luraproject/lura/v2/logging"
 )
 
-func TestNewLoggingMiddleware_multipleNext(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("The code did not panic")
-		}
-	}()
-	buff := bytes.NewBuffer(make([]byte, 1024))
-	logger, _ := logging.NewLogger("INFO", buff, "pref")
-	mw := NewLoggingMiddleware(logger, "supu")
-	mw(explosiveProxy(t), explosiveProxy(t))
-}
-
 func TestNewLoggingMiddleware_ok(t *testing.T) {
 	buff := bytes.NewBuffer(make([]byte, 1024))
 	logger, _ := logging.NewLogger("DEBUG", buff, "pref")
