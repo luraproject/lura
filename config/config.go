@@ -272,6 +272,8 @@ type Backend struct {
 	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
 	// HeadersToPass defines the list of headers to pass to this backend
 	HeadersToPass []string `mapstructure:"input_headers"`
+	// QueryStringsToPass has the list of query string params to be sent to the backend
+	QueryStringsToPass []string `mapstructure:"input_query_strings"`
 }
 
 // Plugin contains the config required by the plugin module
