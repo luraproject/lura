@@ -34,7 +34,7 @@ func NewFilterQueryStringsMiddleware(logger logging.Logger, remote *config.Backe
 				}
 			}
 			if numQueryStringsToPass == len(request.Query) {
-				// all the headers should pass, no need to clone the headers
+				// all the query strings should pass, no need to clone the headers
 				return nextProxy(ctx, request)
 			}
 			// ATTENTION: this is not a clone of query strings!

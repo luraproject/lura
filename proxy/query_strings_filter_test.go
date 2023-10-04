@@ -96,3 +96,73 @@ func TestNewFilterQueryStringsMiddleware(t *testing.T) {
 		return
 	}
 }
+
+func TestFilterQueryStringsBlockAll(t *testing.T) {
+	// In order to block all the query strings, we must only let pass
+	// the 'empty' string ""
+	mw := NewFilterQueryStringsMiddleware(
+		logging.NoOp,
+		&config.Backend{
+			QueryStringsToPass: []string{""},
+		},
+	)
+
+	var receivedReq *Request
+	prxy := mw(func(ctx context.Context, req *Request) (*Response, error) {
+		receivedReq = req
+		return nil, nil
+	})
+
+	sentReq := &Request{
+		Body:   nil,
+		Params: map[string]string{},
+		Query: map[string][]string{
+			"oak":   []string{"acorn", "evergreen"},
+			"maple": []string{"tree", "shrub"},
+		},
+	}
+
+	prxy(context.Background(), sentReq)
+
+	if receivedReq == sentReq {
+		t.Errorf("request should be different")
+		return
+	}
+
+	if len(receivedReq.Query) != 0 {
+		t.Errorf("should have blocked all query strings")
+		return
+	}
+}
+
+func TestFilterQueryStringsAllowAll(t *testing.T) {
+	// Empty backend query strings to passa everything
+	mw := NewFilterQueryStringsMiddleware(
+		logging.NoOp,
+		&config.Backend{
+			QueryStringsToPass: []string{},
+		},
+	)
+
+	var receivedReq *Request
+	prxy := mw(func(ctx context.Context, req *Request) (*Response, error) {
+		receivedReq = req
+		return nil, nil
+	})
+
+	sentReq := &Request{
+		Body:   nil,
+		Params: map[string]string{},
+		Query: map[string][]string{
+			"oak":   []string{"acorn", "evergreen"},
+			"maple": []string{"tree", "shrub"},
+		},
+	}
+
+	prxy(context.Background(), sentReq)
+
+	if len(receivedReq.Query) != 2 {
+		t.Errorf("should have passed all query strings")
+		return
+	}
+}
