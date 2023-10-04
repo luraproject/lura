@@ -81,3 +81,70 @@ func TestNewFilterHeadersMiddleware(t *testing.T) {
 		return
 	}
 }
+
+func TestNewFilterHeadersMiddlewareBlockAll(t *testing.T) {
+	mw := NewFilterHeadersMiddleware(
+		logging.NoOp,
+		&config.Backend{
+			HeadersToPass: []string{""},
+		},
+	)
+
+	var receivedReq *Request
+	prxy := mw(func(ctx context.Context, req *Request) (*Response, error) {
+		receivedReq = req
+		return nil, nil
+	})
+
+	sentReq := &Request{
+		Body:   nil,
+		Params: map[string]string{},
+		Headers: map[string][]string{
+			"X-This-Shall-Pass":    []string{"tupu", "supu"},
+			"X-You-Shall-Not-Pass": []string{"Balrog"},
+		},
+	}
+
+	prxy(context.Background(), sentReq)
+
+	if receivedReq == sentReq {
+		t.Errorf("request should be different")
+		return
+	}
+
+	if len(receivedReq.Headers) != 0 {
+		t.Errorf("should have blocked all headers")
+		return
+	}
+}
+
+func TestNewFilterHeadersMiddlewareAllowAll(t *testing.T) {
+	mw := NewFilterHeadersMiddleware(
+		logging.NoOp,
+		&config.Backend{
+			HeadersToPass: []string{},
+		},
+	)
+
+	var receivedReq *Request
+	prxy := mw(func(ctx context.Context, req *Request) (*Response, error) {
+		receivedReq = req
+		return nil, nil
+	})
+
+	sentReq := &Request{
+		Body:   nil,
+		Params: map[string]string{},
+		Headers: map[string][]string{
+			"X-This-Shall-Pass":    []string{"tupu", "supu"},
+			"X-You-Shall-Not-Pass": []string{"Balrog"},
+		},
+	}
+
+	prxy(context.Background(), sentReq)
+
+	if len(receivedReq.Headers) != 2 {
+		t.Errorf("should have let pass all headers")
+		return
+	}
+}
