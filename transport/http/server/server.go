@@ -73,25 +73,29 @@ func InitHTTPDefaultTransportWithLogger(cfg config.ServiceConfig, logger logging
 		cfg.ClientTLS.AllowInsecureConnections = true
 	}
 	onceTransportConfig.Do(func() {
-		http.DefaultTransport = &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
-			DialContext: (&net.Dialer{
-				Timeout:       cfg.DialerTimeout,
-				KeepAlive:     cfg.DialerKeepAlive,
-				FallbackDelay: cfg.DialerFallbackDelay,
-				DualStack:     true,
-			}).DialContext,
-			DisableCompression:    cfg.DisableCompression,
-			DisableKeepAlives:     cfg.DisableKeepAlives,
-			MaxIdleConns:          cfg.MaxIdleConns,
-			MaxIdleConnsPerHost:   cfg.MaxIdleConnsPerHost,
-			IdleConnTimeout:       cfg.IdleConnTimeout,
-			ResponseHeaderTimeout: cfg.ResponseHeaderTimeout,
-			ExpectContinueTimeout: cfg.ExpectContinueTimeout,
-			TLSHandshakeTimeout:   10 * time.Second,
-			TLSClientConfig:       ParseClientTLSConfigWithLogger(cfg.ClientTLS, logger),
-		}
+		http.DefaultTransport = newTransport(cfg, logger)
 	})
+}
+
+func newTransport(cfg config.ServiceConfig, logger logging.Logger) *http.Transport {
+	return &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:       cfg.DialerTimeout,
+			KeepAlive:     cfg.DialerKeepAlive,
+			FallbackDelay: cfg.DialerFallbackDelay,
+			DualStack:     true,
+		}).DialContext,
+		DisableCompression:    cfg.DisableCompression,
+		DisableKeepAlives:     cfg.DisableKeepAlives,
+		MaxIdleConns:          cfg.MaxIdleConns,
+		MaxIdleConnsPerHost:   cfg.MaxIdleConnsPerHost,
+		IdleConnTimeout:       cfg.IdleConnTimeout,
+		ResponseHeaderTimeout: cfg.ResponseHeaderTimeout,
+		ExpectContinueTimeout: cfg.ExpectContinueTimeout,
+		TLSHandshakeTimeout:   10 * time.Second,
+		TLSClientConfig:       ParseClientTLSConfigWithLogger(cfg.ClientTLS, logger),
+	}
 }
 
 // RunServer runs a http.Server with the given handler and configuration.
@@ -200,6 +204,7 @@ func ParseClientTLSConfigWithLogger(cfg *config.ClientTLS, logger logging.Logger
 		MaxVersion:         parseTLSVersion(cfg.MaxVersion),
 		CurvePreferences:   parseCurveIDs(cfg.CurvePreferences),
 		CipherSuites:       parseCipherSuites(cfg.CipherSuites),
+		Certificates:       loadClientCerts(cfg.ClientCerts, logger),
 	}
 }
 
@@ -221,6 +226,31 @@ func loadCertPool(disableSystemCaPool bool, caCerts []string, logger logging.Log
 		}
 	}
 	return certPool
+}
+
+func loadClientCerts(certFiles [][]string, logger logging.Logger) []tls.Certificate {
+	certs := make([]tls.Certificate, 0, len(certFiles))
+	for idx, certAndKey := range certFiles {
+		if len(certAndKey) < 2 {
+			logger.Error(fmt.Sprintf("%s Missing cert and key at idx %d: %v",
+				loggerPrefix, idx, certAndKey))
+			continue
+		}
+		if len(certAndKey) > 2 {
+			logger.Warning(fmt.Sprintf("%s Extra fields at idx %d: %v",
+				loggerPrefix, idx, certAndKey))
+		}
+
+		cert, err := tls.LoadX509KeyPair(certAndKey[0], certAndKey[1])
+		if err != nil {
+			logger.Error(fmt.Sprintf("%s Cannot load client certificate %s, %s: %s",
+				loggerPrefix, certAndKey[0], certAndKey[1], err.Error()))
+			continue
+		}
+		certs = append(certs, cert)
+	}
+
+	return certs
 }
 
 func parseTLSVersion(key string) uint16 {

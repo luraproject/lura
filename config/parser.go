@@ -216,6 +216,7 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 			MaxVersion:               p.ClientTLS.MaxVersion,
 			CurvePreferences:         p.ClientTLS.CurvePreferences,
 			CipherSuites:             p.ClientTLS.CipherSuites,
+			ClientCerts:              p.ClientTLS.ClientCerts,
 		}
 	}
 	if p.ExtraConfig != nil {
@@ -249,13 +250,14 @@ type parseableTLS struct {
 }
 
 type parseableClientTLS struct {
-	AllowInsecureConnections bool     `json:"allow_insecure_connections"`
-	CaCerts                  []string `json:"ca_certs"`
-	DisableSystemCaPool      bool     `json:"disable_system_ca_pool"`
-	MinVersion               string   `json:"min_version"`
-	MaxVersion               string   `json:"max_version"`
-	CurvePreferences         []uint16 `json:"curve_preferences"`
-	CipherSuites             []uint16 `json:"cipher_suites"`
+	AllowInsecureConnections bool       `json:"allow_insecure_connections"`
+	CaCerts                  []string   `json:"ca_certs"`
+	DisableSystemCaPool      bool       `json:"disable_system_ca_pool"`
+	MinVersion               string     `json:"min_version"`
+	MaxVersion               string     `json:"max_version"`
+	CurvePreferences         []uint16   `json:"curve_preferences"`
+	CipherSuites             []uint16   `json:"cipher_suites"`
+	ClientCerts              [][]string `json:"client_certs"`
 }
 
 type parseableEndpointConfig struct {

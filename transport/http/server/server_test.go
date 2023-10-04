@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/logging"
 )
 
 func init() {
@@ -97,23 +98,27 @@ func TestRunServer_MTLS(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	port := newPort()
-	port = 36517
+	port := 36517
 	done := make(chan error)
-	go func() {
-		done <- RunServer(
-			ctx,
-			config.ServiceConfig{
-				Port: port,
-				TLS: &config.TLS{
-					PublicKey:  "cert.pem",
-					PrivateKey: "key.pem",
-					CaCerts:    []string{"ca.pem"},
-					EnableMTLS: true,
-				},
+
+	cfg := config.ServiceConfig{
+		Port: port,
+		TLS: &config.TLS{
+			PublicKey:  "cert.pem",
+			PrivateKey: "key.pem",
+			CaCerts:    []string{"ca.pem"},
+			EnableMTLS: true,
+		},
+		ClientTLS: &config.ClientTLS{
+			AllowInsecureConnections: false, // we do not check the server cert
+			CaCerts:                  []string{"ca.pem"},
+			ClientCerts: [][]string{
+				[]string{"cert.pem", "key.pem"},
 			},
-			http.HandlerFunc(dummyHandler),
-		)
+		},
+	}
+	go func() {
+		done <- RunServer(ctx, cfg, http.HandlerFunc(dummyHandler))
 	}()
 
 	client, err := mtlsClient("cert.pem", "key.pem")
@@ -133,6 +138,29 @@ func TestRunServer_MTLS(t *testing.T) {
 		t.Errorf("unexpected status code: %d", resp.StatusCode)
 		return
 	}
+
+	logger := logging.NoOp
+	// since test are run in a suite, and `InitHTTPDefaultTransportWithLogger` is
+	// used to setup the `http.DefaultTransport` global variable once, we need to
+	// create a client here like if it was using the default created with the
+	// clientTLS config.
+	// This is a copy of the code we can find inside
+	// InitHTTPDefaultTransportWithLogger(serviceConfig, nil):
+	transport := newTransport(cfg, logger)
+
+	defClient := http.Client{
+		Transport: transport,
+	}
+	resp, err = defClient.Get(fmt.Sprintf("https://localhost:%d", port))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if resp.StatusCode != 200 {
+		t.Errorf("unexpected status code: %d", resp.StatusCode)
+		return
+	}
+
 	cancel()
 
 	if err = <-done; err != nil {
