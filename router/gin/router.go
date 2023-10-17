@@ -102,10 +102,6 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 
 	r.registerEndpointsAndMiddlewares(cfg)
 
-	// TODO: remove this ugly hack once https://github.com/gin-gonic/gin/pull/2692 and
-	// https://github.com/gin-gonic/gin/issues/2862 are completely fixed
-	go r.cfg.Engine.Run("XXXX")
-
 	r.cfg.Logger.Info("[SERVICE: Gin] Listening on port:", cfg.Port)
 	if err := r.runServerF(r.ctx, cfg, r.cfg.Engine.Handler()); err != nil && err != http.ErrServerClosed {
 		r.cfg.Logger.Error(logPrefix, err.Error())
