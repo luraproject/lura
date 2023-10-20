@@ -11,6 +11,7 @@ import (
 	"html"
 	"log"
 	"math/rand"
+	"net"
 	"net/http"
 	"os"
 	"testing"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/logging"
+	"golang.org/x/net/http2"
 )
 
 func init() {
@@ -186,6 +188,45 @@ func TestRunServer_plain(t *testing.T) {
 	<-time.After(100 * time.Millisecond)
 
 	resp, err := http.Get(fmt.Sprintf("http://localhost:%d", port))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if resp.StatusCode != 200 {
+		t.Errorf("unexpected status code: %d", resp.StatusCode)
+		return
+	}
+	cancel()
+
+	if err = <-done; err != nil {
+		t.Error(err)
+	}
+}
+
+func TestRunServer_h2c(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	port := newPort()
+
+	done := make(chan error)
+	go func() {
+		done <- RunServer(
+			ctx,
+			config.ServiceConfig{
+				Port: port,
+				ExtraConfig: config.ExtraConfig{
+					ginNamespace: serverOptions{UseH2C: true},
+				},
+			},
+			http.HandlerFunc(dummyHandler),
+		)
+	}()
+
+	<-time.After(100 * time.Millisecond)
+
+	client := h2cClient()
+	resp, err := client.Get(fmt.Sprintf("http://localhost:%d", port))
 	if err != nil {
 		t.Error(err)
 		return
@@ -410,6 +451,18 @@ func mtlsClient(certPath, keyPath string) (*http.Client, error) {
 		Certificates: []tls.Certificate{cert},
 	}
 	return &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConf}}, nil
+}
+
+// h2cClient initializes client which executes cleartext http2 requests
+func h2cClient() *http.Client {
+	return &http.Client{
+		Transport: &http2.Transport{
+			DialTLSContext: func(ctx context.Context, network, addr string, cfg *tls.Config) (net.Conn, error) {
+				return net.Dial(network, addr)
+			},
+			AllowHTTP: true,
+		},
+	}
 }
 
 // newPort returns random port numbers to avoid port collisions during the tests
