@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"net/textproto"
 	"regexp"
@@ -56,6 +57,8 @@ type ServiceConfig struct {
 	Host []string `mapstructure:"host"`
 	// port to bind the lura service
 	Port int `mapstructure:"port"`
+	// address to listen
+	Address string `mapstructure:"listen_address"`
 	// version code of the configuration
 	Version int `mapstructure:"version"`
 	// OutputEncoding defines the default encoding strategy to use for the endpoint responses
@@ -404,6 +407,13 @@ func (s *ServiceConfig) initGlobalParams() error {
 	if s.Port == 0 {
 		s.Port = defaultPort
 	}
+
+	if s.Address != "" {
+		if !validateAddress(s.Address) {
+			return fmt.Errorf("invalid ip address %s", s.Address)
+		}
+	}
+
 	if s.MaxIdleConnsPerHost == 0 {
 		s.MaxIdleConnsPerHost = DefaultMaxIdleConnsPerHost
 	}
@@ -765,4 +775,9 @@ func SetSequentialParamsPattern(pattern string) error {
 	}
 	sequentialParamsPattern = re
 	return nil
+}
+
+func validateAddress(address string) bool {
+	ip := net.ParseIP(address)
+	return ip != nil
 }
