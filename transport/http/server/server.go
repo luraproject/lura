@@ -9,7 +9,6 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -41,8 +40,6 @@ const (
 	// HeaderIncompleteResponseValue is the value of the CompleteResponseHeader
 	// if the response is not complete
 	HeaderIncompleteResponseValue = "false"
-	// ginNamespace used to grab router extra config
-	ginNamespace = "github_com/luraproject/lura/router/gin"
 )
 
 var (
@@ -144,22 +141,9 @@ func NewServer(cfg config.ServiceConfig, handler http.Handler) *http.Server {
 	return NewServerWithLogger(cfg, handler, nil)
 }
 
-type serverOptions struct {
-	// UseH2C enable h2c support.
-	UseH2C bool `json:"use_h2c"`
-}
-
 func NewServerWithLogger(cfg config.ServiceConfig, handler http.Handler, logger logging.Logger) *http.Server {
-	// wrap handler with h2c handler if it is enabled
-	srvCfg := serverOptions{}
-	if v, ok := cfg.ExtraConfig[ginNamespace]; ok {
-		if d, err := json.Marshal(v); err == nil {
-			if err := json.Unmarshal(d, &srvCfg); err == nil {
-				if srvCfg.UseH2C {
-					handler = h2c.NewHandler(handler, &http2.Server{})
-				}
-			}
-		}
+	if cfg.UseH2C {
+		handler = h2c.NewHandler(handler, &http2.Server{})
 	}
 
 	return &http.Server{

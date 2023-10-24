@@ -73,6 +73,7 @@ func NewEngine(cfg config.ServiceConfig, opt EngineOptions) *gin.Engine {
 				engine.AppEngine = ginOptions.AppEngine
 				engine.MaxMultipartMemory = ginOptions.MaxMultipartMemory
 				engine.RemoveExtraSlash = ginOptions.RemoveExtraSlash
+				engine.UseH2C = ginOptions.UseH2C
 				paths = ginOptions.LoggerSkipPaths
 
 				returnErrorMsg = ginOptions.ReturnErrorMsg
