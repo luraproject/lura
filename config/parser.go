@@ -139,7 +139,7 @@ type parseableServiceConfig struct {
 	CacheTTL              string                     `json:"cache_ttl"`
 	Host                  []string                   `json:"host"`
 	Port                  int                        `json:"port"`
-	Address               string                     `json:"listen_address"`
+	Address               string                     `json:"listen_ip"`
 	Version               int                        `json:"version"`
 	ExtraConfig           *ExtraConfig               `json:"extra_config,omitempty"`
 	ReadTimeout           string                     `json:"read_timeout"`

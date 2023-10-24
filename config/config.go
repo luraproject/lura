@@ -58,7 +58,7 @@ type ServiceConfig struct {
 	// port to bind the lura service
 	Port int `mapstructure:"port"`
 	// address to listen
-	Address string `mapstructure:"listen_address"`
+	Address string `mapstructure:"listen_ip"`
 	// version code of the configuration
 	Version int `mapstructure:"version"`
 	// OutputEncoding defines the default encoding strategy to use for the endpoint responses
