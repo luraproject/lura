@@ -214,10 +214,8 @@ func TestRunServer_h2c(t *testing.T) {
 		done <- RunServer(
 			ctx,
 			config.ServiceConfig{
-				Port: port,
-				ExtraConfig: config.ExtraConfig{
-					ginNamespace: serverOptions{UseH2C: true},
-				},
+				Port:   port,
+				UseH2C: true,
 			},
 			http.HandlerFunc(dummyHandler),
 		)
