@@ -160,6 +160,9 @@ type ServiceConfig struct {
 	// the router layer
 	TLS *TLS `mapstructure:"tls"`
 
+	// UseH2C enables h2c support.
+	UseH2C bool `json:"use_h2c"`
+
 	// run lura in debug mode
 	Debug     bool `mapstructure:"debug_endpoint"`
 	Echo      bool `mapstructure:"echo_endpoint"`

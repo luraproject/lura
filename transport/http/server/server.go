@@ -20,6 +20,8 @@ import (
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/core"
 	"github.com/luraproject/lura/v2/logging"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 )
 
 // ToHTTPError translates an error into a HTTP status code
@@ -140,6 +142,10 @@ func NewServer(cfg config.ServiceConfig, handler http.Handler) *http.Server {
 }
 
 func NewServerWithLogger(cfg config.ServiceConfig, handler http.Handler, logger logging.Logger) *http.Server {
+	if cfg.UseH2C {
+		handler = h2c.NewHandler(handler, &http2.Server{})
+	}
+
 	return &http.Server{
 		Addr:              net.JoinHostPort(cfg.Address, fmt.Sprintf("%d", cfg.Port)),
 		Handler:           handler,
