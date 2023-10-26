@@ -139,6 +139,7 @@ type parseableServiceConfig struct {
 	CacheTTL              string                     `json:"cache_ttl"`
 	Host                  []string                   `json:"host"`
 	Port                  int                        `json:"port"`
+	Address               string                     `json:"listen_ip"`
 	Version               int                        `json:"version"`
 	ExtraConfig           *ExtraConfig               `json:"extra_config,omitempty"`
 	ReadTimeout           string                     `json:"read_timeout"`
@@ -171,6 +172,7 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 		CacheTTL:              parseDuration(p.CacheTTL),
 		Host:                  p.Host,
 		Port:                  p.Port,
+		Address:               p.Address,
 		Version:               p.Version,
 		Debug:                 p.Debug,
 		Echo:                  p.Echo,
