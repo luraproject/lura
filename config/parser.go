@@ -221,11 +221,7 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 			ClientCerts:              make([]ClientTLSCert, 0, len(p.ClientTLS.ClientCerts)),
 		}
 		for _, cc := range p.ClientTLS.ClientCerts {
-			cfg.ClientTLS.ClientCerts = append(cfg.ClientTLS.ClientCerts,
-				ClientTLSCert{
-					Certificate: cc.Certificate,
-					PrivateKey:  cc.PrivateKey,
-				})
+			cfg.ClientTLS.ClientCerts = append(cfg.ClientTLS.ClientCerts, ClientTLSCert(cc))
 		}
 	}
 	if p.ExtraConfig != nil {
