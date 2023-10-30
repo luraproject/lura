@@ -114,8 +114,11 @@ func TestRunServer_MTLS(t *testing.T) {
 		ClientTLS: &config.ClientTLS{
 			AllowInsecureConnections: false, // we do not check the server cert
 			CaCerts:                  []string{"ca.pem"},
-			ClientCerts: [][]string{
-				[]string{"cert.pem", "key.pem"},
+			ClientCerts: []config.ClientTLSCert{
+				config.ClientTLSCert{
+					Certificate: "cert.pem",
+					PrivateKey:  "key.pem",
+				},
 			},
 		},
 	}

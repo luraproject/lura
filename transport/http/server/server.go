@@ -234,23 +234,13 @@ func loadCertPool(disableSystemCaPool bool, caCerts []string, logger logging.Log
 	return certPool
 }
 
-func loadClientCerts(certFiles [][]string, logger logging.Logger) []tls.Certificate {
+func loadClientCerts(certFiles []config.ClientTLSCert, logger logging.Logger) []tls.Certificate {
 	certs := make([]tls.Certificate, 0, len(certFiles))
-	for idx, certAndKey := range certFiles {
-		if len(certAndKey) < 2 {
-			logger.Error(fmt.Sprintf("%s Missing cert and key at idx %d: %v",
-				loggerPrefix, idx, certAndKey))
-			continue
-		}
-		if len(certAndKey) > 2 {
-			logger.Warning(fmt.Sprintf("%s Extra fields at idx %d: %v",
-				loggerPrefix, idx, certAndKey))
-		}
-
-		cert, err := tls.LoadX509KeyPair(certAndKey[0], certAndKey[1])
+	for _, certAndKey := range certFiles {
+		cert, err := tls.LoadX509KeyPair(certAndKey.Certificate, certAndKey.PrivateKey)
 		if err != nil {
 			logger.Error(fmt.Sprintf("%s Cannot load client certificate %s, %s: %s",
-				loggerPrefix, certAndKey[0], certAndKey[1], err.Error()))
+				loggerPrefix, certAndKey.Certificate, certAndKey.PrivateKey, err.Error()))
 			continue
 		}
 		certs = append(certs, cert)
