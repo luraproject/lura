@@ -27,35 +27,35 @@ func NewAnnotatedLogger(l Logger, appendAnnotation string) (AnnotatedLogger, err
 
 // Debug logs a message using DEBUG as log level.
 func (l AnnotatedLogger) Debug(v ...interface{}) {
-	l.wrapped.Debug(l.appendLog(v))
+	l.wrapped.Debug(l.appendLog(v)...)
 }
 
 // Info logs a message using INFO as log level.
 func (l AnnotatedLogger) Info(v ...interface{}) {
-	l.wrapped.Info(l.appendLog(v))
+	l.wrapped.Info(l.appendLog(v)...)
 }
 
 // Warning logs a message using WARNING as log level.
 func (l AnnotatedLogger) Warning(v ...interface{}) {
-	l.wrapped.Warning(l.appendLog(v))
+	l.wrapped.Warning(l.appendLog(v)...)
 }
 
 // Error logs a message using ERROR as log level.
 func (l AnnotatedLogger) Error(v ...interface{}) {
-	l.wrapped.Error(l.appendLog(v))
+	l.wrapped.Error(l.appendLog(v)...)
 }
 
 // Critical logs a message using CRITICAL as log level.
 func (l AnnotatedLogger) Critical(v ...interface{}) {
-	l.wrapped.Critical(l.appendLog(v))
+	l.wrapped.Critical(l.appendLog(v)...)
 }
 
 // Fatal is equivalent to l.Critical(fmt.Sprint()) followed by a call to os.Exit(1).
 func (l AnnotatedLogger) Fatal(v ...interface{}) {
-	l.wrapped.Fatal(l.appendLog(v))
+	l.wrapped.Fatal(l.appendLog(v)...)
 }
 
-func (l AnnotatedLogger) appendLog(v ...interface{}) []interface{} {
+func (l AnnotatedLogger) appendLog(v []interface{}) []interface{} {
 	if len(l.appendAnnotation) == 0 {
 		return v
 	}
