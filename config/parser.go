@@ -218,7 +218,10 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 			MaxVersion:               p.ClientTLS.MaxVersion,
 			CurvePreferences:         p.ClientTLS.CurvePreferences,
 			CipherSuites:             p.ClientTLS.CipherSuites,
-			ClientCerts:              p.ClientTLS.ClientCerts,
+			ClientCerts:              make([]ClientTLSCert, 0, len(p.ClientTLS.ClientCerts)),
+		}
+		for _, cc := range p.ClientTLS.ClientCerts {
+			cfg.ClientTLS.ClientCerts = append(cfg.ClientTLS.ClientCerts, ClientTLSCert(cc))
 		}
 	}
 	if p.ExtraConfig != nil {
@@ -252,14 +255,19 @@ type parseableTLS struct {
 }
 
 type parseableClientTLS struct {
-	AllowInsecureConnections bool       `json:"allow_insecure_connections"`
-	CaCerts                  []string   `json:"ca_certs"`
-	DisableSystemCaPool      bool       `json:"disable_system_ca_pool"`
-	MinVersion               string     `json:"min_version"`
-	MaxVersion               string     `json:"max_version"`
-	CurvePreferences         []uint16   `json:"curve_preferences"`
-	CipherSuites             []uint16   `json:"cipher_suites"`
-	ClientCerts              [][]string `json:"client_certs"`
+	AllowInsecureConnections bool                     `json:"allow_insecure_connections"`
+	CaCerts                  []string                 `json:"ca_certs"`
+	DisableSystemCaPool      bool                     `json:"disable_system_ca_pool"`
+	MinVersion               string                   `json:"min_version"`
+	MaxVersion               string                   `json:"max_version"`
+	CurvePreferences         []uint16                 `json:"curve_preferences"`
+	CipherSuites             []uint16                 `json:"cipher_suites"`
+	ClientCerts              []parseableClientTLSCert `json:"client_certs"`
+}
+
+type parseableClientTLSCert struct {
+	Certificate string `json:"certificate"`
+	PrivateKey  string `json:"private_key"`
 }
 
 type parseableEndpointConfig struct {
