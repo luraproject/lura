@@ -3,6 +3,8 @@
 package proxy
 
 import (
+	"fmt"
+
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/logging"
 	"github.com/luraproject/lura/v2/sd"
@@ -56,47 +58,48 @@ type defaultFactory struct {
 
 // New implements the Factory interface
 func (pf defaultFactory) New(cfg *config.EndpointConfig) (p Proxy, err error) {
+	l, _ := logging.NewAnnotatedLogger(pf.logger, fmt.Sprintf("%s %s", cfg.Method, cfg.Endpoint))
 	switch len(cfg.Backend) {
 	case 0:
 		err = ErrNoBackends
 	case 1:
-		p, err = pf.newSingle(cfg)
+		p, err = pf.newSingle(l, cfg)
 	default:
-		p, err = pf.newMulti(cfg)
+		p, err = pf.newMulti(l, cfg)
 	}
 	if err != nil {
 		return
 	}
 
-	p = NewPluginMiddleware(pf.logger, cfg)(p)
-	p = NewStaticMiddleware(pf.logger, cfg)(p)
+	p = NewPluginMiddleware(l, cfg)(p)
+	p = NewStaticMiddleware(l, cfg)(p)
 	return
 }
 
-func (pf defaultFactory) newMulti(cfg *config.EndpointConfig) (p Proxy, err error) {
+func (pf defaultFactory) newMulti(l logging.Logger, cfg *config.EndpointConfig) (p Proxy, err error) {
 	backendProxy := make([]Proxy, len(cfg.Backend))
 	for i, backend := range cfg.Backend {
-		backendProxy[i] = pf.newStack(backend)
+		backendProxy[i] = pf.newStack(l, backend)
 	}
-	p = NewMergeDataMiddleware(pf.logger, cfg)(backendProxy...)
-	p = NewFlatmapMiddleware(pf.logger, cfg)(p)
+	p = NewMergeDataMiddleware(l, cfg)(backendProxy...)
+	p = NewFlatmapMiddleware(l, cfg)(p)
 	return
 }
 
-func (pf defaultFactory) newSingle(cfg *config.EndpointConfig) (Proxy, error) {
-	return pf.newStack(cfg.Backend[0]), nil
+func (pf defaultFactory) newSingle(l logging.Logger, cfg *config.EndpointConfig) (Proxy, error) {
+	return pf.newStack(l, cfg.Backend[0]), nil
 }
 
-func (pf defaultFactory) newStack(backend *config.Backend) (p Proxy) {
+func (pf defaultFactory) newStack(l logging.Logger, backend *config.Backend) (p Proxy) {
 	p = pf.backendFactory(backend)
-	p = NewBackendPluginMiddleware(pf.logger, backend)(p)
-	p = NewGraphQLMiddleware(pf.logger, backend)(p)
-	p = NewFilterHeadersMiddleware(pf.logger, backend)(p)
-	p = NewFilterQueryStringsMiddleware(pf.logger, backend)(p)
-	p = NewLoadBalancedMiddlewareWithSubscriberAndLogger(pf.logger, pf.subscriberFactory(backend))(p)
+	p = NewBackendPluginMiddleware(l, backend)(p)
+	p = NewGraphQLMiddleware(l, backend)(p)
+	p = NewFilterHeadersMiddleware(l, backend)(p)
+	p = NewFilterQueryStringsMiddleware(l, backend)(p)
+	p = NewLoadBalancedMiddlewareWithSubscriberAndLogger(l, pf.subscriberFactory(backend))(p)
 	if backend.ConcurrentCalls > 1 {
-		p = NewConcurrentMiddlewareWithLogger(pf.logger, backend)(p)
+		p = NewConcurrentMiddlewareWithLogger(l, backend)(p)
 	}
-	p = NewRequestBuilderMiddlewareWithLogger(pf.logger, backend)(p)
+	p = NewRequestBuilderMiddlewareWithLogger(l, backend)(p)
 	return
 }
