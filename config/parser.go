@@ -163,6 +163,7 @@ type parseableServiceConfig struct {
 	Plugin                *Plugin                    `json:"plugin,omitempty"`
 	TLS                   *parseableTLS              `json:"tls,omitempty"`
 	ClientTLS             *parseableClientTLS        `json:"client_tls,omitempty"`
+	UseH2C                bool                       `json:"use_h2c,omitempty"`
 }
 
 func (p *parseableServiceConfig) normalize() ServiceConfig {
@@ -193,6 +194,7 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 		DialerKeepAlive:       parseDuration(p.DialerKeepAlive),
 		OutputEncoding:        p.OutputEncoding,
 		Plugin:                p.Plugin,
+		UseH2C:                p.UseH2C,
 	}
 	if p.TLS != nil {
 		cfg.TLS = &TLS{
