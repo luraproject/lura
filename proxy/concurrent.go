@@ -14,14 +14,14 @@ import (
 // NewConcurrentMiddlewareWithLogger creates a proxy middleware that enables sending several requests concurrently
 func NewConcurrentMiddlewareWithLogger(logger logging.Logger, remote *config.Backend) Middleware {
 	if remote.ConcurrentCalls == 1 {
-		logger.Fatal("too few concurrent calls: NewConcurrentMiddleware expects more than 1 concurrent call, got %d", remote.ConcurrentCalls)
+		logger.Fatal("too few concurrent calls for %s -> %s: NewConcurrentMiddleware expects more than 1 concurrent call, got %d", remote.ParentEndpoint, remote.URLPattern, remote.ConcurrentCalls)
 		return nil
 	}
 	serviceTimeout := time.Duration(75*remote.Timeout.Nanoseconds()/100) * time.Nanosecond
 
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {
-			logger.Fatal("too many proxies for this proxy middleware: NewConcurrentMiddleware only accepts 1 proxy, got %d", len(next))
+			logger.Fatal("too many proxies for this %s -> %s proxy middleware: NewConcurrentMiddleware only accepts 1 proxy, got %d", remote.ParentEndpoint, remote.URLPattern, len(next))
 			return nil
 		}
 

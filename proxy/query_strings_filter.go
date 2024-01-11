@@ -19,7 +19,7 @@ func NewFilterQueryStringsMiddleware(logger logging.Logger, remote *config.Backe
 
 	return func(next ...Proxy) Proxy {
 		if len(next) > 1 {
-			logger.Fatal("too many proxies for this proxy middleware: NewFilterQueryStringsMiddleware only accepts 1 proxy, got %d", len(next))
+			logger.Fatal("too many proxies for this %s -> %s proxy middleware: NewFilterQueryStringsMiddleware only accepts 1 proxy, got %d", remote.ParentEndpoint, remote.URLPattern, len(next))
 			return nil
 		}
 		nextProxy := next[0]
