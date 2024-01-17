@@ -100,7 +100,11 @@ func (u URI) GetEndpointPath(path string, params []string) string {
 	if u == ColonRouterPatternBuilder {
 		for p := range params {
 			parts := strings.Split(result, "?")
-			parts[0] = strings.ReplaceAll(parts[0], "{"+params[p]+"}", ":"+params[p])
+			param := params[p]
+			if !strings.HasPrefix(params[p], "*") {
+				param = ":" + params[p]
+			}
+			parts[0] = strings.ReplaceAll(parts[0], "{"+params[p]+"}", param)
 			result = strings.Join(parts, "?")
 		}
 	}

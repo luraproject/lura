@@ -25,13 +25,18 @@ func (r *Request) GeneratePath(URLPattern string) {
 		r.Path = URLPattern
 		return
 	}
+
+	if strings.Contains(URLPattern, "{{.*") {
+		idx := strings.Index(URLPattern, "*")
+		URLPattern = URLPattern[:idx] + textproto.CanonicalMIMEHeaderKey(URLPattern[idx+1:idx+2]) + URLPattern[idx+2:]
+	}
 	buff := []byte(URLPattern)
 	for k, v := range r.Params {
 		key := []byte{}
 		key = append(key, "{{."...)
 		key = append(key, k...)
 		key = append(key, "}}"...)
-		buff = bytes.ReplaceAll(buff, key, []byte(v))
+		buff = bytes.ReplaceAll(buff, key, []byte(strings.TrimPrefix(v, "/")))
 	}
 	r.Path = string(buff)
 }
