@@ -100,7 +100,7 @@ Here you'll find some benchmarks of the different components of the Lura framewo
     BenchmarkEntityFormatter_grouping/with_20_elements-8            20000000           298 ns/op         384 B/op          3 allocs/op
     BenchmarkEntityFormatter_grouping/with_25_elements-8            20000000           298 ns/op         384 B/op          3 allocs/op
 
-## Repsonse property mapping
+## Response property mapping
 
     BenchmarkEntityFormatter_mapping/with_0_elements_with_0_extra_fields-8          100000000           61.1 ns/op        48 B/op          1 allocs/op
     BenchmarkEntityFormatter_mapping/with_1_elements_with_0_extra_fields-8          100000000           63.5 ns/op        48 B/op          1 allocs/op
