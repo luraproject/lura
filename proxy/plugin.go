@@ -38,7 +38,8 @@ func NewBackendPluginMiddleware(logger logging.Logger, remote *config.Backend) M
 		return emptyMiddlewareFallback(logger)
 	}
 
-	return newPluginMiddleware(logger, "BACKEND", remote.URLPattern, cfg)
+	return newPluginMiddleware(logger, "BACKEND",
+		fmt.Sprintf("%s -> %s", remote.ParentEndpoint, remote.URLPattern), cfg)
 }
 
 func newPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[string]interface{}) Middleware {

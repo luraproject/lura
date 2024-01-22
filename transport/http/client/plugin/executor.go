@@ -4,6 +4,7 @@ package plugin
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 
@@ -27,7 +28,7 @@ func HTTPRequestExecutorWithContext(
 	next func(*config.Backend) client.HTTPRequestExecutor,
 ) func(*config.Backend) client.HTTPRequestExecutor {
 	return func(cfg *config.Backend) client.HTTPRequestExecutor {
-		logPrefix := "[BACKEND: " + cfg.URLPattern + "]"
+		logPrefix := fmt.Sprintf("[BACKEND: %s -> %s]", cfg.ParentEndpoint, cfg.URLPattern)
 		v, ok := cfg.ExtraConfig[Namespace]
 		if !ok {
 			return next(cfg)

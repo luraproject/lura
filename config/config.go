@@ -280,6 +280,11 @@ type Backend struct {
 	HeadersToPass []string `mapstructure:"input_headers"`
 	// QueryStringsToPass has the list of query string params to be sent to the backend
 	QueryStringsToPass []string `mapstructure:"input_query_strings"`
+
+	// ParentEndpoint is to be filled by the parent endpoint with its pattern enpoint
+	// so logs and other instrumentation can output better info (thus, it is not loaded
+	// with `mapstructure` or `json` tags).
+	ParentEndpoint string `json:"-" mapstructure:"-"`
 }
 
 // Plugin contains the config required by the plugin module
@@ -497,6 +502,8 @@ func (s *ServiceConfig) initEndpoints() error {
 		e.ExtraConfig.sanitize()
 
 		for j, b := range e.Backend {
+			// we "tell" the backend which is his parent endpoint
+			b.ParentEndpoint = e.Endpoint
 			if err := s.initBackendDefaults(i, j); err != nil {
 				return err
 			}

@@ -56,23 +56,23 @@ func New(logger logging.Logger, next RunServer) RunServer {
 		for _, name := range fifo {
 			rawHf, ok := r.Get(name)
 			if !ok {
-				logger.Debug(logPrefix, "No plugin resgistered as", name)
-				return next(ctx, cfg, handler)
+				logger.Error(logPrefix, "No plugin resgistered as", name)
+				continue
 			}
 
 			hf, ok := rawHf.(func(context.Context, map[string]interface{}, http.Handler) (http.Handler, error))
 			if !ok {
-				logger.Warning(logPrefix, "Wrong plugin handler type:", name)
-				return next(ctx, cfg, handler)
+				logger.Error(logPrefix, "Wrong plugin handler type:", name)
+				continue
 			}
 
 			handlerWrapper, err := hf(ctx, extra, handler)
 			if err != nil {
-				logger.Warning(logPrefix, "Error getting the plugin handler:", err.Error())
+				logger.Error(logPrefix, "Error getting the plugin handler:", err.Error())
 				continue
 			}
 
-			logger.Debug(logPrefix, "Injecting plugin", name)
+			logger.Info(logPrefix, "Injecting plugin", name)
 			handler = handlerWrapper
 		}
 		return next(ctx, cfg, handler)
