@@ -240,7 +240,7 @@ func TestNewHTTPProxy_badStatusCode_detailed(t *testing.T) {
 		t.Errorf("unexpected error code: %d", response.Metadata.StatusCode)
 	}
 	b, _ := json.Marshal(response.Data)
-	if string(b) != `{"error_some":{"http_status_code":500,"http_body":"booom\n"}}` {
+	if string(b) != `{"error_some":{"http_status_code":500,"http_body":"booom\n","http_body_encoding":"text/plain; charset=utf-8"}}` {
 		t.Errorf("unexpected response content: %s", string(b))
 	}
 	select {

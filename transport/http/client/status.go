@@ -87,6 +87,7 @@ func newHTTPResponseError(resp *http.Response) HTTPResponseError {
 	return HTTPResponseError{
 		Code: resp.StatusCode,
 		Msg:  string(body),
+		Enc:  resp.Header.Get("Content-Type"),
 	}
 }
 
@@ -94,6 +95,7 @@ func newHTTPResponseError(resp *http.Response) HTTPResponseError {
 type HTTPResponseError struct {
 	Code int    `json:"http_status_code"`
 	Msg  string `json:"http_body,omitempty"`
+	Enc  string `json:"http_body_encoding,omitempty"`
 }
 
 // Error returns the error message
@@ -104,6 +106,11 @@ func (r HTTPResponseError) Error() string {
 // StatusCode returns the status code returned by the backend
 func (r HTTPResponseError) StatusCode() int {
 	return r.Code
+}
+
+// Encoding returns the content type returned by the backend
+func (r HTTPResponseError) Encoding() string {
+	return r.Enc
 }
 
 // NamedHTTPResponseError is the error to be returned by the DetailedHTTPStatusHandler
