@@ -49,7 +49,7 @@ func TestDetailedHTTPStatusHandler(t *testing.T) {
 
 		resp := &http.Response{
 			StatusCode: code,
-			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"msg":"%s"}`, msg))),
+			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"msg":%q}`, msg))),
 			Header:     http.Header{"Content-Type": []string{expectedEncoding}},
 		}
 
@@ -71,7 +71,7 @@ func TestDetailedHTTPStatusHandler(t *testing.T) {
 			return
 		}
 
-		if e.Error() != fmt.Sprintf(`{"msg":"%s"}`, msg) {
+		if e.Error() != fmt.Sprintf(`{"msg":%q}`, msg) {
 			t.Errorf("#%d unexpected message: %s", i, e.Msg)
 			return
 		}
