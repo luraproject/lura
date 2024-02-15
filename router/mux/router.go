@@ -22,7 +22,6 @@ const (
 	DefaultDebugPattern = "/__debug/"
 	DefaultEchoPattern  = "/__echo/"
 	logPrefix           = "[SERVICE: Mux]"
-	Namespace           = "github_com/luraproject/lura/router/mux"
 )
 
 // RunServerFunc is a func that will run the http Server with the given params.
@@ -131,11 +130,6 @@ func (r httpRouter) Run(cfg config.ServiceConfig) {
 		}
 	}
 
-	if v, ok := cfg.ExtraConfig[Namespace].(map[string]interface{}); ok {
-		b, ok := v["return_error_msg"].(bool)
-		returnErrorMsg = b && ok
-	}
-
 	r.cfg.Engine.Handle("/__health", "GET", http.HandlerFunc(HealthHandler))
 
 	server.InitHTTPDefaultTransport(cfg)
@@ -193,5 +187,3 @@ func (r httpRouter) handler() http.Handler {
 	}
 	return handler
 }
-
-var returnErrorMsg bool
