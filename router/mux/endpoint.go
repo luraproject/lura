@@ -82,9 +82,12 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF server.ToHTTPErr
 				w.Header().Set(server.CompleteResponseHeaderName, server.HeaderIncompleteResponseValue)
 				if err != nil {
 					if t, ok := err.(responseError); ok {
-						http.Error(w, err.Error(), t.StatusCode())
+						w.WriteHeader(t.StatusCode())
 					} else {
-						http.Error(w, err.Error(), errF(err))
+						w.WriteHeader(errF(err))
+					}
+					if returnErrorMsg {
+						ErrorResponseWriter(w, err)
 					}
 					cancel()
 					return
@@ -169,6 +172,11 @@ type responseError interface {
 	StatusCode() int
 }
 
+type encodedResponseError interface {
+	responseError
+	Encoding() string
+}
+
 // clientIP implements a best effort algorithm to return the real client IP, it parses
 // X-Real-IP and X-Forwarded-For in order to work properly with reverse-proxies such us: nginx or haproxy.
 // Use X-Forwarded-For before X-Real-Ip as nginx uses X-Real-Ip with the proxy's IP.
@@ -191,4 +199,13 @@ func clientIP(r *http.Request) string {
 	}
 
 	return ""
+}
+
+// ErrorResponseWriter writes the string representation of an error into the response body
+// and sets a Content-Type header for errors that implement the encodedResponseError interface.
+var ErrorResponseWriter = func(rw http.ResponseWriter, err error) {
+	if te, ok := err.(encodedResponseError); ok && te.Encoding() != "" {
+		rw.Header().Set("Content-Type", te.Encoding())
+	}
+	rw.Write([]byte(err.Error()))
 }

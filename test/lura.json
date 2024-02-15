@@ -8,6 +8,9 @@
     "extra_config":{
         "github_com/luraproject/lura/router/gin":{
             "return_error_msg":true
+        },
+        "github_com/luraproject/lura/router/mux":{
+            "return_error_msg":true
         }
     },
     "endpoints": [

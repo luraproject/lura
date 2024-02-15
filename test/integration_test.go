@@ -73,6 +73,7 @@ func TestKrakenD_ginRouter(t *testing.T) {
 			"trusted_proxies":        []interface{}{"127.0.0.1/32", "::1"},
 			"remote_ip_headers":      []interface{}{"x-forwarded-for"},
 			"forwarded_by_client_ip": true,
+			"return_error_msg":       true,
 		}
 
 		ignoredChan := make(chan string)
@@ -238,7 +239,7 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 			url:        "/detail_error",
 			headers:    map[string]string{},
 			expHeaders: incompleteHeader,
-			expBody:    `{"email":"some@email.com","error_backend_a":{"http_status_code":429,"http_body":"sad panda\n"},"name":"a"}`,
+			expBody:    `{"email":"some@email.com","error_backend_a":{"http_status_code":429,"http_body":"sad panda\n","http_body_encoding":"text/plain; charset=utf-8"},"name":"a"}`,
 		},
 		{
 			name:       "querystring-params-no-params",
@@ -454,7 +455,6 @@ func testKrakenD(t *testing.T, runRouter func(logging.Logger, *config.ServiceCon
 			}
 		})
 	}
-
 }
 
 func setupBackend(t *testing.T) (*config.ServiceConfig, error) {
