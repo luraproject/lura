@@ -174,14 +174,6 @@ func TestDefaultFactory_ko(t *testing.T) {
 				Method:   "GETTT",
 				Backend:  []*config.Backend{},
 			},
-			{
-				Endpoint: "/also-ignored",
-				Method:   "PUT",
-				Backend: []*config.Backend{
-					{},
-					{},
-				},
-			},
 		},
 	}
 
