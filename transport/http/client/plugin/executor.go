@@ -28,7 +28,7 @@ func HTTPRequestExecutorWithContext(
 	next func(*config.Backend) client.HTTPRequestExecutor,
 ) func(*config.Backend) client.HTTPRequestExecutor {
 	return func(cfg *config.Backend) client.HTTPRequestExecutor {
-		logPrefix := fmt.Sprintf("[BACKEND: %s -> %s]", cfg.ParentEndpoint, cfg.URLPattern)
+		logPrefix := fmt.Sprintf("[BACKEND: %s %s -> %s]", cfg.ParentEndpointMethod, cfg.ParentEndpoint, cfg.URLPattern)
 		v, ok := cfg.ExtraConfig[Namespace]
 		if !ok {
 			return next(cfg)

@@ -285,6 +285,10 @@ type Backend struct {
 	// so logs and other instrumentation can output better info (thus, it is not loaded
 	// with `mapstructure` or `json` tags).
 	ParentEndpoint string `json:"-" mapstructure:"-"`
+	// ParentEndpointMethod is to be filled by the parent endpoint with its enpoint method
+	// so logs and other instrumentation can output better info (thus, it is not loaded
+	// with `mapstructure` or `json` tags).
+	ParentEndpointMethod string `json:"-" mapstructure:"-"`
 }
 
 // Plugin contains the config required by the plugin module
@@ -504,6 +508,7 @@ func (s *ServiceConfig) initEndpoints() error {
 		for j, b := range e.Backend {
 			// we "tell" the backend which is his parent endpoint
 			b.ParentEndpoint = e.Endpoint
+			b.ParentEndpointMethod = e.Method
 			if err := s.initBackendDefaults(i, j); err != nil {
 				return err
 			}
