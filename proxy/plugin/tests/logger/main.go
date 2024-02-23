@@ -3,6 +3,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -15,6 +16,7 @@ func main() {}
 var ModifierRegisterer = registerer("lura-request-modifier-example")
 
 var logger Logger = nil
+var ctx context.Context = context.Background()
 
 type registerer string
 
@@ -35,12 +37,22 @@ func (registerer) RegisterLogger(in interface{}) {
 	}
 	logger = l
 	logger.Debug(fmt.Sprintf("[PLUGIN: %s] Logger loaded", ModifierRegisterer))
+}
 
+func (registerer) RegisterContext(c context.Context) {
+	ctx = c
+	logger.Debug(fmt.Sprintf("[PLUGIN: %s] Context loaded", ModifierRegisterer))
 }
 
 func (registerer) requestModifierFactory(_ map[string]interface{}) func(interface{}) (interface{}, error) {
 	// check the config
 	// return the modifier
+
+	// Graceful shutdown of any service or connection managed by the plugin
+	go func() {
+		<-ctx.Done()
+		logger.Debug("Shuting down the service")
+	}()
 
 	if logger == nil {
 		fmt.Println("request modifier loaded without logger")
@@ -63,6 +75,8 @@ func (registerer) requestModifierFactory(_ map[string]interface{}) func(interfac
 
 		r := modifier(req)
 
+		requestCtx := req.Context()
+		logger.Debug("context key:", requestCtx.Value("myCtxKey"))
 		logger.Debug("params:", r.params)
 		logger.Debug("headers:", r.headers)
 		logger.Debug("method:", r.method)
@@ -90,6 +104,11 @@ func (registerer) reqsponseModifierFactory(_ map[string]interface{}) func(interf
 	   }
 	*/
 
+	go func() {
+		<-ctx.Done()
+		logger.Debug("Shuting down the service")
+	}()
+
 	// return the modifier
 	if logger == nil {
 		fmt.Println("response modifier loaded without logger")
@@ -115,6 +134,14 @@ func (registerer) reqsponseModifierFactory(_ map[string]interface{}) func(interf
 			return nil, unkownTypeErr
 		}
 
+		if req, ok := resp.Request().(RequestWrapper); ok {
+			for k, v := range req.Headers() {
+				logger.Debug(fmt.Sprintf("Header %s value: %s", k, v[0]))
+			}
+		}
+
+		respCtx := resp.Context()
+		logger.Debug("context key:", respCtx.Value("myCtxKey"))
 		logger.Debug("data:", resp.Data())
 		logger.Debug("is complete:", resp.IsComplete())
 		logger.Debug("headers:", resp.Headers())
@@ -139,6 +166,8 @@ func modifier(req RequestWrapper) requestWrapper {
 var unkownTypeErr = errors.New("unknown request type")
 
 type ResponseWrapper interface {
+	Context() context.Context
+	Request() interface{}
 	Data() map[string]interface{}
 	IsComplete() bool
 	Headers() map[string][]string
@@ -146,6 +175,7 @@ type ResponseWrapper interface {
 }
 
 type RequestWrapper interface {
+	Context() context.Context
 	Params() map[string]string
 	Headers() map[string][]string
 	Body() io.ReadCloser
@@ -156,6 +186,7 @@ type RequestWrapper interface {
 }
 
 type requestWrapper struct {
+	ctx     context.Context
 	method  string
 	url     *url.URL
 	query   url.Values
@@ -165,6 +196,7 @@ type requestWrapper struct {
 	headers map[string][]string
 }
 
+func (r requestWrapper) Context() context.Context     { return r.ctx }
 func (r requestWrapper) Method() string               { return r.method }
 func (r requestWrapper) URL() *url.URL                { return r.url }
 func (r requestWrapper) Query() url.Values            { return r.query }

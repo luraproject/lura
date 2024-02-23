@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package plugin provides tools for loading and registering proxy plugins
+Package plugin provides tools for loading and registering proxy plugins
 */
 package plugin
 
 import (
+	"context"
 	"fmt"
 	"plugin"
 	"strings"
@@ -84,6 +85,10 @@ type LoggerRegisterer interface {
 	RegisterLogger(interface{})
 }
 
+type ContextRegisterer interface {
+	RegisterContext(context.Context)
+}
+
 // RegisterModifierFunc type is the function passed to the loaded Registerers
 type RegisterModifierFunc func(
 	name string,
@@ -99,18 +104,22 @@ func Load(path, pattern string, rmf RegisterModifierFunc) (int, error) {
 
 // LoadWithLogger scans the given path using the pattern and registers all the found modifier plugins into the rmf
 func LoadWithLogger(path, pattern string, rmf RegisterModifierFunc, logger logging.Logger) (int, error) {
+	return LoadWithLoggerAndContext(context.Background(), path, pattern, rmf, logger)
+}
+
+func LoadWithLoggerAndContext(ctx context.Context, path, pattern string, rmf RegisterModifierFunc, logger logging.Logger) (int, error) {
 	plugins, err := luraplugin.Scan(path, pattern)
 	if err != nil {
 		return 0, err
 	}
-	return load(plugins, rmf, logger)
+	return load(ctx, plugins, rmf, logger)
 }
 
-func load(plugins []string, rmf RegisterModifierFunc, logger logging.Logger) (int, error) {
+func load(ctx context.Context, plugins []string, rmf RegisterModifierFunc, logger logging.Logger) (int, error) {
 	errors := []error{}
 	loadedPlugins := 0
 	for k, pluginName := range plugins {
-		if err := open(pluginName, rmf, logger); err != nil {
+		if err := open(ctx, pluginName, rmf, logger); err != nil {
 			errors = append(errors, fmt.Errorf("plugin #%d (%s): %s", k, pluginName, err.Error()))
 			continue
 		}
@@ -123,7 +132,7 @@ func load(plugins []string, rmf RegisterModifierFunc, logger logging.Logger) (in
 	return loadedPlugins, nil
 }
 
-func open(pluginName string, rmf RegisterModifierFunc, logger logging.Logger) (err error) {
+func open(ctx context.Context, pluginName string, rmf RegisterModifierFunc, logger logging.Logger) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			var ok bool
@@ -153,6 +162,10 @@ func open(pluginName string, rmf RegisterModifierFunc, logger logging.Logger) (e
 		if lr, ok := r.(LoggerRegisterer); ok {
 			lr.RegisterLogger(logger)
 		}
+	}
+
+	if lr, ok := r.(ContextRegisterer); ok {
+		lr.RegisterContext(ctx)
 	}
 
 	registerer.RegisterModifiers(rmf)

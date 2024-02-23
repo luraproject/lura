@@ -101,14 +101,14 @@ func newPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[str
 					return resp, err
 				}
 
-				return executeResponseModifiers(respModifiers, resp)
+				return executeResponseModifiers(ctx, respModifiers, resp, newRequestWrapper(ctx, r))
 			}
 		}
 
 		if totRespModifiers == 0 {
 			return func(ctx context.Context, r *Request) (*Response, error) {
 				var err error
-				r, err = executeRequestModifiers(reqModifiers, r)
+				r, err = executeRequestModifiers(ctx, reqModifiers, r)
 				if err != nil {
 					return nil, err
 				}
@@ -119,7 +119,7 @@ func newPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[str
 
 		return func(ctx context.Context, r *Request) (*Response, error) {
 			var err error
-			r, err = executeRequestModifiers(reqModifiers, r)
+			r, err = executeRequestModifiers(ctx, reqModifiers, r)
 			if err != nil {
 				return nil, err
 			}
@@ -129,22 +129,14 @@ func newPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[str
 				return resp, err
 			}
 
-			return executeResponseModifiers(respModifiers, resp)
+			return executeResponseModifiers(ctx, respModifiers, resp, newRequestWrapper(ctx, r))
 		}
 	}
 }
 
-func executeRequestModifiers(reqModifiers []func(interface{}) (interface{}, error), r *Request) (*Request, error) {
+func executeRequestModifiers(ctx context.Context, reqModifiers []func(interface{}) (interface{}, error), r *Request) (*Request, error) {
 	var tmp RequestWrapper
-	tmp = &requestWrapper{
-		method:  r.Method,
-		url:     r.URL,
-		query:   r.Query,
-		path:    r.Path,
-		body:    r.Body,
-		params:  r.Params,
-		headers: r.Headers,
-	}
+	tmp = newRequestWrapper(ctx, r)
 
 	for _, f := range reqModifiers {
 		res, err := f(tmp)
@@ -169,9 +161,11 @@ func executeRequestModifiers(reqModifiers []func(interface{}) (interface{}, erro
 	return r, nil
 }
 
-func executeResponseModifiers(respModifiers []func(interface{}) (interface{}, error), r *Response) (*Response, error) {
+func executeResponseModifiers(ctx context.Context, respModifiers []func(interface{}) (interface{}, error), r *Response, req RequestWrapper) (*Response, error) {
 	var tmp ResponseWrapper
 	tmp = responseWrapper{
+		ctx:        ctx,
+		request:    req,
 		data:       r.Data,
 		isComplete: r.IsComplete,
 		metadata: metadataWrapper{
@@ -222,7 +216,21 @@ type ResponseWrapper interface {
 	StatusCode() int
 }
 
+func newRequestWrapper(ctx context.Context, r *Request) *requestWrapper {
+	return &requestWrapper{
+		ctx:     ctx,
+		method:  r.Method,
+		url:     r.URL,
+		query:   r.Query,
+		path:    r.Path,
+		body:    r.Body,
+		params:  r.Params,
+		headers: r.Headers,
+	}
+}
+
 type requestWrapper struct {
+	ctx     context.Context
 	method  string
 	url     *url.URL
 	query   url.Values
@@ -232,6 +240,7 @@ type requestWrapper struct {
 	headers map[string][]string
 }
 
+func (r *requestWrapper) Context() context.Context     { return r.ctx }
 func (r *requestWrapper) Method() string               { return r.method }
 func (r *requestWrapper) URL() *url.URL                { return r.url }
 func (r *requestWrapper) Query() url.Values            { return r.query }
@@ -249,12 +258,16 @@ func (m metadataWrapper) Headers() map[string][]string { return m.headers }
 func (m metadataWrapper) StatusCode() int              { return m.statusCode }
 
 type responseWrapper struct {
+	ctx        context.Context
+	request    interface{}
 	data       map[string]interface{}
 	isComplete bool
 	metadata   metadataWrapper
 	io         io.Reader
 }
 
+func (r responseWrapper) Context() context.Context     { return r.ctx }
+func (r responseWrapper) Request() interface{}         { return r.request }
 func (r responseWrapper) Data() map[string]interface{} { return r.data }
 func (r responseWrapper) IsComplete() bool             { return r.isComplete }
 func (r responseWrapper) Io() io.Reader                { return r.io }

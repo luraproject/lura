@@ -6,13 +6,88 @@
 package plugin
 
 import (
+	"bytes"
+	"context"
+	"fmt"
 	"io"
 	"net/url"
+	"strings"
 	"testing"
+
+	"github.com/luraproject/lura/v2/logging"
 )
 
+func ExampleLoadWithLoggerAndContext() {
+	var data []byte
+
+	buf := bytes.NewBuffer(data)
+	logger, err := logging.NewLogger("DEBUG", buf, "")
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	total, err := LoadWithLoggerAndContext(context.Background(), "./tests", ".so", RegisterModifier, logger)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	if total != 2 {
+		fmt.Printf("unexpected number of loaded plugins!. have %d, want 2\n", total)
+		return
+	}
+
+	modFactory, ok := GetRequestModifier("lura-request-modifier-example-request")
+	if !ok {
+		fmt.Println("modifier factory not found in the register")
+		return
+	}
+
+	modifier := modFactory(map[string]interface{}{})
+
+	input := requestWrapper{
+		ctx:    context.WithValue(context.Background(), "myCtxKey", "some"),
+		path:   "/bar",
+		method: "GET",
+	}
+
+	tmp, err := modifier(input)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	output, ok := tmp.(RequestWrapper)
+	if !ok {
+		fmt.Println("unexpected result type")
+		return
+	}
+
+	if res := output.Path(); res != "/bar/fooo" {
+		fmt.Printf("unexpected result path. have %s, want /bar/fooo\n", res)
+		return
+	}
+
+	lines := strings.Split(buf.String(), "\n")
+	for i := range lines[:len(lines)-1] {
+		fmt.Println(lines[i][21:])
+	}
+
+	// output:
+	// DEBUG: [PLUGIN: lura-error-example] Logger loaded
+	// DEBUG: [PLUGIN: lura-request-modifier-example] Logger loaded
+	// DEBUG: [PLUGIN: lura-request-modifier-example] Context loaded
+	// DEBUG: [PLUGIN: lura-request-modifier-example] Request modifier injected
+	// DEBUG: context key: some
+	// DEBUG: params: map[]
+	// DEBUG: headers: map[]
+	// DEBUG: method: GET
+	// DEBUG: url: <nil>
+	// DEBUG: query: map[]
+	// DEBUG: path: /bar/fooo
+}
+
 func TestLoad(t *testing.T) {
-	total, err := Load("./tests", ".so", RegisterModifier)
+	total, err := LoadWithLogger("./tests", ".so", RegisterModifier, logging.NoOp)
 	if err != nil {
 		t.Error(err.Error())
 		t.Fail()
@@ -29,7 +104,7 @@ func TestLoad(t *testing.T) {
 
 	modifier := modFactory(map[string]interface{}{})
 
-	input := requestWrapper{path: "/bar"}
+	input := requestWrapper{ctx: context.WithValue(context.Background(), "myCtxKey", "some"), path: "/bar"}
 
 	tmp, err := modifier(input)
 	if err != nil {
@@ -59,6 +134,7 @@ type RequestWrapper interface {
 }
 
 type requestWrapper struct {
+	ctx     context.Context
 	method  string
 	url     *url.URL
 	query   url.Values
@@ -68,6 +144,7 @@ type requestWrapper struct {
 	headers map[string][]string
 }
 
+func (r requestWrapper) Context() context.Context     { return r.ctx }
 func (r requestWrapper) Method() string               { return r.method }
 func (r requestWrapper) URL() *url.URL                { return r.url }
 func (r requestWrapper) Query() url.Values            { return r.query }
