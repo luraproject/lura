@@ -18,7 +18,8 @@ import (
 )
 
 func ExampleLoadWithLoggerAndContext() {
-	data := []byte{}
+	var data []byte
+
 	buf := bytes.NewBuffer(data)
 	logger, err := logging.NewLogger("DEBUG", buf, "")
 	if err != nil {
