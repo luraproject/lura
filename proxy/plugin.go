@@ -101,7 +101,7 @@ func newPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[str
 					return resp, err
 				}
 
-				return executeResponseModifiers(ctx, respModifiers, resp, NewRequestWrapper(ctx, r))
+				return executeResponseModifiers(ctx, respModifiers, resp, newRequestWrapper(ctx, r))
 			}
 		}
 
@@ -129,14 +129,14 @@ func newPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[str
 				return resp, err
 			}
 
-			return executeResponseModifiers(ctx, respModifiers, resp, NewRequestWrapper(ctx, r))
+			return executeResponseModifiers(ctx, respModifiers, resp, newRequestWrapper(ctx, r))
 		}
 	}
 }
 
 func executeRequestModifiers(ctx context.Context, reqModifiers []func(interface{}) (interface{}, error), r *Request) (*Request, error) {
 	var tmp RequestWrapper
-	tmp = NewRequestWrapper(ctx, r)
+	tmp = newRequestWrapper(ctx, r)
 
 	for _, f := range reqModifiers {
 		res, err := f(tmp)
@@ -216,7 +216,7 @@ type ResponseWrapper interface {
 	StatusCode() int
 }
 
-func NewRequestWrapper(ctx context.Context, r *Request) *requestWrapper {
+func newRequestWrapper(ctx context.Context, r *Request) *requestWrapper {
 	return &requestWrapper{
 		ctx:     ctx,
 		method:  r.Method,
