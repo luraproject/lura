@@ -114,11 +114,10 @@ func newRequestBuilderMiddleware(l logging.Logger, remote *config.Backend) Middl
 			l.Fatal("too many proxies for this %s %s -> %s proxy middleware: newRequestBuilderMiddleware only accepts 1 proxy, got %d", remote.ParentEndpointMethod, remote.ParentEndpoint, remote.URLPattern, len(next))
 			return nil
 		}
-		return func(ctx context.Context, request *Request) (*Response, error) {
-			r := request.Clone()
+		return func(ctx context.Context, r *Request) (*Response, error) {
 			r.GeneratePath(remote.URLPattern)
 			r.Method = remote.Method
-			return next[0](ctx, &r)
+			return next[0](ctx, r)
 		}
 	}
 }
