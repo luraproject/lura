@@ -5,7 +5,6 @@ package proxy
 import (
 	"context"
 	"net/url"
-	"strings"
 
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/logging"
@@ -97,10 +96,7 @@ func newLoadBalancedMiddleware(l logging.Logger, lb sd.Balancer) Middleware {
 			}
 			r := request.Clone()
 
-			var b strings.Builder
-			b.WriteString(host)
-			b.WriteString(r.Path)
-			r.URL, err = url.Parse(b.String())
+			r.URL, err = url.Parse(host + r.Path)
 			if err != nil {
 				return nil, err
 			}
