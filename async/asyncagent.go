@@ -66,9 +66,7 @@ func (a AgentStarter) Start(
 		logger.Debug(fmt.Sprintf("[SERVICE: AsyncAgent][%s] Starting the async agent", agent.Name))
 
 		for i := range agent.Backend {
-			b := agent.Backend[i]
-			b.Timeout = agent.Consumer.Timeout
-			agent.Backend[i] = b
+			agent.Backend[i].Timeout = agent.Consumer.Timeout
 		}
 
 		endpoint := &config.EndpointConfig{
