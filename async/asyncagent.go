@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-
  */
 package async
 
@@ -66,8 +65,13 @@ func (a AgentStarter) Start(
 
 		logger.Debug(fmt.Sprintf("[SERVICE: AsyncAgent][%s] Starting the async agent", agent.Name))
 
+		for i := range agent.Backend {
+			agent.Backend[i].Timeout = agent.Consumer.Timeout
+		}
+
 		endpoint := &config.EndpointConfig{
 			Endpoint:    agent.Name,
+			Timeout:     agent.Consumer.Timeout,
 			Backend:     agent.Backend,
 			ExtraConfig: agent.ExtraConfig,
 		}
