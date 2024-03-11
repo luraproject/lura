@@ -799,6 +799,11 @@ func SetSequentialParamsPattern(pattern string) error {
 	return nil
 }
 
+// SetInvalidPattern sets the invalidPattern variable to the provided value.
+func SetInvalidPattern(pattern string) {
+	invalidPattern = pattern
+}
+
 func validateAddress(address string) bool {
 	ip := net.ParseIP(address)
 	return ip != nil
