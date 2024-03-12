@@ -309,3 +309,32 @@ func TestConfig_initKOInvalidDebugPattern(t *testing.T) {
 
 	invalidPattern = dp
 }
+
+func TestConfig_initKOValidSetinvalidPattern(t *testing.T) {
+	dp := invalidPattern
+
+	invalidPattern = `^[^/]|/__(debug|echo|health)(/.*)?$`
+	subject := ServiceConfig{
+		Version: ConfigVersion,
+		Host:    []string{"http://127.0.0.1:8080"},
+		Endpoints: []*EndpointConfig{
+			{
+				Endpoint: "/*",
+				Method:   "GET",
+				Backend: []*Backend{
+					{
+						URLPattern: "/",
+						Host:       []string{"https://api.github.com"},
+						AllowList:  []string{"authorizations_url", "code_search_url"},
+					},
+				},
+			},
+		},
+	}
+
+	if err := subject.Init(); err != nil {
+		t.Error(err)
+	}
+
+	invalidPattern = dp
+}
