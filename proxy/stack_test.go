@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -61,7 +60,8 @@ func TestProxyStack_multi(t *testing.T) {
 			}]
 		}`
 		if err := os.WriteFile(cfgPath, []byte(fmt.Sprintf(cfgContent, s.URL, s.URL, s.URL)), 0666); err != nil {
-			log.Fatal(err)
+			t.Error(err)
+			return
 		}
 		defer os.Remove(cfgPath)
 	}
