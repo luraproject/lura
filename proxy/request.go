@@ -42,9 +42,13 @@ func (r *Request) GeneratePath(URLPattern string) {
 // For thread-safe request headers and/or params manipulation, use the proxy.CloneRequest
 // function.
 func (r *Request) Clone() Request {
+	var clonedURL *url.URL
+	if r.URL != nil {
+		clonedURL, _ = url.Parse(r.URL.String())
+	}
 	return Request{
 		Method:  r.Method,
-		URL:     r.URL,
+		URL:     clonedURL,
 		Query:   r.Query,
 		Path:    r.Path,
 		Body:    r.Body,

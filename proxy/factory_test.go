@@ -1,3 +1,6 @@
+//go:build integration || !race
+// +build integration !race
+
 // SPDX-License-Identifier: Apache-2.0
 
 package proxy

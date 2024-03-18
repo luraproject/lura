@@ -69,7 +69,7 @@ var errNullResult = errors.New("invalid response")
 func processConcurrentCall(ctx context.Context, next Proxy, request *Request, out chan<- *Response, failed chan<- error) {
 	localCtx, cancel := context.WithCancel(ctx)
 
-	result, err := next(localCtx, request)
+	result, err := next(localCtx, CloneRequest(request))
 	if err != nil {
 		failed <- err
 		cancel()
