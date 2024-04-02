@@ -154,6 +154,7 @@ func NewServerWithLogger(cfg config.ServiceConfig, handler http.Handler, logger 
 		ReadHeaderTimeout: cfg.ReadHeaderTimeout,
 		IdleTimeout:       cfg.IdleTimeout,
 		TLSConfig:         ParseTLSConfigWithLogger(cfg.TLS, logger),
+		MaxHeaderBytes:    cfg.MaxHeaderBytes,
 	}
 }
 

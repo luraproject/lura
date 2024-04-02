@@ -89,6 +89,12 @@ type ServiceConfig struct {
 	// after reading the headers and the Handler can decide what
 	// is considered too slow for the body.
 	ReadHeaderTimeout time.Duration `mapstructure:"read_header_timeout"`
+	// MaxHeaderBytes controls the maximum number of bytes the
+	// server will read parsing the request header's keys and
+	// values, including the request line. It does not limit the
+	// size of the request body.
+	// If zero, DefaultMaxHeaderBytes (1MB) is used.
+	MaxHeaderBytes int `mapstructure:"max_header_bytes"`
 
 	// DisableKeepAlives, if true, prevents re-use of TCP connections
 	// between different HTTP requests.
