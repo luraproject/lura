@@ -15,6 +15,7 @@ func TestNewParser_ok(t *testing.T) {
     "port": 8080,
     "cache_ttl": "3600s",
     "timeout": "3s",
+    "max_header_bytes": 10000,
     "tls": {
 		"public_key":  "cert.pem",
 		"private_key": "key.pem"
@@ -107,6 +108,9 @@ func TestNewParser_ok(t *testing.T) {
 
 	if err != nil {
 		t.Error("Unexpected error. Got", err.Error())
+	}
+	if serviceConfig.MaxHeaderBytes != 10000 {
+		t.Errorf("unexpected max_header_bytes value. have %d, want 10000", serviceConfig.MaxHeaderBytes)
 	}
 	testExtraConfig(serviceConfig.ExtraConfig, t)
 
