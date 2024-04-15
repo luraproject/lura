@@ -82,15 +82,12 @@ func hasUnsafeBackends(cfg *config.EndpointConfig) bool {
 		return false
 	}
 
-	hasOneUnsafe := false
 	for _, b := range cfg.Backend {
 		if m := strings.ToUpper(b.Method); m != http.MethodGet && m != http.MethodHead {
-			if hasOneUnsafe {
-				return true
-			}
-			hasOneUnsafe = true
+			return true
 		}
 	}
+
 	return false
 }
 
