@@ -16,15 +16,41 @@ import (
 	"time"
 )
 
+type certDef struct {
+	Prefix      string
+	IPAddresses []string
+	DNSNames    []string
+}
+
+func (c certDef) Org() string {
+	if len(c.Prefix) == 0 {
+		return "Acme Co"
+	}
+	return c.Prefix + " " + "Acme Co"
+}
+
 func init() {
-	if err := generateCerts(); err != nil {
-		log.Fatal(err.Error())
+	certs := []certDef{
+		certDef{
+			Prefix:      "",
+			IPAddresses: []string{"127.0.0.1", "::1"},
+			DNSNames:    []string{"localhost"},
+		},
+		certDef{
+			Prefix:      "example",
+			IPAddresses: []string{"127.0.0.1"},
+			DNSNames:    []string{"example.com"},
+		},
+	}
+
+	for _, cd := range certs {
+		if err := generateNamedCert(cd); err != nil {
+			log.Fatal(err.Error())
+		}
 	}
 }
 
-func generateCerts() error {
-	hosts := []string{"127.0.0.1", "::1", "localhost"}
-
+func generateNamedCert(hostCert certDef) error {
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return fmt.Errorf("Failed to generate private key: %v", err)
@@ -44,22 +70,22 @@ func generateCerts() error {
 	template := x509.Certificate{
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
-			Organization: []string{"Acme Co"},
+			Organization: []string{hostCert.Org()},
 		},
-		NotBefore: notBefore,
-		NotAfter:  notAfter,
-
+		NotBefore:             notBefore,
+		NotAfter:              notAfter,
 		KeyUsage:              keyUsage,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
 	}
 
-	for _, h := range hosts {
-		if ip := net.ParseIP(h); ip != nil {
+	for _, strIP := range hostCert.IPAddresses {
+		if ip := net.ParseIP(strIP); ip != nil {
 			template.IPAddresses = append(template.IPAddresses, ip)
-		} else {
-			template.DNSNames = append(template.DNSNames, h)
 		}
+	}
+	for _, dname := range hostCert.DNSNames {
+		template.DNSNames = append(template.DNSNames, dname)
 	}
 
 	template.IsCA = true
@@ -75,9 +101,9 @@ func generateCerts() error {
 		return fmt.Errorf("Failed to create ca: %v", err)
 	}
 
-	serverCert := "cert.pem"
-	serverKey := "key.pem"
-	caCert := "ca.pem"
+	serverCert := hostCert.Prefix + "cert.pem"
+	serverKey := hostCert.Prefix + "key.pem"
+	caCert := hostCert.Prefix + "ca.pem"
 
 	certOut, err := os.Create(serverCert)
 	if err != nil {

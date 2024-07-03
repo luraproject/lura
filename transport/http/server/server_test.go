@@ -14,6 +14,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -469,4 +470,105 @@ func h2cClient() *http.Client {
 // newPort returns random port numbers to avoid port collisions during the tests
 func newPort() int {
 	return 16666 + rand.Intn(40000)
+}
+
+func TestRunServer_MultipleTLS(t *testing.T) {
+	testKeysAreAvailable(t)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	port := newPort()
+
+	done := make(chan error)
+	go func() {
+		done <- RunServer(
+			ctx,
+			config.ServiceConfig{
+				Port: port,
+				TLS: &config.TLS{
+					CaCerts: []string{"ca.pem", "exampleca.pem"},
+					Keys: []config.TLSKeyPair{
+						config.TLSKeyPair{
+							PublicKey:  "cert.pem",
+							PrivateKey: "key.pem",
+						},
+						config.TLSKeyPair{
+							PublicKey:  "examplecert.pem",
+							PrivateKey: "examplekey.pem",
+						},
+					},
+				},
+			},
+			http.HandlerFunc(dummyHandler),
+		)
+	}()
+
+	client, err := httpsClient("cert.pem")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	<-time.After(100 * time.Millisecond)
+
+	resp, err := client.Get(fmt.Sprintf("https://localhost:%d", port))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if resp.StatusCode != 200 {
+		t.Errorf("unexpected status code: %d", resp.StatusCode)
+		return
+	}
+
+	client, err = httpsClient("examplecert.pem")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	resp, err = client.Get(fmt.Sprintf("https://127.0.0.1:%d", port))
+	// should fail, because it will be served with cert.pem
+	if err == nil || strings.Contains(err.Error(), "bad certificate") {
+		t.Error("expected to have 'bad certificate' error")
+		return
+	}
+
+	req, _ := http.NewRequest("GET", fmt.Sprintf("https://example.com:%d", port), nil)
+	OverrideHostTransport(client)
+	resp, err = client.Do(req)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	cancel()
+	if err = <-done; err != nil {
+		t.Error(err)
+	}
+}
+
+// OverrideHostTransport subtitutes the actual address that the request will
+// connecto (overriding the dns resolution).
+func OverrideHostTransport(client *http.Client) {
+	t := http.DefaultTransport.(*http.Transport).Clone()
+	if client.Transport != nil {
+		if tt, ok := client.Transport.(*http.Transport); ok {
+			t = tt
+		}
+	}
+	myDialer := &net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+		DualStack: true,
+	}
+	t.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
+		_, port, err := net.SplitHostPort(address)
+		if err != nil {
+			return nil, err
+		}
+		overrideAddress := net.JoinHostPort("127.0.0.1", port)
+		return myDialer.DialContext(ctx, network, overrideAddress)
+	}
+	client.Transport = t
 }

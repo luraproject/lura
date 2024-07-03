@@ -213,10 +213,7 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 			DisableSystemCaPool:      p.TLS.DisableSystemCaPool,
 		}
 		for _, k := range p.TLS.Keys {
-			cfg.TLS.Keys = append(cfg.TLS.Keys, TLSKeyPair{
-				PublicKey:  k.PublicKey,
-				PrivateKey: k.PrivateKey,
-			})
+			cfg.TLS.Keys = append(cfg.TLS.Keys, TLSKeyPair(k))
 		}
 	}
 	if p.ClientTLS != nil {
