@@ -212,6 +212,12 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 			EnableMTLS:               p.TLS.EnableMTLS,
 			DisableSystemCaPool:      p.TLS.DisableSystemCaPool,
 		}
+		for _, k := range p.TLS.Keys {
+			cfg.TLS.Keys = append(cfg.TLS.Keys, TLSKeyPair{
+				PublicKey:  k.PublicKey,
+				PrivateKey: k.PrivateKey,
+			})
+		}
 	}
 	if p.ClientTLS != nil {
 		cfg.ClientTLS = &ClientTLS{
@@ -244,18 +250,24 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 	return cfg
 }
 
+type parseableTLSKeyPair struct {
+	PublicKey  string `json:"public_key"`
+	PrivateKey string `json:"private_key"`
+}
+
 type parseableTLS struct {
-	IsDisabled               bool     `json:"disabled"`
-	PublicKey                string   `json:"public_key"`
-	PrivateKey               string   `json:"private_key"`
-	CaCerts                  []string `json:"ca_certs"`
-	MinVersion               string   `json:"min_version"`
-	MaxVersion               string   `json:"max_version"`
-	CurvePreferences         []uint16 `json:"curve_preferences"`
-	PreferServerCipherSuites bool     `json:"prefer_server_cipher_suites"`
-	CipherSuites             []uint16 `json:"cipher_suites"`
-	EnableMTLS               bool     `json:"enable_mtls"`
-	DisableSystemCaPool      bool     `json:"disable_system_ca_pool"`
+	IsDisabled               bool                  `json:"disabled"`
+	PublicKey                string                `json:"public_key"`
+	PrivateKey               string                `json:"private_key"`
+	CaCerts                  []string              `json:"ca_certs"`
+	MinVersion               string                `json:"min_version"`
+	MaxVersion               string                `json:"max_version"`
+	CurvePreferences         []uint16              `json:"curve_preferences"`
+	PreferServerCipherSuites bool                  `json:"prefer_server_cipher_suites"`
+	CipherSuites             []uint16              `json:"cipher_suites"`
+	EnableMTLS               bool                  `json:"enable_mtls"`
+	DisableSystemCaPool      bool                  `json:"disable_system_ca_pool"`
+	Keys                     []parseableTLSKeyPair `json:"keys"`
 }
 
 type parseableClientTLS struct {
