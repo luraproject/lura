@@ -116,14 +116,33 @@ func RunServerWithLoggerFactory(l logging.Logger) func(context.Context, config.S
 				done <- s.ListenAndServe()
 			}()
 		} else {
-			if cfg.TLS.PublicKey == "" {
+			if len(cfg.TLS.PublicKey) > 0 || len(cfg.TLS.PrivateKey) > 0 {
+				cfg.TLS.Keys = append(cfg.TLS.Keys, config.TLSKeyPair{
+					PublicKey:  cfg.TLS.PublicKey,
+					PrivateKey: cfg.TLS.PrivateKey,
+				})
+			}
+			if len(cfg.TLS.Keys) == 0 {
 				return ErrPublicKey
 			}
-			if cfg.TLS.PrivateKey == "" {
-				return ErrPrivateKey
+			for _, k := range cfg.TLS.Keys {
+				if k.PublicKey == "" {
+					return ErrPublicKey
+				}
+				if k.PrivateKey == "" {
+					return ErrPrivateKey
+				}
+				cert, err := tls.LoadX509KeyPair(k.PublicKey, k.PrivateKey)
+				if err != nil {
+					return err
+				}
+				s.TLSConfig.Certificates = append(s.TLSConfig.Certificates, cert)
 			}
+
 			go func() {
-				done <- s.ListenAndServeTLS(cfg.TLS.PublicKey, cfg.TLS.PrivateKey)
+				// since we already use the list of certificates in the config
+				// we do not need to specify the files for public and private key here
+				done <- s.ListenAndServeTLS("", "")
 			}()
 		}
 
