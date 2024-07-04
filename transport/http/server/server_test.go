@@ -527,18 +527,22 @@ func TestRunServer_MultipleTLS(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	resp, err = client.Get(fmt.Sprintf("https://127.0.0.1:%d", port))
+	_, err = client.Get(fmt.Sprintf("https://127.0.0.1:%d", port))
 	// should fail, because it will be served with cert.pem
 	if err == nil || strings.Contains(err.Error(), "bad certificate") {
 		t.Error("expected to have 'bad certificate' error")
 		return
 	}
 
-	req, _ := http.NewRequest("GET", fmt.Sprintf("https://example.com:%d", port), nil)
-	OverrideHostTransport(client)
+	req, _ := http.NewRequest("GET", fmt.Sprintf("https://example.com:%d", port), http.NoBody)
+	overrideHostTransport(client)
 	resp, err = client.Do(req)
 	if err != nil {
 		t.Error(err)
+		return
+	}
+	if resp.StatusCode != 200 {
+		t.Errorf("unexpected status code: %d", resp.StatusCode)
 		return
 	}
 
@@ -548,9 +552,9 @@ func TestRunServer_MultipleTLS(t *testing.T) {
 	}
 }
 
-// OverrideHostTransport subtitutes the actual address that the request will
+// overrideHostTransport subtitutes the actual address that the request will
 // connecto (overriding the dns resolution).
-func OverrideHostTransport(client *http.Client) {
+func overrideHostTransport(client *http.Client) {
 	t := http.DefaultTransport.(*http.Transport).Clone()
 	if client.Transport != nil {
 		if tt, ok := client.Transport.(*http.Transport); ok {

@@ -23,7 +23,7 @@ type certDef struct {
 }
 
 func (c certDef) Org() string {
-	if len(c.Prefix) == 0 {
+	if c.Prefix == "" {
 		return "Acme Co"
 	}
 	return c.Prefix + " " + "Acme Co"
@@ -84,9 +84,7 @@ func generateNamedCert(hostCert certDef) error {
 			template.IPAddresses = append(template.IPAddresses, ip)
 		}
 	}
-	for _, dname := range hostCert.DNSNames {
-		template.DNSNames = append(template.DNSNames, dname)
-	}
+	template.DNSNames = append(template.DNSNames, hostCert.DNSNames...)
 
 	template.IsCA = true
 	template.KeyUsage |= x509.KeyUsageCertSign
