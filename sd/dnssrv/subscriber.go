@@ -18,6 +18,8 @@ import (
 
 // Namespace is the key for the dns sd module
 const Namespace = "dns"
+const DefaultTTL = 30 * time.Second
+const MinTTL = time.Second
 
 // Register registers the dns sd subscriber factory under the name defined by Namespace
 func Register() error {
@@ -25,7 +27,16 @@ func Register() error {
 }
 
 // TTL is the duration of the cached data
-var TTL = 30 * time.Second
+var TTL = DefaultTTL
+
+func SetTTL(d time.Duration) {
+	if d < MinTTL {
+		// in case the TTL is less than the minimum, we leave what is
+		// already set.
+		return
+	}
+	TTL = d
+}
 
 // DefaultLookup is the function used for the DNS resolution
 var DefaultLookup = net.LookupSRV

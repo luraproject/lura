@@ -185,6 +185,9 @@ type ServiceConfig struct {
 	// ClientTLS is used to configure the http default transport
 	// with TLS parameters
 	ClientTLS *ClientTLS `mapstructure:"client_tls"`
+
+	// DNSCacheTTL is the duration of the cached data for the DNS lookups
+	DNSCacheTTL time.Duration `mapstructure:"dns_cache_ttl"`
 }
 
 // AsyncAgent defines the configuration of a single subscriber/consumer to be initialized
