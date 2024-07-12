@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-   Package core contains some basic constants and variables
+Package core contains some basic constants and variables
 */
 package core
 
@@ -24,3 +24,6 @@ var KrakendHeaderValue = fmt.Sprintf("Version %s", KrakendVersion)
 
 // KrakendUserAgent is the value of the user agent header sent to the backends
 var KrakendUserAgent = fmt.Sprintf("KrakenD Version %s", KrakendVersion)
+
+// KrakendHeaders is a flag telling router if it needs to include KrakendHeaderName in the response.
+var KrakendHeaders bool = true

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/luraproject/lura/v2/core"
 	"github.com/luraproject/lura/v2/transport/http/server"
 )
 
@@ -37,7 +38,9 @@ type HTTPErrorInterceptor struct {
 func (i *HTTPErrorInterceptor) WriteHeader(code int) {
 	i.once.Do(func() {
 		if code != http.StatusOK {
-			i.ResponseWriter.Header().Set(server.CompleteResponseHeaderName, server.HeaderIncompleteResponseValue)
+			if core.KrakendHeaders {
+				i.ResponseWriter.Header().Set(server.CompleteResponseHeaderName, server.HeaderIncompleteResponseValue)
+			}
 		}
 	})
 	i.ResponseWriter.WriteHeader(code)
@@ -73,7 +76,9 @@ func (e *BasicEngine) registrableHandler(pattern string) http.Handler {
 			return
 		}
 
-		rw.Header().Set(server.CompleteResponseHeaderName, server.HeaderIncompleteResponseValue)
+		if core.KrakendHeaders {
+			rw.Header().Set(server.CompleteResponseHeaderName, server.HeaderIncompleteResponseValue)
+		}
 		http.Error(rw, "", http.StatusMethodNotAllowed)
 	})
 }

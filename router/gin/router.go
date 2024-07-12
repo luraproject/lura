@@ -191,7 +191,9 @@ func (r ginRouter) registerOptionEndpoints(rg *gin.RouterGroup) {
 
 		rg.OPTIONS(path, func(c *gin.Context) {
 			c.Header("Allow", allowed)
-			c.Header(core.KrakendHeaderName, core.KrakendHeaderValue)
+			if core.KrakendHeaders {
+				c.Header(core.KrakendHeaderName, core.KrakendHeaderValue)
+			}
 		})
 	}
 }

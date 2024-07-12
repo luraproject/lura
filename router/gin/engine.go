@@ -81,12 +81,16 @@ func NewEngine(cfg config.ServiceConfig, opt EngineOptions) *gin.Engine {
 				if ginOptions.ObfuscateVersionHeader {
 					core.KrakendHeaderValue = "Version undefined"
 				}
+
+				if ginOptions.RemoveKrakendHeaders {
+					core.KrakendHeaders = false
+				}
 			}
 		}
 	}
 
 	engine.NoRoute(func(c *gin.Context) {
-		c.Header(server.CompleteResponseHeaderName, server.HeaderIncompleteResponseValue)
+		completeHeader(c, server.HeaderIncompleteResponseValue)
 	})
 
 	if !ginOptions.DisableAccessLog {
@@ -114,6 +118,12 @@ func NewEngine(cfg config.ServiceConfig, opt EngineOptions) *gin.Engine {
 	}
 
 	return engine
+}
+
+func completeHeader(c *gin.Context, value string) {
+	if core.KrakendHeaders {
+		c.Header(server.CompleteResponseHeaderName, value)
+	}
 }
 
 func healthEndpoint(health <-chan string) func(*gin.Context) {
@@ -239,6 +249,10 @@ type engineConfiguration struct {
 	// ObfuscateVersionHeader flags if the version header returned by the router should replace the actual
 	// version with the value "undefined"
 	ObfuscateVersionHeader bool `json:"hide_version_header"`
+
+	// RemoveKrakendHeaders flags if the X-Krakend and X-Krakend-Completed headers should be included
+	// in the response/
+	RemoveKrakendHeaders bool `json:"remove_krakend_header"`
 
 	// UseH2C enable h2c support.
 	UseH2C bool `json:"use_h2c"`
