@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package chi provides some basic implementations for building routers based on go-chi/chi
+Package chi provides some basic implementations for building routers based on go-chi/chi
 */
 package chi
 
@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v2/core"
 	"github.com/luraproject/lura/v2/logging"
 	"github.com/luraproject/lura/v2/proxy"
 	"github.com/luraproject/lura/v2/router"
@@ -97,7 +98,9 @@ func (r chiRouter) Run(cfg config.ServiceConfig) {
 	r.registerKrakendEndpoints(cfg.Endpoints)
 
 	r.cfg.Engine.NotFound(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set(server.CompleteResponseHeaderName, server.HeaderIncompleteResponseValue)
+		if core.KrakendHeaders {
+			w.Header().Set(server.CompleteResponseHeaderName, server.HeaderIncompleteResponseValue)
+		}
 		http.NotFound(w, r)
 	})
 

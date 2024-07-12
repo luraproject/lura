@@ -30,6 +30,12 @@ func CustomEndpointHandler(rb RequestBuilder) HandlerFactory {
 	return CustomEndpointHandlerWithHTTPError(rb, server.DefaultToHTTPError)
 }
 
+func krakenHeader(w http.ResponseWriter, header, value string) {
+	if core.KrakendHeaders {
+		w.Header().Set(header, value)
+	}
+}
+
 // CustomEndpointHandlerWithHTTPError returns a HandlerFactory with the received RequestBuilder
 func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF server.ToHTTPError) HandlerFactory {
 	return func(configuration *config.EndpointConfig, prxy proxy.Proxy) http.HandlerFunc {
@@ -44,9 +50,9 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF server.ToHTTPErr
 		method := strings.ToTitle(configuration.Method)
 
 		return func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set(core.KrakendHeaderName, core.KrakendHeaderValue)
+			krakenHeader(w, core.KrakendHeaderName, core.KrakendHeaderValue)
 			if r.Method != method {
-				w.Header().Set(server.CompleteResponseHeaderName, server.HeaderIncompleteResponseValue)
+				krakenHeader(w, server.CompleteResponseHeaderName, server.HeaderIncompleteResponseValue)
 				http.Error(w, "", http.StatusMethodNotAllowed)
 				return
 			}
@@ -65,12 +71,12 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF server.ToHTTPErr
 
 			if response != nil && len(response.Data) > 0 {
 				if response.IsComplete {
-					w.Header().Set(server.CompleteResponseHeaderName, server.HeaderCompleteResponseValue)
+					krakenHeader(w, server.CompleteResponseHeaderName, server.HeaderCompleteResponseValue)
 					if isCacheEnabled {
 						w.Header().Set("Cache-Control", cacheControlHeaderValue)
 					}
 				} else {
-					w.Header().Set(server.CompleteResponseHeaderName, server.HeaderIncompleteResponseValue)
+					krakenHeader(w, server.CompleteResponseHeaderName, server.HeaderIncompleteResponseValue)
 				}
 
 				for k, vs := range response.Metadata.Headers {
@@ -79,7 +85,8 @@ func CustomEndpointHandlerWithHTTPError(rb RequestBuilder, errF server.ToHTTPErr
 					}
 				}
 			} else {
-				w.Header().Set(server.CompleteResponseHeaderName, server.HeaderIncompleteResponseValue)
+				krakenHeader(w, server.CompleteResponseHeaderName, server.HeaderIncompleteResponseValue)
+
 				if err != nil {
 					if t, ok := err.(responseError); ok {
 						http.Error(w, err.Error(), t.StatusCode())

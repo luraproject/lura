@@ -33,6 +33,12 @@ var ErrorResponseWriter = func(c *gin.Context, err error) {
 // EndpointHandler implements the HandlerFactory interface using the default ToHTTPError function
 var EndpointHandler = CustomErrorEndpointHandler(logging.NoOp, server.DefaultToHTTPError)
 
+func krakenheader(c *gin.Context, header, value string) {
+	if core.KrakendHeaders {
+		c.Header(header, value)
+	}
+}
+
 // CustomErrorEndpointHandler returns a HandlerFactory using the injected ToHTTPError function and logger
 func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) HandlerFactory {
 	return func(configuration *config.EndpointConfig, prxy proxy.Proxy) gin.HandlerFunc {
@@ -45,7 +51,7 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 		return func(c *gin.Context) {
 			requestCtx, cancel := context.WithTimeout(c, configuration.Timeout)
 
-			c.Header(core.KrakendHeaderName, core.KrakendHeaderValue)
+			krakenheader(c, core.KrakendHeaderName, core.KrakendHeaderValue)
 
 			response, err := prxy(requestCtx, requestGenerator(c, configuration.QueryString))
 
@@ -74,7 +80,7 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 				}
 			}
 
-			c.Header(server.CompleteResponseHeaderName, complete)
+			krakenheader(c, server.CompleteResponseHeaderName, complete)
 
 			for _, err := range c.Errors {
 				logger.Error(logPrefix, err.Error())
