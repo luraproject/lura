@@ -107,58 +107,74 @@ func newPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[str
 
 		if totRespModifiers == 0 {
 			return func(ctx context.Context, r *Request) (*Response, error) {
-				var err error
-				r, err = executeRequestModifiers(ctx, reqModifiers, r)
+				req, resp, err := executeRequestModifiers(ctx, reqModifiers, r)
 				if err != nil {
 					return nil, err
 				}
 
-				return next[0](ctx, r)
+				if resp != nil {
+					return resp, nil
+				}
+
+				return next[0](ctx, req)
 			}
 		}
 
 		return func(ctx context.Context, r *Request) (*Response, error) {
-			var err error
-			r, err = executeRequestModifiers(ctx, reqModifiers, r)
+			req, resp, err := executeRequestModifiers(ctx, reqModifiers, r)
 			if err != nil {
 				return nil, err
 			}
 
-			resp, err := next[0](ctx, r)
-			if err != nil {
-				return resp, err
+			if resp == nil {
+				var err error
+				resp, err = next[0](ctx, req)
+				if err != nil {
+					return resp, err
+				}
 			}
 
-			return executeResponseModifiers(ctx, respModifiers, resp, newRequestWrapper(ctx, r))
+			return executeResponseModifiers(ctx, respModifiers, resp, newRequestWrapper(ctx, req))
 		}
 	}
 }
 
-func executeRequestModifiers(ctx context.Context, reqModifiers []func(interface{}) (interface{}, error), r *Request) (*Request, error) {
+func executeRequestModifiers(ctx context.Context, reqModifiers []func(interface{}) (interface{}, error), req *Request) (*Request, *Response, error) {
 	var tmp RequestWrapper
-	tmp = newRequestWrapper(ctx, r)
+	tmp = newRequestWrapper(ctx, req)
+	var resp *Response
 
 	for _, f := range reqModifiers {
 		res, err := f(tmp)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		t, ok := res.(RequestWrapper)
-		if !ok {
+		switch t := res.(type) {
+		case RequestWrapper:
+			tmp = t
+		case ResponseWrapper:
+			resp = new(Response)
+			resp.Data = t.Data()
+			resp.IsComplete = t.IsComplete()
+			resp.Io = t.Io()
+			resp.Metadata = Metadata{}
+			resp.Metadata.Headers = t.Headers()
+			resp.Metadata.StatusCode = t.StatusCode()
+			break
+		default:
 			continue
 		}
-		tmp = t
 	}
 
-	r.Method = tmp.Method()
-	r.URL = tmp.URL()
-	r.Query = tmp.Query()
-	r.Path = tmp.Path()
-	r.Body = tmp.Body()
-	r.Params = tmp.Params()
-	r.Headers = tmp.Headers()
+	req.Method = tmp.Method()
+	req.URL = tmp.URL()
+	req.Query = tmp.Query()
+	req.Path = tmp.Path()
+	req.Body = tmp.Body()
+	req.Params = tmp.Params()
+	req.Headers = tmp.Headers()
 
-	return r, nil
+	return req, resp, nil
 }
 
 func executeResponseModifiers(ctx context.Context, respModifiers []func(interface{}) (interface{}, error), r *Response, req RequestWrapper) (*Response, error) {
