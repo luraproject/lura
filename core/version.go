@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-   Package core contains some basic constants and variables
+Package core contains some basic constants and variables
 */
 package core
 
-import "fmt"
+import (
+	"fmt"
+	"runtime"
+)
 
 // KrakendHeaderName is the name of the custom KrakenD header
 const KrakendHeaderName = "X-KRAKEND"
@@ -14,7 +17,7 @@ const KrakendHeaderName = "X-KRAKEND"
 var KrakendVersion = "undefined"
 
 // GoVersion is the version of the go compiler used at build time
-var GoVersion = "undefined"
+var GoVersion = runtime.Version()
 
 // GlibcVersion is the version of the glibc used by CGO at build time
 var GlibcVersion = "undefined"
