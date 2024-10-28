@@ -56,7 +56,7 @@ func New(logger logging.Logger, next RunServer) RunServer {
 		for _, name := range fifo {
 			rawHf, ok := r.Get(name)
 			if !ok {
-				logger.Error(logPrefix, "No plugin resgistered as", name)
+				logger.Error(logPrefix, "No plugin registered as", name)
 				continue
 			}
 
