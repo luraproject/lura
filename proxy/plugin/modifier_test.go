@@ -31,7 +31,7 @@ func ExampleLoadWithLoggerAndContext() {
 		fmt.Println(err.Error())
 		return
 	}
-	if total != 2 {
+	if total != 3 {
 		fmt.Printf("unexpected number of loaded plugins!. have %d, want 2\n", total)
 		return
 	}
@@ -92,7 +92,7 @@ func TestLoad(t *testing.T) {
 		t.Error(err.Error())
 		t.Fail()
 	}
-	if total != 2 {
+	if total != 3 {
 		t.Errorf("unexpected number of loaded plugins!. have %d, want 2", total)
 	}
 

@@ -193,6 +193,103 @@ func TestNewPluginMiddleware_error_response(t *testing.T) {
 	}
 }
 
+func TestNewPluginMiddleware_shortcircuit_request(t *testing.T) {
+	plugin.LoadWithLogger("./plugin/tests", ".so", plugin.RegisterModifier, logging.NoOp)
+
+	validator := func(ctx context.Context, r *Request) (*Response, error) {
+		t.Helper()
+		t.Error("the backend should not be called")
+		return nil, nil
+	}
+
+	bknd := NewBackendPluginMiddleware(
+		logging.NoOp,
+		&config.Backend{},
+	)(validator)
+
+	p := NewPluginMiddleware(
+		logging.NoOp,
+		&config.EndpointConfig{
+			ExtraConfig: map[string]interface{}{
+				plugin.Namespace: map[string]interface{}{
+					"name": []interface{}{
+						"lura-shortcircuit-example-request",
+					},
+				},
+			},
+		},
+	)(bknd)
+
+	resp, err := p(context.Background(), &Request{Path: "/bar"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if resp == nil {
+		t.Errorf("unexpected response: %v", resp)
+		return
+	}
+
+	if sc := resp.Metadata.StatusCode; sc != http.StatusTeapot {
+		t.Errorf("unexpected status code: %d", sc)
+	}
+
+	header := http.Header(resp.Metadata.Headers)
+	if h := header.Get("X-Plugin-Request"); h != "shortcircuit" {
+		t.Errorf("unexpected header: %s", h)
+	}
+}
+
+func TestNewPluginMiddleware_shortcircuit_request_response(t *testing.T) {
+	plugin.LoadWithLogger("./plugin/tests", ".so", plugin.RegisterModifier, logging.NoOp)
+
+	validator := func(ctx context.Context, r *Request) (*Response, error) {
+		t.Error("the backend should not be called")
+		return nil, nil
+	}
+
+	bknd := NewBackendPluginMiddleware(
+		logging.NoOp,
+		&config.Backend{},
+	)(validator)
+
+	p := NewPluginMiddleware(
+		logging.NoOp,
+		&config.EndpointConfig{
+			ExtraConfig: map[string]interface{}{
+				plugin.Namespace: map[string]interface{}{
+					"name": []interface{}{
+						"lura-shortcircuit-example-request",
+						"lura-shortcircuit-example-response",
+					},
+				},
+			},
+		},
+	)(bknd)
+
+	resp, err := p(context.Background(), &Request{Path: "/bar"})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if resp == nil {
+		t.Errorf("unexpected response: %v", resp)
+		return
+	}
+
+	if sc := resp.Metadata.StatusCode; sc != http.StatusTeapot {
+		t.Errorf("unexpected status code: %d", sc)
+	}
+
+	header := http.Header(resp.Metadata.Headers)
+	if h := header.Get("X-Plugin-Request"); h != "shortcircuit" {
+		t.Errorf("unexpected header: %s", h)
+	}
+	if h := header.Get("X-Plugin-Response"); h != "shortcircuit" {
+		t.Errorf("unexpected header: %s", h)
+	}
+}
+
 func TestNewPluginMiddleware_PoisonedPlugin(t *testing.T) {
 	plugin.RegisterModifier("poisoned", func(map[string]interface{}) func(interface{}) (interface{}, error) {
 		return nil
