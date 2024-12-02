@@ -8,6 +8,7 @@ package core
 import (
 	"fmt"
 	"runtime"
+	"strings"
 )
 
 // KrakendHeaderName is the name of the custom KrakenD header
@@ -17,7 +18,7 @@ const KrakendHeaderName = "X-KRAKEND"
 var KrakendVersion = "undefined"
 
 // GoVersion is the version of the go compiler used at build time
-var GoVersion = runtime.Version()
+var GoVersion = strings.TrimPrefix(runtime.Version(), "go")
 
 // GlibcVersion is the version of the glibc used by CGO at build time
 var GlibcVersion = "undefined"
