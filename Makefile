@@ -11,6 +11,8 @@ generate:
 	go build -buildmode=plugin -o ./transport/http/server/plugin/tests/lura-server-example.so ./transport/http/server/plugin/tests
 	go build -buildmode=plugin -o ./proxy/plugin/tests/lura-request-modifier-example.so ./proxy/plugin/tests/logger
 	go build -buildmode=plugin -o ./proxy/plugin/tests/lura-error-example.so ./proxy/plugin/tests/error
+	go build -buildmode=plugin -o ./proxy/pluginproxy/tests/logger.so ./proxy/pluginproxy/tests/logger
+	go build -buildmode=plugin -o ./proxy/pluginproxy/tests/error.so ./proxy/pluginproxy/tests/error
 
 test: generate
 	go test -cover -race ./...

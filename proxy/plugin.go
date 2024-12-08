@@ -257,6 +257,20 @@ type metadataWrapper struct {
 func (m metadataWrapper) Headers() map[string][]string { return m.headers }
 func (m metadataWrapper) StatusCode() int              { return m.statusCode }
 
+func newResponseWrapper(ctx context.Context, r *Response) *responseWrapper {
+	return &responseWrapper{
+		ctx: ctx,
+		// TODO: not sure how to populate field request
+		data:       r.Data,
+		isComplete: r.IsComplete,
+		metadata: metadataWrapper{
+			headers:    r.Metadata.Headers,
+			statusCode: r.Metadata.StatusCode,
+		},
+		io: r.Io,
+	}
+}
+
 type responseWrapper struct {
 	ctx        context.Context
 	request    interface{}
