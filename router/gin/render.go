@@ -71,10 +71,10 @@ func getWithFallback(key string, fallback Render) Render {
 }
 
 func negotiatedRender(c *gin.Context, response *proxy.Response) {
-	switch c.NegotiateFormat(gin.MIMEJSON, gin.MIMEPlain, gin.MIMEXML) {
+	switch c.NegotiateFormat(gin.MIMEJSON, gin.MIMEPlain, gin.MIMEXML, gin.MIMEYAML) {
 	case gin.MIMEXML:
 		getWithFallback(XML, jsonRender)(c, response)
-	case gin.MIMEPlain:
+	case gin.MIMEPlain, gin.MIMEYAML:
 		getWithFallback(YAML, jsonRender)(c, response)
 	default:
 		getWithFallback(encoding.JSON, jsonRender)(c, response)
