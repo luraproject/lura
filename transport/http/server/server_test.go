@@ -152,7 +152,7 @@ func TestRunServer_MTLS(t *testing.T) {
 	// clientTLS config.
 	// This is a copy of the code we can find inside
 	// InitHTTPDefaultTransportWithLogger(serviceConfig, nil):
-	transport := newTransport(cfg, logger)
+	transport := NewTransport(cfg, logger)
 
 	defClient := http.Client{
 		Transport: transport,

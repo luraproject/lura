@@ -75,11 +75,11 @@ func InitHTTPDefaultTransportWithLogger(cfg config.ServiceConfig, logger logging
 		cfg.ClientTLS.AllowInsecureConnections = true
 	}
 	onceTransportConfig.Do(func() {
-		http.DefaultTransport = newTransport(cfg, logger)
+		http.DefaultTransport = NewTransport(cfg, logger)
 	})
 }
 
-func newTransport(cfg config.ServiceConfig, logger logging.Logger) *http.Transport {
+func NewTransport(cfg config.ServiceConfig, logger logging.Logger) *http.Transport {
 	return &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
