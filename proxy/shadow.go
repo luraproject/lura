@@ -28,10 +28,12 @@ func (s shadowFactory) New(cfg *config.EndpointConfig) (p Proxy, err error) {
 		return
 	}
 
+	cfgCopy := *cfg
+
 	var shadow []*config.Backend
 	var regular []*config.Backend
 	var maxTimeout time.Duration
-	for _, b := range cfg.Backend {
+	for _, b := range cfgCopy.Backend {
 		if d, ok := isShadowBackend(b); ok {
 			if maxTimeout < d {
 				maxTimeout = d
@@ -42,12 +44,12 @@ func (s shadowFactory) New(cfg *config.EndpointConfig) (p Proxy, err error) {
 		regular = append(regular, b)
 	}
 
-	cfg.Backend = regular
-	p, err = s.f.New(cfg)
+	cfgCopy.Backend = regular
+	p, err = s.f.New(&cfgCopy)
 
 	if len(shadow) > 0 {
-		cfg.Backend = shadow
-		pShadow, _ := s.f.New(cfg)
+		cfgCopy.Backend = shadow
+		pShadow, _ := s.f.New(&cfgCopy)
 		p = ShadowMiddlewareWithTimeout(maxTimeout, p, pShadow)
 	}
 
