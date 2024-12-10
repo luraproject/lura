@@ -116,7 +116,7 @@ func TestRunServer_MTLS(t *testing.T) {
 			AllowInsecureConnections: false, // we do not check the server cert
 			CaCerts:                  []string{"ca.pem"},
 			ClientCerts: []config.ClientTLSCert{
-				config.ClientTLSCert{
+				{
 					Certificate: "cert.pem",
 					PrivateKey:  "key.pem",
 				},
@@ -459,7 +459,7 @@ func mtlsClient(certPath, keyPath string) (*http.Client, error) {
 func h2cClient() *http.Client {
 	return &http.Client{
 		Transport: &http2.Transport{
-			DialTLSContext: func(ctx context.Context, network, addr string, cfg *tls.Config) (net.Conn, error) {
+			DialTLSContext: func(_ context.Context, network, addr string, _ *tls.Config) (net.Conn, error) {
 				return net.Dial(network, addr)
 			},
 			AllowHTTP: true,
@@ -489,11 +489,11 @@ func TestRunServer_MultipleTLS(t *testing.T) {
 				TLS: &config.TLS{
 					CaCerts: []string{"ca.pem", "exampleca.pem"},
 					Keys: []config.TLSKeyPair{
-						config.TLSKeyPair{
+						{
 							PublicKey:  "cert.pem",
 							PrivateKey: "key.pem",
 						},
-						config.TLSKeyPair{
+						{
 							PublicKey:  "examplecert.pem",
 							PrivateKey: "examplekey.pem",
 						},
