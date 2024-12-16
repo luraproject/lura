@@ -154,6 +154,11 @@ func (r ginRouter) registerKrakendEndpoint(rg *gin.RouterGroup, method string, e
 		}
 	}
 
+	if !e.HasHosts() {
+		r.cfg.Logger.Warning(logPrefix, "[ENDPOINT:", path, "] Could not find any valid backend host, skipping")
+		return
+	}
+
 	switch method {
 	case http.MethodGet:
 		rg.GET(path, h)

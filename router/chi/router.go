@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package chi provides some basic implementations for building routers based on go-chi/chi
+Package chi provides some basic implementations for building routers based on go-chi/chi
 */
 package chi
 
@@ -138,6 +138,11 @@ func (r chiRouter) registerKrakendEndpoint(method string, endpoint *config.Endpo
 			r.cfg.Logger.Error(logPrefix, method, "endpoints with sequential proxy enabled only allow a non-GET in the last backend! Ignoring", path)
 			return
 		}
+	}
+
+	if !endpoint.HasHosts() {
+		r.cfg.Logger.Warning(logPrefix, "[ENDPOINT:", path, "] Could not find any valid backend host, skipping")
+		return
 	}
 
 	switch method {

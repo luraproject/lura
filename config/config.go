@@ -711,6 +711,15 @@ func (e *EndpointConfig) validate() error {
 	return nil
 }
 
+func (e *EndpointConfig) HasHosts() bool {
+	for _, b := range e.Backend {
+		if len(b.Host) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
 // EndpointMatchError is the error returned by the configuration init process when the endpoint pattern
 // check fails
 type EndpointMatchError struct {

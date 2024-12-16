@@ -165,6 +165,11 @@ func (r httpRouter) registerKrakendEndpoint(method string, endpoint *config.Endp
 		}
 	}
 
+	if !endpoint.HasHosts() {
+		r.cfg.Logger.Warning(logPrefix, "[ENDPOINT:", path, "] Could not find any valid backend host, skipping")
+		return
+	}
+
 	switch method {
 	case http.MethodGet:
 	case http.MethodPost:

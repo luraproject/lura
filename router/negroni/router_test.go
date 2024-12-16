@@ -40,7 +40,9 @@ func TestDefaultFactory_ok(t *testing.T) {
 	expectedBody := "{\"supu\":\"tupu\"}"
 
 	serviceCfg := config.ServiceConfig{
-		Port: 8052,
+		Port:    8052,
+		Version: 3,
+		Host:    []string{"http://example.com"},
 		Endpoints: []*config.EndpointConfig{
 			{
 				Endpoint: "/get/{id}",
@@ -83,6 +85,10 @@ func TestDefaultFactory_ok(t *testing.T) {
 				},
 			},
 		},
+	}
+
+	if err = serviceCfg.Init(); err != nil {
+		t.Errorf("Error during the config init: %s\n", err.Error())
 	}
 
 	go func() { r.Run(serviceCfg) }()
@@ -144,7 +150,9 @@ func TestDefaultFactory_middlewares(t *testing.T) {
 	expectedBody := "{\"supu\":\"tupu\"}"
 
 	serviceCfg := config.ServiceConfig{
-		Port: 8090,
+		Port:    8090,
+		Version: 3,
+		Host:    []string{"http://example.com"},
 		Endpoints: []*config.EndpointConfig{
 			{
 				Endpoint: "/get/{id}",
@@ -155,6 +163,10 @@ func TestDefaultFactory_middlewares(t *testing.T) {
 				},
 			},
 		},
+	}
+
+	if err = serviceCfg.Init(); err != nil {
+		t.Errorf("Error during the config init: %s\n", err.Error())
 	}
 
 	go func() { r.Run(serviceCfg) }()
@@ -235,11 +247,10 @@ func TestDefaultFactory_ko(t *testing.T) {
 				Backend:  []*config.Backend{},
 			},
 			{
-				Endpoint: "/also-ignored",
-				Method:   "PUT",
+				Endpoint: "/no-hosts-ignored",
+				Method:   "GET",
 				Backend: []*config.Backend{
-					{},
-					{},
+					{Host: []string{}},
 				},
 			},
 		},
@@ -252,7 +263,7 @@ func TestDefaultFactory_ko(t *testing.T) {
 	for _, subject := range [][]string{
 		{"GET", "ignored"},
 		{"GET", "empty"},
-		{"PUT", "also-ignored"},
+		{"GET", "no-hosts-ignored"},
 	} {
 		req, _ := http.NewRequest(subject[0], fmt.Sprintf("http://127.0.0.1:8053/%s", subject[1]), http.NoBody)
 		req.Header.Set("Content-Type", "application/json")

@@ -38,7 +38,9 @@ func TestDefaultFactory_ok(t *testing.T) {
 	expectedBody := "{\"supu\":\"tupu\"}"
 
 	serviceCfg := config.ServiceConfig{
-		Port: 8082,
+		Port:    8082,
+		Host:    []string{"http://example.com"},
+		Version: 3,
 		Endpoints: []*config.EndpointConfig{
 			{
 				Endpoint: "/get/{id}",
@@ -81,6 +83,10 @@ func TestDefaultFactory_ok(t *testing.T) {
 				},
 			},
 		},
+	}
+
+	if err = serviceCfg.Init(); err != nil {
+		t.Errorf("Error during the config init: %s\n", err.Error())
 	}
 
 	go func() { r.Run(serviceCfg) }()
@@ -157,11 +163,10 @@ func TestDefaultFactory_ko(t *testing.T) {
 				Backend:  []*config.Backend{},
 			},
 			{
-				Endpoint: "/also-ignored",
-				Method:   "PUT",
+				Endpoint: "/no-hosts-ignored",
+				Method:   "GET",
 				Backend: []*config.Backend{
-					{},
-					{},
+					{Host: []string{}},
 				},
 			},
 		},
@@ -174,7 +179,7 @@ func TestDefaultFactory_ko(t *testing.T) {
 	for _, subject := range [][]string{
 		{"GET", "ignored"},
 		{"GET", "empty"},
-		{"PUT", "also-ignored"},
+		{"GET", "no-hosts-ignored"},
 	} {
 		req, _ := http.NewRequest(subject[0], fmt.Sprintf("http://127.0.0.1:8083/%s", subject[1]), http.NoBody)
 		req.Header.Set("Content-Type", "application/json")
@@ -276,10 +281,4 @@ type erroredProxyFactory struct {
 
 func (e erroredProxyFactory) New(_ *config.EndpointConfig) (proxy.Proxy, error) {
 	return proxy.NoopProxy, e.Error
-}
-
-type identityMiddleware struct{}
-
-func (identityMiddleware) Handler(h http.Handler) http.Handler {
-	return h
 }
