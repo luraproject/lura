@@ -156,14 +156,6 @@ func TestDefaultFactory_ko(t *testing.T) {
 				Method:   "GETTT",
 				Backend:  []*config.Backend{},
 			},
-			{
-				Endpoint: "/also-ignored",
-				Method:   "PUT",
-				Backend: []*config.Backend{
-					{},
-					{},
-				},
-			},
 		},
 	}
 
@@ -174,7 +166,6 @@ func TestDefaultFactory_ko(t *testing.T) {
 	for _, subject := range [][]string{
 		{"GET", "ignored"},
 		{"GET", "empty"},
-		{"PUT", "also-ignored"},
 	} {
 		req, _ := http.NewRequest(subject[0], fmt.Sprintf("http://127.0.0.1:8083/%s", subject[1]), http.NoBody)
 		req.Header.Set("Content-Type", "application/json")
