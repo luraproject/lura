@@ -29,7 +29,7 @@ func TestConfig_rejectInvalidEndpoints(t *testing.T) {
 	for _, e := range samples {
 		subject := ServiceConfig{Version: ConfigVersion, Endpoints: []*EndpointConfig{{Endpoint: e, Method: "GET"}}}
 		err := subject.Init()
-		if err == nil || err.Error() != fmt.Sprintf("ignoring the 'GET %s' endpoint, since it is invalid!!!", e) {
+		if err == nil || err.Error() != fmt.Sprintf("can't register 'GET %s' endpoint, it's using a reserved path!", e) {
 			t.Errorf("Unexpected error processing '%s': %v", e, err)
 		}
 	}
@@ -216,6 +216,38 @@ func TestConfig_init(t *testing.T) {
 	}
 }
 
+func TestConfig_initAtLeastOneHost(t *testing.T) {
+	supuBackend := Backend{
+		URLPattern: "/__debug/supu",
+	}
+	tupuBackend := Backend{
+		URLPattern: "/__debug/tupu",
+		Host:       []string{"http://example.com"},
+	}
+	supuEndpoint := EndpointConfig{
+		Endpoint: "/supu",
+		Backend:  []*Backend{&supuBackend, &tupuBackend},
+	}
+
+	subject := ServiceConfig{
+		Version:   ConfigVersion,
+		Endpoints: []*EndpointConfig{&supuEndpoint},
+	}
+
+	if err := subject.Init(); err != nil {
+		t.Error("unexpected error at the configuration init:", err.Error())
+	}
+
+	hash, err := subject.Hash()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if hash != "JmPNpF4R859GgtXPOZNVhrsY6ByFq9CgE8or8+Zy45c=" {
+		t.Errorf("unexpected hash: %s", hash)
+	}
+}
+
 func TestConfig_initKONoBackends(t *testing.T) {
 	subject := ServiceConfig{
 		Version: ConfigVersion,
@@ -230,7 +262,7 @@ func TestConfig_initKONoBackends(t *testing.T) {
 	}
 
 	if err := subject.Init(); err == nil ||
-		err.Error() != "ignoring the 'POST /supu' endpoint, since it has 0 backends defined!" {
+		err.Error() != "can't register 'POST /supu' endpoint, since it has 0 backends defined!" {
 		t.Error("Unexpected error at the configuration init!", err)
 	}
 }
@@ -303,11 +335,34 @@ func TestConfig_initKOInvalidDebugPattern(t *testing.T) {
 	}
 
 	if err := subject.Init(); err == nil ||
-		err.Error() != "ignoring the 'GET /__debug/supu' endpoint due to a parsing error: error parsing regexp: missing closing ): `a(b`" {
+		err.Error() != "can't register 'GET /__debug/supu' endpoint due to a parsing error: error parsing regexp: missing closing ): `a(b`" {
 		t.Error("Expecting an error at the configuration init!", err)
 	}
 
 	invalidPattern = dp
+}
+
+func TestConfig_initKONoBackendHosts(t *testing.T) {
+	subject := ServiceConfig{
+		Version: ConfigVersion,
+		Endpoints: []*EndpointConfig{
+			{
+				Endpoint: "/something",
+				Method:   "GET",
+				Backend: []*Backend{
+					{
+						URLPattern: "/back",
+						Host:       []string{},
+					},
+				},
+			},
+		},
+	}
+
+	if err := subject.Init(); err == nil ||
+		err.Error() != "can't register 'GET /something' endpoint, it doesn't have any host" {
+		t.Error("Expecting an error at the configuration init!", err)
+	}
 }
 
 func TestConfig_initKOValidSetinvalidPattern(t *testing.T) {

@@ -535,6 +535,10 @@ func (s *ServiceConfig) initEndpoints() error {
 
 			b.ExtraConfig.sanitize()
 		}
+
+		if !e.HasHosts() {
+			return &NotEnoughHostsError{Path: e.Endpoint, Method: e.Method}
+		}
 	}
 	return nil
 }
@@ -711,6 +715,15 @@ func (e *EndpointConfig) validate() error {
 	return nil
 }
 
+func (e *EndpointConfig) HasHosts() bool {
+	for _, b := range e.Backend {
+		if len(b.Host) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
 // EndpointMatchError is the error returned by the configuration init process when the endpoint pattern
 // check fails
 type EndpointMatchError struct {
@@ -721,7 +734,7 @@ type EndpointMatchError struct {
 
 // Error returns a string representation of the EndpointMatchError
 func (e *EndpointMatchError) Error() string {
-	return fmt.Sprintf("ignoring the '%s %s' endpoint due to a parsing error: %s", e.Method, e.Path, e.Err.Error())
+	return fmt.Sprintf("can't register '%s %s' endpoint due to a parsing error: %s", e.Method, e.Path, e.Err.Error())
 }
 
 // NoBackendsError is the error returned by the configuration init process when an endpoint
@@ -733,7 +746,16 @@ type NoBackendsError struct {
 
 // Error returns a string representation of the NoBackendsError
 func (n *NoBackendsError) Error() string {
-	return "ignoring the '" + n.Method + " " + n.Path + "' endpoint, since it has 0 backends defined!"
+	return "can't register '" + n.Method + " " + n.Path + "' endpoint, since it has 0 backends defined!"
+}
+
+type NotEnoughHostsError struct {
+	Path   string
+	Method string
+}
+
+func (h *NotEnoughHostsError) Error() string {
+	return "can't register '" + h.Method + " " + h.Path + "' endpoint, it doesn't have any host"
 }
 
 // UnsupportedVersionError is the error returned by the configuration init process when the configuration
@@ -757,7 +779,7 @@ type EndpointPathError struct {
 
 // Error returns a string representation of the EndpointPathError
 func (e *EndpointPathError) Error() string {
-	return "ignoring the '" + e.Method + " " + e.Path + "' endpoint, since it is invalid!!!"
+	return "can't register '" + e.Method + " " + e.Path + "' endpoint, it's using a reserved path!"
 }
 
 // UndefinedOutputParamError is the error returned by the configuration init process when an output
