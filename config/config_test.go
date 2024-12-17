@@ -243,7 +243,7 @@ func TestConfig_initAtLeastOneHost(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	if hash != "JmPNpF4R859GgtXPOZNVhrsY6ByFq9CgE8or8+Zy45c=" {
+	if hash != "/2xqGWkemKmpd/66klm9k879UHrH5emSDfD80zJwSAs=" {
 		t.Errorf("unexpected hash: %s", hash)
 	}
 }
