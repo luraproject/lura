@@ -150,13 +150,13 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 			"array":      []interface{}{"1", "2"},
 			"propagated": "everywhere",
 		}, IsComplete: true}),
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, r *Request) (*Response, error) {
 			checkBody(t, r)
 			checkRequestParam(t, r, "Resp0_array", "1,2")
 			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
 			return &Response{Data: map[string]interface{}{"tupu": "foo"}, IsComplete: true}, nil
 		},
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, r *Request) (*Response, error) {
 			checkBody(t, r)
 			checkRequestParam(t, r, "Resp0_int", "42")
 			checkRequestParam(t, r, "Resp0_string", "some")
@@ -166,7 +166,7 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
 			return &Response{Data: map[string]interface{}{"tupu": "foo"}, IsComplete: true}, nil
 		},
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, r *Request) (*Response, error) {
 			checkBody(t, r)
 			checkRequestParam(t, r, "Resp0_int", "42")
 			checkRequestParam(t, r, "Resp0_string", "some")
@@ -177,7 +177,7 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
 			return &Response{Data: map[string]interface{}{"aaaa": []int{1, 2, 3}}, IsComplete: true}, nil
 		},
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, r *Request) (*Response, error) {
 			checkBody(t, r)
 			checkRequestParam(t, r, "Resp0_struct.foo", "bar")
 			checkRequestParam(t, r, "Resp0_struct.struct.foo", "bar")
@@ -185,12 +185,12 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
 			return &Response{Data: map[string]interface{}{"bbbb": []bool{true, false}}, IsComplete: true}, nil
 		},
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, r *Request) (*Response, error) {
 			checkBody(t, r)
 			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
 			return &Response{Data: map[string]interface{}{}, Io: io.NopCloser(strings.NewReader("hello")), IsComplete: true}, nil
 		},
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, r *Request) (*Response, error) {
 			checkBody(t, r)
 			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
 			checkRequestParam(t, r, "Resp5", "hello")
@@ -246,13 +246,13 @@ func TestNewMergeDataMiddleware_sequential_unavailableParams(t *testing.T) {
 	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	p := mw(
 		dummyProxy(&Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}),
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, r *Request) (*Response, error) {
 			if v, ok := r.Params["Resp0_supu"]; ok || v != "" {
 				t.Errorf("request with unexpected set of params")
 			}
 			return &Response{Data: map[string]interface{}{"tupu": "foo"}, IsComplete: true}, nil
 		},
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, r *Request) (*Response, error) {
 			if v, ok := r.Params["Resp0_supu"]; ok || v != "" {
 				t.Errorf("request with unexpected set of params")
 			}
@@ -306,13 +306,13 @@ func TestNewMergeDataMiddleware_sequential_erroredBackend(t *testing.T) {
 	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	p := mw(
 		dummyProxy(&Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}),
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, r *Request) (*Response, error) {
 			if r.Params["Resp0_supu"] != "42" {
 				t.Errorf("request without the expected set of params")
 			}
 			return nil, expecterErr
 		},
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, _ *Request) (*Response, error) {
 			return nil, nil
 		},
 	)
@@ -357,14 +357,14 @@ func TestNewMergeDataMiddleware_sequential_erroredFirstBackend(t *testing.T) {
 	expecterErr := errors.New("wait for me")
 	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	p := mw(
-		func(ctx context.Context, _ *Request) (*Response, error) {
+		func(_ context.Context, _ *Request) (*Response, error) {
 			return nil, expecterErr
 		},
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, _ *Request) (*Response, error) {
 			t.Error("this backend should never be called")
 			return nil, nil
 		},
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, _ *Request) (*Response, error) {
 			t.Error("this backend should never be called")
 			return nil, nil
 		},

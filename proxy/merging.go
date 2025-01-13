@@ -17,7 +17,7 @@ import (
 )
 
 // NewMergeDataMiddleware creates proxy middleware for merging responses from several backends
-func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.EndpointConfig) Middleware {
+func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.EndpointConfig) Middleware { // skipcq: GO-R1005
 	totalBackends := len(endpointConfig.Backend)
 	if totalBackends == 0 {
 		logger.Fatal("all endpoints must have at least one backend: NewMergeDataMiddleware")
@@ -60,8 +60,8 @@ func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.Endpoi
 
 		sequentialReplacements := make([][]sequentialBackendReplacement, totalBackends)
 
-		var rePropagatedParams = regexp.MustCompile(`[Rr]esp(\d+)_?([\w-\.]+)?`)
-		var reUrlPatterns = regexp.MustCompile(`\{\{\.Resp(\d+)_([\w-\.]+)\}\}`)
+		var rePropagatedParams = regexp.MustCompile(`[Rr]esp(\d+)_?([\w-.]+)?`)
+		var reUrlPatterns = regexp.MustCompile(`\{\{\.Resp(\d+)_([\w-.]+)\}\}`)
 		destKeyGenerator := func(i string, t string) string {
 			key := "Resp" + i
 			if t != "" {
@@ -82,7 +82,7 @@ func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.Endpoi
 						backendIndex: backendIndex,
 						destination:  destKeyGenerator(match[1], match[2]),
 						source:       strings.Split(match[2], "."),
-						fullResponse: len(match[2]) == 0,
+						fullResponse: match[2] == "",
 					})
 				}
 			}
@@ -100,7 +100,7 @@ func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.Endpoi
 								backendIndex: backendIndex,
 								destination:  destKeyGenerator(match[1], match[2]),
 								source:       strings.Split(match[2], "."),
-								fullResponse: len(match[2]) == 0,
+								fullResponse: match[2] == "",
 							})
 						}
 					}
@@ -121,7 +121,7 @@ type sequentialBackendReplacement struct {
 
 func sequentialMergerConfig(cfg *config.EndpointConfig) (bool, []string) {
 	enabled := false
-	propagatedParams := []string{}
+	var propagatedParams []string
 	if v, ok := cfg.ExtraConfig[Namespace]; ok {
 		if e, ok := v.(map[string]interface{}); ok {
 			if v, ok := e[isSequentialKey]; ok {
@@ -181,7 +181,7 @@ func parallelMerge(reqCloner func(*Request) *Request, timeout time.Duration, rc 
 	}
 }
 
-func sequentialMerge(reqCloner func(*Request) *Request, sequentialReplacements [][]sequentialBackendReplacement, timeout time.Duration, rc ResponseCombiner, next ...Proxy) Proxy {
+func sequentialMerge(reqCloner func(*Request) *Request, sequentialReplacements [][]sequentialBackendReplacement, timeout time.Duration, rc ResponseCombiner, next ...Proxy) Proxy { // skipcq: GO-R1005
 	return func(ctx context.Context, request *Request) (*Response, error) {
 		localCtx, cancel := context.WithTimeout(ctx, timeout)
 
