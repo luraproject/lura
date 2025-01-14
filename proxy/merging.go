@@ -458,7 +458,7 @@ func combineData(total int, parts []*Response) *Response {
 		}
 		isComplete = isComplete && part.IsComplete
 		if retResponse == nil {
-			retResponse = part
+			retResponse = &Response{Data: part.Data, IsComplete: isComplete}
 			continue
 		}
 		for k, v := range part.Data {
