@@ -51,7 +51,8 @@ func BenchmarkNewMergeDataMiddleware(b *testing.B) {
 func BenchmarkNewMergeDataMiddleware_sequential(b *testing.B) {
 	backends := make([]*config.Backend, 10)
 	pattern := "/some"
-	keys := []string{}
+	var keys []string
+
 	for i := range backends {
 		b := &config.Backend{
 			URLKeys:    make([]string, 4*i),
