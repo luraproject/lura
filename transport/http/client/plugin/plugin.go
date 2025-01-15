@@ -52,7 +52,8 @@ func LoadWithLogger(path, pattern string, rcf RegisterClientFunc, logger logging
 }
 
 func load(plugins []string, rcf RegisterClientFunc, logger logging.Logger) (int, error) {
-	errors := []error{}
+	var errors []error
+
 	loadedPlugins := 0
 	for k, pluginName := range plugins {
 		if err := open(pluginName, rcf, logger); err != nil {

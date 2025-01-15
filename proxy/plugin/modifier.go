@@ -116,7 +116,8 @@ func LoadWithLoggerAndContext(ctx context.Context, path, pattern string, rmf Reg
 }
 
 func load(ctx context.Context, plugins []string, rmf RegisterModifierFunc, logger logging.Logger) (int, error) {
-	errors := []error{}
+	var errors []error
+
 	loadedPlugins := 0
 	for k, pluginName := range plugins {
 		if err := open(ctx, pluginName, rmf, logger); err != nil {

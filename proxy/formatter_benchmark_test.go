@@ -252,12 +252,14 @@ func BenchmarkEntityFormatter_flatmapAlt(b *testing.B) {
 				},
 				IsComplete: true,
 			}
-			subCol := []interface{}{}
+			var subCol []interface{}
+
 			for i := 0; i < size; i++ {
 				subCol = append(subCol, i)
 			}
 			sub["e"] = subCol
-			sampleSubCol := []interface{}{}
+			var sampleSubCol []interface{}
+
 			for i := 0; i < size; i++ {
 				sampleSubCol = append(sampleSubCol, sub)
 			}
@@ -285,7 +287,8 @@ func BenchmarkEntityFormatter_flatmap(b *testing.B) {
 				IsComplete: true,
 			}
 
-			cmds := []interface{}{}
+			var cmds []interface{}
+
 			for _, path := range blacklist {
 				cmds = append(cmds, map[string]interface{}{
 					"type": "del",

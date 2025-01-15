@@ -43,7 +43,7 @@ func NewEngine(cfg config.ServiceConfig, opt EngineOptions) *gin.Engine {
 	engine.HandleMethodNotAllowed = true
 	engine.ContextWithFallback = true
 
-	paths := []string{}
+	var paths []string
 
 	ginOptions := engineConfiguration{}
 	if v, ok := cfg.ExtraConfig[Namespace]; ok {

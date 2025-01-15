@@ -27,7 +27,8 @@ func (r *Request) GeneratePath(URLPattern string) {
 	}
 	buff := []byte(URLPattern)
 	for k, v := range r.Params {
-		key := []byte{}
+		var key []byte
+
 		key = append(key, "{{."...)
 		key = append(key, k...)
 		key = append(key, "}}"...)
