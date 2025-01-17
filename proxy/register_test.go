@@ -3,6 +3,7 @@
 package proxy
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -52,10 +53,14 @@ func TestNewRegister_responseCombiner_fallbackIfErrored(t *testing.T) {
 
 	original := &Response{IsComplete: true, Data: map[string]interface{}{"a": 42}}
 
-	result := rc(0, []*Response{original})
+	result := rc(1, []*Response{{Data: original.Data, IsComplete: original.IsComplete}})
 
-	if result != original {
-		t.Error("unexpected result:", result)
+	if !reflect.DeepEqual(original.Data, result.Data) {
+		t.Errorf("unexpected data, want=%+v | have=%+v", original.Data, result.Data)
+		return
+	}
+	if result.IsComplete != original.IsComplete {
+		t.Errorf("unexpected complete flag, want=%+v | have=%+v", original.IsComplete, result.IsComplete)
 		return
 	}
 }
@@ -71,10 +76,14 @@ func TestNewRegister_responseCombiner_fallbackIfUnknown(t *testing.T) {
 
 	original := &Response{IsComplete: true, Data: map[string]interface{}{"a": 42}}
 
-	result := rc(0, []*Response{original})
+	result := rc(1, []*Response{{Data: original.Data, IsComplete: original.IsComplete}})
 
-	if result != original {
-		t.Error("unexpected result:", result)
+	if !reflect.DeepEqual(original.Data, result.Data) {
+		t.Errorf("unexpected data, want=%+v | have=%+v", original.Data, result.Data)
+		return
+	}
+	if result.IsComplete != original.IsComplete {
+		t.Errorf("unexpected complete flag, want=%+v | have=%+v", original.IsComplete, result.IsComplete)
 		return
 	}
 }

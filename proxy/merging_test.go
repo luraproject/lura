@@ -100,11 +100,14 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 			{URLPattern: "/aaa/{{.Resp0_int}}/{{.Resp0_string}}/{{.Resp0_bool}}/{{.Resp0_float}}/{{.Resp0_struct.foo}}"},
 			{URLPattern: "/aaa/{{.Resp0_int}}/{{.Resp0_string}}/{{.Resp0_bool}}/{{.Resp0_float}}/{{.Resp0_struct.foo}}?x={{.Resp1_tupu}}"},
 			{URLPattern: "/aaa/{{.Resp0_struct.foo}}/{{.Resp0_struct.struct.foo}}/{{.Resp0_struct.struct.struct.foo}}"},
+			{URLPattern: "/zzz", Encoding: "no-op"},
+			{URLPattern: "/hit-me"},
 		},
 		Timeout: time.Duration(timeout) * time.Millisecond,
 		ExtraConfig: config.ExtraConfig{
 			Namespace: map[string]interface{}{
-				isSequentialKey: true,
+				isSequentialKey:        true,
+				sequentialPropagateKey: []interface{}{"resp0_propagated", "resp5"},
 			},
 		},
 	}
@@ -144,23 +147,26 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 					},
 				},
 			},
-			"array": []interface{}{"1", "2"},
+			"array":      []interface{}{"1", "2"},
+			"propagated": "everywhere",
 		}, IsComplete: true}),
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, r *Request) (*Response, error) {
 			checkBody(t, r)
 			checkRequestParam(t, r, "Resp0_array", "1,2")
+			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
 			return &Response{Data: map[string]interface{}{"tupu": "foo"}, IsComplete: true}, nil
 		},
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, r *Request) (*Response, error) {
 			checkBody(t, r)
 			checkRequestParam(t, r, "Resp0_int", "42")
 			checkRequestParam(t, r, "Resp0_string", "some")
 			checkRequestParam(t, r, "Resp0_float", "3.14E+00")
 			checkRequestParam(t, r, "Resp0_bool", "true")
 			checkRequestParam(t, r, "Resp0_struct.foo", "bar")
+			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
 			return &Response{Data: map[string]interface{}{"tupu": "foo"}, IsComplete: true}, nil
 		},
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, r *Request) (*Response, error) {
 			checkBody(t, r)
 			checkRequestParam(t, r, "Resp0_int", "42")
 			checkRequestParam(t, r, "Resp0_string", "some")
@@ -168,14 +174,27 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 			checkRequestParam(t, r, "Resp0_bool", "true")
 			checkRequestParam(t, r, "Resp0_struct.foo", "bar")
 			checkRequestParam(t, r, "Resp1_tupu", "foo")
+			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
 			return &Response{Data: map[string]interface{}{"aaaa": []int{1, 2, 3}}, IsComplete: true}, nil
 		},
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, r *Request) (*Response, error) {
 			checkBody(t, r)
 			checkRequestParam(t, r, "Resp0_struct.foo", "bar")
 			checkRequestParam(t, r, "Resp0_struct.struct.foo", "bar")
 			checkRequestParam(t, r, "Resp0_struct.struct.struct.foo", "bar")
+			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
 			return &Response{Data: map[string]interface{}{"bbbb": []bool{true, false}}, IsComplete: true}, nil
+		},
+		func(_ context.Context, r *Request) (*Response, error) {
+			checkBody(t, r)
+			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
+			return &Response{Data: map[string]interface{}{}, Io: io.NopCloser(strings.NewReader("hello")), IsComplete: true}, nil
+		},
+		func(_ context.Context, r *Request) (*Response, error) {
+			checkBody(t, r)
+			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
+			checkRequestParam(t, r, "Resp5", "hello")
+			return &Response{Data: map[string]interface{}{}, IsComplete: true}, nil
 		},
 	)
 	mustEnd := time.After(time.Duration(2*timeout) * time.Millisecond)
@@ -194,7 +213,7 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 	case <-mustEnd:
 		t.Errorf("We were expecting a response but we got none\n")
 	default:
-		if len(out.Data) != 9 {
+		if len(out.Data) != 10 {
 			t.Errorf("We weren't expecting a partial response but we got %v!\n", out)
 		}
 		if !out.IsComplete {
@@ -227,13 +246,13 @@ func TestNewMergeDataMiddleware_sequential_unavailableParams(t *testing.T) {
 	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	p := mw(
 		dummyProxy(&Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}),
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, r *Request) (*Response, error) {
 			if v, ok := r.Params["Resp0_supu"]; ok || v != "" {
 				t.Errorf("request with unexpected set of params")
 			}
 			return &Response{Data: map[string]interface{}{"tupu": "foo"}, IsComplete: true}, nil
 		},
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, r *Request) (*Response, error) {
 			if v, ok := r.Params["Resp0_supu"]; ok || v != "" {
 				t.Errorf("request with unexpected set of params")
 			}
@@ -287,13 +306,13 @@ func TestNewMergeDataMiddleware_sequential_erroredBackend(t *testing.T) {
 	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	p := mw(
 		dummyProxy(&Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}),
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, r *Request) (*Response, error) {
 			if r.Params["Resp0_supu"] != "42" {
 				t.Errorf("request without the expected set of params")
 			}
 			return nil, expecterErr
 		},
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, _ *Request) (*Response, error) {
 			return nil, nil
 		},
 	)
@@ -338,14 +357,14 @@ func TestNewMergeDataMiddleware_sequential_erroredFirstBackend(t *testing.T) {
 	expecterErr := errors.New("wait for me")
 	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	p := mw(
-		func(ctx context.Context, _ *Request) (*Response, error) {
+		func(_ context.Context, _ *Request) (*Response, error) {
 			return nil, expecterErr
 		},
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, _ *Request) (*Response, error) {
 			t.Error("this backend should never be called")
 			return nil, nil
 		},
-		func(ctx context.Context, r *Request) (*Response, error) {
+		func(_ context.Context, _ *Request) (*Response, error) {
 			t.Error("this backend should never be called")
 			return nil, nil
 		},
