@@ -37,7 +37,11 @@ func DefaultHTTPResponseParserFactory(cfg HTTPResponseParserConfig) HTTPResponse
 		var reader io.ReadCloser
 		switch resp.Header.Get("Content-Encoding") {
 		case "gzip":
-			reader, _ = gzip.NewReader(resp.Body)
+			gzipReader, err := gzip.NewReader(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+			reader = gzipReader
 			defer reader.Close()
 		default:
 			reader = resp.Body
