@@ -15,7 +15,7 @@ import (
 
 func TestNopHTTPResponseParser(t *testing.T) {
 	w := httptest.NewRecorder()
-	handler := func(w http.ResponseWriter, r *http.Request) {
+	handler := func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("header1", "value1")
 		w.Write([]byte("some nice, interesting and long content"))
 	}
@@ -50,7 +50,7 @@ func TestNopHTTPResponseParser(t *testing.T) {
 
 func TestDefaultHTTPResponseParser_gzipped(t *testing.T) {
 	w := httptest.NewRecorder()
-	handler := func(w http.ResponseWriter, r *http.Request) {
+	handler := func(w http.ResponseWriter, _ *http.Request) {
 		gzipWriter, _ := gzip.NewWriterLevel(w, gzip.BestSpeed)
 		defer gzipWriter.Close()
 
@@ -86,7 +86,7 @@ func TestDefaultHTTPResponseParser_gzipped(t *testing.T) {
 
 func TestDefaultHTTPResponseParser_gzipped_bad_header(t *testing.T) {
 	w := httptest.NewRecorder()
-	handler := func(w http.ResponseWriter, r *http.Request) {
+	handler := func(w http.ResponseWriter, _ *http.Request) {
 		gzipWriter, _ := gzip.NewWriterLevel(w, gzip.BestSpeed)
 		defer gzipWriter.Close()
 
@@ -123,7 +123,7 @@ func TestDefaultHTTPResponseParser_gzipped_bad_header(t *testing.T) {
 
 func TestDefaultHTTPResponseParser_plain(t *testing.T) {
 	w := httptest.NewRecorder()
-	handler := func(w http.ResponseWriter, r *http.Request) {
+	handler := func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.Write([]byte(`{"msg":"some nice, interesting and long content"}`))
 	}

@@ -31,7 +31,7 @@ type HTTPResponseParserFactory func(HTTPResponseParserConfig) HTTPResponseParser
 
 // DefaultHTTPResponseParserFactory is the default implementation of HTTPResponseParserFactory
 func DefaultHTTPResponseParserFactory(cfg HTTPResponseParserConfig) HTTPResponseParser {
-	return func(ctx context.Context, resp *http.Response) (*Response, error) {
+	return func(_ context.Context, resp *http.Response) (*Response, error) {
 		defer resp.Body.Close()
 
 		var reader io.ReadCloser
