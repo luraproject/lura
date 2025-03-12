@@ -96,7 +96,7 @@ func newMwPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[s
 			resp, err := next[0](ctx, req)
 
 			if resp == nil {
-				return resp, err
+				return nil, err
 			}
 
 			return responseWrapper{
