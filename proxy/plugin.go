@@ -24,7 +24,7 @@ func NewPluginMiddleware(logger logging.Logger, endpoint *config.EndpointConfig)
 		return emptyMiddlewareFallback(logger)
 	}
 
-	return newPluginMiddleware(logger, "ENDPOINT", endpoint.Endpoint, cfg)
+	return newModifierPluginMiddleware(logger, "ENDPOINT", endpoint.Endpoint, cfg)
 }
 
 // NewBackendPluginMiddleware returns a backend middleware wrapped (if required) with the plugin middleware.
@@ -38,11 +38,11 @@ func NewBackendPluginMiddleware(logger logging.Logger, remote *config.Backend) M
 		return emptyMiddlewareFallback(logger)
 	}
 
-	return newPluginMiddleware(logger, "BACKEND",
+	return newModifierPluginMiddleware(logger, "BACKEND",
 		fmt.Sprintf("%s %s -> %s", remote.ParentEndpointMethod, remote.ParentEndpoint, remote.URLPattern), cfg)
 }
 
-func newPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[string]interface{}) Middleware {
+func newModifierPluginMiddleware(logger logging.Logger, tag, pattern string, cfg map[string]interface{}) Middleware {
 	plugins, ok := cfg["name"].([]interface{})
 	if !ok {
 		return emptyMiddlewareFallback(logger)
