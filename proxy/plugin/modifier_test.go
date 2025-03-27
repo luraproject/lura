@@ -45,9 +45,10 @@ func ExampleLoadWithLoggerAndContext() {
 	modifier := modFactory(map[string]interface{}{})
 
 	input := requestWrapper{
-		ctx:    context.WithValue(context.Background(), "myCtxKey", "some"),
-		path:   "/bar",
-		method: "GET",
+		ctx:     context.WithValue(context.Background(), "myCtxKey", "some"),
+		path:    "/bar",
+		method:  "GET",
+		headers: map[string][]string{"X-Foo": {"bar"}},
 	}
 
 	tmp, err := modifier(input)
@@ -67,6 +68,25 @@ func ExampleLoadWithLoggerAndContext() {
 		return
 	}
 
+	modFactory, ok = GetResponseModifier("lura-request-modifier-example-response")
+	if !ok {
+		fmt.Println("modifier factory not found in the register")
+		return
+	}
+
+	modifier = modFactory(map[string]interface{}{})
+
+	response := responseWrapper{
+		ctx:     context.WithValue(context.Background(), "myCtxKey", "other"),
+		request: input,
+		data:    map[string]interface{}{"foo": "bar"},
+	}
+
+	if _, err = modifier(response); err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
 	lines := strings.Split(buf.String(), "\n")
 	for i := range lines[:len(lines)-1] {
 		fmt.Println(lines[i][21:])
@@ -79,11 +99,20 @@ func ExampleLoadWithLoggerAndContext() {
 	// DEBUG: [PLUGIN: lura-request-modifier-example] Request modifier injected
 	// DEBUG: context key: some
 	// DEBUG: params: map[]
-	// DEBUG: headers: map[]
+	// DEBUG: headers: map[X-Foo:[bar]]
 	// DEBUG: method: GET
 	// DEBUG: url: <nil>
 	// DEBUG: query: map[]
 	// DEBUG: path: /bar/fooo
+	// DEBUG: [PLUGIN: lura-request-modifier-example] Response modifier injected
+	// DEBUG: Header X-Foo value: bar
+	// DEBUG: context key: other
+	// DEBUG: data: map[foo:bar]
+	// DEBUG: is complete: false
+	// DEBUG: headers: map[]
+	// DEBUG: status code: 0
+	// DEBUG: original headers: map[X-Foo:[bar]]
+
 }
 
 func TestLoad(t *testing.T) {
@@ -152,3 +181,28 @@ func (r requestWrapper) Path() string                 { return r.path }
 func (r requestWrapper) Body() io.ReadCloser          { return r.body }
 func (r requestWrapper) Params() map[string]string    { return r.params }
 func (r requestWrapper) Headers() map[string][]string { return r.headers }
+
+type metadataWrapper struct {
+	headers    map[string][]string
+	statusCode int
+}
+
+func (m metadataWrapper) Headers() map[string][]string { return m.headers }
+func (m metadataWrapper) StatusCode() int              { return m.statusCode }
+
+type responseWrapper struct {
+	ctx        context.Context
+	request    interface{}
+	data       map[string]interface{}
+	isComplete bool
+	metadata   metadataWrapper
+	io         io.Reader
+}
+
+func (r responseWrapper) Context() context.Context     { return r.ctx }
+func (r responseWrapper) Request() interface{}         { return r.request }
+func (r responseWrapper) Data() map[string]interface{} { return r.data }
+func (r responseWrapper) IsComplete() bool             { return r.isComplete }
+func (r responseWrapper) Io() io.Reader                { return r.io }
+func (r responseWrapper) Headers() map[string][]string { return r.metadata.headers }
+func (r responseWrapper) StatusCode() int              { return r.metadata.statusCode }
