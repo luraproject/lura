@@ -147,6 +147,11 @@ func (registerer) reqsponseModifierFactory(_ map[string]interface{}) func(interf
 		logger.Debug("headers:", resp.Headers())
 		logger.Debug("status code:", resp.StatusCode())
 
+		req, ok := resp.Request().(RequestWrapper)
+		if ok {
+			logger.Debug("original headers:", req.Headers())
+		}
+
 		return resp, nil
 	}
 }
