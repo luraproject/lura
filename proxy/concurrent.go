@@ -35,7 +35,11 @@ func NewConcurrentMiddlewareWithLogger(logger logging.Logger, remote *config.Bac
 			failed := make(chan error, remote.ConcurrentCalls)
 
 			for i := 0; i < remote.ConcurrentCalls; i++ {
-				go processConcurrentCall(localCtx, next[0], request, results, failed)
+				if i < remote.ConcurrentCalls-1 {
+					go processConcurrentCall(localCtx, next[0], CloneRequest(request), results, failed)
+				} else {
+					go processConcurrentCall(localCtx, next[0], request, results, failed)
+				}
 			}
 
 			var response *Response
@@ -69,7 +73,7 @@ var errNullResult = errors.New("invalid response")
 func processConcurrentCall(ctx context.Context, next Proxy, request *Request, out chan<- *Response, failed chan<- error) {
 	localCtx, cancel := context.WithCancel(ctx)
 
-	result, err := next(localCtx, CloneRequest(request))
+	result, err := next(localCtx, request)
 	if err != nil {
 		failed <- err
 		cancel()
