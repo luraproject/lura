@@ -133,11 +133,16 @@ func (r ginRouter) registerEndpointsAndMiddlewares(cfg config.ServiceConfig) {
 }
 
 func (r ginRouter) registerKrakendEndpoints(rg *gin.RouterGroup, cfg config.ServiceConfig) {
+	proxyBuildFailedHandler := func(c *gin.Context) {
+		c.AbortWithStatus(http.StatusInternalServerError)
+	}
 	// build and register the pipes and endpoints sequentially
 	for _, c := range cfg.Endpoints {
 		proxyStack, err := r.cfg.ProxyFactory.New(c)
 		if err != nil {
 			r.cfg.Logger.Error(logPrefix, "Calling the ProxyFactory", err.Error())
+			r.registerKrakendEndpoint(rg, c.Method, c,
+				proxyBuildFailedHandler, 1)
 			continue
 		}
 		r.registerKrakendEndpoint(rg, c.Method, c, r.cfg.HandlerFactory(c, proxyStack), len(c.Backend))
