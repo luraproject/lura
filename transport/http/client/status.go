@@ -27,7 +27,7 @@ type HTTPStatusHandler func(context.Context, *http.Response) (*http.Response, er
 // at the extra config, it returns a DetailedHTTPStatusHandler. Otherwise, it returns a
 // DefaultHTTPStatusHandler
 func GetHTTPStatusHandler(remote *config.Backend) HTTPStatusHandler {
-	errPrefix := fmt.Sprintf("[Client %s %s] Status: ", remote.Method, remote.URLPattern)
+	errPrefix := fmt.Sprintf("[%s %s]:", remote.Method, remote.URLPattern)
 	if e, ok := remote.ExtraConfig[Namespace]; ok {
 		if m, ok := e.(map[string]interface{}); ok {
 			if v, ok := m["return_error_details"]; ok {
@@ -60,8 +60,7 @@ func DefaultHTTPStatusHandlerWithErrPrefix(errPrefix string) HTTPStatusHandler {
 			if resp.Request != nil && resp.Request.URL != nil {
 				p = resp.Request.URL.String()
 			}
-			return nil, fmt.Errorf("%w %s %d req: %s", ErrInvalidStatusCode, errPrefix,
-				resp.StatusCode, p)
+			return nil, fmt.Errorf("%w %d %s %s", ErrInvalidStatusCode, resp.StatusCode, errPrefix, p)
 		}
 		return resp, nil
 	}
