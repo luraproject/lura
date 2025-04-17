@@ -5,6 +5,7 @@ package client
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -124,7 +125,7 @@ func TestDefaultHTTPStatusHandler(t *testing.T) {
 			return
 		}
 
-		if err != ErrInvalidStatusCode {
+		if !errors.Is(err, ErrInvalidStatusCode) {
 			t.Errorf("#%d unexpected error: %v", code, err)
 			return
 		}
