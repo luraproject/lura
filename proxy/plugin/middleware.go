@@ -16,7 +16,7 @@ const MiddlewareNamespace = "github.com/devopsfaith/krakend/proxy/plugin/middlew
 // MiddlewareFactory is function that, given an extra_config and a middleware returns another middleware with custom logic wrapping the one passed as argument
 type MiddlewareFactory func(map[string]interface{}, func(context.Context, interface{}) (interface{}, error)) func(context.Context, interface{}) (interface{}, error)
 
-// RegisterModifier registers the injected modifier factory with the given name at the selected namespace
+// RegisterMiddleware registers the injected modifier factory with the given name at the selected namespace
 func RegisterMiddleware(
 	name string,
 	middlewareFactory func(map[string]interface{}, func(context.Context, interface{}) (interface{}, error)) func(context.Context, interface{}) (interface{}, error),

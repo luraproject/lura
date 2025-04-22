@@ -28,9 +28,11 @@ func ExampleLoadWithLoggerAndContext() {
 	}
 	total, err := LoadWithLoggerAndContext(context.Background(), "./tests", ".so", RegisterModifier, logger)
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		for _, errLine := range strings.Split(err.Error(), "\n") {
+			fmt.Println("'" + errLine + "'")
+		}
 	}
+
 	if total != 2 {
 		fmt.Printf("unexpected number of loaded plugins!. have %d, want 2\n", total)
 		return
@@ -73,6 +75,8 @@ func ExampleLoadWithLoggerAndContext() {
 	}
 
 	// output:
+	// 'plugin loader found 1 error(s): '
+	// 'plugin #1 (tests/lura-middleware-example.so): plugin: symbol ModifierRegisterer not found in plugin github.com/luraproject/lura/v2/proxy/plugin/tests/middleware'
 	// DEBUG: [PLUGIN: lura-error-example] Logger loaded
 	// DEBUG: [PLUGIN: lura-request-modifier-example] Logger loaded
 	// DEBUG: [PLUGIN: lura-request-modifier-example] Context loaded
@@ -88,10 +92,18 @@ func ExampleLoadWithLoggerAndContext() {
 
 func TestLoad(t *testing.T) {
 	total, err := LoadWithLogger("./tests", ".so", RegisterModifier, logging.NoOp)
-	if err != nil {
-		t.Error(err.Error())
-		t.Fail()
+	if err == nil {
+		t.Error("an error was expected")
+		return
 	}
+
+	expectedErrorMsg := `plugin loader found 1 error(s): 
+plugin #1 (tests/lura-middleware-example.so): plugin: symbol ModifierRegisterer not found in plugin github.com/luraproject/lura/v2/proxy/plugin/tests/middleware`
+
+	if errMsg := err.Error(); errMsg != expectedErrorMsg {
+		t.Errorf("unexpected error: '%s'", errMsg)
+	}
+
 	if total != 2 {
 		t.Errorf("unexpected number of loaded plugins!. have %d, want 2", total)
 	}
