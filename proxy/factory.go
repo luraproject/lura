@@ -69,6 +69,7 @@ func (pf defaultFactory) New(cfg *config.EndpointConfig) (p Proxy, err error) {
 	}
 
 	p = NewPluginMiddleware(pf.logger, cfg)(p)
+	p = NewMwPluginMiddleware(pf.logger, cfg)(p)
 	p = NewStaticMiddleware(pf.logger, cfg)(p)
 	return
 }
@@ -90,6 +91,7 @@ func (pf defaultFactory) newSingle(cfg *config.EndpointConfig) (Proxy, error) {
 func (pf defaultFactory) newStack(backend *config.Backend) (p Proxy) {
 	p = pf.backendFactory(backend)
 	p = NewBackendPluginMiddleware(pf.logger, backend)(p)
+	p = NewBackendMwPluginMiddleware(pf.logger, backend)(p)
 	p = NewGraphQLMiddleware(pf.logger, backend)(p)
 	p = NewFilterHeadersMiddleware(pf.logger, backend)(p)
 	p = NewFilterQueryStringsMiddleware(pf.logger, backend)(p)
