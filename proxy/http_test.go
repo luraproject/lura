@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -189,7 +190,7 @@ func TestNewHTTPProxy_badStatusCode(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Millisecond)
 	defer cancel()
 	response, err := httpProxy(&backend)(ctx, &request)
-	if err == nil || !errors.Is(err, client.ErrInvalidStatusCode) {
+	if err == nil || !strings.HasPrefix(err.Error(), "invalid status code") {
 		t.Errorf("The proxy didn't propagate the backend error: %s\n", err)
 	}
 	if response != nil {

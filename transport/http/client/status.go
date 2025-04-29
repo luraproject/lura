@@ -20,6 +20,29 @@ const Namespace = "github.com/devopsfaith/krakend/http"
 // is not a 200 nor a 201
 var ErrInvalidStatusCode = errors.New("invalid status code")
 
+type ErrInvalidStatus struct {
+	statusCode int
+	errPrefix  string
+	path       string
+}
+
+func (e *ErrInvalidStatus) Error() string {
+	return fmt.Sprintf("invalid status code %d %s %s", e.statusCode, e.errPrefix, e.path)
+}
+
+func NewErrInvalidStatusCode(resp *http.Response, errPrefix string) *ErrInvalidStatus {
+	var p string
+	if resp.Request != nil && resp.Request.URL != nil {
+		p = resp.Request.URL.String()
+	}
+
+	return &ErrInvalidStatus{
+		statusCode: resp.StatusCode,
+		errPrefix:  errPrefix,
+		path:       p,
+	}
+}
+
 // HTTPStatusHandler defines how we tread the http response code
 type HTTPStatusHandler func(context.Context, *http.Response) (*http.Response, error)
 
@@ -56,11 +79,7 @@ func DefaultHTTPStatusHandler(_ context.Context, resp *http.Response) (*http.Res
 func DefaultHTTPStatusHandlerWithErrPrefix(errPrefix string) HTTPStatusHandler {
 	return func(_ context.Context, resp *http.Response) (*http.Response, error) {
 		if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-			var p string
-			if resp.Request != nil && resp.Request.URL != nil {
-				p = resp.Request.URL.String()
-			}
-			return nil, fmt.Errorf("%w %d %s %s", ErrInvalidStatusCode, resp.StatusCode, errPrefix, p)
+			return nil, NewErrInvalidStatusCode(resp, errPrefix)
 		}
 		return resp, nil
 	}

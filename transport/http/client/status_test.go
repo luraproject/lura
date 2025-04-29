@@ -5,10 +5,10 @@ package client
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/luraproject/lura/v2/config"
@@ -125,7 +125,7 @@ func TestDefaultHTTPStatusHandler(t *testing.T) {
 			return
 		}
 
-		if !errors.Is(err, ErrInvalidStatusCode) {
+		if !strings.HasPrefix(err.Error(), "invalid status code") {
 			t.Errorf("#%d unexpected error: %v", code, err)
 			return
 		}
