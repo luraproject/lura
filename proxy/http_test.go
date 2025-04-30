@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -97,7 +98,7 @@ func TestNewHTTPProxy_ok(t *testing.T) {
 
 func TestNewHTTPProxy_cancel(t *testing.T) {
 	expectedMethod := "GET"
-	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	backendServer := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
 		time.Sleep(time.Duration(300) * time.Millisecond)
 	}))
 	defer backendServer.Close()
@@ -134,7 +135,7 @@ func TestNewHTTPProxy_cancel(t *testing.T) {
 
 func TestNewHTTPProxy_badResponseBody(t *testing.T) {
 	expectedMethod := "GET"
-	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		fmt.Fprintf(w, "supu")
 	}))
 	defer backendServer.Close()
@@ -189,7 +190,7 @@ func TestNewHTTPProxy_badStatusCode(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Millisecond)
 	defer cancel()
 	response, err := httpProxy(&backend)(ctx, &request)
-	if err == nil || err != client.ErrInvalidStatusCode {
+	if err == nil || !strings.HasPrefix(err.Error(), "invalid status code") {
 		t.Errorf("The proxy didn't propagate the backend error: %s\n", err)
 	}
 	if response != nil {
@@ -204,7 +205,7 @@ func TestNewHTTPProxy_badStatusCode(t *testing.T) {
 
 func TestNewHTTPProxy_badStatusCode_detailed(t *testing.T) {
 	expectedMethod := "GET"
-	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, "booom", 500)
 	}))
 	defer backendServer.Close()
@@ -252,7 +253,7 @@ func TestNewHTTPProxy_badStatusCode_detailed(t *testing.T) {
 
 func TestNewHTTPProxy_decodingError(t *testing.T) {
 	expectedMethod := "GET"
-	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		fmt.Fprintf(w, `{"supu": 42}`)
 	}))
 	defer backendServer.Close()
@@ -288,7 +289,7 @@ func TestNewHTTPProxy_decodingError(t *testing.T) {
 }
 
 func TestNewHTTPProxy_badMethod(t *testing.T) {
-	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	backendServer := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
 		t.Error("The handler shouldn't be called")
 	}))
 	defer backendServer.Close()
@@ -327,7 +328,7 @@ func TestNewHTTPProxy_badMethod(t *testing.T) {
 }
 
 func TestNewHTTPProxy_requestKo(t *testing.T) {
-	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	backendServer := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
 		t.Error("The handler shouldn't be called")
 	}))
 	defer backendServer.Close()
@@ -373,15 +374,15 @@ func TestNewRequestBuilderMiddleware_ok(t *testing.T) {
 	expected := errors.New("error to be propagated")
 	expectedMethod := "GET"
 	expectedPath := "/supu"
-	assertion := func(ctx context.Context, request *Request) (*Response, error) {
+	assertion := func(_ context.Context, request *Request) (*Response, error) {
 		if request.Method != expectedMethod {
 			err := fmt.Errorf("Wrong request method. Want: %s. Have: %s", expectedMethod, request.Method)
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 			return nil, err
 		}
 		if request.Path != expectedPath {
 			err := fmt.Errorf("Wrong request path. Want: %s. Have: %s", expectedPath, request.Path)
-			t.Errorf(err.Error())
+			t.Error(err.Error())
 			return nil, err
 		}
 		return nil, expected
@@ -427,7 +428,7 @@ func TestDefaultHTTPResponseParserConfig_nopEntityFormatter(t *testing.T) {
 
 func TestNewHTTPProxy_noopDecoder(t *testing.T) {
 	expectedcontent := "some nice, interesting and long content"
-	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("header1", "value1")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(expectedcontent))

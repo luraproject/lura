@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -19,6 +20,29 @@ const Namespace = "github.com/devopsfaith/krakend/http"
 // is not a 200 nor a 201
 var ErrInvalidStatusCode = errors.New("invalid status code")
 
+type ErrInvalidStatus struct {
+	statusCode int
+	errPrefix  string
+	path       string
+}
+
+func (e *ErrInvalidStatus) Error() string {
+	return fmt.Sprintf("invalid status code %d %s %s", e.statusCode, e.errPrefix, e.path)
+}
+
+func NewErrInvalidStatusCode(resp *http.Response, errPrefix string) *ErrInvalidStatus {
+	var p string
+	if resp.Request != nil && resp.Request.URL != nil {
+		p = resp.Request.URL.String()
+	}
+
+	return &ErrInvalidStatus{
+		statusCode: resp.StatusCode,
+		errPrefix:  errPrefix,
+		path:       p,
+	}
+}
+
 // HTTPStatusHandler defines how we tread the http response code
 type HTTPStatusHandler func(context.Context, *http.Response) (*http.Response, error)
 
@@ -26,18 +50,19 @@ type HTTPStatusHandler func(context.Context, *http.Response) (*http.Response, er
 // at the extra config, it returns a DetailedHTTPStatusHandler. Otherwise, it returns a
 // DefaultHTTPStatusHandler
 func GetHTTPStatusHandler(remote *config.Backend) HTTPStatusHandler {
+	errPrefix := fmt.Sprintf("[%s %s]:", remote.Method, remote.URLPattern)
 	if e, ok := remote.ExtraConfig[Namespace]; ok {
 		if m, ok := e.(map[string]interface{}); ok {
 			if v, ok := m["return_error_details"]; ok {
 				if b, ok := v.(string); ok && b != "" {
-					return DetailedHTTPStatusHandler(b)
+					return DetailedHTTPStatusHandlerWithErrPrefix(b, errPrefix)
 				}
 			} else if v, ok := m["return_error_code"].(bool); ok && v {
-				return ErrorHTTPStatusHandler
+				return ErrorHTTPStatusHandlerWithErrPrefix(errPrefix)
 			}
 		}
 	}
-	return DefaultHTTPStatusHandler
+	return DefaultHTTPStatusHandlerWithErrPrefix(errPrefix)
 }
 
 // DefaultHTTPStatusHandler is the default implementation of HTTPStatusHandler
@@ -49,12 +74,34 @@ func DefaultHTTPStatusHandler(_ context.Context, resp *http.Response) (*http.Res
 	return resp, nil
 }
 
+// DefaultHTTPStatusHandlerWithErrPrefix is the default implementation of HTTPStatusHandler
+// with information about the failing status code, and the failed request
+func DefaultHTTPStatusHandlerWithErrPrefix(errPrefix string) HTTPStatusHandler {
+	return func(_ context.Context, resp *http.Response) (*http.Response, error) {
+		if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+			return nil, NewErrInvalidStatusCode(resp, errPrefix)
+		}
+		return resp, nil
+	}
+}
+
 // ErrorHTTPStatusHandler is a HTTPStatusHandler that returns the status code as part of the error details
 func ErrorHTTPStatusHandler(ctx context.Context, resp *http.Response) (*http.Response, error) {
 	if _, err := DefaultHTTPStatusHandler(ctx, resp); err == nil {
 		return resp, nil
 	}
 	return resp, newHTTPResponseError(resp)
+}
+
+// ErrorHTTPStatusHandlerWithErrPrefix is a HTTPStatusHandler that returns the status code as part of the error details
+func ErrorHTTPStatusHandlerWithErrPrefix(errPrefix string) HTTPStatusHandler {
+	defaultH := DefaultHTTPStatusHandlerWithErrPrefix(errPrefix)
+	return func(ctx context.Context, resp *http.Response) (*http.Response, error) {
+		if _, err := defaultH(ctx, resp); err == nil {
+			return resp, nil
+		}
+		return resp, newHTTPResponseError(resp)
+	}
 }
 
 // NoOpHTTPStatusHandler is a NO-OP implementation of HTTPStatusHandler
@@ -66,6 +113,23 @@ func NoOpHTTPStatusHandler(_ context.Context, resp *http.Response) (*http.Respon
 func DetailedHTTPStatusHandler(name string) HTTPStatusHandler {
 	return func(ctx context.Context, resp *http.Response) (*http.Response, error) {
 		if _, err := DefaultHTTPStatusHandler(ctx, resp); err == nil {
+			return resp, nil
+		}
+
+		return resp, NamedHTTPResponseError{
+			HTTPResponseError: newHTTPResponseError(resp),
+			name:              name,
+		}
+	}
+}
+
+// DetailedHTTPStatusHandlerWithErrPrefix is a HTTPStatusHandlers that
+// can receive an error prefix to be added when an error happens to help
+// identify the endpoint using this handler.
+func DetailedHTTPStatusHandlerWithErrPrefix(name, errPrefix string) HTTPStatusHandler {
+	defaultH := DefaultHTTPStatusHandlerWithErrPrefix(errPrefix)
+	return func(ctx context.Context, resp *http.Response) (*http.Response, error) {
+		if _, err := defaultH(ctx, resp); err == nil {
 			return resp, nil
 		}
 
