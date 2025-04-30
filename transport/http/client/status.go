@@ -93,7 +93,7 @@ func ErrorHTTPStatusHandler(ctx context.Context, resp *http.Response) (*http.Res
 	return resp, newHTTPResponseError(resp)
 }
 
-// ErrorHTTPStatusHandler is a HTTPStatusHandler that returns the status code as part of the error details
+// ErrorHTTPStatusHandlerWithErrPrefix is a HTTPStatusHandler that returns the status code as part of the error details
 func ErrorHTTPStatusHandlerWithErrPrefix(errPrefix string) HTTPStatusHandler {
 	defaultH := DefaultHTTPStatusHandlerWithErrPrefix(errPrefix)
 	return func(ctx context.Context, resp *http.Response) (*http.Response, error) {
@@ -123,6 +123,9 @@ func DetailedHTTPStatusHandler(name string) HTTPStatusHandler {
 	}
 }
 
+// DetailedHTTPStatusHandlerWithErrPrefix is a HTTPStatusHandlers that
+// can receive an error prefix to be added when an error happens to help
+// identify the endpoint using this handler.
 func DetailedHTTPStatusHandlerWithErrPrefix(name, errPrefix string) HTTPStatusHandler {
 	defaultH := DefaultHTTPStatusHandlerWithErrPrefix(errPrefix)
 	return func(ctx context.Context, resp *http.Response) (*http.Response, error) {
