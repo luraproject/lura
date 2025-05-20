@@ -34,7 +34,7 @@ var ErrorResponseWriter = func(c *gin.Context, err error) {
 var EndpointHandler = CustomErrorEndpointHandler(logging.NoOp, server.DefaultToHTTPError)
 
 // CustomErrorEndpointHandler returns a HandlerFactory using the injected ToHTTPError function and logger
-func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) HandlerFactory {
+func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) HandlerFactory { // skipcq: GO-R1005
 	return func(configuration *config.EndpointConfig, prxy proxy.Proxy) gin.HandlerFunc {
 		cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
 		isCacheEnabled := configuration.CacheTTL.Seconds() != 0
