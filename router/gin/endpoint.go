@@ -34,7 +34,7 @@ var ErrorResponseWriter = func(c *gin.Context, err error) {
 var EndpointHandler = CustomErrorEndpointHandler(logging.NoOp, server.DefaultToHTTPError)
 
 // CustomErrorEndpointHandler returns a HandlerFactory using the injected ToHTTPError function and logger
-func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) HandlerFactory {
+func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) HandlerFactory { // skipcq: GO-R1005
 	return func(configuration *config.EndpointConfig, prxy proxy.Proxy) gin.HandlerFunc {
 		cacheControlHeaderValue := fmt.Sprintf("public, max-age=%d", int(configuration.CacheTTL.Seconds()))
 		isCacheEnabled := configuration.CacheTTL.Seconds() != 0
@@ -92,11 +92,19 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 				}
 
 				if response == nil {
+					if t, ok := err.(headerResponseError); ok {
+						for k, vs := range t.Headers() {
+							for _, v := range vs {
+								c.Writer.Header().Add(k, v)
+							}
+						}
+					}
 					if t, ok := err.(responseError); ok {
 						c.Status(t.StatusCode())
 					} else {
 						c.Status(errF(err))
 					}
+
 					if returnErrorMsg {
 						ErrorResponseWriter(c, err)
 					}
@@ -180,6 +188,11 @@ type encodedResponseError interface {
 type responseError interface {
 	error
 	StatusCode() int
+}
+
+type headerResponseError interface {
+	responseError
+	Headers() map[string][]string
 }
 
 type multiError interface {

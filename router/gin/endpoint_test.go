@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -162,6 +163,30 @@ func TestEndpointHandler_errored_responseError(t *testing.T) {
 	returnErrorMsg = false
 }
 
+func TestEndpointHandler_errored_withHeaders(t *testing.T) {
+	expectedBody := "this is a dummy error"
+	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
+		return nil, dummyHeadersResponseError{
+			dummyResponseError: dummyResponseError{err: expectedBody, status: http.StatusTeapot},
+			headers: map[string][]string{
+				"X-Header": {"header1", "header2"},
+			},
+		}
+	}
+	endpointHandlerTestCase{
+		timeout:            10,
+		proxy:              p,
+		method:             "GET",
+		expectedBody:       "",
+		expectedCache:      "",
+		expectedContent:    "",
+		expectedHeaders:    map[string][]string{"X-Header": {"header1", "header2"}},
+		expectedStatusCode: http.StatusTeapot,
+		completed:          false,
+	}.test(t)
+	time.Sleep(5 * time.Millisecond)
+}
+
 func TestEndpointHandler_errored_encodedResponseError(t *testing.T) {
 	expectedBody := `{ "message": "this is a dummy error" }`
 	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
@@ -202,6 +227,15 @@ type dummyEncodedResponseError struct {
 
 func (d dummyEncodedResponseError) Encoding() string {
 	return d.encoding
+}
+
+type dummyHeadersResponseError struct {
+	dummyResponseError
+	headers map[string][]string
+}
+
+func (d dummyHeadersResponseError) Headers() map[string][]string {
+	return d.headers
 }
 
 func TestEndpointHandler_incompleteAndErrored(t *testing.T) {
@@ -385,8 +419,9 @@ func (tc endpointHandlerTestCase) test(t *testing.T) {
 		t.Error("Unexpected body:", content, "expected:", tc.expectedBody)
 	}
 	for k, v := range tc.expectedHeaders {
-		if header := resp.Header.Get(k); v[0] != header {
-			t.Error("Unexpected value for header:", k, header, "expected:", v[0])
+		h := resp.Header.Values(k)
+		if !reflect.DeepEqual(h, v) {
+			t.Error("Unexpected value for header:", k, h, "expected:", v)
 		}
 	}
 }
