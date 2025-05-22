@@ -92,17 +92,17 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 				}
 
 				if response == nil {
-					if t, ok := err.(responseError); ok {
-						c.Status(t.StatusCode())
-					} else {
-						c.Status(errF(err))
-					}
 					if t, ok := err.(headerResponseError); ok {
 						for k, vs := range t.Headers() {
 							for _, v := range vs {
 								c.Writer.Header().Add(k, v)
 							}
 						}
+					}
+					if t, ok := err.(responseError); ok {
+						c.Status(t.StatusCode())
+					} else {
+						c.Status(errF(err))
 					}
 
 					if returnErrorMsg {
