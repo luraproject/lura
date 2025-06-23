@@ -103,7 +103,7 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 	r.registerEndpointsAndMiddlewares(cfg)
 
 	r.cfg.Logger.Info("[SERVICE: Gin] Listening on port:", cfg.Port)
-	if err := r.runServerF(r.ctx, cfg, r.cfg.Engine.Handler()); err != nil && err != http.ErrServerClosed {
+	if err := r.runServerF(r.ctx, cfg, &safeCaster{h: r.cfg.Engine.Handler()}); err != nil && err != http.ErrServerClosed {
 		r.cfg.Logger.Error(logPrefix, err.Error())
 	}
 
