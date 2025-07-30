@@ -552,7 +552,7 @@ func h2cClient() *http.Client {
 
 // newPort returns random port numbers to avoid port collisions during the tests
 func newPort() int {
-	return 16666 + rand.Intn(40000)
+	return 16666 + rand.Intn(40000) // skipcq: GSC-G404
 }
 
 func TestRunServer_MultipleTLS(t *testing.T) {

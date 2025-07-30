@@ -116,7 +116,7 @@ func RunServerWithLoggerFactory(l logging.Logger) func(context.Context, config.S
 				done <- s.ListenAndServe()
 			}()
 		} else {
-			if len(cfg.TLS.PublicKey) > 0 || len(cfg.TLS.PrivateKey) > 0 {
+			if cfg.TLS.PublicKey != "" || cfg.TLS.PrivateKey != "" {
 				cfg.TLS.Keys = append(cfg.TLS.Keys, config.TLSKeyPair{
 					PublicKey:  cfg.TLS.PublicKey,
 					PrivateKey: cfg.TLS.PrivateKey,
