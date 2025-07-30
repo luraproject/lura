@@ -206,12 +206,14 @@ func ParseTLSConfigWithLogger(cfg *config.TLS, logger logging.Logger) *tls.Confi
 
 	certPool := loadCertPool(cfg.DisableSystemCaPool, cfg.CaCerts, logger)
 
-	caCert, err := os.ReadFile(cfg.PublicKey)
-	if err != nil {
-		logger.Error(fmt.Sprintf("%s Cannot load public key %s: %s", loggerPrefix, cfg.PublicKey, err.Error()))
-		return tlsConfig
+	for _, cert := range cfg.Keys {
+		caCert, err := os.ReadFile(cert.PublicKey)
+		if err != nil {
+			logger.Error(fmt.Sprintf("%s Cannot load public key %s: %s", loggerPrefix, cert.PublicKey, err.Error()))
+			continue
+		}
+		certPool.AppendCertsFromPEM(caCert)
 	}
-	certPool.AppendCertsFromPEM(caCert)
 
 	tlsConfig.ClientCAs = certPool
 	tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
