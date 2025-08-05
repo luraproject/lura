@@ -10,7 +10,7 @@ import (
 	"github.com/luraproject/lura/v2/logging"
 )
 
-// NewFilterQueryStringsMiddleware returns a middleware with or without a header filtering
+// NewFilterQueryStringsMiddleware returns a middleware with or without a query string filtering
 // proxy wrapping the next element (depending on the configuration).
 func NewFilterQueryStringsMiddleware(logger logging.Logger, remote *config.Backend) Middleware {
 	if len(remote.QueryStringsToPass) == 0 {
@@ -50,9 +50,11 @@ func NewFilterQueryStringsMiddleware(logger logging.Logger, remote *config.Backe
 					newQueryStrings[v] = values
 				}
 			}
+			newURL := request.URL
+			newURL.RawQuery = newQueryStrings.Encode()
 			return nextProxy(ctx, &Request{
 				Method:  request.Method,
-				URL:     request.URL,
+				URL:     newURL,
 				Query:   newQueryStrings,
 				Path:    request.Path,
 				Body:    request.Body,
