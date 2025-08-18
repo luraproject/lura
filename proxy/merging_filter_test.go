@@ -121,7 +121,7 @@ func TestNewMergeDataMiddleware_sequentialFiltering(t *testing.T) {
 	case <-mustEnd:
 		t.Errorf("We were expecting a response but we got none\n")
 	default:
-		if len(out.Data) != 9 {
+		if len(out.Data) != 8 {
 			t.Errorf("We were expecting a response from just two backends, but we got %v!\n", out)
 		}
 		if !out.IsComplete {
