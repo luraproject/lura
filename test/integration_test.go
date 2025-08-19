@@ -38,7 +38,7 @@ import (
 var localhostIP string
 
 func init() {
-	ln, err := net.Listen("tcp", "localhost:8080")
+	ln, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		return
 	}
