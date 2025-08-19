@@ -10,7 +10,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/luraproject/lura/v2/config"
@@ -74,8 +73,15 @@ func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.Endpoi
 	return p
 }
 
+// BackendFiltererFactory is a factory function that returns a list of BackendFilterer
+// based on the provided EndpointConfig.
+// The returned list must be sorted by the backend index.
+// The list can contain nil values, which means that the backend in that index is untouched.
 type BackendFiltererFactory func(*config.EndpointConfig) ([]BackendFilterer, error)
 
+// BackendFilterer evalutes the request and returns true if the backend should be used,
+// otherwise the backend is skipped in both normal and sequential merging.
+// If the backend is skipped, the response will not be merged into the final response.
 type BackendFilterer func(*Request) bool
 
 func defaultBackendFiltererFactory(_ *config.EndpointConfig) ([]BackendFilterer, error) {
@@ -84,18 +90,19 @@ func defaultBackendFiltererFactory(_ *config.EndpointConfig) ([]BackendFilterer,
 
 type backendFiltererRegistry struct {
 	filtererFactory BackendFiltererFactory
-	once            *sync.Once
 }
 
 var backendFiltererFactory = backendFiltererRegistry{
 	filtererFactory: defaultBackendFiltererFactory,
-	once:            new(sync.Once),
 }
 
+// RegisterBackendFiltererFactory registers a new backend filterer factory
+// to be used by the merging middleware.
+// This factory is used to create a list of BackendFilterer
+// functions that will be used to filter backends based on the request.
+// Important: this function should be called everytime the middleware is created.
 func RegisterBackendFiltererFactory(f BackendFiltererFactory) {
-	backendFiltererFactory.once.Do(func() {
-		backendFiltererFactory.filtererFactory = f
-	})
+	backendFiltererFactory.filtererFactory = f
 }
 
 type sequentialBackendReplacement struct {

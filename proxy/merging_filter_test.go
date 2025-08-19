@@ -86,23 +86,7 @@ func TestNewMergeDataMiddleware_sequentialFiltering(t *testing.T) {
 
 	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	p := mw(
-		dummyProxy(&Response{Data: map[string]interface{}{
-			"int":    42,
-			"string": "some",
-			"bool":   true,
-			"float":  3.14,
-			"struct": map[string]interface{}{
-				"foo": "bar",
-				"struct": map[string]interface{}{
-					"foo": "bar",
-					"struct": map[string]interface{}{
-						"foo": "bar",
-					},
-				},
-			},
-			"array":      []interface{}{"1", "2"},
-			"propagated": "everywhere",
-		}, IsComplete: true}),
+		dummyProxy(&Response{Data: map[string]interface{}{"string": "some"}, IsComplete: true}),
 		dummyProxy(&Response{Data: map[string]interface{}{"tupu": "foo"}, IsComplete: true}),
 		dummyProxy(&Response{Data: map[string]interface{}{"final": "meh"}, IsComplete: true}),
 	)
@@ -121,7 +105,7 @@ func TestNewMergeDataMiddleware_sequentialFiltering(t *testing.T) {
 	case <-mustEnd:
 		t.Errorf("We were expecting a response but we got none\n")
 	default:
-		if len(out.Data) != 8 {
+		if len(out.Data) != 2 {
 			t.Errorf("We were expecting a response from just two backends, but we got %v!\n", out)
 		}
 		if !out.IsComplete {
