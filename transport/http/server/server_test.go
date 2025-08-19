@@ -107,6 +107,89 @@ func TestRunServer_MTLS(t *testing.T) {
 	cfg := config.ServiceConfig{
 		Port: port,
 		TLS: &config.TLS{
+			Keys: []config.TLSKeyPair{
+				{
+					PublicKey:  "cert.pem",
+					PrivateKey: "key.pem",
+				},
+			},
+			CaCerts:    []string{"ca.pem"},
+			EnableMTLS: true,
+		},
+		ClientTLS: &config.ClientTLS{
+			AllowInsecureConnections: false, // we do not check the server cert
+			CaCerts:                  []string{"ca.pem"},
+			ClientCerts: []config.ClientTLSCert{
+				{
+					Certificate: "cert.pem",
+					PrivateKey:  "key.pem",
+				},
+			},
+		},
+	}
+	go func() {
+		done <- RunServer(ctx, cfg, http.HandlerFunc(dummyHandler))
+	}()
+
+	client, err := mtlsClient("cert.pem", "key.pem")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	<-time.After(1000 * time.Millisecond)
+
+	resp, err := client.Get(fmt.Sprintf("https://localhost:%d", port))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if resp.StatusCode != 200 {
+		t.Errorf("unexpected status code: %d", resp.StatusCode)
+		return
+	}
+
+	logger := logging.NoOp
+	// since test are run in a suite, and `InitHTTPDefaultTransportWithLogger` is
+	// used to setup the `http.DefaultTransport` global variable once, we need to
+	// create a client here like if it was using the default created with the
+	// clientTLS config.
+	// This is a copy of the code we can find inside
+	// InitHTTPDefaultTransportWithLogger(serviceConfig, nil):
+	transport := NewTransport(cfg, logger)
+
+	defClient := http.Client{
+		Transport: transport,
+	}
+	resp, err = defClient.Get(fmt.Sprintf("https://localhost:%d", port))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if resp.StatusCode != 200 {
+		t.Errorf("unexpected status code: %d", resp.StatusCode)
+		return
+	}
+
+	cancel()
+
+	if err = <-done; err != nil {
+		t.Error(err)
+	}
+}
+
+func TestRunServer_MTLSOldConfigFormat(t *testing.T) {
+	testKeysAreAvailable(t)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	port := 36517
+	done := make(chan error)
+
+	cfg := config.ServiceConfig{
+		Port: port,
+		TLS: &config.TLS{
 			PublicKey:  "cert.pem",
 			PrivateKey: "key.pem",
 			CaCerts:    []string{"ca.pem"},
@@ -469,7 +552,7 @@ func h2cClient() *http.Client {
 
 // newPort returns random port numbers to avoid port collisions during the tests
 func newPort() int {
-	return 16666 + rand.Intn(40000)
+	return 16666 + rand.Intn(40000) // skipcq: GSC-G404
 }
 
 func TestRunServer_MultipleTLS(t *testing.T) {
