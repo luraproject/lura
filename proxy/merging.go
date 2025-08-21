@@ -42,7 +42,7 @@ func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.Endpoi
 
 	bfFactory := backendFiltererFactory.filtererFactory
 
-	p := func(next ...Proxy) Proxy {
+	return func(next ...Proxy) Proxy {
 		if len(next) != totalBackends {
 			// we leave the panic here, because we do not want to continue
 			// if this configuration is wrong, as it would lead to unexpected
@@ -67,10 +67,6 @@ func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.Endpoi
 
 		return sequentialMerge(reqClone, serviceTimeout, combiner, sequentialReplacements, filters, next...)
 	}
-
-	// Resetting the filterer factory to default after the middleware is created
-	backendFiltererFactory.filtererFactory = defaultBackendFiltererFactory
-	return p
 }
 
 // BackendFiltererFactory is a factory function that returns a list of BackendFilterer
@@ -103,6 +99,10 @@ var backendFiltererFactory = backendFiltererRegistry{
 // Important: this function should be called everytime the middleware is created.
 func RegisterBackendFiltererFactory(f BackendFiltererFactory) {
 	backendFiltererFactory.filtererFactory = f
+}
+
+func ResetBackendFiltererFactory() {
+	backendFiltererFactory.filtererFactory = defaultBackendFiltererFactory
 }
 
 type sequentialBackendReplacement struct {
