@@ -112,7 +112,7 @@ type sequentialBackendReplacement struct {
 	fullResponse bool
 }
 
-func sequentialMergerConfig(cfg *config.EndpointConfig) (bool, [][]sequentialBackendReplacement) {
+func sequentialMergerConfig(cfg *config.EndpointConfig) (bool, [][]sequentialBackendReplacement) { // skipcq: GO-R1005
 	enabled := false
 	totalBackends := len(cfg.Backend)
 	sequentialReplacements := make([][]sequentialBackendReplacement, totalBackends)
@@ -237,14 +237,14 @@ func parallelMerge(
 	}
 }
 
-func sequentialMerge(
+func sequentialMerge( // skipcq: GO-R1005
 	reqCloner func(*Request) *Request,
 	timeout time.Duration,
 	rc ResponseCombiner,
 	sequentialReplacements [][]sequentialBackendReplacement,
 	filters []BackendFilterer,
 	next ...Proxy,
-) Proxy { // skipcq: GO-R1005
+) Proxy {
 	return func(ctx context.Context, request *Request) (*Response, error) {
 		localCtx, cancel := context.WithTimeout(ctx, timeout)
 

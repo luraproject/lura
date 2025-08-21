@@ -785,7 +785,7 @@ func testNewMergeDataMiddleware_sequentialFiltering(t *testing.T) {
 			func(_ *Request) bool {
 				return true
 			},
-			func(r *Request) bool {
+			func(_ *Request) bool {
 				return false
 			},
 			func(_ *Request) bool {
