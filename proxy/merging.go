@@ -54,7 +54,8 @@ func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.Endpoi
 
 		filters, err := bfFactory(endpointConfig)
 		if err != nil {
-			logger.Error(fmt.Sprintf("[ENDPOINT: %s][Merge] Error creating backend filterers: %s", endpointConfig.Endpoint, err))
+			logger.Error(fmt.Sprintf("[ENDPOINT: %s]%s", endpointConfig.Endpoint, err))
+			return func(_ context.Context, _ *Request) (*Response, error) { return nil, err }
 		}
 
 		if hasUnsafeBackends(endpointConfig) {
@@ -257,12 +258,6 @@ func sequentialMerge( // skipcq: GO-R1005
 		acc := newIncrementalMergeAccumulator(len(next), rc)
 	TxLoop:
 		for i, n := range next {
-			if (i < filterCount) && (filters[i] != nil) && !filters[i](request) {
-				parts[i] = &Response{IsComplete: true, Data: make(map[string]interface{})}
-				acc.pending--
-				continue
-			}
-
 			if i > 0 {
 				for _, r := range sequentialReplacements[i] {
 					if r.backendIndex >= i || parts[r.backendIndex] == nil {
@@ -338,6 +333,12 @@ func sequentialMerge( // skipcq: GO-R1005
 					request.Params[r.destination] = param
 					sequentialMergeRegistry[r.destination] = param
 				}
+			}
+
+			if (i < filterCount) && (filters[i] != nil) && !filters[i](request) {
+				parts[i] = &Response{IsComplete: true, Data: make(map[string]interface{})}
+				acc.pending--
+				continue
 			}
 
 			sequentialRequestPart(localCtx, n, reqCloner(request), out, errCh)
