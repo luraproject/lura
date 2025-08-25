@@ -727,7 +727,7 @@ func testNewMergeDataMiddleware_simpleFiltering(t *testing.T) {
 		Timeout: time.Duration(timeout) * time.Millisecond,
 	}
 
-	RegisterBackendFiltererFactory(func(_ *config.EndpointConfig) ([]BackendFilterer, error) {
+	RegisterBackendFiltererFactory("", func(_ *config.EndpointConfig) ([]BackendFilterer, error) {
 		return []BackendFilterer{
 			func(_ *Request) bool {
 				return true
@@ -780,7 +780,7 @@ func testNewMergeDataMiddleware_sequentialFiltering(t *testing.T) {
 		},
 	}
 
-	RegisterBackendFiltererFactory(func(_ *config.EndpointConfig) ([]BackendFilterer, error) {
+	RegisterBackendFiltererFactory("", func(_ *config.EndpointConfig) ([]BackendFilterer, error) {
 		return []BackendFilterer{
 			func(_ *Request) bool {
 				return true

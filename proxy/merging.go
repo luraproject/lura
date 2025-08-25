@@ -54,7 +54,7 @@ func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.Endpoi
 
 		filters, err := bfFactory(endpointConfig)
 		if err != nil {
-			logger.Error(fmt.Sprintf("[ENDPOINT: %s]%s", endpointConfig.Endpoint, err))
+			logger.Error(fmt.Sprintf("[ENDPOINT: %s]%s %s", endpointConfig.Endpoint, backendFiltererFactory.logPrefix, err))
 			return func(_ context.Context, _ *Request) (*Response, error) { return nil, err }
 		}
 
@@ -86,6 +86,7 @@ func defaultBackendFiltererFactory(_ *config.EndpointConfig) ([]BackendFilterer,
 }
 
 type backendFiltererRegistry struct {
+	logPrefix       string
 	filtererFactory BackendFiltererFactory
 }
 
@@ -98,11 +99,13 @@ var backendFiltererFactory = backendFiltererRegistry{
 // This factory is used to create a list of BackendFilterer
 // functions that will be used to filter backends based on the request.
 // Important: this function should be called everytime the middleware is created.
-func RegisterBackendFiltererFactory(f BackendFiltererFactory) {
+func RegisterBackendFiltererFactory(logPrefix string, f BackendFiltererFactory) {
+	backendFiltererFactory.logPrefix = logPrefix
 	backendFiltererFactory.filtererFactory = f
 }
 
 func ResetBackendFiltererFactory() {
+	backendFiltererFactory.logPrefix = ""
 	backendFiltererFactory.filtererFactory = defaultBackendFiltererFactory
 }
 
