@@ -8,13 +8,13 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/gorilla/mux v1.8.1
-	github.com/krakendio/flatmap v1.1.1
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/urfave/negroni/v2 v2.0.2
 	github.com/valyala/fastrand v1.1.0
 )
 
 require (
+	github.com/krakend/flatmap v1.2.0
 	golang.org/x/net v0.33.0
 	golang.org/x/sync v0.10.0
 	golang.org/x/text v0.21.0
