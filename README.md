@@ -49,11 +49,11 @@ The source code for the [Lura project](https://luraproject.org) framework. It is
 
 Use this repository if you want to **build from source your API Gateway** or if you want to **reuse the components in another application**.
 
-If you need a fully functional API Gateway you can [download the KrakenD binary for your architecture](http://www.krakend.io/download) or [build it yourself](https://github.com/krakendio/krakend-ce).
+If you need a fully functional API Gateway you can [download the KrakenD binary for your architecture](http://www.krakend.io/download) or [build it yourself](https://github.com/krakend/krakend-ce).
 
 
 ## Library Usage
-The Lura project is presented as a **Go library** that you can include in your own Go application to build a powerful proxy or API gateway. For a complete example, check the [KrakenD CE repository](https://github.com/krakendio/krakend-ce).
+The Lura project is presented as a **Go library** that you can include in your own Go application to build a powerful proxy or API gateway. For a complete example, check the [KrakenD CE repository](https://github.com/krakend/krakend-ce).
 
 Of course, you will need [Go installed](https://golang.org/doc/install) in your system to compile the code.
 
