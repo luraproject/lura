@@ -13,6 +13,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -486,5 +487,71 @@ func TestNewHTTPProxy_noopDecoder(t *testing.T) {
 	}
 	if content := b.String(); content != expectedcontent {
 		t.Error("unexpected content:", content)
+	}
+}
+
+func TestNewHTTPProxy_redirectWithBody(t *testing.T) {
+	var executed atomic.Uint64
+	expectedBody := `{"message":"redirected"}`
+	expectedResponse := `{"message":"ok"}`
+	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		data, err := io.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		if string(data) != expectedBody {
+			t.Errorf("invalid data: %s", string(data))
+			return
+		}
+		executed.Add(1)
+		w.Write([]byte(`{"message":"ok"}`))
+	}))
+	defer backendServer.Close()
+	redirServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		executed.Add(1)
+		http.Redirect(w, r, backendServer.URL, http.StatusPermanentRedirect)
+	}))
+	defer redirServer.Close()
+
+	rpURL, _ := url.Parse(redirServer.URL)
+	backend := config.Backend{
+		Decoder: encoding.JSONDecoder,
+		ExtraConfig: map[string]interface{}{
+			clientHTTPOptions: map[string]interface{}{
+				clientHTTPOptionRedirectPost: true,
+			},
+		},
+	}
+	request := Request{
+		Method: "POST",
+		Path:   "/",
+		URL:    rpURL,
+		Body:   newDummyReadCloser(expectedBody),
+	}
+	mustEnd := time.After(time.Duration(150) * time.Millisecond)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Millisecond)
+	defer cancel()
+	response, err := httpProxy(&backend)(ctx, &request)
+	if err != nil {
+		t.Errorf("The proxy propagated a backend errors: %s\n", err)
+		return
+	}
+	respData, err := json.Marshal(response.Data)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if string(respData) != expectedResponse {
+		t.Errorf("unexpected response data: '%s'", string(respData))
+	}
+	select {
+	case <-mustEnd:
+		t.Errorf("Error: expected response")
+	default:
+	}
+	if executed.Load() != 2 {
+		t.Errorf("number of executions should be 2 not %d", executed.Load())
 	}
 }
