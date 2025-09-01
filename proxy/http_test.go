@@ -171,7 +171,7 @@ func TestNewHTTPProxy_badResponseBody(t *testing.T) {
 
 func TestNewHTTPProxy_badStatusCode(t *testing.T) {
 	expectedMethod := "GET"
-	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, "booom", 500)
 	}))
 	defer backendServer.Close()
