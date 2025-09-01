@@ -10,7 +10,7 @@ import (
 	"github.com/luraproject/lura/v2/config"
 )
 
-func ExampleNewGraphQLParamExtractor() {
+func ExampleExtractor() {
 	cfg, err := GetOptions(config.ExtraConfig{
 		Namespace: map[string]interface{}{
 			"type":  OperationQuery,
@@ -93,7 +93,7 @@ func ExampleNewGraphQLParamExtractor() {
 
 }
 
-func ExampleNewGraphQLParamExtractor_fromFile() {
+func ExampleExtractor_fromFile() {
 	os.WriteFile(".graphql_query.txt", []byte("{\n  find_follower(func: uid(\"0x3\")) {\n    name \n    }\n  }\n"), 0664)
 	defer os.Remove(".graphql_query.txt")
 
@@ -179,7 +179,7 @@ func ExampleNewGraphQLParamExtractor_fromFile() {
 
 }
 
-func ExampleNewGraphQLParamExtractor_noReplacement() {
+func ExampleExtractor_noReplacement() {
 	cfg, err := GetOptions(config.ExtraConfig{
 		Namespace: map[string]interface{}{
 			"type":  OperationQuery,
