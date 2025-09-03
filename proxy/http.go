@@ -3,8 +3,10 @@
 package proxy
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -45,11 +47,46 @@ func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, re client.HTTPRequestE
 	return NewHTTPProxyDetailed(remote, re, client.GetHTTPStatusHandler(remote), rp)
 }
 
+const (
+	clientHTTPOptions            string = "backend/http/client"
+	clientHTTPOptionRedirectPost string = "send_body_on_redirect"
+)
+
+// redirectPostReaderFactory checks if the clientHTTPOptionRedirectPost is enabled
+// This will read the body and return a bytes.Buffer with the body content, so we
+// delegate to http.NewRequest the population of request.GetBody so a redirect (307
+// and 308) is executed while maintaining the method and the body
+// This is necessary since the request comes from another http.Client and it's not
+// a concrete type that can be copied but just a io.ReaderCloser (*http.body)
+func redirectPostReaderFactory(cfg *config.Backend) func(r io.ReadCloser) io.Reader {
+	emptyFactory := func(r io.ReadCloser) io.Reader { return r }
+	if cfg == nil || cfg.ExtraConfig == nil {
+		return emptyFactory
+	}
+	v, ok := cfg.ExtraConfig[clientHTTPOptions].(map[string]interface{})
+	if !ok {
+		return emptyFactory
+	}
+	if opt, ok := v[clientHTTPOptionRedirectPost].(bool); !ok || !opt {
+		return emptyFactory
+	}
+	return func(r io.ReadCloser) io.Reader {
+		if r == http.NoBody || r == nil {
+			return r
+		}
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(r)
+		r.Close()
+		return buf
+	}
+}
+
 // NewHTTPProxyDetailed creates a http proxy with the injected configuration, HTTPRequestExecutor,
 // Decoder and HTTPResponseParser
-func NewHTTPProxyDetailed(_ *config.Backend, re client.HTTPRequestExecutor, ch client.HTTPStatusHandler, rp HTTPResponseParser) Proxy {
+func NewHTTPProxyDetailed(cfg *config.Backend, re client.HTTPRequestExecutor, ch client.HTTPStatusHandler, rp HTTPResponseParser) Proxy {
+	bodyFactory := redirectPostReaderFactory(cfg)
 	return func(ctx context.Context, request *Request) (*Response, error) {
-		requestToBackend, err := http.NewRequest(strings.ToTitle(request.Method), request.URL.String(), request.Body)
+		requestToBackend, err := http.NewRequest(strings.ToTitle(request.Method), request.URL.String(), bodyFactory(request.Body))
 		if err != nil {
 			return nil, err
 		}
