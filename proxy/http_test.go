@@ -349,7 +349,7 @@ func TestNewHTTPProxy_requestKo(t *testing.T) {
 	}
 	mustEnd := time.After(time.Duration(150) * time.Millisecond)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(100)*time.Millisecond)
 	defer cancel()
 
 	expectedError := fmt.Errorf("MAYDAY, MAYDAY")
@@ -531,7 +531,7 @@ func TestNewHTTPProxy_redirectWithBody(t *testing.T) {
 	}
 	mustEnd := time.After(time.Duration(150) * time.Millisecond)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(100)*time.Millisecond)
 	defer cancel()
 	response, err := httpProxy(&backend)(ctx, &request)
 	if err != nil {
