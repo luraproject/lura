@@ -92,11 +92,13 @@ func (pf defaultFactory) newStack(backend *config.Backend) (p Proxy) {
 	p = NewBackendPluginMiddleware(pf.logger, backend)(p)
 	p = NewGraphQLMiddleware(pf.logger, backend)(p)
 	p = NewFilterHeadersMiddleware(pf.logger, backend)(p)
-	p = NewFilterQueryStringsMiddleware(pf.logger, backend)(p)
 	p = NewLoadBalancedMiddlewareWithSubscriberAndLogger(pf.logger, pf.subscriberFactory(backend))(p)
 	if backend.ConcurrentCalls > 1 {
 		p = NewConcurrentMiddlewareWithLogger(pf.logger, backend)(p)
 	}
 	p = NewRequestBuilderMiddlewareWithLogger(pf.logger, backend)(p)
+	// we need to filter the input query strings before the request is constructed
+	// so the query strings are properly added to the URL:
+	p = NewFilterQueryStringsMiddleware(pf.logger, backend)(p)
 	return
 }
