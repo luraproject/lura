@@ -14,7 +14,31 @@ import (
 	"github.com/luraproject/lura/v2/logging"
 )
 
-func TestNewMergeDataMiddleware_empty(t *testing.T) {
+func TestNewMergeDataMiddleware(t *testing.T) {
+	tests := []func(t *testing.T){
+		testNewMergeDataMiddleware_simpleFiltering,
+		testNewMergeDataMiddleware_sequentialFiltering,
+		testNewMergeDataMiddleware_empty,
+		testNewMergeDataMiddleware_ok,
+		testNewMergeDataMiddleware_sequential,
+		testNewMergeDataMiddleware_sequential_unavailableParams,
+		testNewMergeDataMiddleware_sequential_erroredBackend,
+		testNewMergeDataMiddleware_sequential_erroredFirstBackend,
+		testNewMergeDataMiddleware_mergeIncompleteResults,
+		testNewMergeDataMiddleware_mergeEmptyResults,
+		testNewMergeDataMiddleware_partialTimeout,
+		testNewMergeDataMiddleware_partial,
+		testNewMergeDataMiddleware_nullResponse,
+		testNewMergeDataMiddleware_timeout,
+		testRegisterResponseCombiner,
+	}
+	for _, test := range tests {
+		ResetBackendFiltererFactory()
+		test(t)
+	}
+}
+
+func testNewMergeDataMiddleware_empty(t *testing.T) {
 	timeout := 500 * time.Millisecond
 	backend := config.Backend{}
 	endpoint := config.EndpointConfig{
@@ -27,7 +51,6 @@ func TestNewMergeDataMiddleware_empty(t *testing.T) {
 	erroredProxy := func(_ context.Context, _ *Request) (*Response, error) {
 		return nil, expectedErr
 	}
-
 	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	p := mw(erroredProxy, erroredProxy)
 
@@ -58,7 +81,7 @@ func TestNewMergeDataMiddleware_empty(t *testing.T) {
 
 }
 
-func TestNewMergeDataMiddleware_ok(t *testing.T) {
+func testNewMergeDataMiddleware_ok(t *testing.T) {
 	timeout := 500
 	backend := config.Backend{}
 	endpoint := config.EndpointConfig{
@@ -91,7 +114,7 @@ func TestNewMergeDataMiddleware_ok(t *testing.T) {
 	}
 }
 
-func TestNewMergeDataMiddleware_sequential(t *testing.T) {
+func testNewMergeDataMiddleware_sequential(t *testing.T) {
 	timeout := 1000
 	endpoint := config.EndpointConfig{
 		Backend: []*config.Backend{
@@ -130,7 +153,6 @@ func TestNewMergeDataMiddleware_sequential(t *testing.T) {
 			t.Errorf("unexpected body '%s'", string(b))
 		}
 	}
-
 	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
 	p := mw(
 		dummyProxy(&Response{Data: map[string]interface{}{
@@ -228,7 +250,7 @@ func checkRequestParam(t *testing.T, r *Request, k, v string) {
 	}
 }
 
-func TestNewMergeDataMiddleware_sequential_unavailableParams(t *testing.T) {
+func testNewMergeDataMiddleware_sequential_unavailableParams(t *testing.T) {
 	timeout := 500
 	endpoint := config.EndpointConfig{
 		Backend: []*config.Backend{
@@ -287,7 +309,7 @@ func TestNewMergeDataMiddleware_sequential_unavailableParams(t *testing.T) {
 	}
 }
 
-func TestNewMergeDataMiddleware_sequential_erroredBackend(t *testing.T) {
+func testNewMergeDataMiddleware_sequential_erroredBackend(t *testing.T) {
 	timeout := 500
 	endpoint := config.EndpointConfig{
 		Backend: []*config.Backend{
@@ -339,7 +361,7 @@ func TestNewMergeDataMiddleware_sequential_erroredBackend(t *testing.T) {
 	}
 }
 
-func TestNewMergeDataMiddleware_sequential_erroredFirstBackend(t *testing.T) {
+func testNewMergeDataMiddleware_sequential_erroredFirstBackend(t *testing.T) {
 	timeout := 500
 	endpoint := config.EndpointConfig{
 		Backend: []*config.Backend{
@@ -386,7 +408,7 @@ func TestNewMergeDataMiddleware_sequential_erroredFirstBackend(t *testing.T) {
 	}
 }
 
-func TestNewMergeDataMiddleware_mergeIncompleteResults(t *testing.T) {
+func testNewMergeDataMiddleware_mergeIncompleteResults(t *testing.T) {
 	timeout := 500
 	backend := config.Backend{}
 	endpoint := config.EndpointConfig{
@@ -419,7 +441,7 @@ func TestNewMergeDataMiddleware_mergeIncompleteResults(t *testing.T) {
 	}
 }
 
-func TestNewMergeDataMiddleware_mergeEmptyResults(t *testing.T) {
+func testNewMergeDataMiddleware_mergeEmptyResults(t *testing.T) {
 	timeout := 500
 	backend := config.Backend{}
 	endpoint := config.EndpointConfig{
@@ -452,7 +474,7 @@ func TestNewMergeDataMiddleware_mergeEmptyResults(t *testing.T) {
 	}
 }
 
-func TestNewMergeDataMiddleware_partialTimeout(t *testing.T) {
+func testNewMergeDataMiddleware_partialTimeout(t *testing.T) {
 	timeout := 100
 	backend := config.Backend{Timeout: time.Duration(timeout) * time.Millisecond}
 	endpoint := config.EndpointConfig{
@@ -485,7 +507,7 @@ func TestNewMergeDataMiddleware_partialTimeout(t *testing.T) {
 	}
 }
 
-func TestNewMergeDataMiddleware_partial(t *testing.T) {
+func testNewMergeDataMiddleware_partial(t *testing.T) {
 	timeout := 100
 	backend := config.Backend{Timeout: time.Duration(timeout) * time.Millisecond}
 	endpoint := config.EndpointConfig{
@@ -518,7 +540,7 @@ func TestNewMergeDataMiddleware_partial(t *testing.T) {
 	}
 }
 
-func TestNewMergeDataMiddleware_nullResponse(t *testing.T) {
+func testNewMergeDataMiddleware_nullResponse(t *testing.T) {
 	timeout := 100
 	backend := config.Backend{Timeout: time.Duration(timeout) * time.Millisecond}
 	endpoint := config.EndpointConfig{
@@ -556,7 +578,7 @@ func TestNewMergeDataMiddleware_nullResponse(t *testing.T) {
 	}
 }
 
-func TestNewMergeDataMiddleware_timeout(t *testing.T) {
+func testNewMergeDataMiddleware_timeout(t *testing.T) {
 	timeout := 100
 	backend := config.Backend{Timeout: time.Duration(timeout) * time.Millisecond}
 	endpoint := config.EndpointConfig{
@@ -597,7 +619,7 @@ func TestNewMergeDataMiddleware_timeout(t *testing.T) {
 	}
 }
 
-func TestRegisterResponseCombiner(t *testing.T) {
+func testRegisterResponseCombiner(t *testing.T) {
 	subject := "test combiner"
 	if len(responseCombiners.data.Clone()) != 1 {
 		t.Error("unexpected initial size of the response combiner list:", responseCombiners.data.Clone())
@@ -694,5 +716,110 @@ func Test_incrementalMergeAccumulator_incompleteResponse(t *testing.T) {
 	}
 	if res.IsComplete {
 		t.Error("response should not be completed")
+	}
+}
+
+func testNewMergeDataMiddleware_simpleFiltering(t *testing.T) {
+	timeout := 500
+	backend := config.Backend{}
+	endpoint := config.EndpointConfig{
+		Backend: []*config.Backend{&backend, &backend},
+		Timeout: time.Duration(timeout) * time.Millisecond,
+	}
+
+	RegisterBackendFiltererFactory("", func(_ *config.EndpointConfig) ([]BackendFilterer, error) {
+		return []BackendFilterer{
+			func(_ *Request) bool {
+				return true
+			},
+			func(r *Request) bool {
+				return r.Headers["X-Filter"][0] == "supu"
+			},
+		}, nil
+	})
+
+	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
+	p := mw(
+		dummyProxy(&Response{Data: map[string]interface{}{"supu": 42}, IsComplete: true}),
+		dummyProxy(&Response{Data: map[string]interface{}{"tupu": true}, IsComplete: true}))
+	mustEnd := time.After(time.Duration(2*timeout) * time.Millisecond)
+	out, err := p(context.Background(), &Request{Headers: map[string][]string{"X-Filter": {"meh"}}})
+	if err != nil {
+		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
+	}
+	if out == nil {
+		t.Errorf("The proxy returned a null result\n")
+		return
+	}
+	select {
+	case <-mustEnd:
+		t.Errorf("We were expecting a response but we got none\n")
+	default:
+		if len(out.Data) != 1 || out.Data["supu"] != 42 {
+			t.Errorf("We were expecting a response from just a backend, but we got %v!\n", out)
+		}
+		if !out.IsComplete {
+			t.Errorf("We were expecting a completed response but we got an incompleted one!\n")
+		}
+	}
+}
+
+func testNewMergeDataMiddleware_sequentialFiltering(t *testing.T) {
+	timeout := 1000
+	endpoint := config.EndpointConfig{
+		Backend: []*config.Backend{
+			{URLPattern: "/"},
+			{URLPattern: "/aaa/{{.Resp0_string}}"},
+			{URLPattern: "/hit-me/{{.Resp1_tupu}}"},
+		},
+		Timeout: time.Duration(timeout) * time.Millisecond,
+		ExtraConfig: config.ExtraConfig{
+			Namespace: map[string]interface{}{
+				isSequentialKey: true,
+			},
+		},
+	}
+
+	RegisterBackendFiltererFactory("", func(_ *config.EndpointConfig) ([]BackendFilterer, error) {
+		return []BackendFilterer{
+			func(_ *Request) bool {
+				return true
+			},
+			func(_ *Request) bool {
+				return false
+			},
+			func(_ *Request) bool {
+				return true
+			},
+		}, nil
+	})
+
+	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
+	p := mw(
+		dummyProxy(&Response{Data: map[string]interface{}{"string": "some"}, IsComplete: true}),
+		dummyProxy(&Response{Data: map[string]interface{}{"tupu": "foo"}, IsComplete: true}),
+		dummyProxy(&Response{Data: map[string]interface{}{"final": "meh"}, IsComplete: true}),
+	)
+	mustEnd := time.After(time.Duration(2*timeout) * time.Millisecond)
+	out, err := p(context.Background(), &Request{
+		Params: map[string]string{},
+	})
+	if err != nil {
+		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
+	}
+	if out == nil {
+		t.Errorf("The proxy returned a null result\n")
+		return
+	}
+	select {
+	case <-mustEnd:
+		t.Errorf("We were expecting a response but we got none\n")
+	default:
+		if len(out.Data) != 2 {
+			t.Errorf("We were expecting a response from just two backends, but we got %v!\n", out)
+		}
+		if !out.IsComplete {
+			t.Errorf("We were expecting a completed response but we got an incompleted one!\n")
+		}
 	}
 }
