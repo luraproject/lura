@@ -188,6 +188,8 @@ type ServiceConfig struct {
 
 	// DNSCacheTTL is the duration of the cached data for the DNS lookups
 	DNSCacheTTL time.Duration `mapstructure:"dns_cache_ttl"`
+
+	MaxShutdownDuration time.Duration `mapstructure:"max_shutdown_wait_time"`
 }
 
 // AsyncAgent defines the configuration of a single subscriber/consumer to be initialized
