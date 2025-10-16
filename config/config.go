@@ -189,6 +189,9 @@ type ServiceConfig struct {
 	// DNSCacheTTL is the duration of the cached data for the DNS lookups
 	DNSCacheTTL time.Duration `mapstructure:"dns_cache_ttl"`
 
+	// MaxShutdownDuration is the maximum duration to wait for the graceful shutdown
+	// of the service. If 0, it will wait indefinitely until all the requests are served
+	// or the process is killed.
 	MaxShutdownDuration time.Duration `mapstructure:"max_shutdown_wait_time"`
 }
 
