@@ -150,7 +150,12 @@ func RunServerWithLoggerFactory(l logging.Logger) func(context.Context, config.S
 		case err := <-done:
 			return err
 		case <-ctx.Done():
-			return s.Shutdown(context.Background())
+			if cfg.MaxShutdownDuration <= 0 {
+				return s.Shutdown(context.Background())
+			}
+			withTimeout, cancel := context.WithTimeout(context.Background(), cfg.MaxShutdownDuration)
+			defer cancel()
+			return s.Shutdown(withTimeout)
 		}
 	}
 }
