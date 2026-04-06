@@ -12,12 +12,16 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/luraproject/lura/v2/config"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
+
+// urlKeysPattern matches URL path parameters in the form {paramName}.
+var urlKeysPattern = regexp.MustCompile(`\{([\w\-.:/]+)\}`)
 
 // Namespace is the key for the backend's extra config
 const Namespace = "github.com/devopsfaith/krakend/transport/http/client/graphql"
@@ -100,8 +104,8 @@ func New(opt Options) *Extractor {
 		if !ok {
 			continue
 		}
-		if val[0] == '{' && val[len(val)-1] == '}' {
-			replacements = append(replacements, [2]string{k, title.String(val[1:2]) + val[2:len(val)-1]})
+		if urlKeysPattern.MatchString(val) {
+			replacements = append(replacements, [2]string{k, val})
 		}
 	}
 
@@ -129,7 +133,14 @@ func New(opt Options) *Extractor {
 			val.Variables[k] = v
 		}
 		for _, vs := range replacements {
-			val.Variables[vs[0]] = params[vs[1]]
+			val.Variables[vs[0]] = urlKeysPattern.ReplaceAllStringFunc(vs[1], func(match string) string {
+				param := match[1 : len(match)-1]
+				key := title.String(param[:1]) + param[1:]
+				if v, ok := params[key]; ok {
+					return v
+				}
+				return match
+			})
 		}
 		return &val, nil
 	}
