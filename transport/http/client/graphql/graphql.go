@@ -96,7 +96,10 @@ func GetOptions(cfg config.ExtraConfig) (*Options, error) {
 
 // New resturns a new Extractor, ready to be use on a middleware
 func New(opt Options) *Extractor {
-	var replacements [][2]string
+	// templates holds [varKey, templateString] pairs where {param} has been
+	// pre-converted to {{.Param}} at setup time, mirroring the approach used
+	// in config.go for url_pattern interpolation.
+	var templates [][2]string
 
 	title := cases.Title(language.Und)
 	for k, v := range opt.Variables {
@@ -104,12 +107,17 @@ func New(opt Options) *Extractor {
 		if !ok {
 			continue
 		}
-		if urlKeysPattern.MatchString(val) {
-			replacements = append(replacements, [2]string{k, val})
+		// Convert all {param} occurrences to {{.Param}} once at setup time.
+		tmpl := urlKeysPattern.ReplaceAllStringFunc(val, func(match string) string {
+			param := match[1 : len(match)-1]
+			return "{{." + title.String(param[:1]) + param[1:] + "}}"
+		})
+		if tmpl != val {
+			templates = append(templates, [2]string{k, tmpl})
 		}
 	}
 
-	if len(replacements) == 0 {
+	if len(templates) == 0 {
 		b, _ := json.Marshal(opt.GraphQLRequest)
 
 		return &Extractor{
@@ -132,15 +140,13 @@ func New(opt Options) *Extractor {
 		for k, v := range opt.Variables {
 			val.Variables[k] = v
 		}
-		for _, vs := range replacements {
-			val.Variables[vs[0]] = urlKeysPattern.ReplaceAllStringFunc(vs[1], func(match string) string {
-				param := match[1 : len(match)-1]
-				key := title.String(param[:1]) + param[1:]
-				if v, ok := params[key]; ok {
-					return v
-				}
-				return match
-			})
+		// Per-request: plain strings.ReplaceAll, no regex — same as proxy.GeneratePath.
+		for _, tmpl := range templates {
+			buff := tmpl[1]
+			for k, v := range params {
+				buff = strings.ReplaceAll(buff, "{{."+k+"}}", v)
+			}
+			val.Variables[tmpl[0]] = buff
 		}
 		return &val, nil
 	}
