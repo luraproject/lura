@@ -3,90 +3,70 @@
 package graphql
 
 import (
-	"encoding/json"
+	"strings"
 	"testing"
-
-	"github.com/luraproject/lura/v2/config"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
-// legacyNew reproduces the original New() behavior before the fix, for comparison.
-func legacyNew(opt Options) *Extractor {
-	var replacements [][2]string
-
-	title := cases.Title(language.Und)
-	for k, v := range opt.Variables {
-		val, ok := v.(string)
-		if !ok {
-			continue
-		}
-		if len(val) > 0 && val[0] == '{' && val[len(val)-1] == '}' {
-			replacements = append(replacements, [2]string{k, title.String(val[1:2]) + val[2:len(val)-1]})
-		}
-	}
-
-	paramExtractor := func(params map[string]string) (*GraphQLRequest, error) {
-		val := GraphQLRequest{
-			Query:         opt.Query,
-			OperationName: opt.OperationName,
-			Variables:     map[string]interface{}{},
-		}
-		for k, v := range opt.Variables {
-			val.Variables[k] = v
-		}
-		for _, vs := range replacements {
-			val.Variables[vs[0]] = params[vs[1]]
-		}
-		return &val, nil
-	}
-
-	return &Extractor{
-		cfg:            opt,
-		paramExtractor: paramExtractor,
-		newBody: func(params map[string]string) ([]byte, error) {
-			val, err := paramExtractor(params)
-			if err != nil {
-				return []byte{}, err
-			}
-			return json.Marshal(val)
-		},
+// legacyInterpolate reproduces the original per-request substitution: direct map lookup.
+func legacyInterpolate(replacements [][2]string, variables map[string]interface{}, params map[string]string) {
+	for _, vs := range replacements {
+		variables[vs[0]] = params[vs[1]]
 	}
 }
 
-var benchCfg = config.ExtraConfig{
-	Namespace: map[string]interface{}{
-		"type":  OperationQuery,
-		"query": "{ search(query: $query) { nodes { id } } }",
-		"variables": map[string]interface{}{
-			"single":   "{owner}",
-			"compound": "repo:{owner}/{repo} category:Announcements",
-			"static":   "no-params-here",
-		},
-	},
+// fixedInterpolate is the new per-request substitution: strings.ReplaceAll loop (mirrors proxy.GeneratePath).
+func fixedInterpolate(templates [][2]string, variables map[string]interface{}, params map[string]string) {
+	for _, tmpl := range templates {
+		buff := tmpl[1]
+		for k, v := range params {
+			buff = strings.ReplaceAll(buff, "{{."+k+"}}", v)
+		}
+		variables[tmpl[0]] = buff
+	}
 }
 
-var benchParams = map[string]string{
-	"Owner": "krakend",
-	"Repo":  "lura",
-}
+var (
+	// legacy: replacements built as [varKey, capitalizedParamKey]
+	legacyReplacements = [][2]string{
+		{"single", "Owner"},
+	}
 
-func BenchmarkBodyFromParams_legacy(b *testing.B) {
-	cfg, _ := GetOptions(benchCfg)
-	extractor := legacyNew(*cfg)
+	// fixed: templates built as [varKey, "{{.Owner}}/{{.Repo}} ..."]
+	fixedTemplates = [][2]string{
+		{"single", "{{.Owner}}"},
+		{"compound", "repo:{{.Owner}}/{{.Repo}} category:Announcements"},
+	}
+
+	benchVariables = map[string]interface{}{
+		"single":   "{owner}",
+		"compound": "repo:{owner}/{repo} category:Announcements",
+		"static":   "no-params-here",
+	}
+
+	benchParams = map[string]string{
+		"Owner": "krakend",
+		"Repo":  "lura",
+	}
+)
+
+func BenchmarkInterpolation_legacy(b *testing.B) {
 	b.ReportAllocs()
-	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		extractor.BodyFromParams(benchParams)
+		vars := map[string]interface{}{}
+		for k, v := range benchVariables {
+			vars[k] = v
+		}
+		legacyInterpolate(legacyReplacements, vars, benchParams)
 	}
 }
 
-func BenchmarkBodyFromParams_fixed(b *testing.B) {
-	cfg, _ := GetOptions(benchCfg)
-	extractor := New(*cfg)
+func BenchmarkInterpolation_fixed(b *testing.B) {
 	b.ReportAllocs()
-	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		extractor.BodyFromParams(benchParams)
+		vars := map[string]interface{}{}
+		for k, v := range benchVariables {
+			vars[k] = v
+		}
+		fixedInterpolate(fixedTemplates, vars, benchParams)
 	}
 }
