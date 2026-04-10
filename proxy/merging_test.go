@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -21,6 +22,7 @@ func TestNewMergeDataMiddleware(t *testing.T) {
 		testNewMergeDataMiddleware_empty,
 		testNewMergeDataMiddleware_ok,
 		testNewMergeDataMiddleware_sequential,
+		testNewMergeDataMiddleware_sequentialGet,
 		testNewMergeDataMiddleware_sequential_unavailableParams,
 		testNewMergeDataMiddleware_sequential_erroredBackend,
 		testNewMergeDataMiddleware_sequential_erroredFirstBackend,
@@ -78,7 +80,6 @@ func testNewMergeDataMiddleware_empty(t *testing.T) {
 		t.Errorf("We were expecting a response but we got none\n")
 	default:
 	}
-
 }
 
 func testNewMergeDataMiddleware_ok(t *testing.T) {
@@ -135,6 +136,13 @@ func testNewMergeDataMiddleware_sequential(t *testing.T) {
 		},
 	}
 
+	checkAndModifyHeaders := func(r *Request) {
+		if len(r.Headers) != 0 {
+			t.Errorf("headers should be empty: %v", r.Headers)
+		}
+		r.Headers["x-foo"] = append(r.Headers["x-foo"], "foo")
+	}
+
 	expectedBody := "foo"
 	checkBody := func(t *testing.T, r *Request) {
 		if r.Body == nil {
@@ -173,12 +181,14 @@ func testNewMergeDataMiddleware_sequential(t *testing.T) {
 			"propagated": "everywhere",
 		}, IsComplete: true}),
 		func(_ context.Context, r *Request) (*Response, error) {
+			checkAndModifyHeaders(r)
 			checkBody(t, r)
 			checkRequestParam(t, r, "Resp0_array", "1,2")
 			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
 			return &Response{Data: map[string]interface{}{"tupu": "foo"}, IsComplete: true}, nil
 		},
 		func(_ context.Context, r *Request) (*Response, error) {
+			checkAndModifyHeaders(r)
 			checkBody(t, r)
 			checkRequestParam(t, r, "Resp0_int", "42")
 			checkRequestParam(t, r, "Resp0_string", "some")
@@ -189,6 +199,7 @@ func testNewMergeDataMiddleware_sequential(t *testing.T) {
 			return &Response{Data: map[string]interface{}{"tupu": "foo"}, IsComplete: true}, nil
 		},
 		func(_ context.Context, r *Request) (*Response, error) {
+			checkAndModifyHeaders(r)
 			checkBody(t, r)
 			checkRequestParam(t, r, "Resp0_int", "42")
 			checkRequestParam(t, r, "Resp0_string", "some")
@@ -200,6 +211,7 @@ func testNewMergeDataMiddleware_sequential(t *testing.T) {
 			return &Response{Data: map[string]interface{}{"aaaa": []int{1, 2, 3}}, IsComplete: true}, nil
 		},
 		func(_ context.Context, r *Request) (*Response, error) {
+			checkAndModifyHeaders(r)
 			checkBody(t, r)
 			checkRequestParam(t, r, "Resp0_struct.foo", "bar")
 			checkRequestParam(t, r, "Resp0_struct.struct.foo", "bar")
@@ -208,11 +220,13 @@ func testNewMergeDataMiddleware_sequential(t *testing.T) {
 			return &Response{Data: map[string]interface{}{"bbbb": []bool{true, false}}, IsComplete: true}, nil
 		},
 		func(_ context.Context, r *Request) (*Response, error) {
+			checkAndModifyHeaders(r)
 			checkBody(t, r)
 			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
 			return &Response{Data: map[string]interface{}{}, Io: io.NopCloser(strings.NewReader("hello")), IsComplete: true}, nil
 		},
 		func(_ context.Context, r *Request) (*Response, error) {
+			checkAndModifyHeaders(r)
 			checkBody(t, r)
 			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
 			checkRequestParam(t, r, "Resp5", "hello")
@@ -221,8 +235,130 @@ func testNewMergeDataMiddleware_sequential(t *testing.T) {
 	)
 	mustEnd := time.After(time.Duration(2*timeout) * time.Millisecond)
 	out, err := p(context.Background(), &Request{
-		Params: map[string]string{},
-		Body:   io.NopCloser(strings.NewReader(expectedBody)),
+		Params:  map[string]string{},
+		Body:    io.NopCloser(strings.NewReader(expectedBody)),
+		Headers: map[string][]string{},
+	})
+	if err != nil {
+		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
+	}
+	if out == nil {
+		t.Errorf("The proxy returned a null result\n")
+		return
+	}
+	select {
+	case <-mustEnd:
+		t.Errorf("We were expecting a response but we got none\n")
+	default:
+		if len(out.Data) != 10 {
+			t.Errorf("We weren't expecting a partial response but we got %v!\n", out)
+		}
+		if !out.IsComplete {
+			t.Errorf("We were expecting a completed response but we got an incompleted one!\n")
+		}
+	}
+}
+
+func testNewMergeDataMiddleware_sequentialGet(t *testing.T) {
+	timeout := 1000
+	endpoint := config.EndpointConfig{
+		Backend: []*config.Backend{
+			{Method: http.MethodGet, URLPattern: "/"},
+			{Method: http.MethodGet, URLPattern: "/aaa/{{.Resp0_array}}"},
+			{Method: http.MethodGet, URLPattern: "/aaa/{{.Resp0_int}}/{{.Resp0_string}}/{{.Resp0_bool}}/{{.Resp0_float}}/{{.Resp0_struct.foo}}"},
+			{Method: http.MethodGet, URLPattern: "/aaa/{{.Resp0_int}}/{{.Resp0_string}}/{{.Resp0_bool}}/{{.Resp0_float}}/{{.Resp0_struct.foo}}?x={{.Resp1_tupu}}"},
+			{Method: http.MethodGet, URLPattern: "/aaa/{{.Resp0_struct.foo}}/{{.Resp0_struct.struct.foo}}/{{.Resp0_struct.struct.struct.foo}}"},
+			{Method: http.MethodGet, URLPattern: "/zzz", Encoding: "no-op"},
+			{Method: http.MethodGet, URLPattern: "/hit-me"},
+		},
+		Timeout: time.Duration(timeout) * time.Millisecond,
+		ExtraConfig: config.ExtraConfig{
+			Namespace: map[string]interface{}{
+				forceDeepCloneKey:      true,
+				isSequentialKey:        true,
+				sequentialPropagateKey: []interface{}{"resp0_propagated", "resp5"},
+			},
+		},
+	}
+
+	checkAndModifyHeaders := func(r *Request) {
+		if len(r.Headers) != 0 {
+			t.Errorf("headers should be empty: %v", r.Headers)
+		}
+		r.Headers["x-foo"] = append(r.Headers["x-foo"], "foo")
+	}
+
+	mw := NewMergeDataMiddleware(logging.NoOp, &endpoint)
+	p := mw(
+		dummyProxy(&Response{Data: map[string]interface{}{
+			"int":    42,
+			"string": "some",
+			"bool":   true,
+			"float":  3.14,
+			"struct": map[string]interface{}{
+				"foo": "bar",
+				"struct": map[string]interface{}{
+					"foo": "bar",
+					"struct": map[string]interface{}{
+						"foo": "bar",
+					},
+				},
+			},
+			"array":      []interface{}{"1", "2"},
+			"propagated": "everywhere",
+		}, IsComplete: true}),
+		func(_ context.Context, r *Request) (*Response, error) {
+			checkAndModifyHeaders(r)
+			checkRequestParam(t, r, "Resp0_array", "1,2")
+			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
+			return &Response{Data: map[string]interface{}{"tupu": "foo"}, IsComplete: true}, nil
+		},
+		func(_ context.Context, r *Request) (*Response, error) {
+			checkAndModifyHeaders(r)
+			checkRequestParam(t, r, "Resp0_int", "42")
+			checkRequestParam(t, r, "Resp0_string", "some")
+			checkRequestParam(t, r, "Resp0_float", "3.14E+00")
+			checkRequestParam(t, r, "Resp0_bool", "true")
+			checkRequestParam(t, r, "Resp0_struct.foo", "bar")
+			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
+			return &Response{Data: map[string]interface{}{"tupu": "foo"}, IsComplete: true}, nil
+		},
+		func(_ context.Context, r *Request) (*Response, error) {
+			checkAndModifyHeaders(r)
+			checkRequestParam(t, r, "Resp0_int", "42")
+			checkRequestParam(t, r, "Resp0_string", "some")
+			checkRequestParam(t, r, "Resp0_float", "3.14E+00")
+			checkRequestParam(t, r, "Resp0_bool", "true")
+			checkRequestParam(t, r, "Resp0_struct.foo", "bar")
+			checkRequestParam(t, r, "Resp1_tupu", "foo")
+			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
+			return &Response{Data: map[string]interface{}{"aaaa": []int{1, 2, 3}}, IsComplete: true}, nil
+		},
+		func(_ context.Context, r *Request) (*Response, error) {
+			checkAndModifyHeaders(r)
+			checkRequestParam(t, r, "Resp0_struct.foo", "bar")
+			checkRequestParam(t, r, "Resp0_struct.struct.foo", "bar")
+			checkRequestParam(t, r, "Resp0_struct.struct.struct.foo", "bar")
+			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
+			return &Response{Data: map[string]interface{}{"bbbb": []bool{true, false}}, IsComplete: true}, nil
+		},
+		func(_ context.Context, r *Request) (*Response, error) {
+			checkAndModifyHeaders(r)
+			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
+			return &Response{Data: map[string]interface{}{}, Io: io.NopCloser(strings.NewReader("hello")), IsComplete: true}, nil
+		},
+		func(_ context.Context, r *Request) (*Response, error) {
+			checkAndModifyHeaders(r)
+			checkRequestParam(t, r, "Resp0_propagated", "everywhere")
+			checkRequestParam(t, r, "Resp5", "hello")
+			return &Response{Data: map[string]interface{}{}, IsComplete: true}, nil
+		},
+	)
+	mustEnd := time.After(time.Duration(2*timeout) * time.Millisecond)
+	out, err := p(context.Background(), &Request{
+		Params:  map[string]string{},
+		Body:    io.NopCloser(strings.NewReader("")),
+		Headers: map[string][]string{},
 	})
 	if err != nil {
 		t.Errorf("The middleware propagated an unexpected error: %s\n", err.Error())
