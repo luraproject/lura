@@ -41,7 +41,7 @@ func TestRender_Negotiated_ok(t *testing.T) {
 	server.GET("/_gin_endpoint/:param", EndpointHandler(endpoint, p))
 
 	for _, testData := range [][]string{
-		{"plain", "text/plain", "application/x-yaml; charset=utf-8", "content:\n    b: supu\n"},
+		{"plain", "text/plain", "application/yaml; charset=utf-8", "content:\n  b: supu\n"},
 		{"none", "", "application/json; charset=utf-8", `{"content":{"B":"supu"}}`},
 		{"json", "application/json", "application/json; charset=utf-8", `{"content":{"B":"supu"}}`},
 		{"xml", "application/xml", "application/xml; charset=utf-8", `<A><B>supu</B></A>`},
@@ -98,7 +98,7 @@ func TestRender_Negotiated_noData(t *testing.T) {
 	server.GET("/_gin_endpoint/:param", EndpointHandler(endpoint, p))
 
 	for _, testData := range [][]string{
-		{"plain", "text/plain", "application/x-yaml; charset=utf-8", "{}\n"},
+		{"plain", "text/plain", "application/yaml; charset=utf-8", "{}\n"},
 		{"none", "", "application/json; charset=utf-8", "{}"},
 		{"json", "application/json", "application/json; charset=utf-8", "{}"},
 		{"xml", "application/xml", "application/xml; charset=utf-8", ""},
@@ -150,7 +150,7 @@ func TestRender_Negotiated_noResponse(t *testing.T) {
 	server.GET("/_gin_endpoint/:param", EndpointHandler(endpoint, p))
 
 	for _, testData := range [][]string{
-		{"plain", "text/plain", "application/x-yaml; charset=utf-8", "{}\n"},
+		{"plain", "text/plain", "application/yaml; charset=utf-8", "{}\n"},
 		{"none", "", "application/json; charset=utf-8", "{}"},
 		{"json", "application/json", "application/json; charset=utf-8", "{}"},
 		{"xml", "application/xml", "application/xml; charset=utf-8", ""},

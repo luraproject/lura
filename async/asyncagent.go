@@ -82,7 +82,7 @@ func (a AgentStarter) Start(
 		}
 
 		if agent.Connection.MaxRetries <= 0 {
-			agent.Connection.MaxRetries = math.MaxInt64
+			agent.Connection.MaxRetries = math.MaxInt
 		}
 
 		opts := Options{

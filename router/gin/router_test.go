@@ -180,7 +180,7 @@ func TestDefaultFactory_ko(t *testing.T) {
 			},
 			{
 				Endpoint: "/also-ignored",
-				Method:   "PUT",
+				Method:   "PUTT",
 				Backend: []*config.Backend{
 					{},
 					{},
@@ -240,10 +240,34 @@ func TestDefaultFactory_proxyFactoryCrash(t *testing.T) {
 
 	time.Sleep(5 * time.Millisecond)
 
-	for _, subject := range [][]string{{"GET", "ignored"}, {"PUT", "also-ignored"}} {
-		req, _ := http.NewRequest(subject[0], fmt.Sprintf("http://127.0.0.1:8074/%s", subject[1]), http.NoBody)
-		req.Header.Set("Content-Type", "application/json")
-		checkResponseIs404(t, req)
+	req, _ := http.NewRequest("GET", "http://127.0.0.1:8074/ignored", http.NoBody)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Error("Making the request:", err.Error())
+		return
+	}
+	defer resp.Body.Close()
+	body, ioerr := io.ReadAll(resp.Body)
+	if ioerr != nil {
+		t.Error("Reading the response:", ioerr.Error())
+		return
+	}
+	if resp.Header.Get("Cache-Control") != "" {
+		t.Error(req.URL.String(), "Cache-Control error:", resp.Header.Get("Cache-Control"))
+	}
+	if resp.Header.Get("Content-Type") != "" {
+		t.Error(req.URL.String(), "Content-Type error:", resp.Header.Get("Content-Type"))
+	}
+	if resp.Header.Get("X-Krakend") != "" {
+		t.Error(req.URL.String(), "X-Krakend error:", resp.Header.Get("X-Krakend"))
+	}
+	if resp.StatusCode != http.StatusInternalServerError {
+		t.Error(req.URL.String(), "Unexpected status code:", resp.StatusCode)
+	}
+	if string(body) != "" {
+		t.Error(req.URL.String(), "Unexpected body:", string(body))
 	}
 }
 
