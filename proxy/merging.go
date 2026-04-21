@@ -28,20 +28,19 @@ func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.Endpoi
 	}
 	serviceTimeout := time.Duration(85*endpointConfig.Timeout.Nanoseconds()/100) * time.Nanosecond
 	combiner := getResponseCombiner(endpointConfig.ExtraConfig)
-	isSequential, sequentialReplacements := sequentialMergerConfig(endpointConfig)
 
+	mf, t := getMergerFactory(endpointConfig.ExtraConfig)
 	logger.Debug(
 		fmt.Sprintf(
-			"[ENDPOINT: %s][Merge] Backends: %d, sequential: %t, combiner: %s",
+			"[ENDPOINT: %s][Merge] Backends: %d, merger: %s, combiner: %s",
 			endpointConfig.Endpoint,
 			totalBackends,
-			isSequential,
+			t,
 			getResponseCombinerName(endpointConfig.ExtraConfig),
 		),
 	)
-
+	m := mf(endpointConfig)
 	bfFactory := backendFiltererFactory.filtererFactory
-
 	return func(next ...Proxy) Proxy {
 		if len(next) != totalBackends {
 			// we leave the panic here, because we do not want to continue
@@ -62,12 +61,74 @@ func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.Endpoi
 			reqClone = CloneRequest
 		}
 
-		if !isSequential {
-			return parallelMerge(reqClone, serviceTimeout, combiner, filters, next...)
+		return m(reqClone, serviceTimeout, combiner, filters, next...)
+	}
+}
+
+func getMergerFactory(cfg config.ExtraConfig) (MergerFactory, string) {
+	var v interface{}
+	var ok bool
+	var m map[string]interface{}
+	if v, ok = cfg[Namespace]; !ok {
+		return mergers[parallelMerger], parallelMerger
+	}
+
+	if m, ok = v.(map[string]interface{}); !ok {
+		return mergers[parallelMerger], parallelMerger
+	}
+
+	if v, ok = m[typeKey]; !ok {
+		if v, ok := m[isSequentialKey]; ok {
+			c, ok := v.(bool)
+			if ok && c {
+				return mergers[isSequentialKey], isSequentialKey
+			}
 		}
 
-		return sequentialMerge(reqClone, serviceTimeout, combiner, sequentialReplacements, filters, next...)
+		return mergers[parallelMerger], parallelMerger
 	}
+
+	var t string
+	if t, ok = v.(string); !ok {
+		return mergers[parallelMerger], parallelMerger
+	}
+
+	if mf, ok := mergers[t]; ok {
+		return mf, t
+	}
+
+	return mergers[parallelMerger], parallelMerger
+}
+
+type (
+	// Merger is a function that controls how multiple backends are executed,
+	// collects responses and returns a single response and error.
+	Merger func(func(*Request) *Request, time.Duration, ResponseCombiner, []BackendFilterer, ...Proxy) Proxy
+	// MergerFactory returns a Merger.
+	MergerFactory func(*config.EndpointConfig) Merger
+)
+
+var mergers = map[string]MergerFactory{
+	isSequentialKey: func(ec *config.EndpointConfig) Merger {
+		sequentialReplacements := sequentialMergerConfig(ec)
+		return func(
+			reqClone func(*Request) *Request,
+			serviceTimeout time.Duration,
+			combiner ResponseCombiner,
+			filters []BackendFilterer,
+			next ...Proxy,
+		) Proxy {
+			return sequentialMerge(reqClone, serviceTimeout, combiner, sequentialReplacements, filters, next...)
+		}
+	},
+	parallelMerger: func(_ *config.EndpointConfig) Merger {
+		return parallelMerge
+	},
+}
+
+// RegisterMergerFactory registers a new merger factory to be used by the merging middleware.
+func RegisterMergerFactory(name string, m MergerFactory) {
+	mergers[name] = m
 }
 
 // BackendFiltererFactory is a factory function that returns a list of BackendFilterer
@@ -128,18 +189,13 @@ func forceDeepClone(cfg *config.EndpointConfig) bool {
 	return false
 }
 
-func sequentialMergerConfig(cfg *config.EndpointConfig) (bool, [][]sequentialBackendReplacement) { // skipcq: GO-R1005
-	enabled := false
+func sequentialMergerConfig(cfg *config.EndpointConfig) [][]sequentialBackendReplacement { // skipcq: GO-R1005
 	totalBackends := len(cfg.Backend)
 	sequentialReplacements := make([][]sequentialBackendReplacement, totalBackends)
 	var propagatedParams []string
 
 	if v, ok := cfg.ExtraConfig[Namespace]; ok {
 		if e, ok := v.(map[string]interface{}); ok {
-			if v, ok := e[isSequentialKey]; ok {
-				c, ok := v.(bool)
-				enabled = ok && c
-			}
 			if v, ok := e[sequentialPropagateKey]; ok {
 				if a, ok := v.([]interface{}); ok {
 					for _, p := range a {
@@ -149,8 +205,8 @@ func sequentialMergerConfig(cfg *config.EndpointConfig) (bool, [][]sequentialBac
 			}
 		}
 	}
-	var rePropagatedParams = regexp.MustCompile(`[Rr]esp(\d+)_?([\w-.]+)?`)
-	var reUrlPatterns = regexp.MustCompile(`\{\{\.Resp(\d+)_([\w-.]+)\}\}`)
+	rePropagatedParams := regexp.MustCompile(`[Rr]esp(\d+)_?([\w-.]+)?`)
+	reUrlPatterns := regexp.MustCompile(`\{\{\.Resp(\d+)_([\w-.]+)\}\}`)
 	destKeyGenerator := func(i string, t string) string {
 		key := "Resp" + i
 		if t != "" {
@@ -196,7 +252,7 @@ func sequentialMergerConfig(cfg *config.EndpointConfig) (bool, [][]sequentialBac
 			}
 		}
 	}
-	return enabled, sequentialReplacements
+	return sequentialReplacements
 }
 
 func hasUnsafeBackends(cfg *config.EndpointConfig) bool {
@@ -501,8 +557,10 @@ const (
 	forceDeepCloneKey      = "force_sandboxed_request"
 	mergeKey               = "combiner"
 	isSequentialKey        = "sequential"
+	parallelMerger         = "parallel"
 	sequentialPropagateKey = "sequential_propagated_params"
 	defaultCombinerName    = "default"
+	typeKey                = "merger_type"
 )
 
 var responseCombiners = initResponseCombiners()
