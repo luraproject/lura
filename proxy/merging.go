@@ -58,7 +58,7 @@ func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.Endpoi
 			return func(_ context.Context, _ *Request) (*Response, error) { return nil, err }
 		}
 
-		if hasUnsafeBackends(endpointConfig) {
+		if hasUnsafeBackends(endpointConfig) || forceDeepClone(endpointConfig) {
 			reqClone = CloneRequest
 		}
 
@@ -114,6 +114,18 @@ type sequentialBackendReplacement struct {
 	destination  string
 	source       []string
 	fullResponse bool
+}
+
+func forceDeepClone(cfg *config.EndpointConfig) bool {
+	if v, ok := cfg.ExtraConfig[Namespace]; ok {
+		if e, ok := v.(map[string]interface{}); ok {
+			if v, ok := e[forceDeepCloneKey]; ok {
+				c, ok := v.(bool)
+				return ok && c
+			}
+		}
+	}
+	return false
 }
 
 func sequentialMergerConfig(cfg *config.EndpointConfig) (bool, [][]sequentialBackendReplacement) { // skipcq: GO-R1005
@@ -438,12 +450,7 @@ func requestPart(ctx context.Context, next Proxy, request *Request, out chan<- *
 }
 
 func sequentialRequestPart(ctx context.Context, next Proxy, request *Request, out chan<- *Response, failed chan<- error) {
-	copyRequest := CloneRequest(request)
-
 	in, err := next(ctx, request)
-
-	*request = *copyRequest
-
 	if err != nil {
 		failed <- err
 		return
@@ -491,6 +498,7 @@ func RegisterResponseCombiner(name string, f ResponseCombiner) {
 }
 
 const (
+	forceDeepCloneKey      = "force_sandboxed_request"
 	mergeKey               = "combiner"
 	isSequentialKey        = "sequential"
 	sequentialPropagateKey = "sequential_propagated_params"
