@@ -179,6 +179,36 @@ func ExampleExtractor_fromFile() {
 
 }
 
+func ExampleExtractor_multipleParamsInVariable() {
+	cfg, err := GetOptions(config.ExtraConfig{
+		Namespace: map[string]interface{}{
+			"type":  OperationQuery,
+			"query": "{\n  search(query: $query) {\n    nodes { id }\n  }\n}\n",
+			"variables": map[string]interface{}{
+				"query": "repo:{owner}/{repo} category:Announcements",
+			},
+		},
+	})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	extractor := New(*cfg)
+
+	body, err := extractor.BodyFromParams(map[string]string{
+		"Owner": "krakend",
+		"Repo":  "lura",
+	})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(string(body))
+
+	// output:
+	// {"query":"{\n  search(query: $query) {\n    nodes { id }\n  }\n}\n","variables":{"query":"repo:krakend/lura category:Announcements"}}
+}
+
 func ExampleExtractor_noReplacement() {
 	cfg, err := GetOptions(config.ExtraConfig{
 		Namespace: map[string]interface{}{
