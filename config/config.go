@@ -44,27 +44,27 @@ var RoutingPattern = ColonRouterPatternBuilder
 // ServiceConfig defines the lura service
 type ServiceConfig struct {
 	// name of the service
-	Name string `mapstructure:"name"`
+	Name string `mapstructure:"name" json:"name"`
 	// set of endpoint definitions
-	Endpoints []*EndpointConfig `mapstructure:"endpoints"`
+	Endpoints []*EndpointConfig `mapstructure:"endpoints" json:"endpoints"`
 	// set of async agent definitions
-	AsyncAgents []*AsyncAgent `mapstructure:"async_agent"`
+	AsyncAgents []*AsyncAgent `mapstructure:"async_agent" json:"async_agent"`
 	// defafult timeout
-	Timeout time.Duration `mapstructure:"timeout"`
+	Timeout time.Duration `mapstructure:"timeout" json:"timeout"`
 	// default TTL for GET
-	CacheTTL time.Duration `mapstructure:"cache_ttl"`
+	CacheTTL time.Duration `mapstructure:"cache_ttl" json:"cache_ttl"`
 	// default set of hosts
-	Host []string `mapstructure:"host"`
+	Host []string `mapstructure:"host" json:"host"`
 	// port to bind the lura service
-	Port int `mapstructure:"port"`
+	Port int `mapstructure:"port" json:"port"`
 	// address to listen
-	Address string `mapstructure:"listen_ip"`
+	Address string `mapstructure:"listen_ip" json:"listen_ip"`
 	// version code of the configuration
-	Version int `mapstructure:"version"`
+	Version int `mapstructure:"version" json:"version"`
 	// OutputEncoding defines the default encoding strategy to use for the endpoint responses
-	OutputEncoding string `mapstructure:"output_encoding"`
+	OutputEncoding string `mapstructure:"output_encoding" json:"output_encoding"`
 	// Extra configuration for customized behaviour
-	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
+	ExtraConfig ExtraConfig `mapstructure:"extra_config" json:"extra_config"`
 
 	// ReadTimeout is the maximum duration for reading the entire
 	// request, including the body.
@@ -73,32 +73,32 @@ type ServiceConfig struct {
 	// decisions on each request body's acceptable deadline or
 	// upload rate, most users will prefer to use
 	// ReadHeaderTimeout. It is valid to use them both.
-	ReadTimeout time.Duration `mapstructure:"read_timeout"`
+	ReadTimeout time.Duration `mapstructure:"read_timeout" json:"read_timeout"`
 	// WriteTimeout is the maximum duration before timing out
 	// writes of the response. It is reset whenever a new
 	// request's header is read. Like ReadTimeout, it does not
 	// let Handlers make decisions on a per-request basis.
-	WriteTimeout time.Duration `mapstructure:"write_timeout"`
+	WriteTimeout time.Duration `mapstructure:"write_timeout" json:"write_timeout"`
 	// IdleTimeout is the maximum amount of time to wait for the
 	// next request when keep-alives are enabled. If IdleTimeout
 	// is zero, the value of ReadTimeout is used. If both are
 	// zero, ReadHeaderTimeout is used.
-	IdleTimeout time.Duration `mapstructure:"idle_timeout"`
+	IdleTimeout time.Duration `mapstructure:"idle_timeout" json:"idle_timeout"`
 	// ReadHeaderTimeout is the amount of time allowed to read
 	// request headers. The connection's read deadline is reset
 	// after reading the headers and the Handler can decide what
 	// is considered too slow for the body.
-	ReadHeaderTimeout time.Duration `mapstructure:"read_header_timeout"`
+	ReadHeaderTimeout time.Duration `mapstructure:"read_header_timeout" json:"read_header_timeout"`
 	// MaxHeaderBytes controls the maximum number of bytes the
 	// server will read parsing the request header's keys and
 	// values, including the request line. It does not limit the
 	// size of the request body.
 	// If zero, DefaultMaxHeaderBytes (1MB) is used.
-	MaxHeaderBytes int `mapstructure:"max_header_bytes"`
+	MaxHeaderBytes int `mapstructure:"max_header_bytes" json:"max_header_bytes"`
 
 	// DisableKeepAlives, if true, prevents re-use of TCP connections
 	// between different HTTP requests.
-	DisableKeepAlives bool `mapstructure:"disable_keep_alives"`
+	DisableKeepAlives bool `mapstructure:"disable_keep_alives" json:"disable_keep_alives"`
 	// DisableCompression, if true, prevents the Transport from
 	// requesting compression with an "Accept-Encoding: gzip"
 	// request header when the Request contains no existing
@@ -107,24 +107,24 @@ type ServiceConfig struct {
 	// decoded in the Response.Body. However, if the user
 	// explicitly requested gzip it is not automatically
 	// uncompressed.
-	DisableCompression bool `mapstructure:"disable_compression"`
+	DisableCompression bool `mapstructure:"disable_compression" json:"disable_compression"`
 	// MaxIdleConns controls the maximum number of idle (keep-alive)
 	// connections across all hosts. Zero means no limit.
-	MaxIdleConns int `mapstructure:"max_idle_connections"`
+	MaxIdleConns int `mapstructure:"max_idle_connections" json:"max_idle_connections"`
 	// MaxIdleConnsPerHost, if non-zero, controls the maximum idle
 	// (keep-alive) connections to keep per-host. If zero,
 	// DefaultMaxIdleConnsPerHost is used.
-	MaxIdleConnsPerHost int `mapstructure:"max_idle_connections_per_host"`
+	MaxIdleConnsPerHost int `mapstructure:"max_idle_connections_per_host" json:"max_idle_connections_per_host"`
 	// IdleConnTimeout is the maximum amount of time an idle
 	// (keep-alive) connection will remain idle before closing
 	// itself.
 	// Zero means no limit.
-	IdleConnTimeout time.Duration `mapstructure:"idle_connection_timeout"`
+	IdleConnTimeout time.Duration `mapstructure:"idle_connection_timeout" json:"idle_connection_timeout"`
 	// ResponseHeaderTimeout, if non-zero, specifies the amount of
 	// time to wait for a server's response headers after fully
 	// writing the request (including its body, if any). This
 	// time does not include the time to read the response body.
-	ResponseHeaderTimeout time.Duration `mapstructure:"response_header_timeout"`
+	ResponseHeaderTimeout time.Duration `mapstructure:"response_header_timeout" json:"response_header_timeout"`
 	// ExpectContinueTimeout, if non-zero, specifies the amount of
 	// time to wait for a server's first response headers after fully
 	// writing the request headers if the request has an
@@ -132,7 +132,7 @@ type ServiceConfig struct {
 	// causes the body to be sent immediately, without
 	// waiting for the server to approve.
 	// This time does not include the time to send the request header.
-	ExpectContinueTimeout time.Duration `mapstructure:"expect_continue_timeout"`
+	ExpectContinueTimeout time.Duration `mapstructure:"expect_continue_timeout" json:"expect_continue_timeout"`
 	// DialerTimeout is the maximum amount of time a dial will wait for
 	// a connect to complete. If Deadline is also set, it may fail
 	// earlier.
@@ -145,108 +145,108 @@ type ServiceConfig struct {
 	// With or without a timeout, the operating system may impose
 	// its own earlier timeout. For instance, TCP timeouts are
 	// often around 3 minutes.
-	DialerTimeout time.Duration `mapstructure:"dialer_timeout"`
+	DialerTimeout time.Duration `mapstructure:"dialer_timeout" json:"dialer_timeout"`
 	// DialerFallbackDelay specifies the length of time to wait before
 	// spawning a fallback connection, when DualStack is enabled.
 	// If zero, a default delay of 300ms is used.
-	DialerFallbackDelay time.Duration `mapstructure:"dialer_fallback_delay"`
+	DialerFallbackDelay time.Duration `mapstructure:"dialer_fallback_delay" json:"dialer_fallback_delay"`
 	// DialerKeepAlive specifies the keep-alive period for an active
 	// network connection.
 	// If zero, keep-alives are not enabled. Network protocols
 	// that do not support keep-alives ignore this field.
-	DialerKeepAlive time.Duration `mapstructure:"dialer_keep_alive"`
+	DialerKeepAlive time.Duration `mapstructure:"dialer_keep_alive" json:"dialer_keep_alive"`
 
 	// DisableStrictREST flags if the REST enforcement is disabled
-	DisableStrictREST bool `mapstructure:"disable_rest"`
+	DisableStrictREST bool `mapstructure:"disable_rest" json:"disable_rest"`
 
 	// Plugin defines the configuration for the plugin loader
-	Plugin *Plugin `mapstructure:"plugin"`
+	Plugin *Plugin `mapstructure:"plugin" json:"plugin,omitempty"`
 
 	// TLS defines the configuration params for enabling TLS (HTTPS & HTTP/2) at
 	// the router layer
-	TLS *TLS `mapstructure:"tls"`
+	TLS *TLS `mapstructure:"tls" json:"tls,omitempty"`
 
 	// UseH2C enables h2c support.
-	UseH2C bool `mapstructure:"use_h2c"`
+	UseH2C bool `mapstructure:"use_h2c" json:"use_h2c"`
 
 	// run lura in debug mode
-	Debug     bool `mapstructure:"debug_endpoint"`
-	Echo      bool `mapstructure:"echo_endpoint"`
+	Debug     bool `mapstructure:"debug_endpoint" json:"debug_endpoint"`
+	Echo      bool `mapstructure:"echo_endpoint" json:"echo_endpoint"`
 	uriParser SafeURIParser
 
 	// SequentialStart flags if the agents should be started sequentially
 	// before starting the router
-	SequentialStart bool `mapstructure:"sequential_start"`
+	SequentialStart bool `mapstructure:"sequential_start" json:"sequential_start"`
 
 	// AllowInsecureConnections sets the http client tls configuration to allow
 	// insecure connections to the backends for development (enables InsecureSkipVerify)
-	AllowInsecureConnections bool `mapstructure:"allow_insecure_connections"`
+	AllowInsecureConnections bool `mapstructure:"allow_insecure_connections" json:"allow_insecure_connections"`
 
 	// ClientTLS is used to configure the http default transport
 	// with TLS parameters
-	ClientTLS *ClientTLS `mapstructure:"client_tls"`
+	ClientTLS *ClientTLS `mapstructure:"client_tls" json:"client_tls,omitempty"`
 
 	// DNSCacheTTL is the duration of the cached data for the DNS lookups
-	DNSCacheTTL time.Duration `mapstructure:"dns_cache_ttl"`
+	DNSCacheTTL time.Duration `mapstructure:"dns_cache_ttl" json:"dns_cache_ttl"`
 
 	// MaxShutdownDuration is the maximum duration to wait for the graceful shutdown
 	// of the service. If 0, it will wait indefinitely until all the requests are served
 	// or the process is killed.
-	MaxShutdownDuration time.Duration `mapstructure:"max_shutdown_wait_time"`
+	MaxShutdownDuration time.Duration `mapstructure:"max_shutdown_wait_time" json:"max_shutdown_wait_time"`
 }
 
 // AsyncAgent defines the configuration of a single subscriber/consumer to be initialized
 // and maintained by the lura service
 type AsyncAgent struct {
-	Name       string     `mapstructure:"name"`
-	Connection Connection `mapstructure:"connection"`
-	Consumer   Consumer   `mapstructure:"consumer"`
+	Name       string     `mapstructure:"name" json:"name"`
+	Connection Connection `mapstructure:"connection" json:"connection"`
+	Consumer   Consumer   `mapstructure:"consumer" json:"consumer"`
 	// the encoding format
-	Encoding string `mapstructure:"encoding"`
+	Encoding string `mapstructure:"encoding" json:"encoding"`
 	// set of definitions of the backends to be linked to this endpoint
-	Backend []*Backend `mapstructure:"backend"`
+	Backend []*Backend `mapstructure:"backend" json:"backend"`
 
 	// Endpoint Extra configuration for customized behaviour
-	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
+	ExtraConfig ExtraConfig `mapstructure:"extra_config" json:"extra_config"`
 }
 
 type Consumer struct {
 	// timeout of the pipe defined by this subscriber
-	Timeout time.Duration `mapstructure:"timeout"`
-	Workers int           `mapstructure:"workers"`
-	Topic   string        `mapstructure:"topic"`
-	MaxRate float64       `mapstructure:"max_rate"`
+	Timeout time.Duration `mapstructure:"timeout" json:"timeout"`
+	Workers int           `mapstructure:"workers" json:"workers"`
+	Topic   string        `mapstructure:"topic" json:"topic"`
+	MaxRate float64       `mapstructure:"max_rate" json:"max_rate"`
 }
 
 type Connection struct {
-	MaxRetries      int           `mapstructure:"max_retries"`
-	BackoffStrategy string        `mapstructure:"backoff_strategy"`
-	HealthInterval  time.Duration `mapstructure:"health_interval"`
+	MaxRetries      int           `mapstructure:"max_retries" json:"max_retries"`
+	BackoffStrategy string        `mapstructure:"backoff_strategy" json:"backoff_strategy"`
+	HealthInterval  time.Duration `mapstructure:"health_interval" json:"health_interval"`
 }
 
 // EndpointConfig defines the configuration of a single endpoint to be exposed
 // by the lura service
 type EndpointConfig struct {
 	// url pattern to be registered and exposed to the world
-	Endpoint string `mapstructure:"endpoint"`
+	Endpoint string `mapstructure:"endpoint" json:"endpoint"`
 	// HTTP method of the endpoint (GET, POST, PUT, etc)
-	Method string `mapstructure:"method"`
+	Method string `mapstructure:"method" json:"method"`
 	// set of definitions of the backends to be linked to this endpoint
-	Backend []*Backend `mapstructure:"backend"`
+	Backend []*Backend `mapstructure:"backend" json:"backend"`
 	// number of concurrent calls this endpoint must send to the backends
-	ConcurrentCalls int `mapstructure:"concurrent_calls"`
+	ConcurrentCalls int `mapstructure:"concurrent_calls" json:"concurrent_calls"`
 	// timeout of this endpoint
-	Timeout time.Duration `mapstructure:"timeout"`
+	Timeout time.Duration `mapstructure:"timeout" json:"timeout"`
 	// duration of the cache header
-	CacheTTL time.Duration `mapstructure:"cache_ttl"`
+	CacheTTL time.Duration `mapstructure:"cache_ttl" json:"cache_ttl"`
 	// list of query string params to be extracted from the URI
-	QueryString []string `mapstructure:"input_query_strings"`
+	QueryString []string `mapstructure:"input_query_strings" json:"input_query_strings"`
 	// Endpoint Extra configuration for customized behaviour
-	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
+	ExtraConfig ExtraConfig `mapstructure:"extra_config" json:"extra_config"`
 	// HeadersToPass defines the list of headers to pass to the backends
-	HeadersToPass []string `mapstructure:"input_headers"`
+	HeadersToPass []string `mapstructure:"input_headers" json:"input_headers"`
 	// OutputEncoding defines the encoding strategy to use for the endpoint responses
-	OutputEncoding string `mapstructure:"output_encoding"`
+	OutputEncoding string `mapstructure:"output_encoding" json:"output_encoding"`
 }
 
 // Backend defines how lura should connect to the backend service (the API resource to consume)
@@ -254,31 +254,31 @@ type EndpointConfig struct {
 type Backend struct {
 	// Group defines the name of the property the response should be moved to. If empty, the response is
 	// not changed
-	Group string `mapstructure:"group"`
+	Group string `mapstructure:"group" json:"group"`
 	// Method defines the HTTP method of the request to send to the backend
-	Method string `mapstructure:"method"`
+	Method string `mapstructure:"method" json:"method"`
 	// Host is a set of hosts of the API
-	Host []string `mapstructure:"host"`
+	Host []string `mapstructure:"host" json:"host"`
 	// HostSanitizationDisabled can be set to false if the hostname should be sanitized
-	HostSanitizationDisabled bool `mapstructure:"disable_host_sanitize"`
+	HostSanitizationDisabled bool `mapstructure:"disable_host_sanitize" json:"disable_host_sanitize"`
 	// URLPattern is the URL pattern to use to locate the resource to be consumed
-	URLPattern string `mapstructure:"url_pattern"`
+	URLPattern string `mapstructure:"url_pattern" json:"url_pattern"`
 	// AllowList is a set of response fields to allow. If empty, the filter id not used
-	AllowList []string `mapstructure:"allow"`
+	AllowList []string `mapstructure:"allow" json:"allow"`
 	// DenyList is a set of response fields to remove. If empty, the filter id not used
-	DenyList []string `mapstructure:"deny"`
+	DenyList []string `mapstructure:"deny" json:"deny"`
 	// map of response fields to be renamed and their new names
-	Mapping map[string]string `mapstructure:"mapping"`
+	Mapping map[string]string `mapstructure:"mapping" json:"mapping"`
 	// the encoding format
-	Encoding string `mapstructure:"encoding"`
+	Encoding string `mapstructure:"encoding" json:"encoding"`
 	// the response to process is a collection
-	IsCollection bool `mapstructure:"is_collection"`
+	IsCollection bool `mapstructure:"is_collection" json:"is_collection"`
 	// name of the field to extract to the root. If empty, the formater will do nothing
-	Target string `mapstructure:"target"`
+	Target string `mapstructure:"target" json:"target"`
 	// name of the service discovery driver to use
-	SD string `mapstructure:"sd"`
+	SD string `mapstructure:"sd" json:"sd"`
 	// scheme to use for servers fetched from
-	SDScheme string `mapstructure:"sd_scheme"`
+	SDScheme string `mapstructure:"sd_scheme" json:"sd_scheme"`
 
 	// list of keys to be replaced in the URLPattern
 	URLKeys []string
@@ -289,11 +289,11 @@ type Backend struct {
 	// decoder to use in order to parse the received response from the API
 	Decoder encoding.Decoder `json:"-"`
 	// Backend Extra configuration for customized behaviours
-	ExtraConfig ExtraConfig `mapstructure:"extra_config"`
+	ExtraConfig ExtraConfig `mapstructure:"extra_config" json:"extra_config"`
 	// HeadersToPass defines the list of headers to pass to this backend
-	HeadersToPass []string `mapstructure:"input_headers"`
+	HeadersToPass []string `mapstructure:"input_headers" json:"input_headers"`
 	// QueryStringsToPass has the list of query string params to be sent to the backend
-	QueryStringsToPass []string `mapstructure:"input_query_strings"`
+	QueryStringsToPass []string `mapstructure:"input_query_strings" json:"input_query_strings"`
 
 	// ParentEndpoint is to be filled by the parent endpoint with its pattern enpoint
 	// so logs and other instrumentation can output better info (thus, it is not loaded
@@ -307,49 +307,49 @@ type Backend struct {
 
 // Plugin contains the config required by the plugin module
 type Plugin struct {
-	Folder  string `mapstructure:"folder"`
-	Pattern string `mapstructure:"pattern"`
+	Folder  string `mapstructure:"folder" json:"folder"`
+	Pattern string `mapstructure:"pattern" json:"pattern"`
 }
 
 // TLSKeyPair contains a pair of public and private keys
 type TLSKeyPair struct {
-	PublicKey  string `mapstructure:"public_key"`
-	PrivateKey string `mapstructure:"private_key"`
+	PublicKey  string `mapstructure:"public_key" json:"public_key"`
+	PrivateKey string `mapstructure:"private_key" json:"private_key"`
 }
 
 // TLS defines the configuration params for enabling TLS (HTTPS & HTTP/2) at the router layer
 type TLS struct {
-	IsDisabled               bool         `mapstructure:"disabled"`
-	PublicKey                string       `mapstructure:"public_key"`
-	PrivateKey               string       `mapstructure:"private_key"`
-	CaCerts                  []string     `mapstructure:"ca_certs"`
-	MinVersion               string       `mapstructure:"min_version"`
-	MaxVersion               string       `mapstructure:"max_version"`
-	CurvePreferences         []uint16     `mapstructure:"curve_preferences"`
-	PreferServerCipherSuites bool         `mapstructure:"prefer_server_cipher_suites"`
-	CipherSuites             []uint16     `mapstructure:"cipher_suites"`
-	EnableMTLS               bool         `mapstructure:"enable_mtls"`
-	DisableSystemCaPool      bool         `mapstructure:"disable_system_ca_pool"`
-	Keys                     []TLSKeyPair `mapstructure:"keys"`
+	IsDisabled               bool         `mapstructure:"disabled" json:"disabled"`
+	PublicKey                string       `mapstructure:"public_key" json:"public_key"`
+	PrivateKey               string       `mapstructure:"private_key" json:"private_key"`
+	CaCerts                  []string     `mapstructure:"ca_certs" json:"ca_certs"`
+	MinVersion               string       `mapstructure:"min_version" json:"min_version"`
+	MaxVersion               string       `mapstructure:"max_version" json:"max_version"`
+	CurvePreferences         []uint16     `mapstructure:"curve_preferences" json:"curve_preferences"`
+	PreferServerCipherSuites bool         `mapstructure:"prefer_server_cipher_suites" json:"prefer_server_cipher_suites"`
+	CipherSuites             []uint16     `mapstructure:"cipher_suites" json:"cipher_suites"`
+	EnableMTLS               bool         `mapstructure:"enable_mtls" json:"enable_mtls"`
+	DisableSystemCaPool      bool         `mapstructure:"disable_system_ca_pool" json:"disable_system_ca_pool"`
+	Keys                     []TLSKeyPair `mapstructure:"keys" json:"keys"`
 }
 
 // ClientTLS defines the configuration params for an HTTP Client
 type ClientTLS struct {
-	AllowInsecureConnections bool            `mapstructure:"allow_insecure_connections"`
-	CaCerts                  []string        `mapstructure:"ca_certs"`
-	DisableSystemCaPool      bool            `mapstructure:"disable_system_ca_pool"`
-	MinVersion               string          `mapstructure:"min_version"`
-	MaxVersion               string          `mapstructure:"max_version"`
-	CurvePreferences         []uint16        `mapstructure:"curve_preferences"`
-	CipherSuites             []uint16        `mapstructure:"cipher_suites"`
-	ClientCerts              []ClientTLSCert `mapstructure:"client_certs"`
+	AllowInsecureConnections bool            `mapstructure:"allow_insecure_connections" json:"allow_insecure_connections"`
+	CaCerts                  []string        `mapstructure:"ca_certs" json:"ca_certs"`
+	DisableSystemCaPool      bool            `mapstructure:"disable_system_ca_pool" json:"disable_system_ca_pool"`
+	MinVersion               string          `mapstructure:"min_version" json:"min_version"`
+	MaxVersion               string          `mapstructure:"max_version" json:"max_version"`
+	CurvePreferences         []uint16        `mapstructure:"curve_preferences" json:"curve_preferences"`
+	CipherSuites             []uint16        `mapstructure:"cipher_suites" json:"cipher_suites"`
+	ClientCerts              []ClientTLSCert `mapstructure:"client_certs" json:"client_certs"`
 }
 
 // ClientTLSCert holds a certificate with its private key to be
 // used for mTLS against the backend services
 type ClientTLSCert struct {
-	Certificate string `mapstructure:"certificate"`
-	PrivateKey  string `mapstructure:"private_key"`
+	Certificate string `mapstructure:"certificate" json:"certificate"`
+	PrivateKey  string `mapstructure:"private_key" json:"private_key"`
 }
 
 // ExtraConfig is a type to store extra configurations for customized behaviours
