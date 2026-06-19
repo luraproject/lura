@@ -111,6 +111,12 @@ func NewHTTPProxyDetailed(cfg *config.Backend, re client.HTTPRequestExecutor, ch
 
 		select {
 		case <-ctx.Done():
+			// re may return a streaming body backed by a live goroutine (e.g. client
+			// plugins). Close it so the producer unwinds instead of leaking on this
+			// early return, where the response parser that would wrap it never runs.
+			if resp != nil && resp.Body != nil {
+				resp.Body.Close()
+			}
 			return nil, ctx.Err()
 		default:
 		}
@@ -118,6 +124,12 @@ func NewHTTPProxyDetailed(cfg *config.Backend, re client.HTTPRequestExecutor, ch
 			return nil, err
 		}
 
+		// ch may reject the response and return (nil, err) (e.g. the default status handler
+		// on a bad status code), dropping the response it was handed. Keep a handle to that
+		// body so the fall-through below can close it instead of leaking a streaming producer
+		// goroutine; the responseError branch forwards the error and leaves the body to its
+		// own handler (newHTTPResponseError already drained and replaced it).
+		respBeforeStatusHandler := resp
 		resp, err = ch(ctx, resp)
 		if err != nil {
 			if t, ok := err.(responseError); ok {
@@ -127,6 +139,9 @@ func NewHTTPProxyDetailed(cfg *config.Backend, re client.HTTPRequestExecutor, ch
 					},
 					Metadata: Metadata{StatusCode: t.StatusCode()},
 				}, nil
+			}
+			if respBeforeStatusHandler != nil && respBeforeStatusHandler.Body != nil {
+				respBeforeStatusHandler.Body.Close()
 			}
 			return nil, err
 		}

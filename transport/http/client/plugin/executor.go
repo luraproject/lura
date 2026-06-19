@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 
 	"github.com/luraproject/lura/v2/config"
 	"github.com/luraproject/lura/v2/logging"
@@ -72,9 +71,7 @@ func HTTPRequestExecutorWithContext(
 
 		logger.Debug(logPrefix, "Injecting plugin", name)
 		return func(ctx context.Context, req *http.Request) (*http.Response, error) {
-			w := httptest.NewRecorder()
-			handler.ServeHTTP(w, req.WithContext(ctx))
-			return w.Result(), nil
+			return executePluginHandler(ctx, logger, logPrefix, handler, req), nil
 		}
 	}
 }
