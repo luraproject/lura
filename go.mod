@@ -6,7 +6,7 @@ require (
 	github.com/dimfeld/httptreemux/v5 v5.5.0
 	github.com/gin-contrib/sse v1.1.0 // indirect
 	github.com/gin-gonic/gin v1.12.0
-	github.com/go-chi/chi/v5 v5.2.2
+	github.com/go-chi/chi/v5 v5.2.4
 	github.com/gorilla/mux v1.8.1
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/urfave/negroni/v2 v2.0.2
