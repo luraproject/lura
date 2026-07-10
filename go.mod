@@ -15,7 +15,7 @@ require (
 
 require (
 	github.com/krakend/flatmap v1.2.0
-	golang.org/x/net v0.54.0
+	golang.org/x/net v0.55.0
 	golang.org/x/sync v0.20.0
 	golang.org/x/text v0.37.0
 )
