@@ -132,75 +132,79 @@ func (p *ParseError) Error() string {
 type FileReaderFunc func(string) ([]byte, error)
 
 type parseableServiceConfig struct {
-	Name                  string                     `json:"name"`
-	Endpoints             []*parseableEndpointConfig `json:"endpoints"`
-	AsyncAgents           []*parseableAsyncAgent     `json:"async_agent"`
-	Timeout               string                     `json:"timeout"`
-	CacheTTL              string                     `json:"cache_ttl"`
-	Host                  []string                   `json:"host"`
-	Port                  int                        `json:"port"`
-	Address               string                     `json:"listen_ip"`
-	Version               int                        `json:"version"`
-	ExtraConfig           *ExtraConfig               `json:"extra_config,omitempty"`
-	ReadTimeout           string                     `json:"read_timeout"`
-	WriteTimeout          string                     `json:"write_timeout"`
-	IdleTimeout           string                     `json:"idle_timeout"`
-	ReadHeaderTimeout     string                     `json:"read_header_timeout"`
-	MaxHeaderBytes        int                        `json:"max_header_bytes"`
-	DisableKeepAlives     bool                       `json:"disable_keep_alives"`
-	DisableCompression    bool                       `json:"disable_compression"`
-	DisableStrictREST     bool                       `json:"disable_rest"`
-	MaxIdleConns          int                        `json:"max_idle_connections"`
-	MaxIdleConnsPerHost   int                        `json:"max_idle_connections_per_host"`
-	IdleConnTimeout       string                     `json:"idle_connection_timeout"`
-	ResponseHeaderTimeout string                     `json:"response_header_timeout"`
-	ExpectContinueTimeout string                     `json:"expect_continue_timeout"`
-	OutputEncoding        string                     `json:"output_encoding"`
-	DialerTimeout         string                     `json:"dialer_timeout"`
-	DialerFallbackDelay   string                     `json:"dialer_fallback_delay"`
-	DialerKeepAlive       string                     `json:"dialer_keep_alive"`
-	Debug                 bool                       `json:"debug_endpoint"`
-	Echo                  bool                       `json:"echo_endpoint"`
-	Plugin                *Plugin                    `json:"plugin,omitempty"`
-	TLS                   *parseableTLS              `json:"tls,omitempty"`
-	ClientTLS             *parseableClientTLS        `json:"client_tls,omitempty"`
-	UseH2C                bool                       `json:"use_h2c,omitempty"`
-	DNSCacheTTL           string                     `json:"dns_cache_ttl"`
-	MaxShutdownDuration   string                     `json:"max_shutdown_wait_time"`
+	Name                    string                     `json:"name"`
+	Endpoints               []*parseableEndpointConfig `json:"endpoints"`
+	AsyncAgents             []*parseableAsyncAgent     `json:"async_agent"`
+	Timeout                 string                     `json:"timeout"`
+	CacheTTL                string                     `json:"cache_ttl"`
+	Host                    []string                   `json:"host"`
+	Port                    int                        `json:"port"`
+	Address                 string                     `json:"listen_ip"`
+	Version                 int                        `json:"version"`
+	ExtraConfig             *ExtraConfig               `json:"extra_config,omitempty"`
+	ReadTimeout             string                     `json:"read_timeout"`
+	WriteTimeout            string                     `json:"write_timeout"`
+	IdleTimeout             string                     `json:"idle_timeout"`
+	ReadHeaderTimeout       string                     `json:"read_header_timeout"`
+	MaxHeaderBytes          int                        `json:"max_header_bytes"`
+	DisableKeepAlives       bool                       `json:"disable_keep_alives"`
+	DisableCompression      bool                       `json:"disable_compression"`
+	DisableStrictREST       bool                       `json:"disable_rest"`
+	MaxIdleConns            int                        `json:"max_idle_connections"`
+	MaxIdleConnsPerHost     int                        `json:"max_idle_connections_per_host"`
+	IdleConnTimeout         string                     `json:"idle_connection_timeout"`
+	ResponseHeaderTimeout   string                     `json:"response_header_timeout"`
+	ExpectContinueTimeout   string                     `json:"expect_continue_timeout"`
+	OutputEncoding          string                     `json:"output_encoding"`
+	DialerTimeout           string                     `json:"dialer_timeout"`
+	DialerFallbackDelay     string                     `json:"dialer_fallback_delay"`
+	DialerKeepAlive         string                     `json:"dialer_keep_alive"`
+	ConnectionLeaseStrategy string                     `json:"connection_lease_strategy"`
+	ConnectionPools         int                        `json:"connection_pools"`
+	Debug                   bool                       `json:"debug_endpoint"`
+	Echo                    bool                       `json:"echo_endpoint"`
+	Plugin                  *Plugin                    `json:"plugin,omitempty"`
+	TLS                     *parseableTLS              `json:"tls,omitempty"`
+	ClientTLS               *parseableClientTLS        `json:"client_tls,omitempty"`
+	UseH2C                  bool                       `json:"use_h2c,omitempty"`
+	DNSCacheTTL             string                     `json:"dns_cache_ttl"`
+	MaxShutdownDuration     string                     `json:"max_shutdown_wait_time"`
 }
 
 func (p *parseableServiceConfig) normalize() ServiceConfig {
 	cfg := ServiceConfig{
-		Name:                  p.Name,
-		Timeout:               parseDuration(p.Timeout),
-		CacheTTL:              parseDuration(p.CacheTTL),
-		Host:                  p.Host,
-		Port:                  p.Port,
-		Address:               p.Address,
-		Version:               p.Version,
-		Debug:                 p.Debug,
-		Echo:                  p.Echo,
-		ReadTimeout:           parseDuration(p.ReadTimeout),
-		WriteTimeout:          parseDuration(p.WriteTimeout),
-		IdleTimeout:           parseDuration(p.IdleTimeout),
-		ReadHeaderTimeout:     parseDuration(p.ReadHeaderTimeout),
-		MaxHeaderBytes:        p.MaxHeaderBytes,
-		DisableKeepAlives:     p.DisableKeepAlives,
-		DisableCompression:    p.DisableCompression,
-		DisableStrictREST:     p.DisableStrictREST,
-		MaxIdleConns:          p.MaxIdleConns,
-		MaxIdleConnsPerHost:   p.MaxIdleConnsPerHost,
-		IdleConnTimeout:       parseDuration(p.IdleConnTimeout),
-		ResponseHeaderTimeout: parseDuration(p.ResponseHeaderTimeout),
-		ExpectContinueTimeout: parseDuration(p.ExpectContinueTimeout),
-		DialerTimeout:         parseDuration(p.DialerTimeout),
-		DialerFallbackDelay:   parseDuration(p.DialerFallbackDelay),
-		DialerKeepAlive:       parseDuration(p.DialerKeepAlive),
-		OutputEncoding:        p.OutputEncoding,
-		Plugin:                p.Plugin,
-		UseH2C:                p.UseH2C,
-		DNSCacheTTL:           parseDuration(p.DNSCacheTTL),
-		MaxShutdownDuration:   parseDuration(p.MaxShutdownDuration),
+		Name:                    p.Name,
+		Timeout:                 parseDuration(p.Timeout),
+		CacheTTL:                parseDuration(p.CacheTTL),
+		Host:                    p.Host,
+		Port:                    p.Port,
+		Address:                 p.Address,
+		Version:                 p.Version,
+		Debug:                   p.Debug,
+		Echo:                    p.Echo,
+		ReadTimeout:             parseDuration(p.ReadTimeout),
+		WriteTimeout:            parseDuration(p.WriteTimeout),
+		IdleTimeout:             parseDuration(p.IdleTimeout),
+		ReadHeaderTimeout:       parseDuration(p.ReadHeaderTimeout),
+		MaxHeaderBytes:          p.MaxHeaderBytes,
+		DisableKeepAlives:       p.DisableKeepAlives,
+		DisableCompression:      p.DisableCompression,
+		DisableStrictREST:       p.DisableStrictREST,
+		MaxIdleConns:            p.MaxIdleConns,
+		MaxIdleConnsPerHost:     p.MaxIdleConnsPerHost,
+		IdleConnTimeout:         parseDuration(p.IdleConnTimeout),
+		ResponseHeaderTimeout:   parseDuration(p.ResponseHeaderTimeout),
+		ExpectContinueTimeout:   parseDuration(p.ExpectContinueTimeout),
+		DialerTimeout:           parseDuration(p.DialerTimeout),
+		DialerFallbackDelay:     parseDuration(p.DialerFallbackDelay),
+		DialerKeepAlive:         parseDuration(p.DialerKeepAlive),
+		ConnectionLeaseStrategy: p.ConnectionLeaseStrategy,
+		ConnectionPools:         p.ConnectionPools,
+		OutputEncoding:          p.OutputEncoding,
+		Plugin:                  p.Plugin,
+		UseH2C:                  p.UseH2C,
+		DNSCacheTTL:             parseDuration(p.DNSCacheTTL),
+		MaxShutdownDuration:     parseDuration(p.MaxShutdownDuration),
 	}
 	if p.TLS != nil {
 		cfg.TLS = &TLS{
