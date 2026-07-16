@@ -156,6 +156,18 @@ type ServiceConfig struct {
 	// that do not support keep-alives ignore this field.
 	DialerKeepAlive time.Duration `mapstructure:"dialer_keep_alive"`
 
+	// ConnectionLeaseStrategy selects how idle backend connections are reused:
+	// "lifo" (the Go net/http default: most-recently-used connection first) or
+	// "fifo" (requests are round-robined across independent connection pools so
+	// idle connections are cycled evenly and traffic is distributed across
+	// backend nodes). An empty value defaults to "lifo".
+	ConnectionLeaseStrategy string `mapstructure:"connection_lease_strategy"`
+	// ConnectionPools is the number of independent connection pools the "fifo"
+	// leasing strategy round-robins across. It is the distribution fan-out, NOT
+	// the idle-connection count: the max_idle_connections* limits are split
+	// across these pools. Ignored for "lifo". A value <= 1 uses a default.
+	ConnectionPools int `mapstructure:"connection_pools"`
+
 	// DisableStrictREST flags if the REST enforcement is disabled
 	DisableStrictREST bool `mapstructure:"disable_rest"`
 
