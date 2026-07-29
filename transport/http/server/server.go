@@ -21,7 +21,7 @@ import (
 	"github.com/luraproject/lura/v3/core"
 	"github.com/luraproject/lura/v3/logging"
 	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
+	"golang.org/x/net/http2/h2c" // skipcq: GO-W1009
 )
 
 // ToHTTPError translates an error into a HTTP status code
@@ -167,7 +167,7 @@ func NewServer(cfg config.ServiceConfig, handler http.Handler) *http.Server {
 
 func NewServerWithLogger(cfg config.ServiceConfig, handler http.Handler, logger logging.Logger) *http.Server {
 	if cfg.UseH2C {
-		handler = h2c.NewHandler(handler, &http2.Server{})
+		handler = h2c.NewHandler(handler, &http2.Server{}) // skipcq: GO-W1009
 	}
 
 	return &http.Server{
