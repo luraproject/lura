@@ -99,7 +99,7 @@ func TestNewStaticMiddleware(t *testing.T) {
 
 	mw := NewStaticMiddleware(logging.NoOp, &config.EndpointConfig{ExtraConfig: extra})
 
-	p := mw(func(_ context.Context, r *Request) (*Response, error) {
+	p := mw(func(_ context.Context, _ *Request) (*Response, error) {
 		return &Response{IsComplete: true}, nil
 	})
 

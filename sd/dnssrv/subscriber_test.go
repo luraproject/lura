@@ -50,7 +50,7 @@ func ExampleRegister() {
 			Target: "127.0.0.1",
 		},
 	}
-	DefaultLookup = func(service, proto, name string) (cname string, addrs []*net.SRV, err error) {
+	DefaultLookup = func(_, _, _ string) (cname string, addrs []*net.SRV, err error) {
 		return "cname", srvSet, nil
 	}
 
@@ -105,7 +105,7 @@ func ExampleNewDetailed() {
 			Target: "127.0.0.1",
 		},
 	}
-	lookupFunc := func(service, proto, name string) (cname string, addrs []*net.SRV, err error) {
+	lookupFunc := func(_, _, _ string) (cname string, addrs []*net.SRV, err error) {
 		return "cname", srvSet, nil
 	}
 
@@ -160,7 +160,7 @@ func ExampleNewDetailedWithScheme() {
 			Target: "127.0.0.1",
 		},
 	}
-	lookupFunc := func(service, proto, name string) (cname string, addrs []*net.SRV, err error) {
+	lookupFunc := func(_, _, _ string) (cname string, addrs []*net.SRV, err error) {
 		return "cname", srvSet, nil
 	}
 
@@ -184,7 +184,7 @@ func ExampleNewDetailedWithScheme() {
 
 func TestSubscriber_LoockupError(t *testing.T) {
 	errToReturn := errors.New("Some random error")
-	defaultLookup := func(service, proto, name string) (cname string, addrs []*net.SRV, err error) {
+	defaultLookup := func(_, _, _ string) (cname string, addrs []*net.SRV, err error) {
 		return "cname", []*net.SRV{}, errToReturn
 	}
 	ttl := 1 * time.Millisecond
@@ -200,21 +200,21 @@ func TestSubscriber_LoockupError(t *testing.T) {
 
 func TestSubscriber_ResolveVeryLarge(t *testing.T) {
 	var srvSet []*net.SRV
-	const max = 1000
-	for i := 0; i < max; i++ {
+	const srvCount = 1000
+	for i := 0; i < srvCount; i++ {
 		srvSet = append(srvSet, &net.SRV{
 			Port:   uint16(80 + i),
 			Target: "127.0.0.1",
 			Weight: 65535,
 		})
 	}
-	lookupFunc := func(service, proto, name string) (cname string, addrs []*net.SRV, err error) {
+	lookupFunc := func(_, _, _ string) (cname string, addrs []*net.SRV, err error) {
 		return "cname", srvSet, nil
 	}
 	s := NewDetailed("large.example.tld", lookupFunc, 10*time.Second)
 	hosts, _ := s.Hosts()
-	if len(hosts) != max {
-		t.Errorf("Expected %d, but got %d", max, len(hosts))
+	if len(hosts) != srvCount {
+		t.Errorf("Expected %d, but got %d", srvCount, len(hosts))
 	}
 }
 

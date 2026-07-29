@@ -90,7 +90,7 @@ func TestNewDefaultFactory_ok(t *testing.T) {
 		Body:   newDummyReadCloser(""),
 	}
 
-	assertion := func(ctx context.Context, request *Request) (*Response, error) {
+	assertion := func(_ context.Context, request *Request) (*Response, error) {
 		if request.URL.String() != expectedURL {
 			t.Errorf("The middlewares did not update the request URL! want [%s], have [%s]\n", expectedURL, request.URL)
 		}

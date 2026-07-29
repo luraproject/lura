@@ -13,12 +13,12 @@ import (
 
 func TestAgentStarter_Start_last(t *testing.T) {
 	var firstAgentCalled, secondAgentCalled bool
-	firstAgent := func(_ context.Context, opts Options) bool {
+	firstAgent := func(_ context.Context, _ Options) bool {
 		// TODO: check opts
 		firstAgentCalled = true
 		return false
 	}
-	secondAgent := func(_ context.Context, opts Options) bool {
+	secondAgent := func(_ context.Context, _ Options) bool {
 		// TODO: check opts
 		secondAgentCalled = true
 		return true
@@ -49,11 +49,11 @@ func TestAgentStarter_Start_last(t *testing.T) {
 
 func TestAgentStarter_Start_first(t *testing.T) {
 	var firstAgentCalled, secondAgentCalled bool
-	firstAgent := func(_ context.Context, opts Options) bool {
+	firstAgent := func(_ context.Context, _ Options) bool {
 		firstAgentCalled = true
 		return true
 	}
-	secondAgent := func(_ context.Context, opts Options) bool {
+	secondAgent := func(_ context.Context, _ Options) bool {
 		secondAgentCalled = true
 		return false
 	}

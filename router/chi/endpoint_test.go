@@ -21,7 +21,7 @@ import (
 )
 
 func TestEndpointHandler_ok(t *testing.T) {
-	p := func(ctx context.Context, req *proxy.Request) (*proxy.Response, error) {
+	p := func(_ context.Context, req *proxy.Request) (*proxy.Response, error) {
 		data, _ := json.Marshal(req.Query)
 		if string(data) != `{"b":["1"],"c[]":["x","y"],"d":["1","2"]}` {
 			t.Errorf("unexpected querystring: %s", data)

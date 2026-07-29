@@ -62,7 +62,7 @@ func NewConcurrentMiddlewareWithLogger(logger logging.Logger, remote *config.Bac
 	}
 }
 
-// NewConcurrentMiddlewareWithLogger creates a proxy middleware that enables sending several requests concurrently.
+// NewConcurrentMiddleware creates a proxy middleware that enables sending several requests concurrently.
 // Is recommended to use the version with a logger param.
 func NewConcurrentMiddleware(remote *config.Backend) Middleware {
 	return NewConcurrentMiddlewareWithLogger(logging.NoOp, remote)

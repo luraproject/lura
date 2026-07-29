@@ -112,7 +112,7 @@ func TestRegister_complete_ko(t *testing.T) {
 	expectedErr := errors.New("expect me")
 
 	if err := decoders.Register("custom", func(_ bool) func(io.Reader, *map[string]interface{}) error {
-		return func(r io.Reader, v *map[string]interface{}) error {
+		return func(r io.Reader, _ *map[string]interface{}) error {
 			d, err := io.ReadAll(r)
 			if err != nil {
 				t.Error(err)

@@ -29,7 +29,7 @@ var (
 )
 
 func newAssertionProxy(counter *uint64) Proxy {
-	return func(ctx context.Context, request *Request) (*Response, error) {
+	return func(_ context.Context, _ *Request) (*Response, error) {
 		atomic.AddUint64(counter, 1)
 		return nil, nil
 	}

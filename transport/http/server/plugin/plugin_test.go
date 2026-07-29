@@ -46,7 +46,7 @@ func TestLoadWithLogger(t *testing.T) {
 				},
 			},
 		},
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
 			t.Error("this handler should not been called")
 		}),
 	); err != nil {

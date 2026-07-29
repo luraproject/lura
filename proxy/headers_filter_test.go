@@ -22,7 +22,7 @@ func TestNewFilterHeadersMiddleware(t *testing.T) {
 	)
 
 	var receivedReq *Request
-	prxy := mw(func(ctx context.Context, req *Request) (*Response, error) {
+	prxy := mw(func(_ context.Context, req *Request) (*Response, error) {
 		receivedReq = req
 		return nil, nil
 	})
@@ -91,7 +91,7 @@ func TestNewFilterHeadersMiddlewareBlockAll(t *testing.T) {
 	)
 
 	var receivedReq *Request
-	prxy := mw(func(ctx context.Context, req *Request) (*Response, error) {
+	prxy := mw(func(_ context.Context, req *Request) (*Response, error) {
 		receivedReq = req
 		return nil, nil
 	})
@@ -127,7 +127,7 @@ func TestNewFilterHeadersMiddlewareAllowAll(t *testing.T) {
 	)
 
 	var receivedReq *Request
-	prxy := mw(func(ctx context.Context, req *Request) (*Response, error) {
+	prxy := mw(func(_ context.Context, req *Request) (*Response, error) {
 		receivedReq = req
 		return nil, nil
 	})
