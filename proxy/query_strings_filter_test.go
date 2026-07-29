@@ -6,8 +6,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/logging"
 )
 
 func TestNewFilterQueryStringsMiddleware(t *testing.T) {
@@ -22,7 +22,7 @@ func TestNewFilterQueryStringsMiddleware(t *testing.T) {
 	)
 
 	var receivedReq *Request
-	prxy := mw(func(ctx context.Context, req *Request) (*Response, error) {
+	prxy := mw(func(_ context.Context, req *Request) (*Response, error) {
 		receivedReq = req
 		return nil, nil
 	})
@@ -108,7 +108,7 @@ func TestFilterQueryStringsBlockAll(t *testing.T) {
 	)
 
 	var receivedReq *Request
-	prxy := mw(func(ctx context.Context, req *Request) (*Response, error) {
+	prxy := mw(func(_ context.Context, req *Request) (*Response, error) {
 		receivedReq = req
 		return nil, nil
 	})
@@ -145,7 +145,7 @@ func TestFilterQueryStringsAllowAll(t *testing.T) {
 	)
 
 	var receivedReq *Request
-	prxy := mw(func(ctx context.Context, req *Request) (*Response, error) {
+	prxy := mw(func(_ context.Context, req *Request) (*Response, error) {
 		receivedReq = req
 		return nil, nil
 	})

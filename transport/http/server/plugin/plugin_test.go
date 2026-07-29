@@ -14,8 +14,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/logging"
 )
 
 func TestLoadWithLogger(t *testing.T) {
@@ -46,7 +46,7 @@ func TestLoadWithLogger(t *testing.T) {
 				},
 			},
 		},
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
 			t.Error("this handler should not been called")
 		}),
 	); err != nil {

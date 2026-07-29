@@ -5,7 +5,7 @@ package encoding
 import (
 	"io"
 
-	"github.com/luraproject/lura/v2/register"
+	"github.com/luraproject/lura/v3/register"
 )
 
 // GetRegister returns the package register

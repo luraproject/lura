@@ -14,13 +14,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v3/config"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
 
 // Namespace is the key for the backend's extra config
-const Namespace = "github.com/devopsfaith/krakend/transport/http/client/graphql"
+const Namespace = "backend/graphql"
 
 // OperationType contains all the operations allowed by graphql
 type OperationType string

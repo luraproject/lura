@@ -11,15 +11,15 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
-	"github.com/luraproject/lura/v2/proxy/plugin"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/logging"
+	"github.com/luraproject/lura/v3/proxy/plugin"
 )
 
 func TestNewPluginMiddleware_logger(t *testing.T) {
 	plugin.LoadWithLogger("./plugin/tests", ".so", plugin.RegisterModifier, logging.NoOp)
 
-	validator := func(ctx context.Context, r *Request) (*Response, error) {
+	validator := func(_ context.Context, r *Request) (*Response, error) {
 		if r.Path != "/bar/fooo/fooo" {
 			return nil, fmt.Errorf("unexpected path %s", r.Path)
 		}
@@ -76,7 +76,7 @@ func TestNewPluginMiddleware_logger(t *testing.T) {
 func TestNewPluginMiddleware_error_request(t *testing.T) {
 	plugin.LoadWithLogger("./plugin/tests", ".so", plugin.RegisterModifier, logging.NoOp)
 
-	validator := func(ctx context.Context, r *Request) (*Response, error) {
+	validator := func(_ context.Context, _ *Request) (*Response, error) {
 		t.Error("the backend should not be called")
 		return nil, nil
 	}
@@ -132,7 +132,7 @@ func TestNewPluginMiddleware_error_response(t *testing.T) {
 
 	var hit bool
 
-	validator := func(ctx context.Context, r *Request) (*Response, error) {
+	validator := func(_ context.Context, _ *Request) (*Response, error) {
 		hit = true
 		return &Response{
 			Data:       map[string]interface{}{"foo": "bar"},
@@ -206,7 +206,7 @@ func TestNewPluginMiddleware_PoisonedPlugin(t *testing.T) {
 		},
 	}
 
-	validator := func(ctx context.Context, r *Request) (*Response, error) {
+	validator := func(_ context.Context, _ *Request) (*Response, error) {
 		return expectedResp, nil
 	}
 

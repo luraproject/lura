@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package router defines some interfaces and common helpers for router adapters
+Package router defines some interfaces and common helpers for router adapters
 */
 package router
 
 import (
 	"context"
 
-	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v3/config"
 )
 
 // Router sets up the public layer exposed to the users

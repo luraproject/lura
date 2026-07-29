@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/encoding"
-	"github.com/luraproject/lura/v2/proxy"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/encoding"
+	"github.com/luraproject/lura/v3/proxy"
 )
 
 func TestRender_unknown(t *testing.T) {

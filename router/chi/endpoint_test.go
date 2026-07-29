@@ -15,13 +15,13 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/proxy"
-	"github.com/luraproject/lura/v2/transport/http/server"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/proxy"
+	"github.com/luraproject/lura/v3/transport/http/server"
 )
 
 func TestEndpointHandler_ok(t *testing.T) {
-	p := func(ctx context.Context, req *proxy.Request) (*proxy.Response, error) {
+	p := func(_ context.Context, req *proxy.Request) (*proxy.Response, error) {
 		data, _ := json.Marshal(req.Query)
 		if string(data) != `{"b":["1"],"c[]":["x","y"],"d":["1","2"]}` {
 			t.Errorf("unexpected querystring: %s", data)

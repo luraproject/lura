@@ -10,12 +10,12 @@ import (
 	"errors"
 	"io"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/logging"
 )
 
 // Namespace to be used in extra config
-const Namespace = "github.com/devopsfaith/krakend/proxy"
+const Namespace = "proxy"
 
 // Metadata is the Metadata of the Response which contains Headers and StatusCode
 type Metadata struct {

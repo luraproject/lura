@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/krakend/flatmap/tree"
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/logging"
 )
 
 // EntityFormatter formats the response data

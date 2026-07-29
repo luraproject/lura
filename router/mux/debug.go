@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v3/logging"
 )
 
 // DebugHandler creates a dummy handler function, useful for quick integration tests

@@ -14,7 +14,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v3/logging"
 )
 
 func ExampleLoadWithLoggerAndContext() {
@@ -45,7 +45,7 @@ func ExampleLoadWithLoggerAndContext() {
 	modifier := modFactory(map[string]interface{}{})
 
 	input := requestWrapper{
-		ctx:     context.WithValue(context.Background(), "myCtxKey", "some"),
+		ctx:     context.WithValue(context.Background(), "myCtxKey", "some"), // skipcq: GO-W5003
 		path:    "/bar",
 		method:  "GET",
 		headers: map[string][]string{"X-Foo": {"bar"}},
@@ -77,7 +77,7 @@ func ExampleLoadWithLoggerAndContext() {
 	modifier = modFactory(map[string]interface{}{})
 
 	response := responseWrapper{
-		ctx:     context.WithValue(context.Background(), "myCtxKey", "other"),
+		ctx:     context.WithValue(context.Background(), "myCtxKey", "other"), // skipcq: GO-W5003
 		request: input,
 		data:    map[string]interface{}{"foo": "bar"},
 	}
@@ -133,7 +133,7 @@ func TestLoad(t *testing.T) {
 
 	modifier := modFactory(map[string]interface{}{})
 
-	input := requestWrapper{ctx: context.WithValue(context.Background(), "myCtxKey", "some"), path: "/bar"}
+	input := requestWrapper{ctx: context.WithValue(context.Background(), "myCtxKey", "some"), path: "/bar"} // skipcq: GO-W5003
 
 	tmp, err := modifier(input)
 	if err != nil {

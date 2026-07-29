@@ -2,8 +2,8 @@
 
 # The Lura Project framework
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/luraproject/lura/v2)](https://goreportcard.com/report/github.com/luraproject/lura/v2)
-[![GoDoc](https://godoc.org/github.com/luraproject/lura/v2?status.svg)](https://godoc.org/github.com/luraproject/lura/v2)
+[![Go Report Card](https://goreportcard.com/badge/github.com/luraproject/lura/v3)](https://goreportcard.com/report/github.com/luraproject/lura/v3)
+[![GoDoc](https://godoc.org/github.com/luraproject/lura/v3?status.svg)](https://godoc.org/github.com/luraproject/lura/v3)
 ![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/3151/badge)
 [![Slack Widget](https://img.shields.io/badge/join-us%20on%20slack-gray.svg?longCache=true&logo=slack&colorB=red)](https://gophers.slack.com/messages/lura)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fluraproject%2Flura.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fluraproject%2Flura%2Fv2?ref=badge_shield&issueType=license)
@@ -66,10 +66,10 @@ A ready to use example:
         "log"
         "os"
 
-        "github.com/luraproject/lura/config"
-        "github.com/luraproject/lura/logging"
-        "github.com/luraproject/lura/proxy"
-        "github.com/luraproject/lura/router/gin"
+        "github.com/luraproject/lura/v3/config"
+        "github.com/luraproject/lura/v3/logging"
+        "github.com/luraproject/lura/v3/proxy"
+        "github.com/luraproject/lura/v3/router/gin"
     )
 
     func main() {

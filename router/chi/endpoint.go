@@ -6,9 +6,9 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/proxy"
-	"github.com/luraproject/lura/v2/router/mux"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/proxy"
+	"github.com/luraproject/lura/v3/router/mux"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )

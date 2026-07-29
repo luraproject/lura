@@ -1,4 +1,4 @@
-module github.com/luraproject/lura/v2
+module github.com/luraproject/lura/v3
 
 go 1.25.0
 

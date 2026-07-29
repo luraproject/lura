@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package chi provides some basic implementations for building routers based on go-chi/chi
+Package chi provides some basic implementations for building routers based on go-chi/chi
 */
 package chi
 
@@ -12,12 +12,12 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
-	"github.com/luraproject/lura/v2/proxy"
-	"github.com/luraproject/lura/v2/router"
-	"github.com/luraproject/lura/v2/router/mux"
-	"github.com/luraproject/lura/v2/transport/http/server"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/logging"
+	"github.com/luraproject/lura/v3/proxy"
+	"github.com/luraproject/lura/v3/router"
+	"github.com/luraproject/lura/v3/router/mux"
+	"github.com/luraproject/lura/v3/transport/http/server"
 )
 
 // ChiDefaultDebugPattern is the default pattern used to define the debug endpoint

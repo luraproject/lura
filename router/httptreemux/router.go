@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package httptreemux provides some basic implementations for building routers based on dimfeld/httptreemux
+Package httptreemux provides some basic implementations for building routers based on dimfeld/httptreemux
 */
 package httptreemux
 
@@ -9,11 +9,11 @@ import (
 	"net/http"
 
 	"github.com/dimfeld/httptreemux/v5"
-	"github.com/luraproject/lura/v2/logging"
-	"github.com/luraproject/lura/v2/proxy"
-	"github.com/luraproject/lura/v2/router"
-	"github.com/luraproject/lura/v2/router/mux"
-	"github.com/luraproject/lura/v2/transport/http/server"
+	"github.com/luraproject/lura/v3/logging"
+	"github.com/luraproject/lura/v3/proxy"
+	"github.com/luraproject/lura/v3/router"
+	"github.com/luraproject/lura/v3/router/mux"
+	"github.com/luraproject/lura/v3/transport/http/server"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )

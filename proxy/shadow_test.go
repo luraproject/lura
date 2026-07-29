@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/logging"
 )
 
 var (
@@ -29,7 +29,7 @@ var (
 )
 
 func newAssertionProxy(counter *uint64) Proxy {
-	return func(ctx context.Context, request *Request) (*Response, error) {
+	return func(_ context.Context, _ *Request) (*Response, error) {
 		atomic.AddUint64(counter, 1)
 		return nil, nil
 	}
