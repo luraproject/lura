@@ -8,9 +8,9 @@ import (
 	"io"
 	"net/url"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
-	"github.com/luraproject/lura/v2/proxy/plugin"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/logging"
+	"github.com/luraproject/lura/v3/proxy/plugin"
 )
 
 // NewPluginMiddleware returns an endpoint middleware wrapped (if required) with the plugin middleware.

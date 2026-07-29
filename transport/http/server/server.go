@@ -17,9 +17,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/core"
-	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/core"
+	"github.com/luraproject/lura/v3/logging"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )

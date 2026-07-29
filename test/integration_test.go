@@ -24,15 +24,15 @@ import (
 	ginlib "github.com/gin-gonic/gin"
 	"github.com/urfave/negroni/v2"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
-	"github.com/luraproject/lura/v2/proxy"
-	"github.com/luraproject/lura/v2/router/chi"
-	"github.com/luraproject/lura/v2/router/gin"
-	"github.com/luraproject/lura/v2/router/gorilla"
-	"github.com/luraproject/lura/v2/router/httptreemux"
-	luranegroni "github.com/luraproject/lura/v2/router/negroni"
-	"github.com/luraproject/lura/v2/transport/http/server"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/logging"
+	"github.com/luraproject/lura/v3/proxy"
+	"github.com/luraproject/lura/v3/router/chi"
+	"github.com/luraproject/lura/v3/router/gin"
+	"github.com/luraproject/lura/v3/router/gorilla"
+	"github.com/luraproject/lura/v3/router/httptreemux"
+	luranegroni "github.com/luraproject/lura/v3/router/negroni"
+	"github.com/luraproject/lura/v3/transport/http/server"
 )
 
 var localhostIP string

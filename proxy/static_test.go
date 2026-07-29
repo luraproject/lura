@@ -8,8 +8,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/logging"
 )
 
 func TestNewStaticMiddleware_ok(t *testing.T) {

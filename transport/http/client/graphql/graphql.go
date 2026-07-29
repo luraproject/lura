@@ -14,7 +14,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v3/config"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )

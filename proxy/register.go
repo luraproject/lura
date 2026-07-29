@@ -3,7 +3,7 @@
 package proxy
 
 import (
-	"github.com/luraproject/lura/v2/register"
+	"github.com/luraproject/lura/v3/register"
 )
 
 func NewRegister() *Register {
