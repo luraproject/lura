@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package negroni provides some basic implementations for building routers based on urfave/negroni
+Package negroni provides some basic implementations for building routers based on urfave/negroni
 */
 package negroni
 

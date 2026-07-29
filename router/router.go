@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package router defines some interfaces and common helpers for router adapters
+Package router defines some interfaces and common helpers for router adapters
 */
 package router
 
