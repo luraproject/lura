@@ -161,7 +161,6 @@ type parseableServiceConfig struct {
 	DialerKeepAlive       string                     `json:"dialer_keep_alive"`
 	Debug                 bool                       `json:"debug_endpoint"`
 	Echo                  bool                       `json:"echo_endpoint"`
-	Plugin                *Plugin                    `json:"plugin,omitempty"`
 	TLS                   *parseableTLS              `json:"tls,omitempty"`
 	ClientTLS             *parseableClientTLS        `json:"client_tls,omitempty"`
 	UseH2C                bool                       `json:"use_h2c,omitempty"`
@@ -197,7 +196,6 @@ func (p *parseableServiceConfig) normalize() ServiceConfig {
 		DialerFallbackDelay:   parseDuration(p.DialerFallbackDelay),
 		DialerKeepAlive:       parseDuration(p.DialerKeepAlive),
 		OutputEncoding:        p.OutputEncoding,
-		Plugin:                p.Plugin,
 		UseH2C:                p.UseH2C,
 		DNSCacheTTL:           parseDuration(p.DNSCacheTTL),
 		MaxShutdownDuration:   parseDuration(p.MaxShutdownDuration),
