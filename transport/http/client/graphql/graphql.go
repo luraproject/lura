@@ -20,7 +20,7 @@ import (
 )
 
 // Namespace is the key for the backend's extra config
-const Namespace = "github.com/devopsfaith/krakend/transport/http/client/graphql"
+const Namespace = "backend/graphql"
 
 // OperationType contains all the operations allowed by graphql
 type OperationType string

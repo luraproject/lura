@@ -21,7 +21,7 @@ import (
 	"github.com/luraproject/lura/v3/transport/http/server"
 )
 
-const Namespace = "github_com/luraproject/lura/router/gin"
+const Namespace = "router"
 
 type EngineOptions struct {
 	Logger    logging.Logger

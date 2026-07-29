@@ -14,7 +14,7 @@ import (
 )
 
 // Namespace to be used in extra config
-const Namespace = "github.com/devopsfaith/krakend/http"
+const Namespace = "backend/http"
 
 // ErrInvalidStatusCode is the error returned by the http proxy when the received status code
 // is not a 200 nor a 201
