@@ -140,11 +140,18 @@ func DetailedHTTPStatusHandlerWithErrPrefix(name, errPrefix string) HTTPStatusHa
 	}
 }
 
+// maxErrorResponseBody bounds how much of an error response body is read into the error
+// message. It is large enough not to truncate real error payloads but prevents an unbounded
+// or still-streaming error body (e.g. from a client plugin) from being buffered without limit.
+// It is a var rather than a const so tests can lower it without allocating the full cap.
+var maxErrorResponseBody int64 = 8 << 20 // 8 MiB
+
 func newHTTPResponseError(resp *http.Response) HTTPResponseError {
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		body = []byte{}
-	}
+	// io.ReadAll returns the bytes read before any error, so keep them rather than
+	// discarding a partial payload. A body over maxErrorResponseBody is silently truncated
+	// (LimitReader yields io.EOF, not an error): the cap bounds the read without surfacing
+	// the truncation as a failure.
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, maxErrorResponseBody))
 	resp.Body.Close()
 	resp.Body = io.NopCloser(bytes.NewBuffer(body))
 

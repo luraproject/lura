@@ -132,6 +132,39 @@ func TestDefaultHTTPStatusHandler(t *testing.T) {
 	}
 }
 
+func TestNewHTTPResponseError_limitsBodySize(t *testing.T) {
+	original := maxErrorResponseBody
+	defer func() { maxErrorResponseBody = original }()
+	maxErrorResponseBody = 8
+
+	full := "0123456789abcdef" // 16 bytes, over the 8-byte cap
+	resp := &http.Response{
+		StatusCode: http.StatusInternalServerError,
+		Header:     http.Header{"Content-Type": []string{"text/plain"}},
+		Body:       io.NopCloser(strings.NewReader(full)),
+	}
+
+	respErr := newHTTPResponseError(resp)
+
+	want := full[:maxErrorResponseBody]
+	if respErr.Msg != want {
+		t.Errorf("expected the error message truncated to %q, got %q", want, respErr.Msg)
+		return
+	}
+	if respErr.Enc != "text/plain" {
+		t.Errorf("expected the content type preserved, got %q", respErr.Enc)
+		return
+	}
+	rest, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Errorf("re-reading the replaced body: %v", err)
+		return
+	}
+	if string(rest) != want {
+		t.Errorf("expected the replaced body to hold the truncated bytes %q, got %q", want, string(rest))
+	}
+}
+
 var statusCodes = []int{
 	http.StatusBadRequest,
 	http.StatusUnauthorized,

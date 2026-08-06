@@ -134,6 +134,79 @@ func TestNewHTTPProxy_cancel(t *testing.T) {
 	}
 }
 
+// recordingBody is a response body that counts how many times it is closed, so a test can
+// assert the proxy releases a streaming producer rather than leaking it.
+type recordingBody struct {
+	io.Reader
+	closes int32
+}
+
+func (b *recordingBody) Close() error {
+	atomic.AddInt32(&b.closes, 1)
+	return nil
+}
+
+func TestNewHTTPProxyDetailed_cancelClosesBody(t *testing.T) {
+	body := &recordingBody{Reader: strings.NewReader("streaming")}
+	re := func(_ context.Context, _ *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Body: body}, nil
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // already cancelled: the proxy must drop and close the response body
+
+	prxy := NewHTTPProxyDetailed(&config.Backend{}, re, client.NoOpHTTPStatusHandler, NoOpHTTPResponseParser)
+	resp, err := prxy(ctx, &Request{
+		Method: "GET",
+		Path:   "/",
+		URL:    &url.URL{Scheme: "http", Host: "example.com"},
+		Body:   newDummyReadCloser(""),
+	})
+
+	if err == nil {
+		t.Error("expected the cancelled-context error, got nil")
+		return
+	}
+	if resp != nil {
+		t.Errorf("expected no response on cancellation, got %v", resp)
+		return
+	}
+	if n := atomic.LoadInt32(&body.closes); n != 1 {
+		t.Errorf("expected the dropped streaming body closed exactly once, got %d closes", n)
+	}
+}
+
+func TestNewHTTPProxyDetailed_badStatusClosesStreamingBody(t *testing.T) {
+	body := &recordingBody{Reader: strings.NewReader("boom")}
+	re := func(_ context.Context, _ *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusInternalServerError, Body: body}, nil
+	}
+
+	// No return_error_details/return_error_code -> the default status handler, which returns
+	// (nil, *ErrInvalidStatus); that error is not a responseError, so the proxy must still
+	// close the streaming body it was handed.
+	backend := &config.Backend{}
+	prxy := NewHTTPProxyDetailed(backend, re, client.GetHTTPStatusHandler(backend), NoOpHTTPResponseParser)
+	resp, err := prxy(context.Background(), &Request{
+		Method: "GET",
+		Path:   "/",
+		URL:    &url.URL{Scheme: "http", Host: "example.com"},
+		Body:   newDummyReadCloser(""),
+	})
+
+	if err == nil || !strings.HasPrefix(err.Error(), "invalid status code") {
+		t.Errorf("expected an invalid status code error, got %v", err)
+		return
+	}
+	if resp != nil {
+		t.Errorf("expected no response on a rejected status, got %v", resp)
+		return
+	}
+	if n := atomic.LoadInt32(&body.closes); n != 1 {
+		t.Errorf("expected the rejected streaming body closed exactly once, got %d closes", n)
+	}
+}
+
 func TestNewHTTPProxy_badResponseBody(t *testing.T) {
 	expectedMethod := "GET"
 	backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
