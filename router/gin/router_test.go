@@ -84,6 +84,14 @@ func TestDefaultFactory_ok(t *testing.T) {
 					{},
 				},
 			},
+			{
+				Endpoint: "/some",
+				Method:   "QUERY",
+				Timeout:  10,
+				Backend: []*config.Backend{
+					{},
+				},
+			},
 		},
 		ExtraConfig: map[string]interface{}{
 			Namespace: map[string]interface{}{
@@ -140,7 +148,7 @@ func TestDefaultFactory_ok(t *testing.T) {
 		return
 	}
 
-	if allow := resp.Header.Get("Allow"); allow != "DELETE, GET, PATCH, POST, PUT" {
+	if allow := resp.Header.Get("Allow"); allow != "DELETE, GET, PATCH, POST, PUT, QUERY" {
 		t.Errorf("unexpected options response: '%s'", allow)
 	}
 }

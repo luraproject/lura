@@ -22,6 +22,7 @@ const (
 	DefaultDebugPattern = "/__debug/"
 	DefaultEchoPattern  = "/__echo/"
 	logPrefix           = "[SERVICE: Mux]"
+	methodQuery         = "QUERY"
 )
 
 // RunServerFunc is a func that will run the http Server with the given params.
@@ -104,6 +105,7 @@ func (r httpRouter) Run(cfg config.ServiceConfig) {
 			http.MethodPut,
 			http.MethodPatch,
 			http.MethodDelete,
+			methodQuery,
 			http.MethodHead,
 			http.MethodOptions,
 			http.MethodConnect,
@@ -121,6 +123,7 @@ func (r httpRouter) Run(cfg config.ServiceConfig) {
 			http.MethodPut,
 			http.MethodPatch,
 			http.MethodDelete,
+			methodQuery,
 			http.MethodHead,
 			http.MethodOptions,
 			http.MethodConnect,
@@ -171,6 +174,7 @@ func (r httpRouter) registerKrakendEndpoint(method string, endpoint *config.Endp
 	case http.MethodPut:
 	case http.MethodPatch:
 	case http.MethodDelete:
+	case methodQuery:
 	default:
 		r.cfg.Logger.Error(logPrefix, "Unsupported method", method)
 		return

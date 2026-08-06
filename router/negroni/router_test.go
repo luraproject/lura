@@ -82,6 +82,14 @@ func TestDefaultFactory_ok(t *testing.T) {
 					{},
 				},
 			},
+			{
+				Endpoint: "/query",
+				Method:   "QUERY",
+				Timeout:  10,
+				Backend: []*config.Backend{
+					{},
+				},
+			},
 		},
 	}
 

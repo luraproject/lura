@@ -22,7 +22,10 @@ import (
 	"github.com/luraproject/lura/v2/transport/http/server"
 )
 
-const logPrefix = "[SERVICE: Gin]"
+const (
+	logPrefix   = "[SERVICE: Gin]"
+	methodQuery = "QUERY"
+)
 
 // RunServerFunc is a func that will run the http Server with the given params.
 type RunServerFunc func(context.Context, config.ServiceConfig, http.Handler) error
@@ -170,6 +173,8 @@ func (r ginRouter) registerKrakendEndpoint(rg *gin.RouterGroup, method string, e
 		rg.PATCH(path, h)
 	case http.MethodDelete:
 		rg.DELETE(path, h)
+	case methodQuery:
+		rg.Handle(methodQuery, path, h)
 	default:
 		r.cfg.Logger.Error(logPrefix, "[ENDPOINT:", path, "] Unsupported method", method)
 		return

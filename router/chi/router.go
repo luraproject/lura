@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package chi provides some basic implementations for building routers based on go-chi/chi
+Package chi provides some basic implementations for building routers based on go-chi/chi
 */
 package chi
 
@@ -20,10 +20,16 @@ import (
 	"github.com/luraproject/lura/v2/transport/http/server"
 )
 
-// ChiDefaultDebugPattern is the default pattern used to define the debug endpoint
-const ChiDefaultDebugPattern = "/__debug/"
+const (
+	// ChiDefaultDebugPattern is the default pattern used to define the debug endpoint
+	ChiDefaultDebugPattern = "/__debug/"
+	logPrefix              = "[SERVICE: Chi]"
+	methodQuery            = "QUERY"
+)
 
-const logPrefix = "[SERVICE: Chi]"
+func init() {
+	chi.RegisterMethod(methodQuery)
+}
 
 // RunServerFunc is a func that will run the http Server with the given params.
 type RunServerFunc func(context.Context, config.ServiceConfig, http.Handler) error
@@ -115,6 +121,7 @@ func (r chiRouter) registerDebugEndpoints() {
 	r.cfg.Engine.Put(r.cfg.DebugPattern, debugHandler)
 	r.cfg.Engine.Patch(r.cfg.DebugPattern, debugHandler)
 	r.cfg.Engine.Delete(r.cfg.DebugPattern, debugHandler)
+	r.cfg.Engine.Method(methodQuery, r.cfg.DebugPattern, debugHandler)
 }
 
 func (r chiRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) {
@@ -151,6 +158,8 @@ func (r chiRouter) registerKrakendEndpoint(method string, endpoint *config.Endpo
 		r.cfg.Engine.Patch(path, handler)
 	case http.MethodDelete:
 		r.cfg.Engine.Delete(path, handler)
+	case methodQuery:
+		r.cfg.Engine.Method(methodQuery, path, handler)
 	default:
 		r.cfg.Logger.Error(logPrefix, "Unsupported method", method)
 		return
