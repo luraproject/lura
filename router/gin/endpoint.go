@@ -4,6 +4,7 @@ package gin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/textproto"
 
@@ -99,13 +100,21 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 							}
 						}
 					}
-					if t, ok := err.(responseError); ok {
+					// 499 Client Closed Request — mirrors the nginx convention for client
+					// aborts. errors.Is is used so wrapped context.Canceled values
+					// (e.g. fmt.Errorf("...: %w", context.Canceled)) are also caught.
+					// context.DeadlineExceeded is intentionally excluded: server-side
+					// timeouts remain 500.
+					clientCanceled := errors.Is(err, context.Canceled)
+					if clientCanceled {
+						c.Status(499)
+					} else if t, ok := err.(responseError); ok {
 						c.Status(t.StatusCode())
 					} else {
 						c.Status(errF(err))
 					}
-
-					if returnErrorMsg {
+					// Do not write an error body when the client is already gone.
+					if returnErrorMsg && !clientCanceled {
 						ErrorResponseWriter(c, err)
 					}
 					cancel()
