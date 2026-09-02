@@ -331,8 +331,8 @@ func NewFlatmapMiddleware(logger logging.Logger, cfg *config.EndpointConfig) Mid
 
 		logger.Debug(
 			fmt.Sprintf(
-				"[ENDPOINT: %s][Flatmap] Adding flatmap manipulator with %d operations",
-				cfg.Endpoint,
+				"[ENDPOINT: %s %s][Flatmap] Adding flatmap manipulator with %d operations",
+				cfg.Method, cfg.Endpoint,
 				len(formatter.Ops),
 			),
 		)

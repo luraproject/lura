@@ -28,7 +28,9 @@ func NewGraphQLMiddleware(logger logging.Logger, remote *config.Backend) Middlew
 	if err != nil {
 		if err != graphql.ErrNoConfigFound {
 			logger.Warning(
-				fmt.Sprintf("[BACKEND: %s %s -> %s][GraphQL] %s", remote.ParentEndpoint, remote.ParentEndpoint, remote.URLPattern, err.Error()))
+				fmt.Sprintf("[BACKEND: %s %s -> %s %s][GraphQL] %s",
+					remote.ParentEndpoint, remote.ParentEndpoint,
+					remote.Method, remote.URLPattern, err.Error()))
 		}
 		return emptyMiddlewareFallback(logger)
 	}
@@ -75,9 +77,10 @@ func NewGraphQLMiddleware(logger logging.Logger, remote *config.Backend) Middlew
 
 		logger.Debug(
 			fmt.Sprintf(
-				"[BACKEND: %s %s -> %s][GraphQL] Operation: %s, Method: %s",
+				"[BACKEND: %s %s -> %s %s][GraphQL] Operation: %s, Method: %s",
 				remote.ParentEndpointMethod,
 				remote.ParentEndpoint,
+				remote.Method,
 				remote.URLPattern,
 				opt.Type,
 				opt.Method,

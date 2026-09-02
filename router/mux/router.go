@@ -97,7 +97,6 @@ func HealthHandler(w http.ResponseWriter, _ *http.Request) {
 // Run implements the router interface
 func (r httpRouter) Run(cfg config.ServiceConfig) {
 	if cfg.Debug {
-		debugHandler := DebugHandler(r.cfg.Logger)
 		for _, method := range []string{
 			http.MethodGet,
 			http.MethodPost,
@@ -109,7 +108,7 @@ func (r httpRouter) Run(cfg config.ServiceConfig) {
 			http.MethodConnect,
 			http.MethodTrace,
 		} {
-			r.cfg.Engine.Handle(r.cfg.DebugPattern, method, debugHandler)
+			r.cfg.Engine.Handle(r.cfg.DebugPattern, method, DebugHandler(r.cfg.Logger, method))
 		}
 	}
 

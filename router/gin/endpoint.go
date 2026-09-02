@@ -40,7 +40,7 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 		isCacheEnabled := configuration.CacheTTL.Seconds() != 0
 		requestGenerator := NewRequest(configuration.HeadersToPass)
 		render := getRender(configuration)
-		logPrefix := "[ENDPOINT: " + configuration.Endpoint + "]"
+		logPrefix := "[ENDPOINT: " + configuration.Method + " " + configuration.Endpoint + "]"
 
 		return func(c *gin.Context) {
 			requestCtx, cancel := context.WithTimeout(c, configuration.Timeout)

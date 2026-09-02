@@ -22,7 +22,8 @@ func NewStaticMiddleware(logger logging.Logger, endpointConfig *config.EndpointC
 
 	logger.Debug(
 		fmt.Sprintf(
-			"[ENDPOINT: %s][Static] Adding a static response using '%s' strategy. Data: %s",
+			"[ENDPOINT: %s %s][Static] Adding a static response using '%s' strategy. Data: %s",
+			endpointConfig.Method,
 			endpointConfig.Endpoint,
 			cfg.Strategy,
 			string(b),

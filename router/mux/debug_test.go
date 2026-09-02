@@ -20,7 +20,7 @@ func TestDebugHandler(t *testing.T) {
 		return
 	}
 
-	handler := DebugHandler(logger)
+	handler := DebugHandler(logger, "GET")
 
 	req, _ := http.NewRequest("GET", "http://127.0.0.1:8089/_mux_debug?b=1", io.NopCloser(&bytes.Buffer{}))
 	req.Header.Set("Content-Type", "application/json")

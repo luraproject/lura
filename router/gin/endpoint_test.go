@@ -344,7 +344,7 @@ func TestCustomErrorEndpointHandler(t *testing.T) {
 	w := httptest.NewRecorder()
 	s.ServeHTTP(w, req)
 
-	if content := buff.String(); !strings.Contains(content, "pref ERROR: [ENDPOINT: /] this is a dummy error") {
+	if content := buff.String(); !strings.Contains(content, "pref ERROR: [ENDPOINT: GET /] this is a dummy error") {
 		t.Error("unexpected log content", content)
 	}
 }

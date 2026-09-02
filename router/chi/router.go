@@ -109,12 +109,11 @@ func (r chiRouter) Run(cfg config.ServiceConfig) {
 }
 
 func (r chiRouter) registerDebugEndpoints() {
-	debugHandler := mux.DebugHandler(r.cfg.Logger)
-	r.cfg.Engine.Get(r.cfg.DebugPattern, debugHandler)
-	r.cfg.Engine.Post(r.cfg.DebugPattern, debugHandler)
-	r.cfg.Engine.Put(r.cfg.DebugPattern, debugHandler)
-	r.cfg.Engine.Patch(r.cfg.DebugPattern, debugHandler)
-	r.cfg.Engine.Delete(r.cfg.DebugPattern, debugHandler)
+	r.cfg.Engine.Get(r.cfg.DebugPattern, mux.DebugHandler(r.cfg.Logger, "GET"))
+	r.cfg.Engine.Post(r.cfg.DebugPattern, mux.DebugHandler(r.cfg.Logger, "POST"))
+	r.cfg.Engine.Put(r.cfg.DebugPattern, mux.DebugHandler(r.cfg.Logger, "PUT"))
+	r.cfg.Engine.Patch(r.cfg.DebugPattern, mux.DebugHandler(r.cfg.Logger, "PATCH"))
+	r.cfg.Engine.Delete(r.cfg.DebugPattern, mux.DebugHandler(r.cfg.Logger, "DELETE"))
 }
 
 func (r chiRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) {

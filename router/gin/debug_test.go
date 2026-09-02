@@ -23,7 +23,7 @@ func TestDebugHandler(t *testing.T) {
 	}
 
 	router := gin.New()
-	router.GET("/_gin_endpoint/:param", DebugHandler(logger))
+	router.GET("/_gin_endpoint/:param", DebugHandler(logger, http.MethodGet))
 
 	req, _ := http.NewRequest("GET", "http://127.0.0.1:8088/_gin_endpoint/a?b=1", io.NopCloser(&bytes.Buffer{}))
 	req.Header.Set("Content-Type", "application/json")

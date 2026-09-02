@@ -112,7 +112,23 @@ func (r ginRouter) Run(cfg config.ServiceConfig) {
 
 func (r ginRouter) registerEndpointsAndMiddlewares(cfg config.ServiceConfig) {
 	if cfg.Debug {
-		r.cfg.Engine.Any("/__debug/*param", DebugHandler(r.cfg.Logger))
+		// TODO: decide if we prefer to use a Any handler with the wildcard
+		// instead of a method name, or explicitly set a new handler for each
+		// method.
+		// r.cfg.Engine.Any("/__debug/*param", DebugHandler(r.cfg.Logger, "*"))
+		for _, method := range []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodPatch,
+			http.MethodDelete,
+			http.MethodHead,
+			http.MethodOptions,
+			http.MethodConnect,
+			http.MethodTrace,
+		} {
+			r.cfg.Engine.Handle(method, "/__debug/*param", DebugHandler(r.cfg.Logger, method))
+		}
 	}
 
 	if cfg.Echo {
@@ -171,7 +187,7 @@ func (r ginRouter) registerKrakendEndpoint(rg *gin.RouterGroup, method string, e
 	case http.MethodDelete:
 		rg.DELETE(path, h)
 	default:
-		r.cfg.Logger.Error(logPrefix, "[ENDPOINT:", path, "] Unsupported method", method)
+		r.cfg.Logger.Error(logPrefix, "[ENDPOINT:", method, " ", path, "] Unsupported method")
 		return
 	}
 

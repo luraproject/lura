@@ -32,7 +32,8 @@ func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.Endpoi
 	mf, t := getMergerFactory(endpointConfig.ExtraConfig)
 	logger.Debug(
 		fmt.Sprintf(
-			"[ENDPOINT: %s][Merge] Backends: %d, merger: %s, combiner: %s",
+			"[ENDPOINT: %s %s][Merge] Backends: %d, merger: %s, combiner: %s",
+			endpointConfig.Method,
 			endpointConfig.Endpoint,
 			totalBackends,
 			t,
@@ -53,7 +54,9 @@ func NewMergeDataMiddleware(logger logging.Logger, endpointConfig *config.Endpoi
 
 		filters, err := bfFactory(endpointConfig)
 		if err != nil {
-			logger.Error(fmt.Sprintf("[ENDPOINT: %s]%s %s", endpointConfig.Endpoint, backendFiltererFactory.logPrefix, err))
+			logger.Error(fmt.Sprintf("[ENDPOINT: %s %s]%s %s",
+				endpointConfig.Method, endpointConfig.Endpoint,
+				backendFiltererFactory.logPrefix, err))
 			return func(_ context.Context, _ *Request) (*Response, error) { return nil, err }
 		}
 
