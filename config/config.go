@@ -159,9 +159,6 @@ type ServiceConfig struct {
 	// DisableStrictREST flags if the REST enforcement is disabled
 	DisableStrictREST bool `mapstructure:"disable_rest"`
 
-	// Plugin defines the configuration for the plugin loader
-	Plugin *Plugin `mapstructure:"plugin"`
-
 	// TLS defines the configuration params for enabling TLS (HTTPS & HTTP/2) at
 	// the router layer
 	TLS *TLS `mapstructure:"tls"`
@@ -303,12 +300,6 @@ type Backend struct {
 	// so logs and other instrumentation can output better info (thus, it is not loaded
 	// with `mapstructure` or `json` tags).
 	ParentEndpointMethod string `json:"-" mapstructure:"-"`
-}
-
-// Plugin contains the config required by the plugin module
-type Plugin struct {
-	Folder  string `mapstructure:"folder"`
-	Pattern string `mapstructure:"pattern"`
 }
 
 // TLSKeyPair contains a pair of public and private keys
