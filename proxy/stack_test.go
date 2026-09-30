@@ -37,7 +37,7 @@ func TestProxyStack_multi(t *testing.T) {
 
 	{
 		cfgContent := `{
-			"version":3,
+			"version":4,
 			"endpoints":[{
 				"endpoint":"/{foo}",
 				"backend":[
@@ -59,7 +59,7 @@ func TestProxyStack_multi(t *testing.T) {
 				]
 			}]
 		}`
-		if err := os.WriteFile(cfgPath, []byte(fmt.Sprintf(cfgContent, s.URL, s.URL, s.URL)), 0666); err != nil {
+		if err := os.WriteFile(cfgPath, []byte(fmt.Sprintf(cfgContent, s.URL, s.URL, s.URL)), 0o666); err != nil {
 			t.Error(err)
 			return
 		}
