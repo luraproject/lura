@@ -6,7 +6,7 @@ The configuration file needs to be a `json` file. The viper parser supports othe
 
 
     {
-	"version": 3,
+	"version": 4,
 	"name": "My lovely gateway",
 	"port": 8080,
 	"timeout": "10s",
