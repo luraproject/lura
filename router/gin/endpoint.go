@@ -9,11 +9,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/core"
-	"github.com/luraproject/lura/v2/logging"
-	"github.com/luraproject/lura/v2/proxy"
-	"github.com/luraproject/lura/v2/transport/http/server"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/core"
+	"github.com/luraproject/lura/v3/logging"
+	"github.com/luraproject/lura/v3/proxy"
+	"github.com/luraproject/lura/v3/transport/http/server"
 )
 
 const requestParamsAsterisk string = "*"
@@ -40,7 +40,7 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 		isCacheEnabled := configuration.CacheTTL.Seconds() != 0
 		requestGenerator := NewRequest(configuration.HeadersToPass)
 		render := getRender(configuration)
-		logPrefix := "[ENDPOINT: " + configuration.Endpoint + "]"
+		logPrefix := "[ENDPOINT: " + configuration.Method + " " + configuration.Endpoint + "]"
 
 		return func(c *gin.Context) {
 			requestCtx, cancel := context.WithTimeout(c, configuration.Timeout)

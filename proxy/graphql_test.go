@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
-	"github.com/luraproject/lura/v2/transport/http/client/graphql"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/logging"
+	"github.com/luraproject/lura/v3/transport/http/client/graphql"
 )
 
 func TestNewGraphQLMiddleware_mutation(t *testing.T) {
@@ -39,7 +39,7 @@ func TestNewGraphQLMiddleware_mutation(t *testing.T) {
 	expectedResponse := &Response{
 		Data: map[string]interface{}{"foo": "bar"},
 	}
-	prxy := mw(func(ctx context.Context, req *Request) (*Response, error) {
+	prxy := mw(func(_ context.Context, req *Request) (*Response, error) {
 		b, err := io.ReadAll(req.Body)
 		req.Body.Close()
 		if err != nil {
@@ -93,7 +93,7 @@ func TestNewGraphQLMiddleware_query(t *testing.T) {
 
 	expectedResponse := &Response{Data: map[string]interface{}{"foo": "bar"}}
 
-	prxy := mw(func(ctx context.Context, req *Request) (*Response, error) {
+	prxy := mw(func(_ context.Context, req *Request) (*Response, error) {
 		request := graphql.GraphQLRequest{
 			Query:         req.Query.Get("query"),
 			OperationName: req.Query.Get("operationName"),

@@ -10,10 +10,10 @@ import (
 	"net/textproto"
 	"strings"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/core"
-	"github.com/luraproject/lura/v2/proxy"
-	"github.com/luraproject/lura/v2/transport/http/server"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/core"
+	"github.com/luraproject/lura/v3/proxy"
+	"github.com/luraproject/lura/v3/transport/http/server"
 )
 
 const requestParamsAsterisk string = "*"

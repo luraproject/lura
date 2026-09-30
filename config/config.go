@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/luraproject/lura/v2/encoding"
+	"github.com/luraproject/lura/v3/encoding"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -158,9 +158,6 @@ type ServiceConfig struct {
 
 	// DisableStrictREST flags if the REST enforcement is disabled
 	DisableStrictREST bool `mapstructure:"disable_rest" json:"disable_rest"`
-
-	// Plugin defines the configuration for the plugin loader
-	Plugin *Plugin `mapstructure:"plugin" json:"plugin,omitempty"`
 
 	// TLS defines the configuration params for enabling TLS (HTTPS & HTTP/2) at
 	// the router layer
@@ -303,12 +300,6 @@ type Backend struct {
 	// so logs and other instrumentation can output better info (thus, it is not loaded
 	// with `mapstructure` or `json` tags).
 	ParentEndpointMethod string `json:"-" mapstructure:"-"`
-}
-
-// Plugin contains the config required by the plugin module
-type Plugin struct {
-	Folder  string `mapstructure:"folder" json:"folder"`
-	Pattern string `mapstructure:"pattern" json:"pattern"`
 }
 
 // TLSKeyPair contains a pair of public and private keys

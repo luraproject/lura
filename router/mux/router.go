@@ -10,11 +10,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
-	"github.com/luraproject/lura/v2/proxy"
-	"github.com/luraproject/lura/v2/router"
-	"github.com/luraproject/lura/v2/transport/http/server"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/logging"
+	"github.com/luraproject/lura/v3/proxy"
+	"github.com/luraproject/lura/v3/router"
+	"github.com/luraproject/lura/v3/transport/http/server"
 )
 
 // DefaultDebugPattern is the default pattern used to define the debug endpoint
@@ -97,7 +97,6 @@ func HealthHandler(w http.ResponseWriter, _ *http.Request) {
 // Run implements the router interface
 func (r httpRouter) Run(cfg config.ServiceConfig) {
 	if cfg.Debug {
-		debugHandler := DebugHandler(r.cfg.Logger)
 		for _, method := range []string{
 			http.MethodGet,
 			http.MethodPost,
@@ -109,7 +108,7 @@ func (r httpRouter) Run(cfg config.ServiceConfig) {
 			http.MethodConnect,
 			http.MethodTrace,
 		} {
-			r.cfg.Engine.Handle(r.cfg.DebugPattern, method, debugHandler)
+			r.cfg.Engine.Handle(r.cfg.DebugPattern, method, DebugHandler(r.cfg.Logger, method))
 		}
 	}
 

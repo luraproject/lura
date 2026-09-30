@@ -6,8 +6,8 @@ import (
 	"context"
 	"net/url"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/logging"
 )
 
 // NewFilterQueryStringsMiddleware returns a middleware with or without a header filtering

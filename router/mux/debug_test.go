@@ -9,7 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v3/logging"
 )
 
 func TestDebugHandler(t *testing.T) {
@@ -20,7 +20,7 @@ func TestDebugHandler(t *testing.T) {
 		return
 	}
 
-	handler := DebugHandler(logger)
+	handler := DebugHandler(logger, "GET")
 
 	req, _ := http.NewRequest("GET", "http://127.0.0.1:8089/_mux_debug?b=1", io.NopCloser(&bytes.Buffer{}))
 	req.Header.Set("Content-Type", "application/json")

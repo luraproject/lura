@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/krakend/flatmap/tree"
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/logging"
 )
 
 // EntityFormatter formats the response data
@@ -331,8 +331,8 @@ func NewFlatmapMiddleware(logger logging.Logger, cfg *config.EndpointConfig) Mid
 
 		logger.Debug(
 			fmt.Sprintf(
-				"[ENDPOINT: %s][Flatmap] Adding flatmap manipulator with %d operations",
-				cfg.Endpoint,
+				"[ENDPOINT: %s %s][Flatmap] Adding flatmap manipulator with %d operations",
+				cfg.Method, cfg.Endpoint,
 				len(formatter.Ops),
 			),
 		)

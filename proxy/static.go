@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/logging"
 )
 
 // NewStaticMiddleware creates proxy middleware for adding static values to the processed responses
@@ -22,7 +22,8 @@ func NewStaticMiddleware(logger logging.Logger, endpointConfig *config.EndpointC
 
 	logger.Debug(
 		fmt.Sprintf(
-			"[ENDPOINT: %s][Static] Adding a static response using '%s' strategy. Data: %s",
+			"[ENDPOINT: %s %s][Static] Adding a static response using '%s' strategy. Data: %s",
+			endpointConfig.Method,
 			endpointConfig.Endpoint,
 			cfg.Strategy,
 			string(b),

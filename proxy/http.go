@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/encoding"
-	"github.com/luraproject/lura/v2/logging"
-	"github.com/luraproject/lura/v2/transport/http/client"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/encoding"
+	"github.com/luraproject/lura/v3/logging"
+	"github.com/luraproject/lura/v3/transport/http/client"
 )
 
 var httpProxy = CustomHTTPProxyFactory(client.NewHTTPClient)
@@ -37,7 +37,7 @@ func NewHTTPProxy(remote *config.Backend, cf client.HTTPClientFactory, decode en
 }
 
 // NewHTTPProxyWithHTTPExecutor creates a http proxy with the injected configuration, HTTPRequestExecutor and Decoder
-func NewHTTPProxyWithHTTPExecutor(remote *config.Backend, re client.HTTPRequestExecutor, dec encoding.Decoder) Proxy {
+var NewHTTPProxyWithHTTPExecutor = func(remote *config.Backend, re client.HTTPRequestExecutor, dec encoding.Decoder) Proxy {
 	if remote.Encoding == encoding.NOOP {
 		return NewHTTPProxyDetailed(remote, re, client.NoOpHTTPStatusHandler, NoOpHTTPResponseParser)
 	}

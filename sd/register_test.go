@@ -5,7 +5,7 @@ package sd
 import (
 	"testing"
 
-	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v3/config"
 )
 
 func TestGetRegister_Register_ok(t *testing.T) {

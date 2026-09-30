@@ -8,8 +8,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/logging"
 )
 
 func TestNewStaticMiddleware_ok(t *testing.T) {
@@ -99,7 +99,7 @@ func TestNewStaticMiddleware(t *testing.T) {
 
 	mw := NewStaticMiddleware(logging.NoOp, &config.EndpointConfig{ExtraConfig: extra})
 
-	p := mw(func(_ context.Context, r *Request) (*Response, error) {
+	p := mw(func(_ context.Context, _ *Request) (*Response, error) {
 		return &Response{IsComplete: true}, nil
 	})
 
