@@ -15,7 +15,6 @@ labels:
 
           - It's vague or not clearly actionable
           - It contains insufficient details to reproduce
-          - It's plugin review or custom code review
           - It does not use the issue template
           - It's unrelated to the project (e.g., related to one of its libraries)
           - It does not follow the technical philosophy of the project

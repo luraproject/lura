@@ -2,8 +2,8 @@
 
 # The Lura Project framework
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/luraproject/lura/v2)](https://goreportcard.com/report/github.com/luraproject/lura/v2)
-[![GoDoc](https://godoc.org/github.com/luraproject/lura/v2?status.svg)](https://godoc.org/github.com/luraproject/lura/v2)
+[![Go Report Card](https://goreportcard.com/badge/github.com/luraproject/lura/v3)](https://goreportcard.com/report/github.com/luraproject/lura/v3)
+[![GoDoc](https://godoc.org/github.com/luraproject/lura/v3?status.svg)](https://godoc.org/github.com/luraproject/lura/v3)
 ![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/3151/badge)
 [![Slack Widget](https://img.shields.io/badge/join-us%20on%20slack-gray.svg?longCache=true&logo=slack&colorB=red)](https://gophers.slack.com/messages/lura)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fluraproject%2Flura.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fluraproject%2Flura%2Fv2?ref=badge_shield&issueType=license)
@@ -15,7 +15,7 @@ An open framework to assemble ultra performance API Gateways with middlewares; f
 
 Consumers of REST API content (specially in microservices) often query backend services that weren't coded for the UI implementation. This is of course a good practice, but the UI consumers need to do implementations that suffer a lot of complexity and burden with the sizes of their microservices responses.
 
-Lura is an **API Gateway** builder and proxy generator that sits between the client and all the source servers, adding a new layer that removes all the complexity to the clients, providing them only the information that the UI needs. Lura acts as an **aggregator** of many sources into single endpoints and allows you to group, wrap, transform and shrink responses. Additionally it supports a myriad of middlewares and plugins that allow you to extend the functionality, such as adding Oauth authorization or security layers.
+Lura is an **API Gateway** builder and proxy generator that sits between the client and all the source servers, adding a new layer that removes all the complexity to the clients, providing them only the information that the UI needs. Lura acts as an **aggregator** of many sources into single endpoints and allows you to group, wrap, transform and shrink responses.
 
 Lura not only supports HTTP(S), but because it is a set of generic libraries you can build all type of API Gateways and proxies, including for instance, an RPC gateway.
 
@@ -66,10 +66,10 @@ A ready to use example:
         "log"
         "os"
 
-        "github.com/luraproject/lura/config"
-        "github.com/luraproject/lura/logging"
-        "github.com/luraproject/lura/proxy"
-        "github.com/luraproject/lura/router/gin"
+        "github.com/luraproject/lura/v3/config"
+        "github.com/luraproject/lura/v3/logging"
+        "github.com/luraproject/lura/v3/proxy"
+        "github.com/luraproject/lura/v3/router/gin"
     )
 
     func main() {

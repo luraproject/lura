@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package logging provides a simple logger interface and implementations
+Package logging provides a simple logger interface and implementations
 */
 package logging
 

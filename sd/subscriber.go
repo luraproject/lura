@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package sd defines some interfaces and implementations for service discovery
+Package sd defines some interfaces and implementations for service discovery
 */
 package sd
 
 import (
 	"math/rand"
 
-	"github.com/luraproject/lura/v2/config"
+	"github.com/luraproject/lura/v3/config"
 )
 
 // Subscriber keeps the set of backend hosts up to date

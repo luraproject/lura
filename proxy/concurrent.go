@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/logging"
 )
 
 // NewConcurrentMiddlewareWithLogger creates a proxy middleware that enables sending several requests concurrently
@@ -62,7 +62,7 @@ func NewConcurrentMiddlewareWithLogger(logger logging.Logger, remote *config.Bac
 	}
 }
 
-// NewConcurrentMiddlewareWithLogger creates a proxy middleware that enables sending several requests concurrently.
+// NewConcurrentMiddleware creates a proxy middleware that enables sending several requests concurrently.
 // Is recommended to use the version with a logger param.
 func NewConcurrentMiddleware(remote *config.Backend) Middleware {
 	return NewConcurrentMiddlewareWithLogger(logging.NoOp, remote)

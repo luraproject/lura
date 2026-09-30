@@ -17,10 +17,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
-	"github.com/luraproject/lura/v2/proxy"
-	"github.com/luraproject/lura/v2/transport/http/server"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/logging"
+	"github.com/luraproject/lura/v3/proxy"
+	"github.com/luraproject/lura/v3/transport/http/server"
 )
 
 func TestEndpointHandler_ok(t *testing.T) {
@@ -344,7 +344,7 @@ func TestCustomErrorEndpointHandler(t *testing.T) {
 	w := httptest.NewRecorder()
 	s.ServeHTTP(w, req)
 
-	if content := buff.String(); !strings.Contains(content, "pref ERROR: [ENDPOINT: /] this is a dummy error") {
+	if content := buff.String(); !strings.Contains(content, "pref ERROR: [ENDPOINT: GET /] this is a dummy error") {
 		t.Error("unexpected log content", content)
 	}
 }

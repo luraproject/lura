@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package register offers tools for creating and managing registers.
+Package register offers tools for creating and managing registers.
 */
 package register
 

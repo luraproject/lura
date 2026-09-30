@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /*
-	Package chi provides some basic implementations for building routers based on go-chi/chi
+Package chi provides some basic implementations for building routers based on go-chi/chi
 */
 package chi
 
@@ -12,12 +12,12 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/luraproject/lura/v2/config"
-	"github.com/luraproject/lura/v2/logging"
-	"github.com/luraproject/lura/v2/proxy"
-	"github.com/luraproject/lura/v2/router"
-	"github.com/luraproject/lura/v2/router/mux"
-	"github.com/luraproject/lura/v2/transport/http/server"
+	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/logging"
+	"github.com/luraproject/lura/v3/proxy"
+	"github.com/luraproject/lura/v3/router"
+	"github.com/luraproject/lura/v3/router/mux"
+	"github.com/luraproject/lura/v3/transport/http/server"
 )
 
 // ChiDefaultDebugPattern is the default pattern used to define the debug endpoint
@@ -109,12 +109,11 @@ func (r chiRouter) Run(cfg config.ServiceConfig) {
 }
 
 func (r chiRouter) registerDebugEndpoints() {
-	debugHandler := mux.DebugHandler(r.cfg.Logger)
-	r.cfg.Engine.Get(r.cfg.DebugPattern, debugHandler)
-	r.cfg.Engine.Post(r.cfg.DebugPattern, debugHandler)
-	r.cfg.Engine.Put(r.cfg.DebugPattern, debugHandler)
-	r.cfg.Engine.Patch(r.cfg.DebugPattern, debugHandler)
-	r.cfg.Engine.Delete(r.cfg.DebugPattern, debugHandler)
+	r.cfg.Engine.Get(r.cfg.DebugPattern, mux.DebugHandler(r.cfg.Logger, "GET"))
+	r.cfg.Engine.Post(r.cfg.DebugPattern, mux.DebugHandler(r.cfg.Logger, "POST"))
+	r.cfg.Engine.Put(r.cfg.DebugPattern, mux.DebugHandler(r.cfg.Logger, "PUT"))
+	r.cfg.Engine.Patch(r.cfg.DebugPattern, mux.DebugHandler(r.cfg.Logger, "PATCH"))
+	r.cfg.Engine.Delete(r.cfg.DebugPattern, mux.DebugHandler(r.cfg.Logger, "DELETE"))
 }
 
 func (r chiRouter) registerKrakendEndpoints(endpoints []*config.EndpointConfig) {

@@ -7,12 +7,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/luraproject/lura/v2/logging"
+	"github.com/luraproject/lura/v3/logging"
 )
 
 // DebugHandler creates a dummy handler function, useful for quick integration tests
-func DebugHandler(logger logging.Logger) gin.HandlerFunc {
-	logPrefixSecondary := "[ENDPOINT: /__debug/*]"
+func DebugHandler(logger logging.Logger, method string) gin.HandlerFunc {
+	logPrefixSecondary := "[ENDPOINT " + method + " " + "/__debug/*]"
 	return func(c *gin.Context) {
 		logger.Debug(logPrefixSecondary, "Method:", c.Request.Method)
 		logger.Debug(logPrefixSecondary, "URL:", c.Request.RequestURI)
