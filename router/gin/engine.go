@@ -138,6 +138,7 @@ func healthEndpoint(health <-chan string) func(*gin.Context) {
 
 func paramChecker() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		rawFragment := strings.Contains(c.Request.URL.RawPath, "#")
 		for _, param := range c.Params {
 			s, err := url.PathUnescape(param.Value)
 			if err != nil {
@@ -146,7 +147,7 @@ func paramChecker() gin.HandlerFunc {
 				c.Abort()
 				return
 			}
-			if s != param.Value || strings.Contains(s, "?") || strings.Contains(s, "#") {
+			if s != param.Value || rawFragment {
 				c.Status(http.StatusBadRequest)
 				ErrorResponseWriter(c, errors.New("error: encoded url params"))
 				c.Abort()
