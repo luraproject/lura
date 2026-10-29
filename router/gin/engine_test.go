@@ -84,6 +84,36 @@ func TestNewEngine_paramsAreChecked(t *testing.T) {
 	}
 
 	assertResponse("/user/123/public", http.StatusOK, "ok")
-	assertResponse("/user/123%3f/public", http.StatusBadRequest, "error: encoded url params")
-	assertResponse("/user/123%23/public", http.StatusBadRequest, "error: encoded url params")
+	assertResponse("/user/123%3f/public", http.StatusOK, "ok")
+	assertResponse("/user/123%23/public", http.StatusOK, "ok")
+	assertResponse("/user/123%2523/public", http.StatusBadRequest, "error: encoded url params")
+
+	assertRawRequest := func(path, rawPath string, statusCode int, body string) {
+		req, _ := http.NewRequest("GET", "/user/123/public", http.NoBody)
+		req.URL.Path = path
+		req.URL.RawPath = rawPath
+		w := httptest.NewRecorder()
+		engine.ServeHTTP(w, req)
+		resp := w.Result()
+
+		if sc := resp.StatusCode; sc != statusCode {
+			t.Errorf("unexpected status code: %d (expected %d)", sc, statusCode)
+			return
+		}
+
+		b, err := io.ReadAll(resp.Body)
+		if err != nil {
+			t.Errorf("reading the response body: %s", err.Error())
+			return
+		}
+
+		if body != "" && string(b) != body {
+			t.Errorf("unexpected response body: '%s' (expected '%s')", string(b), body)
+		}
+	}
+
+	assertRawRequest("/user/123#/public", "", http.StatusOK, "ok")
+	assertRawRequest("/user/123#/public", "/user/123%23/public", http.StatusOK, "ok")
+	assertRawRequest("/user/123#/public", "/user/123#/public", http.StatusBadRequest, "error: encoded url params")
+	assertRawRequest("/user/10%/public", "/user/10%/public", http.StatusBadRequest, "")
 }
