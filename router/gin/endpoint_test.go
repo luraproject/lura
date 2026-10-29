@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -292,6 +293,94 @@ func TestEndpointHandler_cancel(t *testing.T) {
 		expectedCache:      "",
 		expectedContent:    "application/json; charset=utf-8",
 		expectedStatusCode: http.StatusOK,
+		completed:          false,
+	}.test(t)
+	time.Sleep(5 * time.Millisecond)
+}
+
+func TestEndpointHandler_clientCanceled(t *testing.T) {
+	// Direct context.Canceled → 499.
+	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
+		return nil, context.Canceled
+	}
+	endpointHandlerTestCase{
+		timeout:            time.Minute,
+		proxy:              p,
+		method:             "GET",
+		expectedBody:       "",
+		expectedCache:      "",
+		expectedContent:    "",
+		expectedStatusCode: 499,
+		completed:          false,
+	}.test(t)
+	time.Sleep(5 * time.Millisecond)
+
+	// Wrapped context.Canceled — errors.Is must unwrap it → 499.
+	p2 := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
+		return nil, fmt.Errorf("upstream closed: %w", context.Canceled)
+	}
+	endpointHandlerTestCase{
+		timeout:            time.Minute,
+		proxy:              p2,
+		method:             "GET",
+		expectedBody:       "",
+		expectedCache:      "",
+		expectedContent:    "",
+		expectedStatusCode: 499,
+		completed:          false,
+	}.test(t)
+	time.Sleep(5 * time.Millisecond)
+
+	// context.DeadlineExceeded must NOT be remapped — server-side timeouts stay 500.
+	p3 := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
+		return nil, context.DeadlineExceeded
+	}
+	endpointHandlerTestCase{
+		timeout:            time.Minute,
+		proxy:              p3,
+		method:             "GET",
+		expectedBody:       "",
+		expectedCache:      "",
+		expectedContent:    "",
+		expectedStatusCode: http.StatusInternalServerError,
+		completed:          false,
+	}.test(t)
+	time.Sleep(5 * time.Millisecond)
+
+	// Generic error — unchanged baseline, still 500.
+	p4 := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
+		return nil, errors.New("something went wrong")
+	}
+	endpointHandlerTestCase{
+		timeout:            time.Minute,
+		proxy:              p4,
+		method:             "GET",
+		expectedBody:       "",
+		expectedCache:      "",
+		expectedContent:    "",
+		expectedStatusCode: http.StatusInternalServerError,
+		completed:          false,
+	}.test(t)
+	time.Sleep(5 * time.Millisecond)
+}
+
+func TestEndpointHandler_clientCanceled_noBody(t *testing.T) {
+	// Even when returnErrorMsg is true, no body must be written for a canceled
+	// request — the client is gone and writing would be wasteful.
+	returnErrorMsg = true
+	defer func() { returnErrorMsg = false }()
+
+	p := func(_ context.Context, _ *proxy.Request) (*proxy.Response, error) {
+		return nil, context.Canceled
+	}
+	endpointHandlerTestCase{
+		timeout:            time.Minute,
+		proxy:              p,
+		method:             "GET",
+		expectedBody:       "",
+		expectedCache:      "",
+		expectedContent:    "",
+		expectedStatusCode: 499,
 		completed:          false,
 	}.test(t)
 	time.Sleep(5 * time.Millisecond)
