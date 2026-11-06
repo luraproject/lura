@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/luraproject/lura/v3/config"
+	"github.com/luraproject/lura/v3/logging"
 )
 
 func TestNewEngine_contextIsPropagated(t *testing.T) {
@@ -86,4 +87,20 @@ func TestNewEngine_paramsAreChecked(t *testing.T) {
 	assertResponse("/user/123/public", http.StatusOK, "ok")
 	assertResponse("/user/123%3f/public", http.StatusBadRequest, "error: encoded url params")
 	assertResponse("/user/123%23/public", http.StatusBadRequest, "error: encoded url params")
+}
+
+func TestNewEngine_clientDisconnectLogLevel(t *testing.T) {
+	defer func() { clientDisconnectLogLevel = "" }()
+
+	NewEngine(config.ServiceConfig{
+		ExtraConfig: config.ExtraConfig{
+			Namespace: map[string]interface{}{
+				"client_disconnect_log_level": "debug",
+			},
+		},
+	}, EngineOptions{Logger: logging.NoOp})
+
+	if clientDisconnectLogLevel != "debug" {
+		t.Errorf("unexpected client disconnect log level: %q", clientDisconnectLogLevel)
+	}
 }

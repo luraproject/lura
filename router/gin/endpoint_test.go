@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -437,5 +438,85 @@ func startGinServer(handlerFunc gin.HandlerFunc) *gin.Engine {
 func ctxMiddleware(c *gin.Context) {
 	for k, v := range ctxContent {
 		c.Set(k, v)
+	}
+}
+
+func clientDisconnectTestCase(t *testing.T, logLevel string, p proxy.Proxy) (*httptest.ResponseRecorder, string) {
+	t.Helper()
+	buff := new(bytes.Buffer)
+	logger, err := logging.NewLogger("DEBUG", buff, "pref")
+	if err != nil {
+		t.Fatal("building the logger:", err.Error())
+	}
+
+	returnErrorMsg = true
+	clientDisconnectLogLevel = logLevel
+	defer func() {
+		returnErrorMsg = false
+		clientDisconnectLogLevel = ""
+	}()
+
+	endpoint := &config.EndpointConfig{
+		Method:   "GET",
+		Endpoint: "/",
+		Timeout:  time.Minute,
+	}
+	s := startGinServer(CustomErrorEndpointHandler(logger, server.DefaultToHTTPError)(endpoint, p))
+	s.ContextWithFallback = true // as set by NewEngine
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // the client is gone before the proxy returns
+	req, _ := http.NewRequestWithContext(ctx, "GET", "http://127.0.0.1:8080/_gin_endpoint/a", http.NoBody)
+
+	w := httptest.NewRecorder()
+	s.ServeHTTP(w, req)
+	return w, buff.String()
+}
+
+func TestCustomErrorEndpointHandler_clientDisconnect(t *testing.T) {
+	canceled := func(ctx context.Context, _ *proxy.Request) (*proxy.Response, error) {
+		return nil, fmt.Errorf("backend call: %w", ctx.Err())
+	}
+
+	for _, tc := range []struct {
+		name          string
+		logLevel      string
+		expectedLevel string
+	}{
+		{name: "default", logLevel: "", expectedLevel: "ERROR"},
+		{name: "debug", logLevel: "debug", expectedLevel: "DEBUG"},
+		{name: "info", logLevel: "INFO", expectedLevel: "INFO"},
+		{name: "warning", logLevel: "warning", expectedLevel: "WARNING"},
+		{name: "unknown", logLevel: "whatever", expectedLevel: "ERROR"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			w, logs := clientDisconnectTestCase(t, tc.logLevel, canceled)
+
+			expected := "pref " + tc.expectedLevel + ": [ENDPOINT: GET /] backend call: context canceled"
+			if !strings.Contains(logs, expected) {
+				t.Errorf("unexpected log content. have: %q, want it to contain: %q", logs, expected)
+			}
+			if w.Code != http.StatusInternalServerError {
+				t.Errorf("unexpected status code: %d", w.Code)
+			}
+			if body := w.Body.String(); body != "" {
+				t.Errorf("no body expected for a gone client, got: %q", body)
+			}
+		})
+	}
+}
+
+func TestCustomErrorEndpointHandler_clientDisconnectPartialResponse(t *testing.T) {
+	partial := func(ctx context.Context, _ *proxy.Request) (*proxy.Response, error) {
+		return &proxy.Response{Data: map[string]interface{}{"foo": "bar"}}, ctx.Err()
+	}
+
+	w, logs := clientDisconnectTestCase(t, "debug", partial)
+
+	if !strings.Contains(logs, "pref DEBUG: [ENDPOINT: GET /] context canceled") {
+		t.Errorf("unexpected log content: %q", logs)
+	}
+	if body := w.Body.String(); body != "" {
+		t.Errorf("no body expected for a gone client, got: %q", body)
 	}
 }
