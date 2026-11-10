@@ -77,6 +77,7 @@ func NewEngine(cfg config.ServiceConfig, opt EngineOptions) *gin.Engine {
 				paths = ginOptions.LoggerSkipPaths
 
 				returnErrorMsg = ginOptions.ReturnErrorMsg
+				clientDisconnectLogLevel = ginOptions.ClientDisconnectLogLevel
 
 				if ginOptions.ObfuscateVersionHeader {
 					core.KrakendHeaderValue = "Version undefined"
@@ -222,6 +223,11 @@ type engineConfiguration struct {
 	// ReturnErrorMsg flags if the error msg should be returned to the client as response body
 	ReturnErrorMsg bool `json:"return_error_msg"`
 
+	// ClientDisconnectLogLevel sets the level (DEBUG, INFO, WARNING or ERROR) used to log the
+	// errors of requests whose client closed the connection before getting the response.
+	// Defaults to ERROR
+	ClientDisconnectLogLevel string `json:"client_disconnect_log_level"`
+
 	// DisableHealthEndpoint marks if the health check endpoint should be exposed
 	DisableHealthEndpoint bool `json:"disable_health"`
 
@@ -245,3 +251,5 @@ type engineConfiguration struct {
 }
 
 var returnErrorMsg bool
+
+var clientDisconnectLogLevel string

@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"net/textproto"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -57,6 +58,14 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 			default:
 			}
 
+			// the request context is only canceled before the end of the handler
+			// when the client closes the connection
+			clientGone := c.Request.Context().Err() == context.Canceled
+			logError := logger.Error
+			if clientGone {
+				logError = clientDisconnectLogger(logger)
+			}
+
 			complete := server.HeaderIncompleteResponseValue
 
 			if response != nil && len(response.Data) > 0 {
@@ -84,11 +93,11 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 				if t, ok := err.(multiError); ok {
 					for i, errN := range t.Errors() {
 						c.Error(errN)
-						logger.Error(fmt.Sprintf("%s Error #%d: %s", logPrefix, i, errN.Error()))
+						logError(fmt.Sprintf("%s Error #%d: %s", logPrefix, i, errN.Error()))
 					}
 				} else {
 					c.Error(err)
-					logger.Error(logPrefix, err.Error())
+					logError(logPrefix, err.Error())
 				}
 
 				if response == nil {
@@ -105,7 +114,7 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 						c.Status(errF(err))
 					}
 
-					if returnErrorMsg {
+					if returnErrorMsg && !clientGone {
 						ErrorResponseWriter(c, err)
 					}
 					cancel()
@@ -113,9 +122,26 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 				}
 			}
 
-			render(c, response)
+			if !clientGone {
+				render(c, response)
+			}
 			cancel()
 		}
+	}
+}
+
+// clientDisconnectLogger returns the logging function to use for the errors of a request
+// whose client closed the connection before getting the response
+func clientDisconnectLogger(logger logging.Logger) func(...interface{}) {
+	switch strings.ToUpper(clientDisconnectLogLevel) {
+	case "DEBUG":
+		return logger.Debug
+	case "INFO":
+		return logger.Info
+	case "WARNING":
+		return logger.Warning
+	default:
+		return logger.Error
 	}
 }
 
