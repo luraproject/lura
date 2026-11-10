@@ -4,7 +4,6 @@ package gin
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/textproto"
 	"strings"
@@ -61,7 +60,7 @@ func CustomErrorEndpointHandler(logger logging.Logger, errF server.ToHTTPError) 
 
 			// the request context is only canceled before the end of the handler
 			// when the client closes the connection
-			clientGone := errors.Is(c.Request.Context().Err(), context.Canceled)
+			clientGone := c.Request.Context().Err() == context.Canceled
 			logError := logger.Error
 			if clientGone {
 				logError = clientDisconnectLogger(logger)
